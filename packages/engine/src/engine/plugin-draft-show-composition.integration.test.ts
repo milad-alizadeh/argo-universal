@@ -1,10 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { processWait } from '#mocks/data-fixture';
 import { writeHookPlugins } from '#mocks/hook-plugins';
+import { drawnRoot, pageAt } from '#mocks/plugin-pages';
 import { shippedFolder } from '#mocks/runtime-plugins';
 
 const source = (version: string): string => `
@@ -98,6 +99,49 @@ it('still waits for the Turn to end when the source changes without plugin.draft
   await expect
     .poll(() => readFile(loaded, 'utf8'), processWait)
     .toBe('initial\nfinal\n');
+}, 30_000);
+
+const pageSource = (text: string): string => `
+  import { Text } from '@argo/plugin-kit';
+  import { jsx } from '@argo/plugin-kit/jsx-runtime';
+  export function register(argo) {
+    argo.pages.define('/', {
+      load: async () => '${text}',
+      render: (text) => jsx(Text, { children: text }),
+    });
+  }`;
+
+it('marks the Draft page stale with the region the Agent is writing when plugin.draft.show swaps the worker', async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    installPlugins: (home) =>
+      writeHookPlugins(home, [{ id: 'dev', source: pageSource('skeleton') }]),
+  });
+
+  const controller = new AbortController();
+
+  onTestFinished(() => controller.abort());
+
+  const marks = (
+    await host.createCaller({ signal: controller.signal }).plugins.stale()
+  )[Symbol.asyncIterator]();
+
+  await drawnRoot(host.caller, pageAt('dev', '/'));
+  await writeFile(
+    join(host.home, shippedFolder, 'dev/index.mjs'),
+    pageSource('list'),
+  );
+  await host.caller.plugin.draft.show({ pluginId: 'dev', region: 'list' });
+
+  const seen: { pluginId: string; region?: string }[] = [];
+
+  for (let mark = await marks.next(); !mark.done; mark = await marks.next()) {
+    seen.push(mark.value);
+
+    if (mark.value.region !== undefined) break;
+  }
+
+  expect(seen.at(-1)).toEqual({ pluginId: 'dev', region: 'list' });
 }, 30_000);
 
 async function deferredBuilds(home: string): Promise<number> {

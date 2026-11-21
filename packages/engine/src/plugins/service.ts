@@ -101,21 +101,32 @@ export class PluginService {
   }
 
   // Rebuilds a dev Plugin at once; a build that fails keeps the worker and is the refusal (ADR-0057).
-  async showDraft(pluginId: string, sessionId?: string): Promise<void> {
+  async showDraft(
+    pluginId: string,
+    region?: string,
+    sessionId?: string,
+  ): Promise<void> {
     await this.activate(pluginId);
 
     // The Session that draws is the one the author's Choose answers to.
     if (sessionId) await this.draftStore().drawnBy(pluginId, sessionId);
 
-    const error = await this.deps.pluginRuntime.showDraft(pluginId);
+    // The mark of the worker this swaps in names the region, so Apps frame it (ADR-0057).
+    const done = this.deps.pluginRuntime.changes.drawing(pluginId, region);
 
-    if (error) throw new Error(error);
+    try {
+      const error = await this.deps.pluginRuntime.showDraft(pluginId);
 
-    // Answered once the new worker reports, so the Agent's next step sees the Draft drawn.
-    const status = await this.activate(pluginId);
+      if (error) throw new Error(error);
 
-    if (status.state !== 'running')
-      throw new Error(status.error ?? 'Plugin did not start');
+      // Answered once the new worker reports, so the Agent's next step sees the Draft drawn.
+      const status = await this.activate(pluginId);
+
+      if (status.state !== 'running')
+        throw new Error(status.error ?? 'Plugin did not start');
+    } finally {
+      done();
+    }
   }
 
   // Records the author's choice and hands it to the Session whose Agent draws the Draft (ADR-0057).

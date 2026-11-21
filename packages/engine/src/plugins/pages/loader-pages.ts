@@ -61,17 +61,21 @@ export class LoaderPages {
     private readonly operations: PluginOperationService,
   ) {
     this.draws = draws;
-    this.unwatch = changes.listen((pluginId, addresses) =>
-      this.mark(pluginId, addresses),
+    this.unwatch = changes.listen((pluginId, addresses, region) =>
+      this.mark(pluginId, addresses, region),
     );
   }
 
   // A Plugin with no Loader pages has nothing to mark.
-  private mark(pluginId: string, addresses?: PageAddress[]): void {
+  private mark(
+    pluginId: string,
+    addresses?: PageAddress[],
+    region?: string,
+  ): void {
     if (addresses) return this.marks.send({ pluginId, addresses });
 
     if (this.draws.patternsOf(pluginId).length > 0)
-      this.marks.send({ pluginId });
+      this.marks.send(region ? { pluginId, region } : { pluginId });
   }
 
   public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {

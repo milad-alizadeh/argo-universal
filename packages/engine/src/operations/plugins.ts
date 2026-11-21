@@ -37,8 +37,12 @@ export function createPluginOperations(
     'plugin.setSetting': (change): Promise<PluginCompletion> =>
       complete(plugins.setSetting(change)),
     ...readOperations(plugins),
-    'plugin.draft.show': ({ pluginId, sessionId }): Promise<PluginCompletion> =>
-      complete(plugins.showDraft(pluginId, sessionId)),
+    'plugin.draft.show': ({
+      pluginId,
+      region,
+      sessionId,
+    }): Promise<PluginCompletion> =>
+      complete(plugins.showDraft(pluginId, region, sessionId)),
     'plugin.draft.choose': (choice) =>
       plugins.chooseDraft(choice, async (sessionId, { text, ...sender }) => {
         const sent = await sessions.promptFromPlugin(

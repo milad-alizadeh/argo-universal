@@ -2,6 +2,7 @@ import type { StaleMark } from '@repo/contracts/plugins/page-address';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { draftNamings } from '../stores/draft-namings';
 import { staleSlotAnswers } from '../utils/slot-answers';
 import { usePageAddresses } from './use-page-addresses';
 
@@ -30,6 +31,9 @@ function useMarked(): (mark: StaleMark) => void {
 
   return (mark) => {
     addresses.markStale(mark);
+
+    // The Agent of a dev Plugin's Draft is writing this region; its page frames it.
+    draftNamings.heard(mark);
 
     if (!mark.addresses) staleSlotAnswers(client, renderKey, mark.pluginId);
   };
