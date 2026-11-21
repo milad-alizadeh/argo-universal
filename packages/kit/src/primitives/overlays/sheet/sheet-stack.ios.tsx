@@ -2,6 +2,7 @@ import {
   Group,
   NavigationDestination,
   NavigationStack,
+  useNativeState,
 } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
@@ -9,12 +10,13 @@ import {
   containerBackground,
   navigationBarTitleDisplayMode,
   navigationTitle,
+  searchable,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { hasLiquidGlass } from '#kit/native-header';
 import { useNativeTheme } from '#kit/native-theme';
 import { SheetContent } from './sheet-content.ios';
-import type { SheetProps } from './sheet-props';
+import type { SheetProps, SheetScreenSearch } from './sheet-props';
 import { SheetScreenToolbar } from './sheet-screen-toolbar.ios';
 import type { SheetScreenEntry, SheetStack } from './sheet-screens';
 import { sheetDetents } from './sheet-state';
@@ -90,7 +92,7 @@ const floatsHeader = ({ popoverWidth, page }: ScreenProps): boolean =>
 
 function ScreenBody(props: ScreenProps): ReactElement {
   return (
-    <Group modifiers={useScreenModifiers(props.page.title)}>
+    <Group modifiers={useScreenModifiers(props.page)}>
       <SheetContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
@@ -104,14 +106,37 @@ function ScreenBody(props: ScreenProps): ReactElement {
   );
 }
 
-function useScreenModifiers(title: string | undefined): ModifierConfig[] {
+function useScreenModifiers(page: SheetScreenEntry): ModifierConfig[] {
   const { content } = useNativeTheme().colors;
+  const search = useSheetSearch(page.search);
 
   return [
     ...(content
       ? [background(content), containerBackground(content, 'navigation')]
       : []),
-    ...titleModifiers(title),
+    ...titleModifiers(page.title),
+    ...search,
+  ];
+}
+
+function useSheetSearch(
+  search: SheetScreenSearch | undefined,
+): ModifierConfig[] {
+  const value = search?.value ?? '';
+  const text = useNativeState(value);
+
+  useEffect(() => {
+    if (text.get() !== value) text.set(value);
+  }, [text, value]);
+
+  if (!search) return [];
+
+  return [
+    searchable(text, {
+      prompt: search.label,
+      placement: hasLiquidGlass ? 'toolbar' : 'navigationBarDrawer',
+      onChange: search.onChangeText,
+    }),
   ];
 }
 

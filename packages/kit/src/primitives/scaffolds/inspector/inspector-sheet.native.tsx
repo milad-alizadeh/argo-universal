@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { InspectorActions, InspectorBody } from './inspector-pane';
 import type { InspectorProps } from './inspector-props';
 import { InspectorSheetFrame } from './inspector-sheet-frame';
@@ -21,7 +21,11 @@ function SheetContent(props: InspectorProps): ReactElement {
     <View testID={props.testID} className="flex-1 bg-content">
       {props.sheetHeader}
       <SheetActions {...props} />
-      <InspectorBody {...props} surface="bg-content" />
+      <InspectorBody
+        {...props}
+        search={Platform.OS === 'ios' ? undefined : props.search}
+        surface="bg-content"
+      />
     </View>
   );
 }

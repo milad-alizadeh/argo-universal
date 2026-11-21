@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import { stackProps } from '../core-kit-props';
 import { actionSlot, defineKitComponent } from '../define-kit-component';
+import { handler } from '../kit-component-props';
 import {
   cardProps,
   collapsibleCard,
@@ -47,6 +49,16 @@ export const layoutComponents = {
       appearance:
         'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
     },
+  ),
+  GradientTile: defineKitComponent(
+    'A pressable tile with a gradient fill and an optional selected marker.',
+    z.object({
+      title: z.string(),
+      fill: z.array(z.string()).optional(),
+      selected: z.boolean().optional(),
+      onPress: handler('onPress'),
+    }),
+    { group: 'layout', events: { onPress: z.undefined() } },
   ),
   Card: defineKitComponent(
     'A card on the card or glass Surface: media, an icon, title and subtitle, one action, a body and an optional footer; collapsible, its title toggles the body.',

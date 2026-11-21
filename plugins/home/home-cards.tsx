@@ -1,100 +1,200 @@
-import { FieldGroup, Grid, Stack, Text, type PageTo } from '@argo/plugin-kit';
+import {
+  Fader,
+  Grid,
+  IconButton,
+  Spacer,
+  Stack,
+  Text,
+  type PageTo,
+  type PluginProps,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { roomSubtitle, homeWords } from './home-words';
+import { homeWords, roomSubtitle } from './home-words';
 import { brightnessRange } from './hue';
-import type { Household, Room, Switch } from './hue-model';
+import { hueSaturationToRgb, toHex } from './hue-colour';
+import type { Household, LightColour, Room, Switch } from './hue-model';
 
-/*
- * The household as a Grid of FieldGroups: each room under its name, its own card switching every light in it, then one for each of its lights; the lights no room holds come last. Each has a power Toggle and a brightness Slider.
- * There is no colour control: the kit has no colour picker.
- */
-const columns = { compact: 1, medium: 2, wide: 3 };
+export type HomeState = { editor: string; sceneSearch: string };
 
-const target = ({ kind, id }: Switch): Pick<Switch, 'kind' | 'id'> => ({
-  kind,
-  id,
-});
+const columns = { compact: 2, medium: 3, wide: 3 };
 
-const power = (light: Switch, to: PageTo): JSX.Element => (
-  <FieldGroup.Toggle
-    title={homeWords.power}
-    value={light.on}
-    onValueChange={to.run('setPower', { ...target(light), on: to.payload() })}
-  />
-);
+type FaderTarget = { light: Switch; title: string; editor: string };
 
-const brightness = (light: Switch, to: PageTo): JSX.Element => (
-  <FieldGroup.Slider
-    title={homeWords.brightness}
-    value={light.brightness}
-    {...brightnessRange}
-    step={1}
-    valueLabel={`${light.brightness}%`}
-    onValueChange={to.run('setBrightness', {
-      ...target(light),
-      brightness: to.payload(),
-    })}
-  />
-);
+const percent = (brightness: number): string => `${Math.round(brightness)}%`;
 
-type Shown = { light: Switch; title: string; footer?: string };
+const labelOf = ({ on, reachable, brightness }: Switch): string => {
+  if (!reachable) return 'Unreachable';
 
-// One light as its own FieldGroup Section: the name is the Section's title, so no Card wraps it.
-const switchSection = (
-  { light, title, footer }: Shown,
-  to: PageTo,
-): JSX.Element => (
-  <FieldGroup key={light.id}>
-    <FieldGroup.Section title={title} {...(footer && { footer })}>
-      {power(light, to)}
-      {brightness(light, to)}
-    </FieldGroup.Section>
-  </FieldGroup>
-);
+  return on ? percent(brightness) : 'Off';
+};
 
-const roomSwitch = (room: Room, to: PageTo): JSX.Element[] =>
-  room.group
-    ? [
-        switchSection(
-          {
-            light: room.group,
-            title: homeWords.allLights,
-            footer: roomSubtitle(room.lights.length),
-          },
-          to,
-        ),
-      ]
-    : [];
+function TileButtons(
+  { light, title, editor }: FaderTarget,
+  state: HomeState,
+  to: PageTo<HomeState>,
+): JSX.Element {
+  const selected = state.editor === editor;
 
-const lightSections = (lights: readonly Switch[], to: PageTo): JSX.Element[] =>
-  lights.map((light) => switchSection({ light, title: light.name }, to));
-
-function section(title: string, cards: JSX.Element[]): JSX.Element {
   return (
-    <Stack key={title} direction="column" gap={3}>
-      <Text role="title">{title}</Text>
-      <Grid columns={columns} gap={3}>
-        {cards}
-      </Grid>
+    <Stack direction="row" align="center" gap={1}>
+      <IconButton
+        icon="edit"
+        size="sm"
+        variant={selected ? 'primary' : 'secondary'}
+        accessibilityLabel={`Edit ${title}`}
+        selected={selected}
+        disabled={!light.reachable}
+        onPress={to.set({ editor: selected ? '' : editor, sceneSearch: '' })}
+      />
+      <IconButton
+        icon="power"
+        size="sm"
+        variant="secondary"
+        accessibilityLabel={`${title} power`}
+        selected={light.on}
+        disabled={!light.reachable}
+        onPress={to.run('setPower', {
+          kind: light.kind,
+          id: light.id,
+          on: !light.on,
+        })}
+      />
     </Stack>
   );
 }
 
-const roomSection = (room: Room, to: PageTo): JSX.Element =>
-  section(room.name, [
-    ...roomSwitch(room, to),
-    ...lightSections(room.lights, to),
-  ]);
+const hexOf = ({ hue, saturation }: LightColour): string =>
+  toHex(hueSaturationToRgb(hue, saturation));
 
-const otherSection = (others: readonly Switch[], to: PageTo): JSX.Element[] =>
-  others.length > 0
-    ? [section(homeWords.otherLights, lightSections(others, to))]
-    : [];
+function levelControl(
+  {
+    light,
+    title,
+    fill,
+  }: Pick<FaderTarget, 'light' | 'title'> & {
+    fill?: string[];
+  },
+  to: PageTo<HomeState>,
+): PluginProps['Fader'] {
+  const { on, colour, brightness, reachable } = light;
 
-export const householdSections = (
+  return {
+    value: on && reachable ? brightness : 0,
+    valueLabel: labelOf(light),
+    accessibilityLabel: `${title} brightness`,
+    minimumValue: brightnessRange.min,
+    maximumValue: brightnessRange.max,
+    step: 1,
+    disabled: !reachable,
+    fill:
+      on && reachable
+        ? (fill ?? (colour ? [hexOf(colour)] : undefined))
+        : undefined,
+    onValueChange: to.run('setBrightness', {
+      kind: light.kind,
+      id: light.id,
+      brightness: to.payload(),
+    }),
+  };
+}
+
+function detailOf(light: Switch): string | null {
+  if (!light.reachable) return 'Check the Hue Bridge';
+
+  return light.on ? null : `Was ${percent(light.brightness)}`;
+}
+
+function lightTile(
+  light: Switch,
+  state: HomeState,
+  to: PageTo<HomeState>,
+): JSX.Element {
+  const title = light.name;
+
+  const detail = detailOf(light);
+
+  return (
+    <Fader key={light.id} {...levelControl({ light, title }, to)}>
+      <Stack direction="row" align="center" gap={1}>
+        <Text role="row">{title}</Text>
+        <Spacer />
+        {TileButtons({ light, title, editor: `light:${light.id}` }, state, to)}
+      </Stack>
+      <Stack direction="column">
+        <Text role={light.reachable ? 'title' : 'heading'}>
+          {labelOf(light)}
+        </Text>
+        {detail && <Text role="secondary">{detail}</Text>}
+      </Stack>
+    </Fader>
+  );
+}
+
+function roomFader(
+  room: Room,
+  state: HomeState,
+  to: PageTo<HomeState>,
+): JSX.Element | null {
+  if (!room.group) return null;
+
+  const title = homeWords.allLights;
+
+  const light = {
+    ...room.group,
+    reachable: room.lights.some((member) => member.reachable),
+  };
+
+  const colours = [
+    ...new Set(
+      room.lights.flatMap((member) =>
+        member.on && member.reachable && member.colour
+          ? [hexOf(member.colour)]
+          : [],
+      ),
+    ),
+  ];
+
+  return (
+    <Fader
+      {...levelControl(
+        { light, title, fill: colours.length ? colours : undefined },
+        to,
+      )}
+      orientation="horizontal"
+    >
+      <Stack direction="column">
+        <Text role="row">{title}</Text>
+        <Text role="secondary">{`${roomSubtitle(room.lights.length)} · ${labelOf(light)}`}</Text>
+      </Stack>
+      {TileButtons({ light, title, editor: `room:${room.id}` }, state, to)}
+    </Fader>
+  );
+}
+
+export function householdSections(
   household: Household,
-  to: PageTo,
-): JSX.Element[] => [
-  ...household.rooms.map((room) => roomSection(room, to)),
-  ...otherSection(household.others, to),
-];
+  state: HomeState,
+  to: PageTo<HomeState>,
+): JSX.Element[] {
+  const sections = household.rooms.map((room) => (
+    <Stack key={room.id} direction="column" gap={3}>
+      <Text role="nav-title">{room.name}</Text>
+      {roomFader(room, state, to)}
+      <Grid columns={columns} gap={3}>
+        {room.lights.map((light) => lightTile(light, state, to))}
+      </Grid>
+    </Stack>
+  ));
+
+  if (household.others.length > 0)
+    sections.push(
+      <Stack key="other-lights" direction="column" gap={3}>
+        <Text role="nav-title">{homeWords.otherLights}</Text>
+        <Grid columns={columns} gap={3}>
+          {household.others.map((light) => lightTile(light, state, to))}
+        </Grid>
+      </Stack>,
+    );
+
+  return sections;
+}

@@ -30,7 +30,14 @@ export type SheetProps = KitProps<'Sheet'> & {
   wide?: boolean;
 };
 
+export interface SheetScreenSearch {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+}
+
 export interface SheetScreenProps {
+  search?: SheetScreenSearch;
   name: string;
   onExit?: () => void;
   // Shown in the page's title row; a pushed page also gets a back button.

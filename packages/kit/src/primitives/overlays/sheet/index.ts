@@ -9,5 +9,6 @@ export {
   type SheetScreenAction,
   type SheetNavigation,
   type SheetScreenProps,
+  type SheetScreenSearch,
   type SheetProps,
 } from './sheet-props';

@@ -1,4 +1,5 @@
 import type { WireComponentName } from '@repo/contracts/plugins/kit';
+import { OutsideColumn } from '@repo/kit/content-column/content-column';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
@@ -13,7 +14,9 @@ import { Link } from '@repo/kit/primitives/content/link';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
+import { ColourWheel } from '@repo/kit/primitives/controls/colour-wheel';
 import { Fader } from '@repo/kit/primitives/controls/fader';
+import { SearchFieldInput } from '@repo/kit/primitives/controls/search-field';
 import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Slider } from '@repo/kit/primitives/controls/slider';
 import { Switch } from '@repo/kit/primitives/controls/switch';
@@ -21,6 +24,7 @@ import { TextArea } from '@repo/kit/primitives/controls/text-area';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
 import { Card } from '@repo/kit/primitives/layout/card';
+import { GradientTile } from '@repo/kit/primitives/layout/gradient-tile';
 import { Grid } from '@repo/kit/primitives/layout/grid';
 import { ScrollView } from '@repo/kit/primitives/layout/scroll-view';
 import { Spacer } from '@repo/kit/primitives/layout/spacer';
@@ -34,6 +38,7 @@ import { Table } from '@repo/kit/primitives/lists/table';
 import { Alert } from '@repo/kit/primitives/overlays/alert';
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
+import { Inspector } from '@repo/kit/primitives/scaffolds/inspector';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { Callout } from '@repo/kit/primitives/status/callout';
@@ -43,6 +48,7 @@ import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import { Canvas, Chart, Svg, Swatch } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
+import { View } from 'react-native';
 import { PluginSignIn } from './plugin-sign-in';
 
 // A Plugin's sheet holds composed content, so it takes the standard sheet inset.
@@ -57,6 +63,20 @@ function PluginCallout(
   props: KitProps<'Callout', string, React.JSX.Element>,
 ): React.JSX.Element {
   return <Callout {...props} inline />;
+}
+
+// Inspector content has its own scroll region and width, outside the Screen content column.
+function PluginInspector({
+  children,
+  ...props
+}: KitProps<'Inspector', string, React.JSX.Element>): React.JSX.Element {
+  return (
+    <OutsideColumn>
+      <Inspector {...props}>
+        <View className="w-full px-4 py-2">{children}</View>
+      </Inspector>
+    </OutsideColumn>
+  );
 }
 
 export const pluginEntries = {
@@ -75,6 +95,9 @@ export const pluginEntries = {
   TextArea,
   Slider,
   Fader,
+  ColourWheel,
+  SearchField: SearchFieldInput,
+  Inspector: PluginInspector,
   Switch,
   SegmentedControl,
   FieldGroup,
@@ -109,6 +132,7 @@ export const pluginEntries = {
   Spacer,
   Card,
   Grid,
+  GradientTile,
   Surface,
   ScrollView,
   Svg,

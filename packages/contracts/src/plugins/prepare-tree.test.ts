@@ -116,20 +116,29 @@ describe('Plugin wire preparation', () => {
     ).toBe(updateMessage);
   });
 
+  it('keeps a search field bound to Plugin Page state', () => {
+    const search: WireNode = {
+      ...label,
+      type: 'SearchField',
+      key: 'search',
+      props: {
+        label: 'Search',
+        value: '',
+        onChangeText: { bind: 'query' },
+      },
+    };
+
+    const root = { ...stack, children: [label, search] };
+
+    expect(prepareWireTree(root)).toEqual(root);
+  });
+
   it.each([
     {
       type: 'Menu',
       props: {
         accessibilityLabel: 'Sort',
         actions: [{ label: 'Name', onPress: { operation: 'open', args: {} } }],
-      },
-    },
-    {
-      type: 'SearchField',
-      props: {
-        label: 'Search',
-        value: '',
-        onChangeText: { bind: 'query' },
       },
     },
     {

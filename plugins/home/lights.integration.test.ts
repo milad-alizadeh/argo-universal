@@ -13,7 +13,7 @@ const desk = 'light-desk';
 
 const ceiling = 'light-ceiling';
 
-const lightSection = 'FieldGroup.Section';
+const lightSection = 'Fader';
 
 it(
   'shows each room with its own card and its lights’ cards, then the lights in no room, each with power and brightness',
@@ -21,16 +21,16 @@ it(
     const page = await connected(await startHome());
 
     expect(page.find('Office').type).toBe('Text');
-    expect(page.find(homeWords.allLights).props.footer).toBe('2 lights');
-    expect(page.find('Desk lamp').type).toBe(lightSection);
+    expect(page.findText('2 lights · 60%')).toBeDefined();
+    expect(page.find(sliderOf(desk)).type).toBe(lightSection);
     expect(page.find(homeWords.otherLights).type).toBe('Text');
     expect(shown(page, toggleOf(desk))).toBe('true');
     expect(shown(page, toggleOf(ceiling))).toBe('false');
     expect(shown(page, sliderOf('light-porch'))).toBe('100');
     expect(shown(page, toggleOf('group-office'))).toBe('true');
     expect(page.find(sliderOf(desk)).props).toMatchObject({
-      min: 1,
-      max: 100,
+      minimumValue: 1,
+      maximumValue: 100,
       valueLabel: '80%',
     });
   },
@@ -43,7 +43,7 @@ it(
     const home = await startHome();
     const page = await connected(home);
 
-    await page.act(toggleOf(desk), 'onValueChange', false);
+    await page.act(toggleOf(desk), 'onPress');
 
     expect(home.hue.puts()).toEqual([
       {
@@ -64,7 +64,8 @@ it(
     const page = await connected(home);
 
     await page.act(sliderOf(ceiling), 'onValueChange', 25);
-    await page.act(toggleOf('group-office'), 'onValueChange', false);
+    await home.test.clock.advance(150);
+    await page.act(toggleOf('group-office'), 'onPress');
 
     expect(home.hue.puts().map(({ path, body }) => ({ path, body }))).toEqual([
       {
@@ -76,7 +77,7 @@ it(
         body: { on: { on: false } },
       },
     ]);
-    expect(shown(page, sliderOf(ceiling))).toBe('25');
+    expect(page.findText('Was 25%')).toBeDefined();
   },
   timeoutMs,
 );
@@ -162,9 +163,9 @@ it(
     });
     const page = await connected(home);
 
-    expect(page.find('Desk lamp').type).toBe(lightSection);
-    expect(page.find('Desk strip').type).toBe(lightSection);
-    expect(page.find(homeWords.allLights).props.footer).toBe('3 lights');
+    expect(page.find(sliderOf(desk)).type).toBe(lightSection);
+    expect(page.find(sliderOf('light-desk-2')).type).toBe(lightSection);
+    expect(page.findText('3 lights · 60%')).toBeDefined();
   },
   timeoutMs,
 );

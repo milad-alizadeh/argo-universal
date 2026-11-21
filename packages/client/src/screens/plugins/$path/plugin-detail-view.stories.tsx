@@ -10,6 +10,14 @@ import {
   loadingJiraList,
   developmentPace,
   homeConnect,
+  homeFaders,
+  homeFilteredScenes,
+  homeManyScenes,
+  homeNoMatchingScenes,
+  homeNoScenes,
+  homeOffLight,
+  homeLightEditor,
+  homeScenesEditor,
   homeLights,
   homeSignedOut,
   homeUnreachable,
@@ -115,3 +123,25 @@ export const HomeConnect: StoryObj<typeof meta> = { args: homeConnect };
 export const HomeUnreachable: StoryObj<typeof meta> = { args: homeUnreachable };
 
 export const HomeSignedOut: StoryObj<typeof meta> = { args: homeSignedOut };
+
+export const HomeFaders: StoryObj<typeof meta> = { args: homeFaders };
+
+export const HomeLightEditor: StoryObj<typeof meta> = { args: homeLightEditor };
+
+export const HomeScenesEditor: StoryObj<typeof meta> = {
+  args: homeScenesEditor,
+};
+
+export const HomeManyScenes: StoryObj<typeof meta> = { args: homeManyScenes };
+
+export const HomeFilteredScenes: StoryObj<typeof meta> = {
+  args: homeFilteredScenes,
+};
+
+export const HomeNoMatchingScenes: StoryObj<typeof meta> = {
+  args: homeNoMatchingScenes,
+};
+
+export const HomeNoScenes: StoryObj<typeof meta> = { args: homeNoScenes };
+
+export const HomeOffLight: StoryObj<typeof meta> = { args: homeOffLight };
