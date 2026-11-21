@@ -13,13 +13,6 @@ const startRun: OperationId = 'run.start';
 const statusRun: OperationId = 'run.status';
 
 // The Checkout's block as the Run sees it: ARGO_PORT_0 to ARGO_PORT_9, consecutive ports.
-const blockEnv = (terminal: FakeTerminal): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(terminal.launch.env).filter(([name]) =>
-      name.startsWith('ARGO_PORT_'),
-    ),
-  );
-
 const block = (terminal: FakeTerminal): number[] =>
   Array.from({ length: 10 }, (_, index) =>
     Number(terminal.launch.env[`ARGO_PORT_${index}`]),
@@ -106,9 +99,17 @@ it('gives the Run its port as $PORT and its Checkout’s block as $ARGO_PORT_0..
   expect(terminal.launch.env).toEqual({
     MODE: 'dev',
     PORT: String(terminal.launch.port),
-    ...blockEnv(terminal),
+    ARGO_PORT_0: String(terminal.launch.port),
+    ARGO_PORT_1: String(terminal.launch.port + 1),
+    ARGO_PORT_2: String(terminal.launch.port + 2),
+    ARGO_PORT_3: String(terminal.launch.port + 3),
+    ARGO_PORT_4: String(terminal.launch.port + 4),
+    ARGO_PORT_5: String(terminal.launch.port + 5),
+    ARGO_PORT_6: String(terminal.launch.port + 6),
+    ARGO_PORT_7: String(terminal.launch.port + 7),
+    ARGO_PORT_8: String(terminal.launch.port + 8),
+    ARGO_PORT_9: String(terminal.launch.port + 9),
   });
-  expect(terminal.launch.env.ARGO_PORT_0).toBe(String(terminal.launch.port));
 });
 
 it('runs the command in the Run Configuration’s folder of the Checkout', async () => {
@@ -532,25 +533,29 @@ const startAndReady = async (
   return terminal;
 };
 
-it('gives two Checkouts that run the same Run Configuration separate blocks of ports', async () => {
+it('gives two Checkouts starting the same Run Configuration concurrently separate blocks of ports', async () => {
   const journey = await startRuns({ configurations: [web2] });
   const worktree = await inWorktree(journey, { configurations: [web2] });
 
-  const one = await startAndReady(
-    journey,
+  const started = Promise.all([
     journey.call(startRun, { name: 'web' }),
-  );
+    worktree.start('web'),
+  ]);
 
-  const two = await startAndReady(journey, worktree.start('web'));
+  const one = await journey.terminals.next();
+  const two = await journey.terminals.next();
+  one.print('up');
+  two.print('up');
+  await started;
 
-  const ports = [...block(one), ...block(two)];
+  expect(new Set([...block(one), ...block(two)]).size).toBe(20);
 
-  expect(new Set(ports).size).toBe(20);
-  expect(block(one)).toContain(one.launch.port);
-  expect(block(two)).toContain(two.launch.port);
-  expect(block(one)).toEqual(
-    block(one).map((_, index) => Number(one.launch.env.ARGO_PORT_0) + index),
-  );
+  for (const terminal of [one, two]) {
+    const port = terminal.launch.port;
+    expect(block(terminal)).toEqual(
+      Array.from({ length: 10 }, (_, index) => port + index),
+    );
+  }
 });
 
 it('shares a Checkout’s block between its Runs, each with a port of its own', async () => {

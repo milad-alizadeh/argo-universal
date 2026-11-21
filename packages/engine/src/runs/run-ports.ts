@@ -4,6 +4,8 @@ import type { RunConfiguration } from './run-configurations';
 
 const firstPort = 4100;
 
+const lastPort = 65_535;
+
 export const portListening = (port: number): Promise<boolean> =>
   new Promise((done) => {
     const socket = connect({ port, host: '127.0.0.1' });
@@ -59,8 +61,17 @@ export async function allocateBlock(
 
   if (preferred !== undefined && (await open(preferred))) return preferred;
 
-  for (let base = firstPort; ; base += blockSize)
+  for (
+    let base = firstPort;
+    base + blockSize - 1 <= lastPort;
+    base += blockSize
+  )
     if (await open(base)) return base;
+
+  throw new TRPCError({
+    code: 'CONFLICT',
+    message: `No block of ${blockSize} TCP ports is available for this Checkout`,
+  });
 }
 
 type Allocation = Holders & {
