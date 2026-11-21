@@ -3,6 +3,7 @@ import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
+import { readProjectPath } from '../projects';
 import {
   draftRunConfigurations,
   type RunCheckout,
@@ -57,6 +58,14 @@ export const runCheckoutOf = (
   return { projectId, checkoutPath };
 };
 
+const projectCheckoutOf = (
+  database: Database,
+  projectId: string,
+): RunCheckout => ({
+  projectId,
+  checkoutPath: readProjectPath(database, projectId),
+});
+
 const runRequestOf = (
   database: Database,
   sessionId: string | undefined,
@@ -109,8 +118,15 @@ export function createRunOperations(
       runs.groups.stop(runCheckoutOf(database, sessionId), name),
     'run.getSettings': ({ sessionId, name }) =>
       runs.settings.read(runCheckoutOf(database, sessionId), name),
-    'run.updateSettings': (input) =>
-      runs.settings.update(runCheckoutOf(database, input.sessionId), input),
+    'run.listSettings': ({ projectId }) =>
+      runs.settings.list(projectCheckoutOf(database, projectId)),
+    'run.updateSettings': ({ projectId, sessionId, ...input }) =>
+      runs.settings.update(
+        projectId === undefined
+          ? runCheckoutOf(database, sessionId)
+          : projectCheckoutOf(database, projectId),
+        input,
+      ),
     'run.status': async ({ sessionId }) =>
       runs.view.status(runCheckoutOf(database, sessionId)),
     'run.draft': async ({ sessionId, overwrite }) => {

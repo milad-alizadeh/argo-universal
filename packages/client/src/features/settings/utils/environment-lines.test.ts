@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { changeLine } from './agent-environment-lines';
+import { changeLine } from './environment-lines';
 
 const env = { FIRST: '1', SECOND: 'two' };
 

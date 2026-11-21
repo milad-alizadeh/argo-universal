@@ -210,3 +210,43 @@ it.each([
     expect(terminals.started).toHaveLength(1);
   },
 );
+
+it('lists and saves the Project’s Run Configuration settings without a Session target', async () => {
+  const fixture = await setUp();
+
+  const {
+    host: { caller },
+    terminals,
+    target,
+  } = fixture;
+
+  const { projectId } = emptySessionInput;
+
+  await expect(caller.run.listSettings({ projectId })).resolves.toEqual([
+    { name, env: {}, port: null, canAutoStart: false, autoStart: false },
+  ]);
+  await expect(
+    asAgent(fixture, { id: 'run.listSettings', params: { projectId } }),
+  ).rejects.toThrow(/Only an App/);
+
+  await ready(terminals, caller.run.start(target));
+  const env = { SHARED: 'personal' };
+  const port = await unusedPort();
+  await caller.run.updateSettings({
+    projectId,
+    name,
+    env,
+    port,
+    autoStart: true,
+  });
+
+  await expect(caller.run.listSettings({ projectId })).resolves.toEqual([
+    { name, env, port, canAutoStart: true, autoStart: true },
+  ]);
+  await expect(caller.run.getSettings(target)).resolves.toEqual({
+    env,
+    port,
+    canAutoStart: true,
+    autoStart: true,
+  });
+});

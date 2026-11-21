@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   RunSettingsEnv,
+  type RunSettingsList,
   type RunSettingsResult,
   type RunSettingsUpdate,
 } from '@repo/contracts';
@@ -134,9 +135,28 @@ export class RunSettingsStore {
     );
   }
 
+  public async list({
+    projectId,
+    checkoutPath,
+  }: RunCheckout): Promise<RunSettingsList> {
+    const { configurations } = await readRunFile(checkoutPath);
+
+    return configurations.map((configuration) => {
+      const { name } = configuration;
+
+      return {
+        name,
+        ...settingsFor(
+          readSettings(this.database, { projectId, name }),
+          configurationFingerprint(configuration),
+        ),
+      };
+    });
+  }
+
   public async update(
     checkout: RunCheckout,
-    { name, ...change }: RunSettingsUpdate,
+    { name, ...change }: SettingChange & { name: string },
   ): Promise<RunSettingsResult> {
     const configuration = await requireRunConfiguration(
       checkout.checkoutPath,

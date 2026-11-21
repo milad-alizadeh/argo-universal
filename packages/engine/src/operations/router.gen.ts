@@ -1027,6 +1027,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      listSettings: authenticatedAppProcedure
+        .input(operations['run.listSettings'].params)
+        .output(operations['run.listSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.listSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       updateSettings: authenticatedAppProcedure
         .input(operations['run.updateSettings'].params)
         .output(operations['run.updateSettings'].result)

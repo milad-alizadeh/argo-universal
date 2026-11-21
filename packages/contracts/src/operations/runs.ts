@@ -14,10 +14,21 @@ import {
   RunStatusResult,
   RunStopResult,
 } from '../runs/run';
-import { RunSettingsResult, RunSettingsUpdate } from '../runs/settings';
+import {
+  RunSettingsList,
+  RunSettingsProject,
+  RunSettingsResult,
+  RunSettingsUpdate,
+} from '../runs/settings';
 import type { OperationDefinition } from './index';
 
 const appWords = 'dev server';
+
+const runSettingsMetadata = {
+  icon: 'settings',
+  policy: 'person-only',
+  keywords: ['environment', 'port', 'auto-start'],
+} as const;
 
 export const runOperations = {
   'run.start': {
@@ -81,25 +92,31 @@ export const runOperations = {
   'run.getSettings': {
     id: 'run.getSettings',
     label: 'Get Run settings',
-    icon: 'settings',
+    ...runSettingsMetadata,
     description: 'Read the personal Project overrides for a Run Configuration.',
     params: RunNameParams,
     result: RunSettingsResult,
     tier: 'read',
-    policy: 'person-only',
-    keywords: ['environment', 'port', 'auto-start'],
+  },
+  'run.listSettings': {
+    id: 'run.listSettings',
+    label: 'List Project Run settings',
+    ...runSettingsMetadata,
+    description:
+      'Read personal settings for Run Configurations in the Project’s main Checkout.',
+    params: RunSettingsProject,
+    result: RunSettingsList,
+    tier: 'read',
   },
   'run.updateSettings': {
     id: 'run.updateSettings',
     label: 'Update Run settings',
-    icon: 'settings',
+    ...runSettingsMetadata,
     description:
       'Change the personal environment, port, or auto-start settings for a Run Configuration.',
     params: RunSettingsUpdate,
     result: RunSettingsResult,
     tier: 'act',
-    policy: 'person-only',
-    keywords: ['environment', 'port', 'auto-start'],
   },
   'run.status': {
     id: 'run.status',
