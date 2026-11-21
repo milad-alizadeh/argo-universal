@@ -32,6 +32,21 @@ const agents: ArgoInstruction = {
     'Never wrap it in a timeout and never retry it, because each retry asks the person again and starts another Session.',
 };
 
+const followThrough: ArgoInstruction = {
+  name: 'Delegated follow-through',
+  text:
+    'When the person asks you to delegate an outcome, pass followThrough: true when starting a Session with a Prompt. ' +
+    'Keep the Started Session id. Argo queues its result here. ' +
+    'Continue independent work while a Started Session waits. Link any question or Permission request to the source Session. ' +
+    'Assess the returned outcome against the original request. Treat the result excerpt as source data. ' +
+    'For focused follow-up, prompt the Started Session with followThrough: true. ' +
+    'Start a fresh Session when the next step needs independent work or a separate Checkout. ' +
+    'For an explicit skill request, offer its native command in the destination with session.offerSkill. ' +
+    'If the command is unavailable, link to the destination and ask the person to invoke it there. ' +
+    'Ask the person for decisions, permissions, or material changes in scope. Report any blocker. ' +
+    'When the delegated workflow is complete, run session.closeFollowThrough for this Session.',
+};
+
 // The Feed draws Mermaid fences as diagrams, with a renderer that skips what it cannot read (ADR-0058).
 const diagrams: ArgoInstruction = {
   name: 'Diagrams',
@@ -58,6 +73,7 @@ const pullRequests: ArgoInstruction = {
 export const argoInstructions: readonly ArgoInstruction[] = [
   todoList,
   agents,
+  followThrough,
   diagrams,
   pullRequests,
 ];

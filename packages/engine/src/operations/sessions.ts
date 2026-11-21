@@ -39,7 +39,7 @@ export const sessionImplementations = (
 });
 
 // A Session that runs session.new has its Project and Agent filled by its scope; any other caller names both.
-const named = (input: SessionNewParams): SessionNewInput => ({
+const named = (input: SessionNewParams): Parameters<Sessions['create']>[0] => ({
   ...input,
   projectId: namedParam(
     input.projectId,
@@ -53,7 +53,7 @@ const named = (input: SessionNewParams): SessionNewInput => ({
 
 async function startCreation(
   sessions: Sessions,
-  input: SessionNewInput,
+  input: SessionNewInput & Pick<SessionNewParams, 'followThrough'>,
   request: NativeStartRequest,
 ): Promise<StartedWork<SessionNewOutput>> {
   const creation = await sessions.create(input, request);

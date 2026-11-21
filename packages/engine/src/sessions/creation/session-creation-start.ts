@@ -1,6 +1,7 @@
 import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import { applyInitialConfiguration } from '../configuration';
+import { runPromptSubmitHook } from '../prompt-authorization';
 import { submitSessionPrompt } from '../session-command';
 import type { SessionContext } from '../session-context';
 import type { NewSessionInput } from '../session-data';
@@ -19,7 +20,7 @@ const initialPromptHook = (
   hooks: CoreHooks,
   context: PromptReady,
 ): ReturnType<CoreHooks['prompt.submit']> =>
-  hooks['prompt.submit']({
+  runPromptSubmitHook(hooks['prompt.submit'], {
     sessionId: context.sessionId,
     projectId: context.input.projectId,
     prompt: context.input.prompt,

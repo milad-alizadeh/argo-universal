@@ -3,6 +3,7 @@ import { session, turn } from '@repo/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { settleArchivedChild } from '../../feed';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import { revokeDelegations } from '../orchestration/result-store';
 import type { QueuedSessionChange } from '../session-storage';
 import type { AnnouncedJob, WriterChange } from '../writer-changes';
 
@@ -27,7 +28,10 @@ export class SessionArchiveJob
       .where(inArray(session.id, this.ids))
       .run();
 
-    if (this.archivedAt !== null) this.cancelChildTurns(transaction);
+    if (this.archivedAt !== null) {
+      revokeDelegations(transaction, this.ids);
+      this.cancelChildTurns(transaction);
+    }
   }
 
   private cancelChildTurns(transaction: StorageTransaction): void {

@@ -287,6 +287,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      offerSkill: authenticatedAppProcedure
+        .input(operations['session.offerSkill'].params)
+        .output(operations['session.offerSkill'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.offerSkill',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      confirmSkill: authenticatedAppProcedure
+        .input(operations['session.confirmSkill'].params)
+        .output(operations['session.confirmSkill'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.confirmSkill',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       submit: authenticatedAppProcedure
         .input(operations['session.submit'].params)
         .output(operations['session.submit'].result)
@@ -338,6 +360,17 @@ export function generatedOperations(runner: OperationRunner) {
           runner.run({
             kind: 'app',
             id: 'session.prompt',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      closeFollowThrough: authenticatedAppProcedure
+        .input(operations['session.closeFollowThrough'].params)
+        .output(operations['session.closeFollowThrough'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.closeFollowThrough',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),

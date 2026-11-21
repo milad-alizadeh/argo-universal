@@ -18,6 +18,7 @@ import { SessionNewScreen } from './session-new-screen';
 import { ConnectedSessionHeader } from './session-page-header';
 import { type SessionPageMenu, useSessionPageMenu } from './session-page-menu';
 import { sessionHeader } from './session-plugin-cards';
+import { useDelegatedFeedItems } from './use-delegated-feed-items';
 import {
   type OpenedSession,
   type SessionPage,
@@ -162,7 +163,15 @@ function headed(
 
   return (
     <>
-      <SessionDetailView {...props} drawHeader={drawHeader} />
+      {props.state === 'open' && !props.archived ? (
+        <DelegatedSessionView
+          {...props}
+          sessionId={sessionId}
+          drawHeader={drawHeader}
+        />
+      ) : (
+        <SessionDetailView {...props} drawHeader={drawHeader} />
+      )}
       {dialogs}
     </>
   );
@@ -170,3 +179,20 @@ function headed(
 
 const previewed = (props: SessionDetailViewProps): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, preview: true } : props;
+
+function DelegatedSessionView({
+  sessionId,
+  drawHeader,
+  ...props
+}: Extract<SessionDetailViewProps, { state: 'open' }> & {
+  sessionId: string;
+  drawHeader: (page: SessionDetailViewProps) => React.JSX.Element;
+}): React.JSX.Element {
+  const delegated = useDelegatedFeedItems(sessionId);
+
+  const feed = delegated.length
+    ? { ...props.feed, items: [...props.feed.items, ...delegated] }
+    : props.feed;
+
+  return <SessionDetailView {...props} feed={feed} drawHeader={drawHeader} />;
+}

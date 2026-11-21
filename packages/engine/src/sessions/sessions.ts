@@ -1,12 +1,14 @@
 import type {
   SentPromptSender,
   SessionNewInput,
+  SessionNewParams,
   SessionPromptInput,
 } from '@repo/contracts';
 import type {
   PluginPromptAnswer,
   PluginWithdrawAnswer,
 } from '@repo/contracts/plugins/argo-calls';
+import { TRPCError } from '@trpc/server';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { SessionArchives } from './archive/session-archives';
 import { ConversationSessionWork } from './conversation-session-work';
@@ -18,6 +20,7 @@ import {
   type CalledOperation,
   type SessionOperationCall,
 } from './operation-call';
+import { DelegatedResults } from './orchestration/results';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { requireNoTurn } from './restart/restart-session';
 import { createSessionRouter } from './router';
@@ -68,6 +71,12 @@ export class Sessions {
       this.implementations,
     );
   }
+  public startDelegatedResults(
+    signal: AbortSignal,
+    log: (message: string) => void,
+  ): void {
+    new DelegatedResults(this.sources, signal, log).start();
+  }
   private operations(
     { sessionCommandSignal }: SessionSources,
     list: ReturnType<typeof createSessionList>,
@@ -82,10 +91,39 @@ export class Sessions {
   }
   // Starts a new Session; the request's signal also stops its admission.
   public create(
-    input: SessionNewInput,
+    input: SessionNewInput & Pick<SessionNewParams, 'followThrough'>,
     request: NativeStartRequest,
   ): ReturnType<typeof startSessionCreation> {
-    return startSessionCreation(this.sources, input, request);
+    const { followThrough, ...creation } = input;
+
+    const sender = followThrough
+      ? this.delegatedSender(request.sender, input.prompt.length > 0)
+      : request.sender;
+
+    return startSessionCreation(this.sources, creation, { ...request, sender });
+  }
+  private delegatedSender(
+    sender: NativeStartRequest['sender'],
+    allowed: boolean,
+  ): NativeStartRequest['sender'] {
+    const starterTurnId =
+      sender.type === 'session'
+        ? this.sources.open.context(sender.sessionId)?.activeTurnId
+        : null;
+
+    if (sender.type !== 'session' || !allowed || !starterTurnId)
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message:
+          'Follow-through requires a running Session caller delegating a Prompt to its own Started Session.',
+      });
+
+    return {
+      type: 'session',
+      sessionId: sender.sessionId,
+      title: sender.title,
+      followThrough: starterTurnId,
+    };
   }
   /*
    * The user's Prompt starts a Turn; another Session's is a Sent Prompt, steered into a running Turn or queued behind
@@ -94,8 +132,17 @@ export class Sessions {
    */
   public prompt(
     input: SessionPromptInput,
-    { sender, signal }: NativeStartRequest,
+    { sender: from, signal }: NativeStartRequest,
   ): NativeStart<PromptLanding> {
+    const sender = input.followThrough
+      ? this.delegatedSender(
+          from,
+          from.type === 'session' &&
+            this.sources.readSession(input.sessionId).startedBySessionId ===
+              from.sessionId,
+        )
+      : from;
+
     const id = this.sources.createId();
 
     const accepted =

@@ -13,6 +13,7 @@ const drawnItemTypes: Record<
   group: true,
   exploration: true,
   subagent: true,
+  delegated: true,
   tool_call: true,
   thought: false,
 };
@@ -53,7 +54,9 @@ const isBlankMessage = (item: FeedViewItem): boolean =>
 export function drawnFeedItems(items: readonly FeedViewItem[]): FeedViewItem[] {
   const drawn = items.filter(isDrawnFeedItem);
 
+  const lastTurnItem = drawn.findLastIndex(({ type }) => type !== 'delegated');
+
   return drawn.filter(
-    (item, index) => index === drawn.length - 1 || !isBlankMessage(item),
+    (item, index) => index === lastTurnItem || !isBlankMessage(item),
   );
 }

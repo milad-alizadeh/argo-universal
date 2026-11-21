@@ -5,6 +5,10 @@ import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
 import { promptMessageChange, type FeedActorRef } from '../../../feed';
 import type { WriterCommit } from '../../../storage';
+import {
+  requireCommittedPromptDispatch,
+  requireNativeCommandAuthority,
+} from '../../prompt-authorization';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {
@@ -111,10 +115,21 @@ export const commitLocalPrompt = async (
   input: PromptCommitInput,
   signal: AbortSignal,
 ): Promise<PromptRequest> => {
+  requireNativeCommandAuthority(
+    input.submission.content,
+    input.submission.sender,
+  );
   const prompt = await readSupportedPromptBlocks(input);
   requirePromptAdmission(input.feed, signal);
   await enqueuePromptAndWaitForCommit(input, signal);
   signal.throwIfAborted();
+  requireCommittedPromptDispatch(
+    {
+      database: input.storage.database,
+      sessionId: input.feed.getSnapshot().context.sessionId,
+    },
+    input.submission.sender,
+  );
 
   return {
     sessionId: input.lease.sessionId,

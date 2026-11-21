@@ -5,15 +5,23 @@ import type {
   QueueCommand,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import { AtomicWriterJob, type WriterJob } from '../storage';
 import type { QueueChange, QueueContext } from './queue-command-types';
 import { appendedPrompt, type AppendCommand } from './queued-prompt-append';
 import { SessionRowUpdateJob } from './session-storage';
 
-export const queueWrite = (
+export function queueWrite(
   sessionId: string,
   promptQueue: PromptQueue,
-): SessionRowUpdateJob =>
-  new SessionRowUpdateJob({ id: sessionId, set: { promptQueue } });
+  receipt?: WriterJob,
+): WriterJob {
+  const queue = new SessionRowUpdateJob({
+    id: sessionId,
+    set: { promptQueue },
+  });
+
+  return receipt ? new AtomicWriterJob([queue, receipt]) : queue;
+}
 
 type RowCommand = Exclude<
   QueueCommand,
@@ -179,6 +187,16 @@ function appendRow(
   command: AppendChange,
   createId: () => string,
 ): QueueChange {
+  const existing = context.promptQueue.items.find(
+    ({ id }) => id === command.queuedId,
+  );
+
+  if (existing) {
+    command.landed?.(existing.id);
+
+    return withItems(context, context.promptQueue.items);
+  }
+
   const waiting = waitingConversationRow(context, command.sender);
 
   const row = waiting

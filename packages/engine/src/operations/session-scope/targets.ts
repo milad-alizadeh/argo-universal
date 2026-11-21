@@ -1,4 +1,5 @@
 import type { OperationId } from '@repo/contracts/operations';
+import { TRPCError } from '@trpc/server';
 import type { OperationParams } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
 import { callerSessionParam, ownSessionOnly } from './caller-session-targets';
@@ -10,10 +11,28 @@ type Defaults = {
   ) => OperationParams<Id>;
 };
 
+function ownSessionTarget<Params extends { sessionId?: string }>(
+  params: Params,
+  caller: SessionCaller,
+): Params {
+  if (params.sessionId !== undefined && params.sessionId !== caller.sessionId)
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Close follow-through from its starter Session.',
+    });
+
+  return callerSessionParam(params, caller);
+}
+
 const defaults: Defaults = {
   'session.list': (params, caller) => ({
     ...params,
     projectId: params.projectId ?? caller.projectId,
+  }),
+  'session.closeFollowThrough': ownSessionTarget,
+  'session.offerSkill': (params, caller) => ({
+    ...params,
+    starterId: caller.sessionId,
   }),
   'session.rename': callerSessionParam,
   'session.declareSubagentRole': callerSessionParam,

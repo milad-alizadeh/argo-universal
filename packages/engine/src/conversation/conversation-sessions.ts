@@ -12,7 +12,7 @@ import type {
   ConversationSessions,
 } from './session-link';
 import { StartedAgents } from './started-agents';
-import { StartedSessions } from './started-watch';
+import { watchStartedSessionSpeech } from './started-watch';
 
 type Listener = (happening: SessionHappening) => void;
 
@@ -23,7 +23,7 @@ export type ConversationSessionWork = Pick<
   | 'stopFromConversation'
   | 'answerFromConversation'
   | 'watchTurns'
-  | 'watchOpened'
+  | 'watchStarted'
   | 'agentName'
 > &
   Pick<ConversationSessions, 'capture'>;
@@ -100,10 +100,15 @@ const watchOf =
     const watching = { ...sources, ...work };
     const words = watchWords(watching, sessionId, listener);
     const turns = watchEnds(work, sessionId, listener);
-    const started = new StartedSessions(watching, sessionId, listener);
+
+    const stopStarted = watchStartedSessionSpeech(
+      watching,
+      sessionId,
+      listener,
+    );
 
     return (): void => {
-      started.stop();
+      stopStarted();
       turns();
       words.stop();
     };

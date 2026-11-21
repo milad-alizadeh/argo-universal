@@ -7,6 +7,7 @@ const appOnly = new Set([
   'session.handoff',
   'session.submit',
   'session.queue',
+  'session.confirmSkill',
   'conversation.status',
   'conversation.start',
   'conversation.end',

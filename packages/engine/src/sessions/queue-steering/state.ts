@@ -1,5 +1,6 @@
 import type { QueuedPrompt } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import { requireQueueSteeringAuthority } from '../prompt-authorization';
 import type { SessionContext } from '../session-context';
 import { turnStep, type TurnStep } from '../turn';
 import { reservePrompt, requireSteeringSupport } from './admission';
@@ -78,6 +79,8 @@ function reserveRow(
   row: QueuedPrompt,
 ): QueueSteering {
   requireFree(context, revision, row);
+
+  requireQueueSteeringAuthority(row.sender);
 
   return {
     ...reservePrompt(context, row.prompt),

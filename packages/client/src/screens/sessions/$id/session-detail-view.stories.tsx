@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
+import type { FeedDelegated } from '#features/feed';
 import { composerTodos } from '../../../../mocks/composer-mock';
 import {
   elicitationProps,
@@ -205,3 +206,53 @@ export const ChangesAndTodos: Story = {
   },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
+
+const delegatedStory = (items: FeedDelegated[]): Story => ({
+  args: {
+    state: 'open',
+    ...runningSession,
+    feed: {
+      ...runningSession.feed,
+      items: [...runningSession.feed.items, ...items],
+    },
+  },
+});
+
+export const DelegatedInput = delegatedStory([
+  {
+    type: 'delegated',
+    id: 'permission',
+    sourceSessionId: 'reviewer',
+    title: 'Review the checkout',
+    kind: 'permission',
+    onOpen: fn(),
+  },
+  {
+    type: 'delegated',
+    id: 'question',
+    sourceSessionId: 'tester',
+    title: 'Run the checks',
+    kind: 'elicitation',
+    onOpen: fn(),
+  },
+]);
+
+const delegatedSkillStory = (command: string): Story =>
+  delegatedStory([
+    {
+      type: 'delegated',
+      id: 'offer',
+      sourceSessionId: 'starter',
+      title: 'the starter Session',
+      kind: 'offered_skill',
+      command,
+      onOpen: fn(),
+      onAnswer: fn(),
+    },
+  ]);
+
+export const DelegatedSkill = delegatedSkillStory('/implement #12345');
+
+export const DelegatedSkillLong = delegatedSkillStory(
+  '/implement #12345 Review changes in the destination Checkout and run the verification requested in the original Session.',
+);
