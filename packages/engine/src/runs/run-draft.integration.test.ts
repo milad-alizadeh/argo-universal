@@ -1,9 +1,12 @@
 import {
+  chmod,
   link,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   rm,
+  stat,
   symlink,
   writeFile,
 } from 'node:fs/promises';
@@ -320,6 +323,27 @@ it('never overwrites an existing .argo/run.json unless asked', async () => {
 
   await draftRunConfigurations(checkout, true);
   expect(await written(checkout)).toContain('"dev"');
+});
+
+it('publishes a replacement while an open reader still sees the previous draft', async () => {
+  const original = '{ "configurations": [] }';
+  const checkout = await checkoutWith({
+    '.argo/run.json': original,
+    [packageJson]: { scripts: { dev: 'vite' } },
+  });
+  const target = join(checkout, '.argo', 'run.json');
+  const permissions = 0o600;
+  await chmod(target, permissions);
+  await using reader = await open(target, 'r');
+
+  await draftRunConfigurations(checkout, true);
+
+  await expect(reader.readFile('utf8')).resolves.toBe(original);
+  expect(readRunConfigurations(await written(checkout))).toMatchObject({
+    ok: true,
+    configurations: [{ name: 'dev', command: npmRunDev }],
+  });
+  expect((await stat(target)).mode & 0o777).toBe(permissions);
 });
 
 it('refuses to write through a linked .argo directory outside the Checkout', async () => {

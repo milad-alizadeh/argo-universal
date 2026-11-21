@@ -1,16 +1,6 @@
-import { constants } from 'node:fs';
-import {
-  lstat,
-  mkdir,
-  open,
-  realpath,
-  unlink,
-  type FileHandle,
-} from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { realpath } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { TRPCError } from '@trpc/server';
-import { namesOpenedFile, noFollow, stillAtPath } from './run-checkout-file';
 import {
   readRunConfigurations,
   runConfigurationsFile,
@@ -23,6 +13,7 @@ import {
   type SkippedDraft,
   type SourceDrafts,
 } from './run-draft-sources';
+import { writeRunDraft } from './write-run-draft';
 
 export type DraftedRunConfigurations = {
   path: string;
@@ -96,87 +87,6 @@ function render(configurations: Draft[]): string {
   return text;
 }
 
-type OpenDraft = { file: FileHandle; created: boolean };
-
-async function openDraft(path: string, overwrite: boolean): Promise<OpenDraft> {
-  const flags = constants.O_WRONLY | noFollow;
-
-  try {
-    const file = await open(path, flags | constants.O_CREAT | constants.O_EXCL);
-
-    return { file, created: true };
-  } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !('code' in error) ||
-      error.code !== 'EEXIST'
-    )
-      throw error;
-    if (overwrite) return { file: await open(path, flags), created: false };
-
-    return refuse(
-      'CONFLICT',
-      `${runConfigurationsFile} already exists. Edit it, or pass overwrite: true to replace it.`,
-    );
-  }
-}
-
-async function checkDraft(
-  path: string,
-  { file, created }: OpenDraft,
-): Promise<void> {
-  const info = await file.stat();
-
-  try {
-    if (!(await stillAtPath(path, info)))
-      refuse(
-        'BAD_REQUEST',
-        `${runConfigurationsFile} changed while it was opened.`,
-      );
-
-    if (info.nlink !== 1)
-      refuse(
-        'BAD_REQUEST',
-        `${runConfigurationsFile} must have a single link.`,
-      );
-  } catch (error) {
-    if (created && (await namesOpenedFile(path, info).catch(() => false)))
-      await unlink(path);
-
-    throw error;
-  }
-}
-
-async function writeNew(
-  checkoutPath: string,
-  text: string,
-  overwrite: boolean,
-): Promise<void> {
-  const target = join(checkoutPath, runConfigurationsFile);
-  const directory = dirname(target);
-  await mkdir(directory, { recursive: true });
-
-  if (!(await lstat(directory)).isDirectory())
-    refuse('BAD_REQUEST', 'The .argo directory must be inside the Checkout.');
-
-  try {
-    const draft = await openDraft(target, overwrite);
-    await using file = draft.file;
-
-    await checkDraft(target, draft);
-    if (!draft.created) await file.truncate(0);
-    await file.writeFile(text);
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ELOOP')
-      refuse(
-        'BAD_REQUEST',
-        `${runConfigurationsFile} must not be a symbolic link.`,
-      );
-
-    throw error;
-  }
-}
-
 /*
  * Writes a first `.argo/run.json` from what the Checkout already holds. It reads those files and never runs what they name;
  * the file is an ordinary one for a person or an Agent to edit and commit.
@@ -200,7 +110,7 @@ export async function draftRunConfigurations(
   if (configurations.length === 0)
     return refuse('BAD_REQUEST', nothingFound(skipped));
 
-  await writeNew(checkout, render(configurations), overwrite);
+  await writeRunDraft(checkout, render(configurations), overwrite);
 
   return { path: runConfigurationsFile, configurations, sources, skipped };
 }
