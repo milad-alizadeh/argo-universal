@@ -17,10 +17,7 @@ import {
 } from '#features/sessions';
 import { LatestTerminalSize } from './latest-terminal-size';
 
-function useRunStatus(
-  sessionId: string,
-  active: boolean,
-): RunConfigurationRow[] {
+function useRunStatus(sessionId: string, active: boolean): RunStatusResult {
   const trpc = useTRPC();
 
   const [snapshot, setSnapshot] = useState<{
@@ -45,8 +42,8 @@ function useRunStatus(
   );
 
   return snapshot?.sessionId === sessionId
-    ? snapshot.status.configurations
-    : [];
+    ? snapshot.status
+    : { configurations: [] };
 }
 
 export function useSessionRuns(
@@ -54,16 +51,18 @@ export function useSessionRuns(
   active: boolean,
 ): SessionRuns {
   const trpc = useTRPC();
-  const runs = useRunStatus(sessionId, active);
+  const status = useRunStatus(sessionId, active);
   const start = useMutation(trpc.run.start.mutationOptions());
   const stop = useMutation(trpc.run.stop.mutationOptions());
   const restart = useMutation(trpc.run.restart.mutationOptions());
   const error = start.error ?? stop.error ?? restart.error;
 
   useErrorToast(error ? { title: 'Runs', message: error.message } : undefined);
+  const defaultGroup = useRunGroupControls(sessionId, status.defaultGroup);
 
   return {
-    runs,
+    runs: status.configurations,
+    defaultGroup,
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
@@ -74,6 +73,29 @@ export function useSessionRuns(
         active={active && visible}
       />
     ),
+  };
+}
+
+function useRunGroupControls(
+  sessionId: string,
+  status: RunStatusResult['defaultGroup'],
+): SessionRuns['defaultGroup'] {
+  const trpc = useTRPC();
+  const start = useMutation(trpc.run.startGroup.mutationOptions());
+  const stop = useMutation(trpc.run.stopGroup.mutationOptions());
+  const failedMember = start.data?.members.find((member) => 'error' in member);
+
+  const message =
+    start.error?.message ?? stop.error?.message ?? failedMember?.error;
+
+  useErrorToast(message ? { title: 'Runs', message } : undefined);
+
+  if (!status) return undefined;
+
+  return {
+    status,
+    onStart: () => start.mutate({ sessionId, name: status.name }),
+    onStop: () => stop.mutate({ sessionId, name: status.name }),
   };
 }
 

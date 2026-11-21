@@ -4,7 +4,11 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import {
   crashedRuns,
+  partiallyReadyGroup,
+  readyGroup,
+  readyGroupRuns,
   startingRuns,
+  stoppedGroup,
   stoppedRuns,
   workbenchRuns,
   workbenchRunTime,
@@ -36,6 +40,10 @@ const meta = {
       control: false,
       description: 'Run Configurations for the Checkout.',
     },
+    defaultGroup: {
+      control: false,
+      description: 'Default Run group progress and actions for the Checkout.',
+    },
     now: {
       control: false,
       description: 'Current time for the starting state.',
@@ -64,3 +72,30 @@ export const Stopped: Story = { args: { runs: stoppedRuns } };
 export const Starting: Story = { args: { runs: startingRuns } };
 
 export const Crashed: Story = { args: { runs: crashedRuns } };
+
+export const GroupStopped: Story = {
+  args: {
+    runs: stoppedRuns,
+    defaultGroup: { status: stoppedGroup, onStart: fn(), onStop: fn() },
+  },
+};
+
+export const GroupStarting: Story = {
+  args: {
+    runs: startingRuns,
+    defaultGroup: { status: stoppedGroup, onStart: fn(), onStop: fn() },
+  },
+};
+
+export const GroupPartiallyReady: Story = {
+  args: {
+    defaultGroup: { status: partiallyReadyGroup, onStart: fn(), onStop: fn() },
+  },
+};
+
+export const GroupReady: Story = {
+  args: {
+    runs: readyGroupRuns,
+    defaultGroup: { status: readyGroup, onStart: fn(), onStop: fn() },
+  },
+};

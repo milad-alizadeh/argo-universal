@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { workbenchRuns } from '../../../../mocks/run-configurations';
+import {
+  partiallyReadyGroup,
+  stoppedGroup,
+  stoppedRuns,
+  workbenchRuns,
+} from '../../../../mocks/run-configurations';
 import { WorkbenchRuns } from './session-workbench-runs';
 
 const meta = {
@@ -35,5 +40,36 @@ export const ControlsRunWithoutOpeningIt: Story = {
 
     await expect(args.onOpen).toHaveBeenCalledTimes(1);
     await expect(args.onOpen).toHaveBeenCalledWith('web');
+  },
+};
+
+export const StartsDefaultGroup: Story = {
+  args: {
+    runs: stoppedRuns,
+    defaultGroup: { status: stoppedGroup, onStart: fn(), onStop: fn() },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Start dev group' }),
+    );
+
+    await expect(args.defaultGroup?.onStart).toHaveBeenCalledTimes(1);
+    await expect(args.onStart).not.toHaveBeenCalled();
+    await expect(args.onOpen).not.toHaveBeenCalled();
+  },
+};
+
+export const StopsPartiallyReadyDefaultGroup: Story = {
+  args: {
+    defaultGroup: { status: partiallyReadyGroup, onStart: fn(), onStop: fn() },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Stop dev group' }),
+    );
+
+    await expect(args.defaultGroup?.onStop).toHaveBeenCalledTimes(1);
+    await expect(args.onStop).not.toHaveBeenCalled();
+    await expect(args.onOpen).not.toHaveBeenCalled();
   },
 };
