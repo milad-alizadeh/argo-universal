@@ -21,7 +21,7 @@ import { DraftCommentMark } from './draft-comment-mark';
 import { DraftCommentSheet, type Anchor } from './draft-comment-sheet';
 
 // A press shorter than this is a tap; a phone picks a node only by pressing longer.
-const longPressMilliseconds = 450;
+const defaultLongPress = 450;
 
 type Picked = { target: CommentTarget; anchor: Anchor };
 
@@ -51,6 +51,8 @@ export function DraftCommentsLayer(props: {
   // The page is a dev Plugin's Draft; any other page draws its children as they are.
   draft: boolean;
   commenting: boolean;
+  // How long a phone's press is before it picks; a test shortens it.
+  longPressMilliseconds?: number;
   children: React.ReactNode;
 }): React.ReactNode {
   if (!props.draft) return props.children;
@@ -61,9 +63,15 @@ export function DraftCommentsLayer(props: {
 function DraftPage(props: {
   opening: PageOpening;
   commenting: boolean;
+  longPressMilliseconds?: number;
   children: React.ReactNode;
 }): React.JSX.Element {
-  const { opening, commenting, children } = props;
+  const {
+    opening,
+    commenting,
+    longPressMilliseconds = defaultLongPress,
+    children,
+  } = props;
   const { notes } = useDraftComments(opening);
   const wide = useWide();
   const targets = useRef(new Map<string, CommentTarget>());
