@@ -3,8 +3,12 @@ import {
   runListRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState, type ReactElement } from 'react';
 import { action } from 'storybook/actions';
-import { PluginDetailView } from './plugin-detail-view';
+import {
+  PluginDetailView,
+  type PluginDetailViewProps,
+} from './plugin-detail-view';
 import {
   loading,
   loadingJiraList,
@@ -126,7 +130,31 @@ export const HomeSignedOut: StoryObj<typeof meta> = { args: homeSignedOut };
 
 export const HomeFaders: StoryObj<typeof meta> = { args: homeFaders };
 
-export const HomeLightEditor: StoryObj<typeof meta> = { args: homeLightEditor };
+// A recorded open editor can dismiss by applying the same Page state patch as the App.
+function DismissibleHomeEditor(props: PluginDetailViewProps): ReactElement {
+  const [root, setRoot] = useState(props.root);
+
+  return (
+    <PluginDetailView
+      {...props}
+      root={root}
+      callbacks={{
+        ...props.callbacks,
+        onPageCall: async (call, event) => {
+          if ('pageState' in call && call.pageState.editor === '')
+            setRoot(homeFaders.root);
+
+          await props.callbacks.onPageCall?.(call, event);
+        },
+      }}
+    />
+  );
+}
+
+export const HomeLightEditor: StoryObj<typeof meta> = {
+  args: homeLightEditor,
+  render: (args) => <DismissibleHomeEditor {...args} />,
+};
 
 export const HomeScenesEditor: StoryObj<typeof meta> = {
   args: homeScenesEditor,
