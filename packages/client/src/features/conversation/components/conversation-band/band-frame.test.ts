@@ -12,6 +12,13 @@ import { barReach, barWidth } from './band-layout';
 
 const dot = barWidth + 0.5;
 
+// the half of the strip at the person's end, where speech stands tallest.
+const loudEndBars = 16;
+
+const seconds = [1, 1.2, 1.4, 1.6, 1.8];
+
+const steady = { state: 'listening', user: speech(0.25) } as const;
+
 describe('the bars at rest', () => {
   it('are dots', () => {
     const heights = heightsOf(run(1, { state: 'listening' }));
@@ -35,11 +42,29 @@ describe('speech', () => {
     );
   });
 
-  it('lifts normal speech to a visible bar: over 60% of the tallest bar at the loud end', () => {
-    const quarter = run(1, { state: 'listening', user: speech(0.25) });
+  it('lifts normal speech to a visible bar: at the loud end a bar rises over 60% of the tallest', () => {
+    const moments = seconds.map((at) => heightsOf(run(at, steady)));
+    const loudEnd = moments.flatMap((bars) => bars.slice(0, loudEndBars));
 
-    expect(heightsOf(quarter)[0]).toBeGreaterThan(barReach * 0.6);
-    expect(Math.max(...heightsOf(quarter))).toBeLessThanOrEqual(barReach);
+    expect(Math.max(...loudEnd)).toBeGreaterThan(barReach * 0.6);
+    expect(Math.max(...moments.flat())).toBeLessThanOrEqual(barReach);
+  });
+
+  it('stays flat in silence however long it runs', () => {
+    const silent = run(3, { state: 'listening' });
+
+    expect(Math.max(...heightsOf(silent))).toBeLessThanOrEqual(dot);
+  });
+
+  it('gives bars at one level different heights', () => {
+    const level = heightsOf(run(1, steady));
+    const distinct = new Set(level.slice(0, loudEndBars).map(Math.round));
+
+    expect(distinct.size).toBeGreaterThan(loudEndBars / 4);
+  });
+
+  it('moves the bars from one moment to the next', () => {
+    expect(heightsOf(run(1.4, steady))).not.toEqual(heightsOf(run(1, steady)));
   });
 
   it('is orange for the person and blue for the Agent', () => {

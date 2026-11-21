@@ -87,7 +87,8 @@ const targetAt = (field: Field, position: number): number => {
 
   return Math.min(
     1,
-    reachAt(field.voices, field.pose, position) + pulseHeight(field.pose, near),
+    reachAt(field.voices, field.pose, { position, time: field.time }) +
+      pulseHeight(field.pose, near),
   );
 };
 
