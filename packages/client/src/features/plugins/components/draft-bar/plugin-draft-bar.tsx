@@ -22,6 +22,7 @@ export function PluginDraftBar({
             icon="message"
             accessibilityLabel="Comments"
             control
+            variant="secondary"
             selected={bar.commenting}
             aria-pressed={bar.commenting}
             onPress={bar.onToggleComments}

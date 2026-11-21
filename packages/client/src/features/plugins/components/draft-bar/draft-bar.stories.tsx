@@ -1,4 +1,5 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -44,3 +45,26 @@ export const Tabs: Story = { args: { form: 'tabs' } };
 
 // A phone folds the states into one State button, which opens the platform's menu.
 export const StateButton: Story = { args: { form: 'menu' } };
+
+const commentToggle = (
+  <IconButton
+    icon="message"
+    accessibilityLabel="Comments"
+    control
+    variant="secondary"
+    onPress={action('toggle comments')}
+  />
+);
+
+const chooseWithComments = (
+  <Button label="Choose · 2 comments" size="sm" onPress={action('choose')} />
+);
+
+// The comment toggle sits after the states, and Choose says how many comments it carries.
+export const TabsWithComments: Story = {
+  args: { form: 'tabs', commentToggle, choose: chooseWithComments },
+};
+
+export const StateButtonWithComments: Story = {
+  args: { form: 'menu', commentToggle, choose: chooseWithComments },
+};

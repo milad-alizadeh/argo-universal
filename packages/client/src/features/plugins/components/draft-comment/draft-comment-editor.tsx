@@ -38,20 +38,24 @@ export function DraftCommentEditor(
           longPressed ? 'flex-row gap-2' : 'flex-row justify-end gap-2'
         }
       >
-        <Button
-          label="Cancel"
-          variant="secondary"
-          size={size}
-          fullWidth={longPressed}
-          onPress={onCancel}
-        />
-        <Button
-          label="Comment"
-          size={size}
-          fullWidth={longPressed}
-          disabled={note.trim() === ''}
-          onPress={onSave}
-        />
+        <View className={longPressed ? 'flex-1' : undefined}>
+          <Button
+            label="Cancel"
+            variant="secondary"
+            size={size}
+            fullWidth={longPressed}
+            onPress={onCancel}
+          />
+        </View>
+        <View className={longPressed ? 'flex-1' : undefined}>
+          <Button
+            label="Comment"
+            size={size}
+            fullWidth={longPressed}
+            disabled={note.trim() === ''}
+            onPress={onSave}
+          />
+        </View>
       </View>
     </View>
   );

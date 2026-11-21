@@ -5,7 +5,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { userEvent as pointer } from 'vitest/browser';
 import { draftComments } from '../../stores/draft-comments';
 import { issuesPage } from './draft-comment-fixtures';
-import { CommentingPage } from './draft-comments-page.mocks';
+import { CommentingPage, holdOn } from './draft-comments-page.mocks';
 
 const meta = {
   title: 'Tests/Plugins/DraftComments',
@@ -21,19 +21,6 @@ type Story = StoryObj<typeof meta>;
 const editor = (): ReturnType<typeof within> => within(document.body);
 
 const pairing = 'Pairing code expires';
-
-// Presses a node the way a phone's long press does: the button held down, then let go.
-async function holdOn(
-  element: HTMLElement,
-  milliseconds: number,
-): Promise<void> {
-  const { left, top } = element.getBoundingClientRect();
-  const at = { bubbles: true, clientX: left + 4, clientY: top + 4 };
-
-  element.dispatchEvent(new MouseEvent('mousedown', at));
-  await new Promise((done) => setTimeout(done, milliseconds));
-  element.dispatchEvent(new MouseEvent('mouseup', at));
-}
 
 // A pointer press on a row picks the row, inside the list region, and the note is saved with its place.
 export const APointerPressPicksTheNodeUnderIt: Story = {

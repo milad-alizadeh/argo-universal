@@ -32,7 +32,7 @@ export function DraftCommentMark({
   );
 }
 
-// A speech-bubble pin on the node's top-right corner, its tail at the lower left.
+// A speech-bubble pin inside the node's top-right corner, its tail at the lower left. Inside, since the kit's lists clip a row to its own box.
 export function DraftCommentPin({
   count,
 }: {
@@ -43,7 +43,7 @@ export function DraftCommentPin({
       pointerEvents="none"
       role="img"
       aria-label={count === 1 ? '1 comment' : `${count} comments`}
-      className="absolute -right-2.5 -top-2.5 size-[22px] items-center justify-center rounded-b-[11px] rounded-bl-[2px] rounded-t-[11px] bg-tone-warning-500 shadow-control"
+      className="absolute right-1 top-1 size-[22px] items-center justify-center rounded-b-[11px] rounded-bl-[2px] rounded-t-[11px] bg-tone-warning-500 shadow-control"
     >
       <Text role="badge" className="text-white">
         {count}

@@ -43,3 +43,16 @@ export function CommentingPage(props: {
     </View>
   );
 }
+
+// Presses a node the way a phone's long press does: the button held down, then let go.
+export async function holdOn(
+  element: HTMLElement,
+  milliseconds: number,
+): Promise<void> {
+  const { left, top } = element.getBoundingClientRect();
+  const at = { bubbles: true, clientX: left + 4, clientY: top + 4 };
+
+  element.dispatchEvent(new MouseEvent('mousedown', at));
+  await new Promise((done) => setTimeout(done, milliseconds));
+  element.dispatchEvent(new MouseEvent('mouseup', at));
+}

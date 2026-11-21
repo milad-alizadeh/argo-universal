@@ -161,18 +161,20 @@ function DraftPage(props: {
         >
           {children}
           {commenting && picked && (
-            <DraftCommentSheet
-              open
-              anchor={picked.anchor}
-              title={titleOf({
-                nodeKey: picked.target.nodeKey,
-                place: picked.target.place,
-              })}
-              note={note}
-              onNoteChange={setNote}
-              onSave={save}
-              onCancel={close}
-            />
+            <View pointerEvents="box-none" className="absolute inset-0">
+              <DraftCommentSheet
+                open
+                anchor={picked.anchor}
+                title={titleOf({
+                  nodeKey: picked.target.nodeKey,
+                  place: picked.target.place,
+                })}
+                note={note}
+                onNoteChange={setNote}
+                onSave={save}
+                onCancel={close}
+              />
+            </View>
           )}
         </View>
       </MarksContext>

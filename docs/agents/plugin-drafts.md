@@ -24,4 +24,4 @@ Read this before you draw or review a Plugin Draft: a page drawn from canned dat
 
 ## Comments
 
-A Choose carries the author's comments as well as the picks, and `plugin.draft.pick` returns both. Each comment names a node by its key, the region and Variant it sits in when it sits in one, and a note (`DraftComment`). Act on a comment by a targeted edit of that node, then run `plugin.draft.show`; do not start the Draft over.
+A Choose carries the author's comments as well as the picks, and `plugin.draft.pick` returns both. Each comment names a node by its key, the region and Variant it sits in when it sits in one, and a note (`DraftComment`). Act on a comment by a targeted edit of that node, then run `plugin.draft.show`; do not start the Draft over. A comment names the key the Plugin gave the node, so give list rows and other repeated nodes keys that tell them apart. A comment is refused if it names a region or Variant the Draft does not declare. A Draft with no regions chooses once the author has left a comment: `picks` is then empty and the comments are what the Agent reads.

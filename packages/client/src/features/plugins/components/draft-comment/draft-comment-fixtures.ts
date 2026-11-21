@@ -1,4 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { DraftNote } from '../../stores/draft-comments';
 import type { DraftRegionTag } from '../../utils/draft-regions-model';
 
 export const issuesPage = { pluginId: 'tracker', path: '/issues' };
@@ -55,3 +56,15 @@ export const issuesTree: WireNode = {
     },
   ],
 };
+
+// Two notes already left: one on the title outside every region, one on a row in the list region.
+export const leftNotes: DraftNote[] = [
+  { address: 'page/title', nodeKey: 'title', note: 'Make the title larger' },
+  {
+    address: 'page/list/open/row-401',
+    nodeKey: 'row-401',
+    region: 'list',
+    variant: 'rows',
+    note: 'Show who it is assigned to',
+  },
+];
