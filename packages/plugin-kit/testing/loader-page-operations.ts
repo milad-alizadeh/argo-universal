@@ -4,6 +4,7 @@ export const close = {
   label: 'Close the Issue',
   description: 'Closes one Issue.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     number: {
       type: 'number' as const,
@@ -18,6 +19,7 @@ export const note = {
   label: 'Note a title',
   description: 'Keeps one title.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     title: {
       type: 'string' as const,
@@ -33,5 +35,6 @@ export const attach = {
   label: 'Attach to the Session',
   description: 'Acts for the calling Session.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   caller: ['session' as const],
 };

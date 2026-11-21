@@ -448,6 +448,8 @@
       --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
+      /* The person's own voice in a Conversation's band, beside the Agent's info blue. */
+      --color-speech: var(--color-orange-500);
       --color-warning: var(--color-amber-700);
       /* The window and page ground (Paper's Rail B and Porcelain screens). */
       --color-content: var(--color-neutral-50);
@@ -627,6 +629,7 @@
       --color-done: var(--color-violet-400);
       --color-success: var(--color-emerald-500);
       --color-info: var(--color-blue-400);
+      --color-speech: var(--color-orange-500);
       --color-warning: var(--color-amber-500);
       --color-content: var(--color-neutral-950);
       --color-glass: color-mix(in oklab, var(--color-white) 4%, transparent);

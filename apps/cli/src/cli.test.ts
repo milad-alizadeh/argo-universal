@@ -28,6 +28,7 @@ const row: OperationRow = {
   params: { type: 'object' },
   result: { type: 'array' },
   tier: 'read',
+  policy: 'allow',
   keywords: [],
   enabled: true,
   disabledReason: null,
@@ -128,7 +129,7 @@ it('lists Operations as lines', async () => {
 
   expect(lines).toMatchObject({
     code: 0,
-    stdout: 'project.list [read] — Lists the Projects.',
+    stdout: 'project.list [allow] — Lists the Projects.',
   });
 });
 

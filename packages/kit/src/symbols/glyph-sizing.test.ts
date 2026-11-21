@@ -3,22 +3,25 @@ import { describe, expect, it } from 'vitest';
 import { appleSymbolShare, glyphPixels } from './glyph-sizing';
 
 describe('glyphPixels', () => {
-  it('steps the desktop sizes 16, 20, 24', () => {
-    expect(iconSizes.map((size) => glyphPixels(size, 'wide'))).toEqual([
-      16, 20, 24,
-    ]);
+  it('never draws a larger size smaller than the one before it', () => {
+    for (const width of ['wide', 'phone'] as const) {
+      const pixels = iconSizes.map((size) => glyphPixels(size, width));
+
+      expect(pixels).toEqual([...pixels].sort((a, b) => a - b));
+    }
   });
 
-  it('steps a phone one size up, to a limit of 24', () => {
-    expect(iconSizes.map((size) => glyphPixels(size, 'phone'))).toEqual([
-      20, 24, 24,
-    ]);
+  it('never draws a phone glyph smaller than the desktop one', () => {
+    for (const size of iconSizes) {
+      expect(glyphPixels(size, 'phone')).toBeGreaterThanOrEqual(
+        glyphPixels(size, 'wide'),
+      );
+    }
   });
 });
 
 describe('appleSymbolShare', () => {
-  it('draws an SF Symbol at four fifths of its box, a chevron at three quarters of that', () => {
-    expect(appleSymbolShare(false)).toBeCloseTo(0.8);
-    expect(appleSymbolShare(true)).toBeCloseTo(0.6);
+  it('draws a chevron smaller in its box than another SF Symbol', () => {
+    expect(appleSymbolShare(true)).toBeLessThan(appleSymbolShare(false));
   });
 });

@@ -36,7 +36,7 @@ it('leaves no Session, Checkout or branch behind when the Agent refuses a first 
       branches: host.git('branch', '--list', 'argo/*'),
     }))
     .toEqual({ sessions: before, turns: [], worktrees: 1, branches: '' });
-  expect(await user.session.list.query({})).toEqual({
+  expect(await host.caller.session.list({})).toEqual({
     sessions: [],
     nextCursor: null,
   });

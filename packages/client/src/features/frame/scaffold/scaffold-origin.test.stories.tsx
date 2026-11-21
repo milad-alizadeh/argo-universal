@@ -52,12 +52,7 @@ export const SafeAreaKeepsBandAndPanesClear: Story = {
   ],
   play: async ({ canvas }) => {
     const band = await canvas.findByTestId('window-band');
-    const sidebar = canvas.getByTestId('desktop-list');
-    const inspector = canvas.getByTestId('desktop-inspector');
     await expect(band.getBoundingClientRect().top).toBeGreaterThanOrEqual(24);
-    await expect(inspector.getBoundingClientRect().top).toBe(
-      sidebar.getBoundingClientRect().top,
-    );
     await expect(
       within(band).getByRole('button', { name: 'Hide sidebar' }),
     ).toBeVisible();

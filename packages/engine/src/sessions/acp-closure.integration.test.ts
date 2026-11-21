@@ -7,6 +7,7 @@ import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { withoutSessionAccess } from '#mocks/session-access';
 
@@ -42,7 +43,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     const sibling = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({ ...closed, prompt });
     await waitForAcpSessionIdle(host, closed.sessionId);
-    await expect(host.caller.session.close(closed)).resolves.toEqual({});
+    await expect(closeTestSession(host, closed)).resolves.toEqual({});
     expect(existsSync(openings[0]?.cwd ?? '')).toBe(true);
     await host.caller.session.prompt({ ...sibling, prompt });
     await waitForAcpSessionIdle(host, sibling.sessionId);

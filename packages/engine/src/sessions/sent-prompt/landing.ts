@@ -1,23 +1,20 @@
-import type { SessionPromptInput } from '@repo/contracts';
+import type { SentPromptSender, SessionPromptInput } from '@repo/contracts';
+import type { PromptSend } from '../prompt-sender';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
 import { startPromptOn, type PromptLanding } from '../session-prompt';
 import type { HandlerSources } from '../session-sources';
 import { sendQueueCommand } from './queue';
-import { steerOrWait, type QueuedSend } from './steering';
+import { steerOrWait } from './steering';
 
 export type SendSources = HandlerSources<
   'readSession' | 'createId' | 'installedAgents' | 'hooks',
   'admit' | 'ready'
 >;
 
-/*
- * One Prompt on its way: what it says, who sends it, the id it takes as its Turn's id or, queued, as its queued id,
- * and the caller's budget, which also stops its admission.
- */
-export type Sending = QueuedSend & {
+// One Prompt on its way: what it says, and its send; its id is its Turn's id or, queued, its queued id.
+export type Sending = PromptSend<SentPromptSender> & {
   input: SessionPromptInput;
-  signal?: AbortSignal;
 };
 
 // A Turn runs, or work already waits, or the queue is paused: the Prompt cannot start now.
@@ -61,10 +58,7 @@ export function landPrompt(
   if (hasWork(session.getSnapshot().context))
     return queuePrompt(sources, session, sending);
 
-  const { input, sender, id: turnId, signal } = sending;
+  const { input, ...turn } = sending;
 
-  return startPromptOn(sources, session, {
-    input,
-    turn: { turnId, sender, signal },
-  });
+  return startPromptOn(sources, session, { input, turn });
 }

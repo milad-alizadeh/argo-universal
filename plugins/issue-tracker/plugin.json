@@ -32,6 +32,7 @@
         "icon": "attach",
         "label": "Attach Issue to Session",
         "description": "Connect the calling Session to an Issue it is implementing, so the Issue's page lists it.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "session", "connect"],
         "params": {
@@ -52,6 +53,7 @@
         "icon": "close",
         "label": "Detach Issue from Session",
         "description": "Disconnect the calling Session from an Issue it is no longer working on.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "session", "disconnect"],
         "params": {
@@ -68,6 +70,7 @@
         "icon": "settings",
         "label": "Choose a Project's Issue tracker",
         "description": "Choose which Tracker a Project's Issues come from, or none when no tracker is named.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "tracker", "project"],
         "params": {
@@ -83,6 +86,7 @@
         "icon": "retry",
         "label": "Read a Project's Issues again",
         "description": "Make the Issue tracker's pages read again.",
+        "policy": "allow",
         "tier": "read",
         "keywords": ["issue", "refresh", "retry"],
         "caller": ["project"]
@@ -92,6 +96,7 @@
         "icon": "check",
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "close", "reopen", "status"],
         "params": {
@@ -114,6 +119,7 @@
         "icon": "tag",
         "label": "Set Issue label",
         "description": "Put a label on one Issue in a Project, or take it off.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "label", "tag"],
         "params": {
@@ -140,6 +146,7 @@
         "icon": "tag",
         "label": "Create an Issue label",
         "description": "Make a new label in the Project's repository and put it on one Issue.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "label", "tag", "create"],
         "params": {
@@ -161,6 +168,7 @@
         "icon": "person",
         "label": "Set Issue assignee",
         "description": "Assign one Issue in a Project to a person, or take them off it.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["issue", "assignee", "assign"],
         "params": {
@@ -187,6 +195,7 @@
         "icon": "key",
         "label": "Sign in to GitHub",
         "description": "Asks GitHub for a sign-in code, shows it on the sign-in page, and adds the Account once the person approves it on GitHub.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["account", "sign in"]
       },
@@ -195,6 +204,7 @@
         "icon": "close",
         "label": "Cancel GitHub sign-in",
         "description": "Stops waiting for the GitHub sign-in code to be approved.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["account", "sign in"]
       }

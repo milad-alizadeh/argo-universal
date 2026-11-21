@@ -15,12 +15,12 @@ import {
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
-import { openWorkbenchSection } from './session-workbench-menu.test.mocks';
+import { openWorkbench } from './session-workbench-sheet.test.mocks';
 
 // The narrowest wide window whose page gutter shows the Workbench's cards.
 const workbenchWide = 1856;
 
-const subagentsName = 'Agents';
+const subagentsName = 'Workbench';
 
 const agentsCard = 'workbench-subagents';
 
@@ -28,14 +28,13 @@ const cardRow = /^(Open (?!.*overview)|Show )/;
 
 const selected = ['aria-selected', 'true'] as const;
 
-// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; on a phone the Workbench menu opens the list.
+// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; on a phone the Workbench sheet lists its Agents.
 async function openList(
   { canvas, userEvent }: Interaction,
   wide: boolean,
-  count: number,
 ): Promise<void> {
   if (!wide) {
-    await openWorkbenchSection({ canvas, userEvent }, `Agents ${count}`);
+    await openWorkbench({ canvas, userEvent });
 
     return;
   }
@@ -133,7 +132,7 @@ function subagentsAt(width: number, state: State): Story {
         return;
       }
 
-      await openList({ canvas, userEvent }, wide, subagents.length);
+      await openList({ canvas, userEvent }, wide);
 
       const page = await subagentsPage(canvas, wide);
 
@@ -202,7 +201,7 @@ export const PhoneSheetDismissesOnSwitch: Story = {
   beforeEach: () => settleLayout(layoutWidths.phone),
   play: async ({ canvas, userEvent }) => {
     const body = within(document.body);
-    await openWorkbenchSection({ canvas, userEvent }, 'Agents 1');
+    await openWorkbench({ canvas, userEvent });
     await expect(
       await body.findByRole('dialog', { name: subagentsName }),
     ).toBeVisible();
@@ -220,7 +219,7 @@ export const PhoneSheetDismissesOnSwitch: Story = {
     await expect(
       body.queryByRole('dialog', { name: subagentsName }),
     ).not.toBeInTheDocument();
-    await openWorkbenchSection({ canvas, userEvent }, 'Agents 1');
+    await openWorkbench({ canvas, userEvent });
     await expect(
       await body.findByRole('dialog', { name: subagentsName }),
     ).toBeVisible();

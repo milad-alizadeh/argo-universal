@@ -8,11 +8,10 @@ import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { askOperation } from '#mocks/operation-permissions';
+import { runOperation } from '#mocks/operations';
 import { addOtherProject } from '#mocks/session-access';
 import {
   delegationJourney,
-  holdSession,
   startDelegated,
   type DelegationJourney,
 } from '#mocks/session-delegation';
@@ -36,7 +35,6 @@ type ActOperation = {
 
 const configOption = { configId: 'mode', type: 'id', value: 'x' };
 
-// The caller's own Session comes last in each row, and session.close comes last, so closing it ends the table.
 const actOperations: ActOperation[] = [
   {
     id: 'session.rename',
@@ -57,18 +55,17 @@ const actOperations: ActOperation[] = [
     params: (sessionId) => ({ sessionId }),
     ranWith: `CONFLICT: Session cannot accept session.cancel in {"open":{"acp":"idle"}}`,
   },
-  { id: 'session.close', params: (sessionId) => ({ sessionId }) },
 ];
 
 const ownedRow = {
   self: 'ran',
   started: 'ran',
-  unrelated: 'asked',
-  foreign: 'asked',
+  unrelated: 'ran',
+  foreign: 'ran',
 };
 
 // The caller's own scope is itself and the Sessions it started in its Project: those run, any other asks.
-it('keeps act Operations from a Session token within the caller’s own scope', async () => {
+it('runs routine Session Operations regardless of Project and starter', async () => {
   const journey = await delegationJourney();
   const targets = await scopeTargets(journey);
   const outcomes: Record<string, Record<string, string>> = {};
@@ -99,41 +96,24 @@ async function scopeTargets(journey: DelegationJourney): Promise<Targets> {
   };
 }
 
-// The caller starts this Session itself, so only its Project is outside the caller's scope.
 async function startForeign(journey: DelegationJourney): Promise<string> {
   const projectId = await addOtherProject(journey.host);
-  await holdSession(journey, journey.caller.sessionId);
-
-  const start = await askOperation(
-    { host: journey.host, session: journey.caller },
-    {
-      id: 'session.new',
-      params: {
-        ...emptySessionInput,
-        projectId,
-        prompt: [{ type: 'text', text: 'Foreign' }],
-      },
-    },
-  );
-
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: start.request.requestId,
-    optionId: 'allow_once',
-  });
-  const [result] = await start.outcome;
 
   const { sessionId } = SessionNewOutput.parse(
     OperationExecution.parse(
-      result?.status === 'fulfilled' ? result.value : null,
+      await runOperation(journey.caller.caller.operations, {
+        id: 'session.new',
+        wait: true,
+        params: {
+          ...emptySessionInput,
+          projectId,
+          prompt: [{ type: 'text', text: 'Foreign' }],
+        },
+      }),
     ).result,
   );
 
   await waitForAcpSessionIdle(journey.host, sessionId);
-  await journey.host.caller.session.cancel({
-    sessionId: journey.caller.sessionId,
-  });
-  await waitForAcpSessionIdle(journey.host, journey.caller.sessionId);
 
   return sessionId;
 }

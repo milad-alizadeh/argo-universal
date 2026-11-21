@@ -36,18 +36,21 @@
         "name": "signIn",
         "label": "Sign in",
         "description": "Starts the sign-in.",
+        "policy": "allow",
         "tier": "act"
       },
       {
         "name": "cancelSignIn",
         "label": "Cancel sign-in",
         "description": "Stops the sign-in.",
+        "policy": "allow",
         "tier": "act"
       },
       {
         "name": "readItems",
         "label": "Read the items",
         "description": "Reads the items as the person signed in.",
+        "policy": "allow",
         "tier": "read"
       }
     ]

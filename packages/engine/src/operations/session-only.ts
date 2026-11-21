@@ -5,7 +5,7 @@ import { withoutConnection } from './without-connection';
 
 type SessionOnly = Pick<
   CallerImplementations<[NewSessionId]>,
-  'session.queue' | 'voice.start' | 'app.screenshot'
+  'session.queue' | 'conversation.start' | 'app.screenshot'
 >;
 
 /*

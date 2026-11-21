@@ -37,6 +37,8 @@ export interface ScrollFadeFrameProps extends Omit<ScrollFadeOptions, 'depth'> {
   horizontal?: boolean;
   // From useScrollFadeTracking, also wired to the scroll view.
   tracking: ScrollFadeTracking;
+  // The virtualized list reports its scrollable extent through its content container's size.
+  virtualized?: true;
   className?: string;
   style?: StyleProp<ViewStyle>;
   // The one scroll view whose content fades.

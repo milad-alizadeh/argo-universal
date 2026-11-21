@@ -1,6 +1,7 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import type { FeedGroup } from '../../view/feed-view';
+import type { OperationParams } from '../../view/operation-call';
 import { toFeedView } from '../../view/to-feed-view';
 import { recordedToolCall } from '../tool-call.mocks';
 import type { ToolCallGroupProps } from './tool-call-group';
@@ -47,6 +48,43 @@ const untargeted: ToolCallUpdate = {
   rawInput: { server, tool: 'operation_run', arguments: {} },
 };
 
+const feedOperation = 'session.feed';
+
+const feedParams = (sessionId: string): OperationParams => ({
+  sessionId,
+  limit: 3,
+});
+
+// Two parallel `session.feed` calls: the Agent's row for each and the Engine's row for the same call.
+const parallelFeedCalls = ['first', 'second'].flatMap(
+  (sessionId, index): ToolCallUpdate[] => {
+    const params = feedParams(sessionId);
+
+    const agent: ToolCallUpdate = {
+      ...agentCall(`toolu-${index}`, index),
+      rawInput: {
+        server,
+        tool: 'operation_run',
+        arguments: { id: feedOperation, params },
+      },
+    };
+
+    const engine: ToolCallUpdate = {
+      ...agent,
+      id: `argo:feed-${index}`,
+      toolCallId: `feed-${index}`,
+      name: feedOperation,
+      title: 'Read Session messages',
+      kind: 'other',
+      position: index + 2,
+      rawInput: params,
+      _meta: { argo: { operationIcon: 'message' } },
+    };
+
+    return [agent, engine];
+  },
+);
+
 function operationGroup(rows: ToolCallUpdate[]): FeedGroup {
   const group = toFeedView(rows, snapshot).items.find(
     (item): item is FeedGroup => item.type === 'group',
@@ -64,7 +102,7 @@ type OperationStoryArgs = Pick<
 
 export const settledOperations = {
   group: operationGroup([
-    agentCall('session.feed', 0),
+    agentCall(feedOperation, 0),
     plugin,
     recorded,
     untargeted,
@@ -76,6 +114,15 @@ export const settledOperations = {
 export const runningOperations = {
   renderActivity: renderOperationActivity,
   group: operationGroup([
-    { ...agentCall('session.feed', 0), state: 'open', status: 'in_progress' },
+    { ...agentCall(feedOperation, 0), state: 'open', status: 'in_progress' },
   ]),
+} satisfies OperationStoryArgs;
+
+// The Agent's rows and the Engine's rows arrive together, as stored; the Feed draws each call once.
+export const parallelOperations = {
+  group: operationGroup(
+    [...parallelFeedCalls].sort((a, b) => a.position - b.position),
+  ),
+  initialOpen: true,
+  renderActivity: renderOperationActivity,
 } satisfies OperationStoryArgs;

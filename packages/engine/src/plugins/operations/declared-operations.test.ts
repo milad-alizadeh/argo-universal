@@ -9,6 +9,7 @@ const operation = PluginOperationContribution.parse({
   label: 'Attach Issue to Session',
   description: 'Connect the calling Session to an Issue.',
   tier: 'act',
+  policy: 'allow',
   params: {
     number: {
       type: 'number',
@@ -63,6 +64,7 @@ it('names a Plugin Operation after the Plugin that answers it', () => {
     id: 'issue-tracker.attach',
     label: 'Attach Issue to Session',
     tier: 'act',
+    policy: 'allow',
     enabled: true,
     disabledReason: null,
   });

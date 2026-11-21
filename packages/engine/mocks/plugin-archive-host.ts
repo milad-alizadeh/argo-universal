@@ -11,6 +11,7 @@ const archive = {
   label: 'Archive',
   description: 'Archives a Session through the Plugin API.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     sessionId: {
       type: 'string' as const,

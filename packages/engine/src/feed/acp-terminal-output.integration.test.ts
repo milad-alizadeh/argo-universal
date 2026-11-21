@@ -9,6 +9,7 @@ import {
   terminalMarker,
   terminalUpdate,
 } from '#mocks/acp-terminal-output';
+import { closeTestSession } from '#mocks/close-session';
 
 it('command output delivered at completion stays readable in the Feed after the Session closes', async () => {
   const { host, sessionId } = await openAcpFeedSession(completedTerminal);
@@ -36,7 +37,7 @@ it('command output delivered at completion stays readable in the Feed after the 
 
   expect(row).toMatchObject(expected);
   expect(row?._meta?.acp).not.toHaveProperty('terminal_output_delta');
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
 
   const stored = await host
     .createCaller()

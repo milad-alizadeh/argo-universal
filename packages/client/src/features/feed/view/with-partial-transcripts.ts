@@ -1,4 +1,4 @@
-import type { VoicePartial } from '@repo/contracts';
+import type { ConversationPartial } from '@repo/contracts';
 import { feedItemKey, type FeedViewItem } from './feed-view';
 
 type PartialRow = Extract<FeedViewItem, { type: 'row' }>;
@@ -18,7 +18,7 @@ const kinds = {
 
 // A partial is keyed as the row its final words are stored as, so it grows in place and, once final, that row draws on in the same place: nothing mounts again, and nothing fades twice.
 const partialItem = (
-  { speaker, id, rowId, text }: VoicePartial,
+  { speaker, id, rowId, text }: ConversationPartial,
   sessionId: string,
 ): PartialRow => ({
   type: 'row',
@@ -33,10 +33,10 @@ const partialItem = (
   },
 });
 
-// The Feed with the words being said on a Voice call drawn last, in place at its tail. They are live state of the call, never stored rows; one whose final row the Feed already holds is that row.
+// The Feed with the words being said on a Conversation drawn last, in place at its tail. They are live state of the call, never stored rows; one whose final row the Feed already holds is that row.
 export function withPartialTranscripts(
   items: FeedViewItem[],
-  partials: readonly VoicePartial[],
+  partials: readonly ConversationPartial[],
   sessionId: string,
 ): FeedViewItem[] {
   if (partials.length === 0) return items;

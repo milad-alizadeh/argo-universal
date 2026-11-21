@@ -9,3 +9,8 @@ type ArchiveSessionAlertFixture = Omit<
 export const archiveConfirm = {
   open: true,
 } satisfies ArchiveSessionAlertFixture;
+
+export const archiveWithLocalWork = {
+  open: true,
+  losesWork: true,
+} satisfies ArchiveSessionAlertFixture;

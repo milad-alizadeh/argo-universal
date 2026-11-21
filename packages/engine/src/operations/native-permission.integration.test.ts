@@ -4,6 +4,7 @@ import {
   answerPermission,
   askArchive,
   permissionJourney,
+  protectArchiveTarget,
   permissionRow,
 } from '#mocks/native-permission';
 import { probeAutoAllow } from '#mocks/native-permission-probe';
@@ -67,6 +68,7 @@ it('denies with the exact refusal and records it without archiving the target', 
 
 it('refuses confirmation without an active Turn instead of leaving a waiting call', async () => {
   const journey = await permissionJourney();
+  await protectArchiveTarget(journey);
   await expect(
     runOperation(journey.session.caller.operations, {
       id: 'session.archive',

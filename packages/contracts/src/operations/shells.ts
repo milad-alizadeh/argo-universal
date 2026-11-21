@@ -13,6 +13,7 @@ export const shellOperations = {
     params: SessionStopShellInput,
     result: SessionStopShellOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['terminal', 'command', 'kill'],
   },
 } as const satisfies Record<string, OperationDefinition>;

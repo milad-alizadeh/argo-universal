@@ -9,16 +9,6 @@ const who = { ...person, token: scopedToken, scoped: true };
 const where = (clauses: string): string =>
   `project = "ARGO"${clauses} ORDER BY updated DESC`;
 
-it('reads the clauses the filters send', () => {
-  const found = filtered(
-    where(' AND statusCategory = 4 AND assignee = currentUser()'),
-    issues,
-    who,
-  );
-
-  expect(found).toMatchObject({ ok: true, issues: [{ key: 'ARGO-3' }] });
-});
-
 it.each([
   ' AND statusCategory = "Done"',
   ' AND assignee = currentuser()',

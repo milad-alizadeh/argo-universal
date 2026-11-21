@@ -23,6 +23,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const jumpLabel = 'Jump to latest';
+
 export const JumpsToLatest: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ canvas }) => {
@@ -57,6 +59,32 @@ export const JumpsToLatest: Story = {
   },
 };
 
+// Pixel wheel input moves once and releases the live end. Browser zoom keeps its wheel event.
+export const ReadsEarlierWithWheel: Story = {
+  render: (args) => <PagedFeed {...args} rows={longRows} />,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    const before = scroll.scrollTop;
+    const pixel = { bubbles: true, cancelable: true, deltaX: 2, deltaY: -120 };
+    const zoom = new WheelEvent('wheel', { ...pixel, ctrlKey: true });
+    scroll.dispatchEvent(zoom);
+    await expect(zoom.defaultPrevented).toBe(false);
+    await expect(scroll.scrollTop).toBe(before);
+    scroll.dispatchEvent(new WheelEvent('wheel', pixel));
+    await expect(scroll.scrollTop).toBe(before - 120);
+    const fine = { ...pixel, deltaX: 0, deltaY: -0.25 };
+
+    for (let i = 0; i < 4; i++)
+      scroll.dispatchEvent(new WheelEvent('wheel', fine));
+    await expect(scroll.scrollTop).toBe(before - 121);
+    await expect(
+      await canvas.findByRole('button', { name: jumpLabel }),
+    ).toBeVisible();
+  },
+};
+
 // The App marks the Session seen only while the Feed's end is on screen.
 export const ReportsWhetherItsEndIsShown: Story = {
   args: { onAtEndChange: fn() },
@@ -68,7 +96,7 @@ export const ReportsWhetherItsEndIsShown: Story = {
     await expect(args.onAtEndChange).toHaveBeenLastCalledWith(true);
     await scrollAwayFromEnd(canvas, scroll);
     await expect(args.onAtEndChange).toHaveBeenLastCalledWith(false);
-    (await canvas.findByRole('button', { name: 'Jump to latest' })).click();
+    (await canvas.findByRole('button', { name: jumpLabel })).click();
     await waitFor(() =>
       expect(args.onAtEndChange).toHaveBeenLastCalledWith(true),
     );
@@ -99,7 +127,7 @@ export const StacksAboveTheFeedFades: Story = {
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await scrollAwayFromEnd(canvas, scroll);
-    const button = canvas.getByRole('button', { name: 'Jump to latest' });
+    const button = canvas.getByRole('button', { name: jumpLabel });
 
     await expect(
       Number(getComputedStyle(overlayOf(button)).zIndex),

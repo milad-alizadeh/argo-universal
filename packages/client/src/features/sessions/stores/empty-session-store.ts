@@ -81,7 +81,7 @@ export class EmptySessionStore {
     this.deliver(prompt);
   }
 
-  // A Voice call from New Session: the Session opens with no prompt, the page goes to it at once, and the call starts there.
+  // A Conversation from New Session: the Session opens with no prompt, the page goes to it at once, and the call starts there.
   public call(start: (sessionId: string) => void): void {
     if (this.handOff.phase !== 'choosing') return;
     this.pending = [];

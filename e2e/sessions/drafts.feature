@@ -34,7 +34,7 @@ Feature: Drafts kept on this Device
     And a New Session with Agent 1
     And I send the prompt "Plan the release"
     And the Agent replies "The shared fixture completed this Turn."
-    And the Server closes the Session quietly
+    And the Engine restarts
     When I try to send the prompt "Ship on Friday"
     Then the App says the Agent failed to launch
     When I reload the App and open the Session "Plan the release"

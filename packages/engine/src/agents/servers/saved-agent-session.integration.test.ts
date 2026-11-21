@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 
 const notInstalled = 'Agent "mock" is not installed.';
 
@@ -54,7 +55,7 @@ it.each(['Open', 'Retry'])(
       prompt: [{ type: 'text', text: 'Keep this history' }],
     });
 
-    await host.caller.session.close({ sessionId });
+    await closeTestSession(host, { sessionId });
     await host.caller.agent.remove({ id: 'mock' });
 
     if (attempt === 'Retry')

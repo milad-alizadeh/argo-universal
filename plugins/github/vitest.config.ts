@@ -1,12 +1,12 @@
+import { createNodeTestProjects } from '@repo/vitest/node';
 import { defineProject } from 'vitest/config';
 
-// The Plugin's own tests run in Node and fail when they assert nothing.
 export default defineProject({
   root: import.meta.dirname,
   test: {
-    name: 'github',
-    environment: 'node',
-    restoreMocks: true,
-    expect: { requireAssertions: true },
+    projects: createNodeTestProjects({
+      // Reads a scripted GitHub whose Checks move on a timer, so it runs alone after the rest.
+      budget: ['checks.integration.test.ts'],
+    }),
   },
 });

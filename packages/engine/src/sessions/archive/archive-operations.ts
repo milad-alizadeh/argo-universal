@@ -1,17 +1,17 @@
 import type { Database } from '@repo/db';
-import { project, session } from '@repo/db/schema';
-import { removeCheckout } from '@repo/git';
+import { session } from '@repo/db/schema';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
-import { readProjectPath } from '../../projects';
 import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
-import type { SessionData } from '../session-data';
 import type { SessionContext } from '../session-machine';
-import { ownsStoredWorktree } from '../session-record';
 import { readBorrowerIds } from './archive-borrowers';
 import { SessionArchiveJob } from './archive-storage';
+import {
+  projectKeepsCheckout,
+  removeSessionCheckout,
+} from './checkout-cleanup';
 
 const storedArchivedAt = (context: SessionContext): number | null =>
   context.input.database
@@ -51,14 +51,6 @@ const archivedSessionIds = (
   ...borrowerIds(context, archivedAt),
 ];
 
-// Whether this archive keeps the worktree is settled now, so changing the Project's setting later never removes it.
-const keepsCheckout = (context: SessionContext): boolean =>
-  context.input.database
-    .select({ deletes: project.deleteWorktreeOnArchive })
-    .from(project)
-    .where(eq(project.id, context.projectId))
-    .get()?.deletes === false;
-
 const archiveJob = (
   context: SessionContext,
   archivedAt: number | null,
@@ -66,7 +58,8 @@ const archiveJob = (
   new SessionArchiveJob(
     archivedSessionIds(context, archivedAt),
     archivedAt,
-    archivedAt !== null && keepsCheckout(context),
+    archivedAt !== null &&
+      projectKeepsCheckout(context.input.database, context.projectId),
   );
 
 // The parent's archive and its borrowed Checkouts share one Writer commit.
@@ -81,29 +74,6 @@ export async function saveSessionArchive(
     writer,
     archiveJob(context, archivedAt),
     true,
-  );
-}
-
-const isCheckoutKept = (database: Database, sessionId: string): boolean =>
-  database
-    .select({ keep: session.keepCheckout })
-    .from(session)
-    .where(eq(session.id, sessionId))
-    .get()?.keep === true;
-
-export async function removeSessionCheckout(
-  database: Database,
-  data: Pick<SessionData, 'projectId' | 'sessionId' | 'checkout'>,
-  signal?: AbortSignal,
-): Promise<void> {
-  if (!ownsStoredWorktree(database, data.sessionId)) return;
-
-  if (isCheckoutKept(database, data.sessionId)) return;
-
-  await removeCheckout(
-    readProjectPath(database, data.projectId),
-    data.checkout,
-    signal,
   );
 }
 

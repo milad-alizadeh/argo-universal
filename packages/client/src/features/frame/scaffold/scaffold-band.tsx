@@ -87,10 +87,7 @@ function BandLeading(parts: BandLeadingReads): ReactElement {
   const style = { width, paddingLeft: inset };
 
   return (
-    <View
-      className="shrink-0 flex-row items-center web:[app-region:no-drag]"
-      style={style}
-    >
+    <View className="shrink-0 flex-row items-center" style={style}>
       {sidebarControl(parts)}
       <BandHistory />
     </View>

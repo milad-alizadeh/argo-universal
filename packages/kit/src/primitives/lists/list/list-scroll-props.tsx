@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useScrollEndGap } from '#kit/scroll-surface';
 import { Icon } from '#primitives/content/icon';
 import { ListFooter } from '../../../list-footer';
@@ -20,15 +20,14 @@ function scrollEvents<Item>(
     onEndReachedThreshold: props.onEndReachedThreshold,
     contentInsetAdjustmentBehavior:
       props.contentInsetAdjustmentBehavior ?? 'automatic',
-    estimatedItemSize: props.estimatedItemSize,
     keyExtractor: props.keyExtractor,
     getItemType: props.getItemType,
   };
 }
 
-function testProps(
-  testID?: string,
-): ReturnType<typeof listTestIdProps> | Record<never, never> {
+type TestProps = ReturnType<typeof listTestIdProps> | Record<never, never>;
+
+function testProps(testID?: string): TestProps {
   return testID ? listTestIdProps(testID) : {};
 }
 
@@ -52,7 +51,20 @@ function streamProps<Item>(
     onStartReached: props.onStartReached,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
+    estimatedItemSize: props.estimatedItemSize,
+    getFixedItemSize: props.getFixedItemSize,
+    viewabilityConfig: props.viewabilityConfig,
+    ...nativeFling(props),
   };
+}
+
+// The web scroll view spreads unknown props onto its div, so even an undefined key warns there.
+function nativeFling<Item>(
+  props: ListProps<Item>,
+): Partial<ScrollFadeListProps<Item>> {
+  if (Platform.OS === 'web') return {};
+
+  return { decelerationRate: props.decelerationRate };
 }
 
 // Where the list opens and which end it holds as its rows change.
@@ -60,6 +72,7 @@ function anchorProps<Item>(
   props: ListProps<Item>,
 ): Partial<ScrollFadeListProps<Item>> {
   return {
+    renderScrollComponent: props.renderScrollComponent,
     initialScrollIndex: props.initialScrollIndex,
     initialScrollAtEnd: props.initialScrollAtEnd,
     alignItemsAtEnd: props.alignItemsAtEnd,

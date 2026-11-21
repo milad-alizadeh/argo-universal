@@ -14,6 +14,7 @@ import {
 } from '@repo/contracts';
 import {
   mergeRouters,
+  authenticatedAppProcedure,
   publicProcedure,
   router,
   routerFactory,
@@ -89,7 +90,7 @@ const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
 
 const createAnswerRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
-    answerPermission: publicProcedure
+    answerPermission: authenticatedAppProcedure
       .input(SessionAnswerPermissionInput)
       .output(SessionAnswerPermissionOutput)
       .mutation(({ input }) => answerSessionPermission(sources, input)),

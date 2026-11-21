@@ -8,8 +8,10 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { lockBrowserSuite } from '@repo/browser-suite-lock';
-import { readStory, testStory, type StoryFile } from './story-file.mts';
-import { loadStoryFiles } from './story-files.mts';
+import { changedPaths } from './hook-checks.mts';
+import { dependentStories } from './story-dependents.mts';
+import { testStory, type StoryFile } from './story-file.mts';
+import { drawingCount, packageStories } from './story-files.mts';
 import {
   childStateProblems,
   duplicateRenderProblems,
@@ -18,6 +20,11 @@ import {
   type FixturePair,
   type StoryRender,
 } from './story-render-rules.mts';
+import {
+  capScope,
+  renderScope,
+  type RenderScope,
+} from './story-render-scope.mts';
 import { parseShard, shardByWeight } from './story-render-shard.mts';
 import { root } from './tracked-files.mts';
 
@@ -36,23 +43,19 @@ const planPath = resolve(storybook, 'story-render-plan.json');
 const fingerprintPath = resolve(storybook, 'story-render-fingerprints.json');
 
 const presentationFiles = (): StoryFile[] =>
-  loadStoryFiles(['packages/*/src/**/*.stories.tsx']).filter(
-    ({ file }): boolean => !testStory.test(file),
-  );
+  packageStories().filter(({ file }): boolean => !testStory.test(file));
 
 /* What a file costs in the browser: each story is drawn once and each candidate pair twice more. */
 type Weighted = PlannedFile & { weight: number };
 
 const planFor = (story: StoryFile): Weighted[] => {
-  const { exports } = readStory(story);
+  const drawings = drawingCount(story);
 
-  if (exports.length < 2) return [];
+  if (!drawings) return [];
 
   const pairs = fixturePairs(story);
 
-  return [
-    { file: story.file, pairs, weight: exports.length + 2 * pairs.length },
-  ];
+  return [{ file: story.file, pairs, weight: drawings + 2 * pairs.length }];
 };
 
 const runStorybookProject = (): void => {
@@ -61,6 +64,35 @@ const runStorybookProject = (): void => {
     ['run', '--config', 'vitest.renders.config.ts'],
     { cwd: storybook, stdio: 'inherit' },
   );
+};
+
+const scopeFor = (base: string | undefined, changed: string[]): RenderScope =>
+  base === undefined
+    ? { all: true }
+    : renderScope({ changed, dependents: dependentStories(base), root });
+
+// Every file in a full run; past RENDER_LIMIT in a scoped one, those in the touched folders.
+const capped = (
+  stories: StoryFile[],
+  scope: RenderScope,
+  changed: string[],
+): StoryFile[] => {
+  if (scope.all) return stories;
+
+  const kept = capScope({
+    files: stories.map(({ file }): string => file),
+    changed,
+    root,
+  });
+
+  if (kept.narrowed)
+    console.log(
+      `check-story-renders: the change reaches ${kept.dependents} story files; drawing the ${kept.files.length} in the folders it touched. The push to main draws them all.`,
+    );
+
+  const files = new Set(kept.files);
+
+  return stories.filter(({ file }): boolean => files.has(file));
 };
 
 const readFingerprints = (): Fingerprints =>
@@ -78,6 +110,7 @@ const report = (problems: readonly string[], files: number): number => {
 
 /*
  * A path fragment narrows the plan to the files whose path contains it, for trying one gate by hand.
+ * `--changed=<ref>` draws only the files a change since that ref reaches; without it, every file.
  * `--shard=2/4` keeps that runner's share of the plan; both gates judge one file against itself, so
  * the shards need no merge and each judges its own drawings.
  */
@@ -86,6 +119,8 @@ const args = process.argv.slice(2);
 const only = args.find((arg): boolean => !arg.startsWith('--')) ?? '';
 
 const shardArg = args.find((arg): boolean => arg.startsWith('--shard='));
+
+const changedArg = args.find((arg): boolean => arg.startsWith('--changed='));
 
 const shard =
   shardArg === undefined
@@ -97,15 +132,31 @@ if (shardArg !== undefined && shard === undefined) {
   process.exit(2);
 }
 
-const planned = presentationFiles()
+const base = changedArg?.slice('--changed='.length);
+
+const changed = base === undefined ? [] : changedPaths(base);
+
+const scope = scopeFor(base, changed);
+
+const inScope = ({ file }: StoryFile): boolean =>
+  scope.all || scope.files.has(file);
+
+const reached = presentationFiles()
   .filter(({ file }): boolean => file.includes(only))
-  .flatMap(planFor);
+  .filter(inScope);
+
+const planned = capped(reached, scope, changed).flatMap(planFor);
 
 const files: PlannedFile[] = (
   shard === undefined
     ? planned
     : shardByWeight(planned, ({ weight }): number => weight, shard)
 ).map(({ file, pairs }): PlannedFile => ({ file, pairs }));
+
+if (files.length === 0) {
+  console.log('check-story-renders: the change reaches no story file to draw.');
+  process.exit(0);
+}
 
 const release = await lockBrowserSuite();
 

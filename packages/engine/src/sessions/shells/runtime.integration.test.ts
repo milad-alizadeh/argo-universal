@@ -9,6 +9,7 @@ import {
 import { expect, it, assert } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 it('stores an exited ACP Shell and its complete output as a referenced Blob', async () => {
   const host = await startAcpEngine(shellScenarios['shell-exited']);
@@ -100,7 +101,7 @@ it('keeps Shells running beyond their Turn and stops only the selected Shell', a
   await expect(
     host.caller.shell.stop({ ...created, shellId: selected }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 });
 
 it('records its Shells before asking the Agent to close the Session, past the close deadline', async () => {
@@ -122,7 +123,7 @@ it('records its Shells before asking the Agent to close the Session, past the cl
     created.sessionId,
     (value) => value.state === 'idle' && value.shells.length === 1,
   );
-  const closing = host.caller.session.close(created);
+  const closing = closeTestSession(host, created);
   await received.promise;
 
   expect(host.database.select().from(shell).get()).toMatchObject({

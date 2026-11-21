@@ -16,7 +16,6 @@ import {
   type SessionPanels,
   type TerminalSignInProps,
 } from '#features/sessions';
-import type { VoiceStageViewProps } from '#features/voice';
 import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -29,6 +28,7 @@ import { sessionParts } from './session-layout-parts';
 import { useWorkPanels } from './session-work-panels';
 import { useInspectorPanels } from './use-inspector-panels';
 import { usePhoneSheet } from './use-phone-sheet';
+import { useSessionWorkbench } from './use-session-workbench';
 
 export interface OpenSessionViewProps extends SessionInspectorContent {
   header: SessionHeaderProps;
@@ -36,6 +36,7 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   feed: FeedProps;
   composer: ComposerProps;
   inspectorPanels?: SessionPanels;
+  onOpenWorkbench?: () => void;
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
@@ -49,8 +50,6 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   preview?: boolean;
   // An archived Session reads only: a banner takes the Composer's place.
   archived?: boolean;
-  // The orb pinned above the Feed while a call runs in this Session.
-  stage?: VoiceStageViewProps;
 }
 
 export type SessionDetailViewProps =
@@ -97,19 +96,31 @@ type HeadedSession = OpenSessionViewProps & { drawHeader: DrawHeader };
 type PhoneSheet = ReturnType<typeof usePhoneSheet>;
 
 // The header and the Session body share the phone sheet's presentation state.
-function OpenSessionView({
-  drawHeader,
-  ...props
-}: HeadedSession): React.JSX.Element {
+function OpenSessionView(session: HeadedSession): React.JSX.Element {
+  const { drawHeader, ...props } = session;
   const phone = usePhoneSheet(useInspectorPanels(props));
+
+  const workbench = useSessionWorkbench(props);
 
   return (
     <>
-      {drawHeader({ ...props, state: 'open', inspectorPanels: phone.panels })}
+      {drawHeader(openHeader(props, phone.panels, workbench.open))}
       <OpenSessionBody {...props} phone={phone} />
+      {workbench.sheet}
     </>
   );
 }
+
+const openHeader = (
+  props: OpenSessionViewProps,
+  inspectorPanels: SessionPanels,
+  onOpenWorkbench: () => void,
+): SessionDetailViewProps => ({
+  ...props,
+  state: 'open',
+  inspectorPanels,
+  onOpenWorkbench,
+});
 
 type SessionBodyProps = OpenSessionViewProps & { phone: PhoneSheet };
 

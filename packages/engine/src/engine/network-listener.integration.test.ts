@@ -61,3 +61,17 @@ it('does not bind again once stopped', async (): Promise<void> => {
   await expect(listener.rebind(true)).rejects.toThrow('The Server is closing');
   expect(server.listening).toBe(false);
 });
+
+it('keeps the port the system chose for port 0 across a move to the network and back', async (): Promise<void> => {
+  const server = createServer();
+  servers.push(server);
+  const listener = await listenForNetworkAccess(server, 0, false);
+  const chosen = listener.port();
+
+  await listener.rebind(true);
+  await listener.rebind(false);
+
+  expect(chosen).toBeGreaterThan(0);
+  expect(listener.port()).toBe(chosen);
+  expect(listener.where()).toBe(`127.0.0.1:${chosen}`);
+});

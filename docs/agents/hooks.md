@@ -29,3 +29,9 @@ Keep a mergeable PR on its tested revision. Update its base when resolving a con
 - `.claude/settings.json` and `.codex/hooks.json` hold the same hook body; change both in one PR.
 - Call binaries from `node_modules/.bin` under the repository root, which follows a worktree. Use neither `pnpm exec` nor `CLAUDE_PROJECT_DIR`, which stays on the main checkout.
 - Keep knip, Storybook, Vitest, Playwright, jscpd and `pnpm install` out of hooks: they are slow, and knip and Storybook rewrite the generated Storybook requires file.
+
+### Validate the Storybook shadow plan
+
+For each PR run, download `story-job-plan-<attempt>` and `story-results-<attempt>` from the same workflow attempt. Match their `revision` values. The plan lists every proposed file by shard. The results link to the live full shards and record runner admissions and queue seconds. Use `changedFiles` to compare PRs of similar size. For a partial rerun, use an earlier attempt only if it has the same tested revision and contains the missing shard.
+
+For each failed interaction test or render problem, find the story path in the linked job log and check whether its suite's proposed shards contain it. Record each missed file. A setup failure, missing artifact, skipped suite or unattributed failure leaves that comparison inconclusive. Validate direct story changes, shared fixtures, deletions and failed dependency listings before switching the merge gate to the proposed matrix. Each selected file must occur once, and every missed failure needs an explanation and a regression test. The initial shard weights use story counts until per-file execution timings are available.

@@ -1,4 +1,4 @@
-import type { SessionListOutput } from '@repo/contracts';
+import type { SessionArchiveOutput, SessionListOutput } from '@repo/contracts';
 import { errorToast } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import {
@@ -65,13 +65,42 @@ function listCalls(
   };
 }
 
-type Calls = Pick<ArchivePort, 'archive' | 'unarchive'>;
+async function sendArchive(
+  client: ReturnType<typeof useTRPCClient>,
+  sessionId: string,
+  checkoutApproval?: string,
+): Promise<void> {
+  const output = await client.session.archive.mutate({
+    sessionId,
+    checkoutApproval,
+  });
+
+  if (output.checkoutConfirmation)
+    throw new Error(
+      'The Checkout changed. Review the archive confirmation and try again.',
+    );
+}
+
+type Calls = Pick<ArchivePort, 'archive' | 'unarchive'> & {
+  inspect: (
+    sessionId: string,
+  ) => Promise<SessionArchiveOutput['checkoutConfirmation']>;
+};
+
+async function inspectCheckout(
+  client: ReturnType<typeof useTRPCClient>,
+  sessionId: string,
+): Promise<SessionArchiveOutput['checkoutConfirmation']> {
+  return (
+    await client.session.archive.mutate({ sessionId, inspectCheckout: true })
+  ).checkoutConfirmation;
+}
 
 function serverCalls(client: ReturnType<typeof useTRPCClient>): Calls {
   return {
-    archive: async (sessionId) => {
-      await client.session.archive.mutate({ sessionId });
-    },
+    inspect: (sessionId) => inspectCheckout(client, sessionId),
+    archive: (sessionId, checkoutApproval) =>
+      sendArchive(client, sessionId, checkoutApproval),
     unarchive: async (sessionId) => {
       await client.session.unarchive.mutate({ sessionId });
     },
@@ -79,7 +108,7 @@ function serverCalls(client: ReturnType<typeof useTRPCClient>): Calls {
 }
 
 // The Server's archiving and the list's cache as this screen sees them, with the toasts that report them.
-export function useArchivePort(): ArchivePort {
+export function useArchivePort(): ArchivePort & Calls {
   const client = useTRPCClient();
   const trpc = useTRPC();
   const queryClient = useQueryClient();

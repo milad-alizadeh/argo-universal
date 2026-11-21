@@ -29,6 +29,7 @@ const manifestSource = `{
         "label": "Add a note",
         "description": "Add one note to the list on the {{name}} page.",
         "tier": "act",
+        "policy": "allow",
         "keywords": ["note", "add"],
         "params": {
           "text": {

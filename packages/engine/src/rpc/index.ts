@@ -1,9 +1,11 @@
 export {
+  authenticatedAppProcedure,
   mergeRouters,
   publicProcedure,
   router,
   routerFactory,
   serverDeviceProcedure,
+  serverDeviceAppProcedure,
   zAsyncIterable,
 } from './trpc';
 

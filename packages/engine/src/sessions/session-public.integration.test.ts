@@ -1,5 +1,6 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { insertSession } from '#mocks/database';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { startSessionJourney } from '#mocks/session-journey';
@@ -97,7 +98,8 @@ it('reads a stored Session snapshot without connecting an Agent when its Feed is
 });
 
 it('refuses commands for a Subagent while keeping its stored Feed readable', async (): Promise<void> => {
-  const { caller, agent, database } = await startSessionJourney();
+  const host = await startSessionJourney();
+  const { caller, agent, database } = host;
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
   await expect(
     caller.session.prompt({
@@ -112,7 +114,7 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
     caller.session.cancel({ sessionId: 'subagent' }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
   await expect(
-    caller.session.close({ sessionId: 'subagent' }),
+    closeTestSession(host, { sessionId: 'subagent' }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
   await expect(
     caller.session.setConfigOption({

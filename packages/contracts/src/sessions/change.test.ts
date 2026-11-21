@@ -1,9 +1,5 @@
 import { expect, it } from 'vitest';
-import {
-  SlotItemsInput,
-  itemsSlot,
-  sessionChangesSlotId,
-} from '../plugins/wire';
+import { itemsSlot, sessionChangesSlotId } from '../plugins/wire';
 import { Change } from './change';
 
 const pullRequest = {
@@ -73,15 +69,9 @@ it.each([
   expect(Change.safeParse(change).success).toBe(false);
 });
 
-it('asks the Session changes Slot for a Session list and answers Changes keyed by Session id', () => {
-  const input = {
-    slotId: sessionChangesSlotId,
-    contexts: [{ sessionId: 'session', projectId: 'argo' }],
-  };
-
+it('answers the Session changes Slot with Changes keyed by Session id', () => {
   const slot = itemsSlot(sessionChangesSlotId);
 
-  expect(SlotItemsInput.parse(input)).toEqual(input);
   expect(slot?.content.key).toBe('sessionId');
   expect(
     slot?.merged.safeParse({

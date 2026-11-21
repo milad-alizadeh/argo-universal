@@ -1,17 +1,20 @@
 import { randomUUID } from 'node:crypto';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
-import { findFreePort } from '@repo/mocks/network/free-port';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
 import { onTestFinished } from 'vitest';
 import { waitFor } from 'xstate';
 import { composeEngine, type EngineActor } from '../src/engine/compose';
 import type { EngineInput } from '../src/engine/machine';
 import { fixtureRegistry } from './agent-fixtures';
-import { openTestDatabase } from './database';
 import { readEngineTestHost, type EngineConnections } from './engine-read';
 import { seedTestCommands } from './engine-seed';
+import {
+  discardTestStorage,
+  resolveTestStorage,
+  type TestStorage,
+} from './engine-storage';
 import { MemorySecretStore } from './memory-secret-store';
 import { shippedFolder } from './runtime-plugins';
 import { decided, scriptedEngineInput } from './scripted-engine';
@@ -41,78 +44,53 @@ export async function startEngineTestHost(
   options: EngineTestOptions = {},
 ): Promise<EngineTestHost> {
   const { home, storage } = resolveTestStorage(options);
-  const port = options.port ?? (await findFreePort());
-  seedTestCommands(options, home, storage);
-
-  const engine = composeEngine(testEngineInput(options, home, port)).start();
+  const engine = composeTestEngine(options, home, storage);
 
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
 
-  return engineTestHost(engine, home, { port, stop });
+  return engineTestHost(readEngineTestHost(engine), home, stop);
+}
+
+// Storage opened for an Engine that never starts is removed at once; no cleanup is registered for it.
+function composeTestEngine(
+  options: EngineTestOptions,
+  home: string,
+  storage: TestStorage['storage'],
+): EngineActor {
+  try {
+    seedTestCommands(options, home, storage);
+
+    return composeEngine(testEngineInput(options, home)).start();
+  } catch (error) {
+    discardTestStorage(storage);
+    throw error;
+  }
 }
 
 const engineTestHost = (
-  engine: EngineActor,
+  connections: EngineConnections,
   home: string,
-  control: { port: number; stop: () => Promise<void> },
+  stop: () => Promise<void>,
 ): EngineTestHost => ({
-  ...readEngineTestHost(engine),
+  ...connections,
   home,
   blobsFolder: join(home, 'blobs'),
-  url: `http://127.0.0.1:${control.port}`,
-  stop: control.stop,
+  url: `http://127.0.0.1:${connections.port}`,
+  stop,
 });
 
-type TestStorage = {
-  home: string;
-  storage: ReturnType<typeof openTestDatabase> | undefined;
-};
-
-const resolveTestStorage = (options: EngineTestOptions): TestStorage => {
-  const storage = chooseTestStorage(options);
-  const home = testHome(options, storage);
-
-  if (!home) throw new Error('Engine test storage is missing');
-
-  return { home, storage };
-};
-
-const chooseTestStorage = (
-  options: EngineTestOptions,
-): ReturnType<typeof openTestDatabase> | undefined =>
-  hasStorage(options) ? undefined : openTestDatabase();
-
-const hasStorage = (options: EngineTestOptions): boolean =>
-  [options.database, options.home, options.runtimeDirectory].some(Boolean);
-
-const testHome = (
-  options: EngineTestOptions,
-  storage: TestStorage['storage'],
-): string | undefined => options.home ?? fallbackHome(options, storage);
-
-const fallbackHome = (
-  options: EngineTestOptions,
-  storage: TestStorage['storage'],
-): string | undefined =>
-  options.database
-    ? databaseHome(options.database)
-    : otherHome(options, storage);
-
-const databaseHome = (database: Database): string =>
-  dirname(database.$client.location() ?? '');
-
-const otherHome = (
-  options: EngineTestOptions,
-  storage: TestStorage['storage'],
-): string | undefined => options.runtimeDirectory ?? storage?.directory;
-
+// Port 0 lets the Server bind a free port itself, so no other process can take it first.
 const testEngineInput = (
   options: EngineTestOptions,
   home: string,
-  port: number,
 ): EngineInput =>
-  decided({ ...baseInput(options, home), ...options, home, port });
+  decided({
+    ...baseInput(options, home),
+    ...options,
+    home,
+    port: options.port ?? 0,
+  });
 
 const baseInput = (
   options: EngineTestOptions,
@@ -160,7 +138,7 @@ const fetchFixtureRegistry =
 
 function registerEngineCleanup(
   engine: EngineActor,
-  storage: ReturnType<typeof openTestDatabase> | undefined,
+  storage: TestStorage['storage'],
 ): () => Promise<void> {
   const stop = async (): Promise<void> => {
     if (engine.getSnapshot().status !== 'active') return;
@@ -170,7 +148,7 @@ function registerEngineCleanup(
 
   onTestFinished(async () => {
     await stop();
-    storage?.remove();
+    discardTestStorage(storage);
   });
 
   return stop;

@@ -3,6 +3,7 @@ import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 it('Stop ends an ignored cancel immediately, queues the next Send until the old prompt answers, and Close still closes', async () => {
   const oldPrompt = Promise.withResolvers<void>();
@@ -58,7 +59,7 @@ it('Stop ends an ignored cancel immediately, queues the next Send until the old 
     page.rows.filter((row) => row.sessionUpdate === 'user_message'),
   ).toHaveLength(2);
   await host.caller.session.cancel(session);
-  await host.caller.session.close(session);
+  await closeTestSession(host, session);
   expect(host.agent.processes).toHaveLength(1);
   expect(host.agent.processes[0]?.terminations).toBe(1);
 });

@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest';
 import { PromptChains } from './prompt-chain';
 import {
-  asks,
   newScope,
   promptTo,
   runs,
@@ -43,10 +42,13 @@ it('prompts the Session that started it, which delegation ran only the other way
   ).toBe(runs);
 });
 
-it('asks once a Prompt chain has run ten deep with no user in it', async () => {
+it('blocks once a Prompt chain has run ten deep with no user in it', async () => {
   const outcomes = await backAndForth(cascade(new PromptChains()), 11);
 
-  expect(outcomes).toEqual([...Array.from({ length: 10 }, () => runs), asks]);
+  expect(outcomes).toEqual([
+    ...Array.from({ length: 10 }, () => runs),
+    'CONFLICT',
+  ]);
 });
 
 it('starts the chain again when the user prompts the Session themselves', async () => {
@@ -55,17 +57,17 @@ it('starts the chain again when the user prompts the Session themselves', async 
 
   await backAndForth(send, 10);
 
-  expect(await send('caller', 'unrelated')).toBe(asks);
+  expect(await send('caller', 'unrelated')).toBe('CONFLICT');
   chains.cleared('unrelated');
   expect(await send('unrelated', 'caller')).toBe(runs);
 });
 
-it('leaves a Session the owner kept a Prompt from serving the chain it had', async () => {
+it('carries a Prompt chain across Projects', async () => {
   const chains = new PromptChains();
   const send = cascade(chains);
 
   await backAndForth(send, 4);
 
-  expect(await send('caller', 'foreign')).toBe(asks);
-  expect(chains.sentFrom('foreign')).toBe(1);
+  expect(await send('caller', 'foreign')).toBe(runs);
+  expect(chains.sentFrom('foreign')).toBe(6);
 });

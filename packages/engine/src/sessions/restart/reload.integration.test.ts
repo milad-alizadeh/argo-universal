@@ -5,6 +5,7 @@ import type {
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
+import { closeTestSession } from '#mocks/close-session';
 import { lastNoticeTitle, startIdleSession } from '#mocks/session-restart';
 
 it('reload resumes the same Agent session on a new Agent process and leaves a Notice', async () => {
@@ -66,7 +67,7 @@ it('refuses to reload a Session no prompt reached', async () => {
 it('refuses to reload an archived Session', async () => {
   const host = await startAcpEngine({ steps: [] });
   const { sessionId } = await promptedArchiveSession(host, { type: 'main' });
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await host.caller.session.archive({ sessionId });
 
   await expect(host.caller.session.reload({ sessionId })).rejects.toMatchObject(

@@ -39,6 +39,7 @@ const signInOperation = {
   label: 'Sign in',
   description: 'Starts a sign-in in the browser.',
   tier: 'act' as const,
+  policy: 'allow' as const,
 };
 
 // The service's token endpoint, at its public name, answering a token for any code.

@@ -51,7 +51,7 @@ describe('hydrateStoredFeedRow', (): void => {
     ).toThrow('row message-0#0 has position in its payload');
   });
 
-  it('keeps the Voice mark the Feed restores, while a read drops it', (): void => {
+  it('keeps the Conversation mark the Feed restores, while a read drops it', (): void => {
     const marked = {
       ...message,
       state: 'open' as const,

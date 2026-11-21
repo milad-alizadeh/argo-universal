@@ -23,7 +23,7 @@ catalog:
   # Each OS's own secret store, for Plugin Secrets (ADR-0051).
   "@napi-rs/keyring": 2.1.2
   "@agentclientprotocol/sdk": 1.7.0
-  "@legendapp/list": 3.7.1
+  "@legendapp/list": 3.7.3
   # Web primitives draw on Radix directly (ADR-0020).
   "@radix-ui/react-collapsible": 1.1.20
   "@radix-ui/react-context-menu": 2.3.7
@@ -175,6 +175,8 @@ catalog:
   # mDNS for the Server (ADR-0045): multicast-dns answers for it, one responder per network interface; bonjour-service is the browser tests and a desktop App use. Pure JS.
   bonjour-service: 1.4.4
   multicast-dns: 7.2.5
+  # Ranks Operations for operation_list (search.ts).
+  minisearch: 7.2.0
   ws: 8.22.0
   # Exact pin: XState may change types in minor releases.
   xstate: 5.33.2

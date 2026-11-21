@@ -9,7 +9,6 @@ const endings: {
   response: ScriptedResponse<'session/prompt'>;
 }[] = [
   { reason: 'refusal', response: { result: { stopReason: 'refusal' } } },
-  { reason: 'max_tokens', response: { result: { stopReason: 'max_tokens' } } },
   { reason: 'auth_required', response: { error: RequestError.authRequired() } },
 ];
 

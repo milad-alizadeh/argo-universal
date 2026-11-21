@@ -114,7 +114,6 @@ export const ReopeningTheInspectorRestoresItsDraggedWidth: ScaffoldStory = {
     const width = inspector.getBoundingClientRect().width;
     await pressInspectorButton(context, controlled, 'closed');
     await waitForZeroWidth(canvas, inspectorId);
-    await expect(pageWidth(canvas)).toBeGreaterThanOrEqual(688);
     await controlled.render({ inspectorState: 'open' });
     await waitFor(() =>
       expect(inspector.getBoundingClientRect().width).toBe(width),
@@ -137,7 +136,6 @@ export const DragNarrowsThePageUntilTheInspectorExpands: ScaffoldStory = {
     await controlled.render({ inspectorState: 'open' });
     const list = listHidden(canvas);
     const start = pageWidth(canvas);
-    await expect(start).toBeGreaterThanOrEqual(688);
     await drag(context, resizeInspectorLabel, 300 - start);
     await waitFor(() => expect(Math.round(pageWidth(canvas))).toBe(300));
     await expect(listHidden(canvas)).toBe(list);

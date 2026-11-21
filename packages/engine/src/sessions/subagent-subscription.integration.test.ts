@@ -3,6 +3,7 @@ import { scenarios } from '@repo/mocks/agent/scenarios';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 async function collectFeed(
   iterator: AsyncIterator<FeedSubscribeOutput>,
@@ -59,7 +60,7 @@ it.each(['open', 'closed'] as const)(
       await host.caller.session.listAgents({ sessionId }),
     );
 
-    if (state === 'closed') await host.caller.session.close({ sessionId });
+    if (state === 'closed') await closeTestSession(host, { sessionId });
     const controller = new AbortController();
     onTestFinished(() => controller.abort());
     const caller = host.createCaller({ signal: controller.signal });
@@ -75,13 +76,13 @@ it.each(['open', 'closed'] as const)(
     const collecting = collectFeed(iterator, events);
 
     try {
-      if (state === 'open') await host.caller.session.close({ sessionId });
+      if (state === 'open') await closeTestSession(host, { sessionId });
       await host.caller.session.prompt({
         sessionId,
         prompt: [{ type: 'text', text: 'Follow up' }],
       });
       await waitForAcpSessionIdle(host, sessionId);
-      await host.caller.session.close({ sessionId });
+      await closeTestSession(host, { sessionId });
       await vi.waitFor(() =>
         expect(events).toEqual(
           expect.arrayContaining([

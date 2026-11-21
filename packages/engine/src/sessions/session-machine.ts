@@ -60,10 +60,8 @@ import {
   admitsPermissionAnswer,
   answeredRequest,
 } from './admission/answer-admission';
-import {
-  saveSessionArchive,
-  removeSessionCheckout,
-} from './archive/archive-operations';
+import { saveSessionArchive } from './archive/archive-operations';
+import { removeSessionCheckout } from './archive/checkout-cleanup';
 import { archiveFailure } from './archive/own-archive';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { sessionConfiguration, type ConfigurationStep } from './configuration';
@@ -250,6 +248,9 @@ type LoadSessionInput = {
 
 export const checkoutLimit = 10_000;
 
+// How long an archived Session can be undone before its checkout is removed: the 5-second toast, plus time for an Undo clicked near its end to reach the Server.
+const archiveUndoMs = 6_000;
+
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
 
@@ -381,7 +382,10 @@ const sessionSetup = setup({
       { context: SessionContext; writer: WriterActorRef | undefined }
     >(({ input }) => saveSessionArchive(input.context, input.writer, null)),
     removeCheckout: fromPromise<void, SessionContext>(({ input, signal }) =>
-      removeSessionCheckout(input.input.database, input, signal),
+      removeSessionCheckout(input.input.database, input, {
+        signal,
+        writer: input.input.writer,
+      }),
     ),
     cancelAcp: fromPromise<void, SessionContext>(({ input }) =>
       cancelAcp(input),
@@ -882,6 +886,12 @@ const sessionSetup = setup({
       elicitationQueue: ({ context }): SessionContext['elicitationQueue'] =>
         context.elicitationQueue.slice(1),
     }),
+    // A Prompt reached the Session while it waits on Elicitations: each is cancelled, so the Agent can act on the Prompt (#2507).
+    cancelElicitations: enqueueActions(({ context, enqueue }) => {
+      for (const { requestId } of context.elicitationQueue)
+        context.acpLifetime.answerElicitation(requestId, { action: 'cancel' });
+      enqueue.assign({ elicitationQueue: [] });
+    }),
     rememberCancellation: assign({
       turnEnding: ({ context }): FeedTurnEnding => ({
         ...context.turnEnding,
@@ -1037,6 +1047,8 @@ const sessionSetup = setup({
       pendingInputRequest(context)?.kind === 'permission',
     hasElicitation: ({ context }): boolean =>
       pendingInputRequest(context)?.kind === 'elicitation',
+    appendsPrompt: ({ event }): boolean =>
+      event.type === 'session.queue' && event.command.action === 'append',
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
       answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
@@ -1049,8 +1061,8 @@ const sessionSetup = setup({
   },
   delays: {
     checkoutLimit,
-    // Give Undo time to reach the Server after a click near the end of the 5-second toast.
-    checkoutRemovalDelay: 6_000,
+    checkoutRemovalDelay: ({ context }) =>
+      context.input.archiveUndoMs ?? archiveUndoMs,
     feedFlushLimit: 5_000,
   },
 });
@@ -1712,7 +1724,17 @@ export const sessionMachine = sessionSetup.createMachine({
                   tags: ['running', 'requiresAction'],
                   entry: 'answerHookedPermission',
                 },
-                awaitingElicitation: { tags: ['running', 'requiresAction'] },
+                // A Prompt settles the Elicitations it waits on; a Permission request waits for its answer whatever arrives.
+                awaitingElicitation: {
+                  tags: ['running', 'requiresAction'],
+                  on: {
+                    'session.queue': {
+                      guard: 'appendsPrompt',
+                      target: 'working',
+                      actions: ['changePromptQueue', 'cancelElicitations'],
+                    },
+                  },
+                },
                 cancelling: {
                   tags: ['settling'],
                   on: {

@@ -15,7 +15,7 @@ type Asker = Exclude<ScreenRequester, { kind: 'person' }>;
 
 // Why no picture was taken, in the words the person reads in the Feed.
 const missWords = {
-  refused: 'No picture was taken: screen sight is off on this Device.',
+  refused: 'No picture was taken: screen sharing is off on this Device.',
   not_opened: 'No picture was taken: no Argo desktop App could be reached.',
   not_available:
     'No picture was taken: this computer would not let Argo capture the screen.',

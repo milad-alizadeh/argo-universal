@@ -3,172 +3,31 @@ import type { OperationParams } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
 import { callerSessionParam, ownSessionOnly } from './caller-session-targets';
 
-// What an Operation reaches: nothing in particular, one Project, or one Session.
-export type ScopeTarget =
-  | { kind: 'global' }
-  | { kind: 'project'; projectId: string }
-  | { kind: 'session'; sessionId: string; opening: boolean };
-
-// The target, and the params the Operation then runs with.
-export type Targeted<Params> = { target: ScopeTarget; params: Params };
-
-type TargetRule<Params> = (
-  params: Params,
-  caller: SessionCaller,
-) => Targeted<Params>;
-
-type TargetRules = { [Id in OperationId]: TargetRule<OperationParams<Id>> };
-
-const global = <Params>(params: Params): Targeted<Params> => ({
-  target: { kind: 'global' },
-  params,
-});
-
-const projectParam = <Params extends { projectId: string }>(
-  params: Params,
-): Targeted<Params> => ({
-  target: { kind: 'project', projectId: params.projectId },
-  params,
-});
-
-const sessionParam = <Params extends { sessionId: string }>(
-  params: Params,
-): Targeted<Params> => ({
-  target: { kind: 'session', sessionId: params.sessionId, opening: false },
-  params,
-});
-
-// Only a close acts on a Session that is still opening (owner, 2026-10-28).
-const openingSessionParam = <Params extends { sessionId: string }>(
-  params: Params,
-): Targeted<Params> => ({
-  target: { kind: 'session', sessionId: params.sessionId, opening: true },
-  params,
-});
-
-// The picture is the calling Session's own: it takes no params and reaches nothing but that Session, so an Agent's call needs no ask.
-const ownSession = <Params>(
-  params: Params,
-  caller: SessionCaller,
-): Targeted<Params> => ({
-  target: { kind: 'session', sessionId: caller.sessionId, opening: false },
-  params,
-});
-
-// A Session lists its own Project's Sessions unless it names another Project.
-const listedProject: TargetRule<OperationParams<'session.list'>> = (
-  params,
-  caller,
-) => {
-  const projectId = params.projectId ?? caller.projectId;
-
-  return {
-    target: { kind: 'project', projectId },
-    params: { ...params, projectId },
-  };
+type Defaults = {
+  [Id in OperationId]?: (
+    params: OperationParams<Id>,
+    caller: SessionCaller,
+  ) => OperationParams<Id>;
 };
 
-type OpenedDestination = OperationParams<'app.open'>['destination'];
-
-// A Session's or a Project's Screen reaches that one; the lists, Agents, Settings and Plugin Pages reach nothing in particular.
-const openedTarget = (destination: OpenedDestination): ScopeTarget => {
-  if (destination.screen === 'session')
-    return {
-      kind: 'session',
-      sessionId: destination.sessionId,
-      opening: false,
-    };
-
-  return destination.screen === 'project'
-    ? { kind: 'project', projectId: destination.projectId }
-    : { kind: 'global' };
-};
-
-const openedScreen: TargetRule<OperationParams<'app.open'>> = (params) => ({
-  target: openedTarget(params.destination),
-  params,
-});
-
-// Every Operation names its target when it enters the registry.
-const targetRules = {
-  'app.open': openedScreen,
-  'app.screenshot': ownSession,
-  'project.list': global,
-  'project.add': global,
-  'project.clone': global,
-  'project.create': global,
-  'project.update': projectParam,
-  'project.listBranches': projectParam,
-  'session.list': listedProject,
-  'session.get': sessionParam,
-  'session.feed': sessionParam,
-  'session.changes': sessionParam,
-  'session.diff': sessionParam,
-  'session.listAgents': sessionParam,
-  'session.listShells': sessionParam,
-  'session.listBranches': sessionParam,
-  'session.new': projectParam,
-  'session.queue': sessionParam,
-  'session.submit': sessionParam,
-  'session.prompt': sessionParam,
-  'session.cancel': sessionParam,
-  'session.rename': sessionParam,
-  'session.setConfigOption': sessionParam,
-  'session.savePlan': sessionParam,
+const defaults: Defaults = {
+  'session.list': (params, caller) => ({
+    ...params,
+    projectId: params.projectId ?? caller.projectId,
+  }),
+  'session.rename': callerSessionParam,
   'session.declareSubagentRole': callerSessionParam,
   'session.setTodos': callerSessionParam,
   'session.setTodoStep': callerSessionParam,
-  'session.close': openingSessionParam,
-  'session.reload': sessionParam,
-  'session.clear': sessionParam,
-  'shell.stop': sessionParam,
-  'session.archive': sessionParam,
-  'session.unarchive': sessionParam,
-  'registry.get': global,
-  'diagram.validate': global,
-  'registry.refresh': global,
-  'registry.sync': global,
-  'agent.list': global,
-  'agent.install': global,
-  'agent.remove': global,
-  'agent.setEnvironment': global,
-  'agent.getSuggestionModels': global,
-  'agent.setSuggestionModel': global,
-  'agent.getAccess': global,
-  'agent.setAccess': global,
-  'agent.getTodoList': global,
-  'agent.setTodoList': global,
-  'agent.installInstructions': global,
-  'plugin.list': global,
-  'plugin.guide': global,
   'plugin.new': callerSessionParam,
-  'plugin.activate': global,
-  'plugin.setEnabled': global,
-  'plugin.getSettings': global,
-  'plugin.setSetting': global,
-  'voice.status': global,
-  'voice.listDevices': global,
-  'voice.chooseDevices': global,
-  'voice.start': sessionParam,
-  'voice.getSettings': global,
-  'voice.setSettings': global,
-  'voice.listVoices': global,
-  'voice.saveCustomVoice': global,
-  'voice.setVoice': global,
-  'voice.deleteCustomVoice': global,
-  'voice.setInstructions': global,
-  'voice.setCallOptions': global,
-  'voice.preview': global,
-  'voice.end': callerSessionParam,
-  'voice.hangUp': ownSessionOnly,
-} satisfies TargetRules;
+  'conversation.end': callerSessionParam,
+  'conversation.hangUp': ownSessionOnly,
+};
 
-const targets: TargetRules = targetRules;
-
-export function scopeTarget<Id extends OperationId>(
+export function scopedParams<Id extends OperationId>(
   id: Id,
   params: OperationParams<Id>,
   caller: SessionCaller,
-): Targeted<OperationParams<Id>> {
-  return targets[id](params, caller);
+): OperationParams<Id> {
+  return defaults[id]?.(params, caller) ?? params;
 }

@@ -1,8 +1,4 @@
 import { sessionRows } from '@repo/mocks/app';
-import {
-  nestedSessions,
-  parent as mixedParent,
-} from './sessions-list-nested-fixtures';
 import { sessionsListProps } from './sessions-list.mocks';
 
 // A selected long title beside unread and waiting Sessions, with both Agent marks.
@@ -32,19 +28,4 @@ export const statusSessions = {
 export const compactStatusSessions = {
   ...statusSessions,
   view: { ...statusSessions.view, layout: 'compact' as const },
-};
-
-export { mixedParent };
-
-export const standaloneSession = {
-  ...sessionRows.unread,
-  title: 'Standalone Session',
-  activityAt: 400,
-  createdAt: 400,
-};
-
-// A group holding delegated work keeps one tree lane for every top-level row, so a childless Session lines up with a parent.
-export const mixedSessions = {
-  ...nestedSessions,
-  sessions: [...nestedSessions.sessions, standaloneSession],
 };

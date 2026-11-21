@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
@@ -43,7 +44,7 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
       expect.objectContaining({ id: otherId, inScope: true }),
     ]),
   );
-  expect(await first.caller.operations.list.query()).toContainEqual(
+  expect(await first.caller.operations.list.query()).not.toContainEqual(
     expect.objectContaining({
       id: 'session.close',
       enabled: true,
@@ -56,8 +57,7 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
       params: { sessionId: second.sessionId },
     }),
   ).rejects.toMatchObject({
-    message: 'A Permission request requires an active Turn',
-    data: { code: 'CONFLICT' },
+    message: expect.stringMatching(/unknown operation/i),
   });
 
   const events = await fixture.host.caller.feed.subscribe({
@@ -82,7 +82,7 @@ it('revokes a closed Session token and reopens with a fresh token without stoppi
   const second = await openAccessSession(fixture, 'Second');
   const session = { sessionId: first.sessionId };
 
-  await fixture.host.caller.session.close(session);
+  await closeTestSession(fixture.host, session);
   await expect(first.caller.operations.list.query()).rejects.toMatchObject({
     data: { code: 'UNAUTHORIZED' },
   });

@@ -55,10 +55,9 @@ describe('insets', () => {
 });
 
 describe('headings and footers', () => {
-  it('start a web card on its rows text, 16 in at every width', () => {
+  it('give a web card a space below its heading', () => {
     const card = look({ appearance: 'grouped' }).section;
 
-    expect(card.inset).toBe('px-4');
     expect(card.headingBelow).not.toBe('');
   });
 

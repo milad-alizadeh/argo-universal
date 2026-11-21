@@ -17,6 +17,7 @@ export const sessionRestartOperations = {
     params: SessionReloadInput,
     result: SessionReloadOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['restart', 'refresh', 'skills', 'extensions'],
   },
   'session.clear': {
@@ -28,6 +29,7 @@ export const sessionRestartOperations = {
     params: SessionClearInput,
     result: SessionClearOutput,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['reset', 'context', 'forget', 'new'],
   },
 } as const satisfies Record<string, OperationDefinition>;

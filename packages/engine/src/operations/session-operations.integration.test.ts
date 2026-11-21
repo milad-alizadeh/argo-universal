@@ -3,6 +3,7 @@ import { runningShellStep } from '@repo/mocks/agent/shell-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { startSessionJourney } from '#mocks/session-journey';
 
@@ -40,17 +41,15 @@ it('saves a plan through its Operation in the Session Checkout', async () => {
     prompt: [{ type: 'text', text: 'Start work' }],
   });
 
-  const caller = await operationCaller(host);
-
   expect(
-    await runOperation(caller.operations, {
-      id: 'session.savePlan',
-      params: { ...created, plan: '# Review the change\n\nInspect the diff.' },
+    await host.caller.session.savePlan({
+      ...created,
+      plan: '# Review the change\n\nInspect the diff.',
     }),
   ).toEqual({ path: '.argo/plans/review-the-change.md' });
 });
 
-it('closes a Session through its Operation and releases its Agent Session', async () => {
+it('keeps Session shutdown internal and releases its Agent Session', async () => {
   const closed: CloseSessionRequest[] = [];
 
   const host = await startAcpEngine({
@@ -61,11 +60,14 @@ it('closes a Session through its Operation and releases its Agent Session', asyn
   const created = await host.caller.session.new(emptySessionInput);
   const caller = await operationCaller(host);
 
-  await runOperation(caller.operations, {
-    id: 'session.close',
-    params: created,
-  });
+  await expect(
+    runOperation(caller.operations, {
+      id: 'session.close',
+      params: created,
+    }),
+  ).rejects.toThrow(/unknown operation/i);
 
+  await closeTestSession(host, created);
   expect(closed).toEqual([{ sessionId: 'owned-1' }]);
 });
 

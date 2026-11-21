@@ -12,7 +12,7 @@ import {
   pluginsRow,
   projectsRow,
   serversRow,
-  voiceRow,
+  conversationRow,
 } from './settings-list-server-rows';
 
 const wideOnly = (wide: boolean, row: SettingsRow): SettingsRow[] =>
@@ -81,6 +81,6 @@ const workspaceRows = (props: SettingsListViewProps): SettingsRow[] => [
   projectsRow(props),
   agentsRow(props),
   agentAccessRow(props),
-  voiceRow(props),
+  conversationRow(props),
   pluginsRow(props),
 ];

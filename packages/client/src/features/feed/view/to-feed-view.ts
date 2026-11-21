@@ -6,6 +6,7 @@ import {
 import type { FeedView, FeedViewItem } from './feed-view';
 import { isGroupRow, startsNewTurn } from './grouping-rules';
 import { OpenGroup } from './open-group';
+import { withoutRecordedAgentCalls } from './operation-pairs';
 import { operationRecords, presentOperation } from './operation-records';
 import { foldedPrompts, subagentItem } from './subagent-items';
 import { isTodoCall } from './todo-call';
@@ -18,10 +19,10 @@ interface Pass {
   snapshot: SessionSnapshot;
 }
 
-// A Voice call's Prompt is stored for the Agent and never drawn (ADR-0064).
+// A Conversation's Prompt is stored for the Agent and never drawn (ADR-0064).
 const isVoicePrompt = (row: SessionUpdate): boolean =>
   row.sessionUpdate === 'prompt_message' &&
-  row._meta.argo.sender.type === 'voice';
+  row._meta.argo.sender.type === 'conversation';
 
 // The Composer shows the checklist, so neither its row nor the calls that keep it draw in the Feed.
 const drawsNothing = (row: SessionUpdate): boolean =>
@@ -76,8 +77,10 @@ export function toFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
 ): FeedView {
-  const pass = newPass(rows, snapshot);
-  appendRows(rows, pass);
+  const folded = withoutRecordedAgentCalls(rows, snapshot);
+  const pass = newPass(folded, snapshot);
+
+  appendRows(folded, pass);
   pass.items.push(...pass.group.flush());
 
   return { items: pass.items, plan: selectActivePlan(rows) };

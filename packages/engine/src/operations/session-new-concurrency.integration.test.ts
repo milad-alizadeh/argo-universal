@@ -1,7 +1,6 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
-import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { runOperation } from '#mocks/operations';
 import {
   delegationJourney,
@@ -38,26 +37,7 @@ it('reserves the last running slot across concurrent Session starts before Agent
       : value;
   };
 
-  const outcomes = Promise.allSettled([run(), run()]);
-
-  const pending = waitForAcpSnapshot(
-    journey.host,
-    journey.caller.sessionId,
-    (snapshot) => snapshot.pendingPermission?.operation?.id === 'session.new',
-  );
-
-  expect(await Promise.race([pending.then(() => 'permission'), outcomes])).toBe(
-    'permission',
-  );
-  const { pendingPermission } = await pending;
-
-  if (!pendingPermission) throw new Error('Missing cap Permission request');
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: pendingPermission.requestId,
-    optionId: 'reject_once',
-  });
-  const settled = await outcomes;
+  const settled = await Promise.allSettled([run(), run()]);
 
   expect(
     settled.filter((outcome) => outcome.status === 'fulfilled'),
@@ -66,7 +46,9 @@ it('reserves the last running slot across concurrent Session starts before Agent
     expect.arrayContaining([
       expect.objectContaining({
         status: 'rejected',
-        reason: expect.objectContaining({ message: 'The user refused' }),
+        reason: expect.objectContaining({
+          message: 'The Session delegation limit has been reached',
+        }),
       }),
     ]),
   );

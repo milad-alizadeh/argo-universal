@@ -3,6 +3,7 @@ import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 it('configuration sent immediately after session/new reaches the opened Session', async () => {
@@ -67,6 +68,6 @@ it('a Session runs a Turn when its Agent does not advertise session/close', asyn
     prompt: [{ type: 'text', text: 'First' }],
   });
   await waitForAcpSessionIdle(host, created.sessionId);
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
   expect(closes).toEqual([]);
 });

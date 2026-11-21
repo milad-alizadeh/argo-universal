@@ -1,4 +1,5 @@
-import type { ScriptedStep } from './scripted-scenario.ts';
+import { acpConfiguration } from './acp-configuration.ts';
+import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
 const messageCount = 180;
 
@@ -27,15 +28,34 @@ const historyPair = (index: number): ScriptedStep[] => [
   historyMessage(index),
 ];
 
-export const feedHistorySteps: ScriptedStep[] = [
-  ...Array.from({ length: messageCount }, (_, index) =>
-    historyPair(index + 1),
-  ).flat(),
+const historySteps = Array.from({ length: messageCount }, (_, index) =>
+  historyPair(index + 1),
+).flat();
+
+export const continuedHistoryPrompt = 'Continue after paging history';
+
+export const continuedHistoryReply = 'History continued in the live Turn.';
+
+const feedHistorySteps = (reply = 'Latest history reply.'): ScriptedStep[] => [
+  ...historySteps,
   {
     type: 'update',
     update: {
       sessionUpdate: 'agent_message_chunk',
-      content: { type: 'text', text: 'Latest history reply.' },
+      content: { type: 'text', text: reply },
     },
   },
 ];
+
+export const feedHistoryScenario: ScriptedScenario = {
+  configOptions: acpConfiguration,
+  steps: feedHistorySteps(),
+  responses: {
+    'session/prompt': [
+      {
+        prompt: continuedHistoryPrompt,
+        steps: feedHistorySteps(continuedHistoryReply),
+      },
+    ],
+  },
+};

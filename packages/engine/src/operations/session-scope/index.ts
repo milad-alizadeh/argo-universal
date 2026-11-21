@@ -1,22 +1,20 @@
-import type { OperationId } from '@repo/contracts/operations';
+import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { z } from 'zod';
 import type { OperationCard } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
 import { isNativeStartOperation, type NativeStartId } from '../native-start';
+import { operationPermission } from '../operation-permission';
 import { validateParams } from '../params';
-import type { SessionCaller } from '../session-tokens';
 import {
   cardUnless,
   confirmed,
   unreserved,
   type ScopedRun,
 } from './confirmation';
-import { ScopeCoverage } from './coverage';
 import { Delegation, type ScopePorts } from './delegation';
 import { operationCard } from './rules';
-import { scopeTarget, type ScopeTarget } from './targets';
-
-export { scopedOperations } from './listing';
+import { scopedParams } from './targets';
 
 export { PromptChains } from './prompt-chain';
 
@@ -35,21 +33,31 @@ const parsed = <Id extends TargetedId>(
   params: Json,
 ): ParsedOperation<Id> => ({ id, params: validateParams(id, params) });
 
-// A Session token's Operation runs within the caller's scope, or asks the user first (ADR-0044).
+const sessionTarget = z.object({ sessionId: z.string() });
+
+type Admission = {
+  id: OperationId;
+  policy: ReturnType<typeof operationPermission>;
+};
+
+// The registry policy decides whether a Session token’s Operation asks first (ADR-0044).
 export class SessionScope {
   private readonly delegation: Delegation;
-  private readonly coverage: ScopeCoverage;
-  public constructor(ports: ScopePorts) {
+  public constructor(private readonly ports: ScopePorts) {
     this.delegation = new Delegation(ports);
-    this.coverage = new ScopeCoverage(ports.directory);
   }
   // Params are parsed once here, and the Operation runs with exactly these; every failure rejects.
   public async run(
     context: ScopedRun,
     { id, params }: { id: OperationId; params: Json },
   ): Promise<OperationResult> {
-    if (isNativeStartOperation(id))
-      return this.delegation.run(context, { id, params });
+    if (isNativeStartOperation(id)) {
+      const policy = operationPermission(operations[id].policy, false);
+
+      return this.permitted(context, { id, policy }, () =>
+        this.delegation.run(context, { id, params }),
+      );
+    }
 
     return this.runTargeted(context, { id, params });
   }
@@ -66,28 +74,44 @@ export class SessionScope {
       context.invoke({ id, params: scoped }),
     );
   }
-  // The target table names what the Operation reaches; its tier says what the caller's scope covers.
+  // Caller defaults are applied before the Operation policy is evaluated.
   private admit<Id extends TargetedId, Result>(
     context: ScopedRun,
     { id, params }: ParsedOperation<Id>,
     invoke: (params: OperationParams<Id>) => Promise<Result>,
   ): Promise<Result> {
-    const scoped = scopeTarget(id, params, context.caller);
+    const scoped = scopedParams(id, params, context.caller);
+    const policy = this.permission(context, id, scoped);
 
-    const card = (): OperationCard | undefined =>
-      this.card(context.caller, { id, target: scoped.target });
-
-    return confirmed(context, { card, release: unreserved }, () =>
-      invoke(scoped.params),
-    );
+    return this.permitted(context, { id, policy }, () => invoke(scoped));
   }
-  private card(
-    caller: SessionCaller,
-    operation: { id: OperationId; target: ScopeTarget },
-  ): OperationCard | undefined {
-    return cardUnless(
-      this.coverage.covers(caller, operation),
-      operationCard(operation.id),
+  private permitted<Result>(
+    context: ScopedRun,
+    { id, policy }: Admission,
+    invoke: () => Promise<Result>,
+  ): Promise<Result> {
+    const card = (): OperationCard | undefined =>
+      cardUnless(policy !== 'ask', operationCard(id));
+
+    return confirmed(context, { card, release: unreserved }, invoke);
+  }
+  private permission(
+    context: ScopedRun,
+    id: OperationId,
+    params: OperationParams,
+  ): ReturnType<typeof operationPermission> {
+    const { policy } = operations[id];
+
+    if (policy !== 'ask-outside-project')
+      return operationPermission(policy, false);
+
+    const { sessionId } = sessionTarget.parse(params);
+    const target = this.ports.directory.session(sessionId);
+
+    return operationPermission(
+      policy,
+      false,
+      target.projectId !== context.caller.projectId,
     );
   }
 }

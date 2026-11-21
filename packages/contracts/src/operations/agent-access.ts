@@ -15,6 +15,7 @@ export const agentAccessOperations = {
     params: z.strictObject({}).default({}),
     result: AgentAccess,
     tier: 'read',
+    policy: 'allow',
     keywords: ['settings', 'token', 'cli', 'access'],
   },
   'agent.setAccess': {
@@ -25,6 +26,7 @@ export const agentAccessOperations = {
     params: AgentAccess.strict(),
     result: AgentAccess,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['settings', 'token', 'cli', 'enable', 'disable'],
   },
   'agent.installInstructions': {
@@ -35,6 +37,7 @@ export const agentAccessOperations = {
     params: z.strictObject({}).default({}),
     result: z.strictObject({ updated: z.boolean() }),
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['settings', 'skill', 'instructions', 'sandbox'],
   },
 } as const;

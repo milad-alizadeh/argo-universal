@@ -2,6 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
+import { closeTestSession } from '#mocks/close-session';
 import { sessionSources } from '#mocks/session-sources';
 import { userOrigin } from './prompt-sender';
 import { Sessions } from './sessions';
@@ -99,7 +100,7 @@ it('opens a closed Session before its next Prompt', async () => {
   const host = await startAcpEngine({ steps: [] });
   const { sessionId } = await promptedArchiveSession(host);
   const sessions = openSessions(host);
-  await sessions.implementations['session.close']({ sessionId });
+  await closeTestSession(host, { sessionId });
 
   await expect(
     sessions.prompt({ sessionId, prompt }, userOrigin).accepted,

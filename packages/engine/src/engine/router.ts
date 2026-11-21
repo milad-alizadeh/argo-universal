@@ -1,6 +1,7 @@
 import { createAgentsRouter } from '../agents';
 import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
+import { createConversationRouter } from '../conversation';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
@@ -13,11 +14,7 @@ import { mergeRouters, router, routerFactory } from '../rpc';
 import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
-import {
-  createVoiceRouter,
-  voiceSessions,
-  type VoiceSessionWork,
-} from '../voice';
+import { attachConversation } from './attach-conversation';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.
@@ -54,32 +51,12 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
-// What the Voice call does through Sessions: send Prompts, stop a Turn, hear Turns end, and ask for a picture of the screen.
-const voiceWork = (
-  deps: AppRouterDeps,
-  sessions: Sessions,
-): VoiceSessionWork => ({
-  prompt: (sessionId, text) =>
-    sessions.promptFromVoice({ sessionId, prompt: [{ type: 'text', text }] }),
-  stop: (sessionId) => sessions.stopFromVoice(sessionId),
-  capture: (sessionId) =>
-    deps.screenSight.capture({ kind: 'voice', sessionId }),
-  watchTurns: (sessionId, listener) => sessions.watchTurns(sessionId, listener),
-});
-
-// The Voice call sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
-function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
-  const linked = voiceSessions(deps, voiceWork(deps, sessions));
-
-  deps.voice.attach(linked);
-}
-
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
-  attachVoice(deps, sessions);
+  attachConversation(deps, sessions);
 
   const operations = createOperationProcedures({ ...deps, sessions });
 
@@ -87,7 +64,10 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
     ...operations,
     session: mergeRouters(sessions.router, operations.session),
     shell: mergeRouters(createShellRouter(deps), operations.shell),
-    voice: mergeRouters(createVoiceRouter(deps), operations.voice),
+    conversation: mergeRouters(
+      createConversationRouter(deps),
+      operations.conversation,
+    ),
   });
 });
 

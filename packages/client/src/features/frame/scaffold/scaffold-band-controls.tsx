@@ -31,11 +31,7 @@ type ExpandReads = PartReads<
 >;
 
 type InspectorToggleReads = PartReads<
-  | 'inspectorState'
-  | 'onInspectorStateChange'
-  | 'band'
-  | 'inspectorAvailable'
-  | 'onWorkbenchIntentChange',
+  'inspectorState' | 'onInspectorStateChange' | 'band' | 'inspectorAvailable',
   'inspector'
 >;
 
@@ -72,11 +68,6 @@ function expandProps({ scaffold, layout }: ExpandReads): IconButtonProps {
   };
 }
 
-function toggleInspector({ scaffold, layout }: InspectorToggleReads): void {
-  if (!layout.inspector.open) scaffold.onWorkbenchIntentChange('hidden');
-  moveInspector(scaffold, 'toggle');
-}
-
 function inspectorToggleProps(parts: InspectorToggleReads): IconButtonProps {
   const { scaffold, layout } = parts;
   const open = layout.inspector.open;
@@ -86,7 +77,7 @@ function inspectorToggleProps(parts: InspectorToggleReads): IconButtonProps {
     icon: 'stage',
     accessibilityLabel: open ? 'Hide Inspector' : 'Show Inspector',
     disabled: !open && !inspectorOffered(scaffold),
-    onPress: () => toggleInspector(parts),
+    onPress: () => moveInspector(scaffold, 'toggle'),
   };
 }
 
@@ -132,7 +123,7 @@ function TrailingGroup({
   return (
     <View
       testID="window-band-trailing"
-      className="shrink-0 flex-row items-center gap-1 web:[app-region:no-drag]"
+      className="shrink-0 flex-row items-center gap-1"
     >
       {trailingContent(band, parts)}
     </View>

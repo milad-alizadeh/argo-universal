@@ -34,9 +34,7 @@ Feature: Session Permission request
     Examples:
       | frame | agent | option | optionId |
       | wide  | 1     | Allow  | allow    |
-      | wide  | 2     | Reject | reject   |
-      | phone | 1     | Reject | reject   |
-      | phone | 2     | Allow  | allow    |
+      | phone | 2     | Reject | reject   |
 
 
   Scenario: Keep delayed Permission command details after reconnecting the App

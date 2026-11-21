@@ -13,6 +13,7 @@ import {
   pluginCardSection,
   type SessionPluginCard,
 } from './plugin-card-section';
+import { schedulesSection } from './schedules-section';
 import {
   drawsCard,
   itemsOf,
@@ -28,6 +29,7 @@ const builtInSections: readonly SessionSection[] = [
   changesSection,
   agentsSection,
   shellsSection,
+  schedulesSection,
 ];
 
 // All a Section list needs of a Session: the Plugin cards it has open. The Sections read the rest when they draw.

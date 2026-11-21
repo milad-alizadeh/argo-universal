@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { closeTestSession } from '#mocks/close-session';
 import { permissionJourney } from '#mocks/native-permission';
 import { beginHeldTurn, operationRaceHost } from '#mocks/operation-race';
 import { runOperation } from '#mocks/operations';
@@ -54,7 +55,7 @@ it('cancels a pending self archive when the Session closes before its Turn finis
       wait: true,
     }),
   ).toEqual({ scheduled: true });
-  await host.caller.session.close({ sessionId: session.sessionId });
+  await closeTestSession(host, { sessionId: session.sessionId });
   expect((await host.caller.session.list({ archived: true })).sessions).toEqual(
     [],
   );
@@ -92,7 +93,7 @@ it('keeps a deferred archive failure visible after closing its Agent', async () 
         }),
       );
     await expect(
-      host.caller.session.close({ sessionId: session.sessionId }),
+      closeTestSession(host, { sessionId: session.sessionId }),
     ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' });
     expect(
       (

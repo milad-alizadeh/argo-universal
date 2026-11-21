@@ -1,7 +1,8 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { Text, View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { lineViews } from '../../../../../mocks/line-views';
 import {
@@ -220,6 +221,41 @@ export const SecondAgentListOnlyPromptWide = listOnlyPrompt(
   'agent-2',
   layoutWidths.wide,
 );
+
+// Capture the row before its inner Markdown reports layout, as a list recycling the prompt would.
+function FirstLayout(
+  props: React.ComponentProps<typeof UserMessage>,
+): React.JSX.Element {
+  const row = useRef<React.ComponentRef<typeof View>>(null);
+  const [initial, setInitial] = useState(0);
+  useLayoutEffect(() => {
+    if (row.current) setInitial(row.current.getBoundingClientRect().height);
+  }, []);
+
+  return (
+    <View style={{ width: 320 }}>
+      <View ref={row} testID="measured-prompt">
+        <UserMessage {...props} />
+      </View>
+      <Text testID="initial-height">{initial}</Text>
+    </View>
+  );
+}
+
+export const FirstLayoutOfCollapsedPrompt: Story = {
+  args: { row: recordedPrompt('agent-1', markdownRecording) },
+  render: (props) => <FirstLayout {...props} />,
+  play: async ({ canvas }) => {
+    const more = await canvas.findByRole('button', { name: 'Show more' });
+    const initial = Number(canvas.getByTestId('initial-height').textContent);
+    const row = canvas.getByTestId('measured-prompt');
+    await expect(initial).toBeGreaterThan(0);
+    await expect(initial).toBeLessThanOrEqual(
+      row.getBoundingClientRect().height + 1,
+    );
+    await expect(more).toBeVisible();
+  },
+};
 
 // A long markdown prompt shows only whole lines above Show more, then every line once expanded.
 function showsMore(agent: MockAgent, width: number): Story {

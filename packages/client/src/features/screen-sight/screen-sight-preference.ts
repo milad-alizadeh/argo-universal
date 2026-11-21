@@ -43,7 +43,7 @@ type ScreenSightPreference = {
   setEnabled: (enabled: boolean) => void;
 };
 
-// The seam a Settings switch will use once one is designed: no screen shows it yet.
+// What the Screen sight switch on the Agent access page reads and writes.
 export function useScreenSightEnabled(): ScreenSightPreference {
   const client = useQueryClient();
   const enabled = useQuery(preference).data ?? false;

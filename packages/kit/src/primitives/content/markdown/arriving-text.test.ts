@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   arrivingTrail,
   firstTrail,
@@ -85,19 +85,28 @@ describe('the text a streaming block remembers', () => {
   });
 });
 
+const readText = (): string => hello;
+
 describe('the trail a block starts with', () => {
   it('fades nothing of a block drawn with its message, and follows it only while it is written', () => {
-    expect(firstTrail(hello, { began: false, growing: true })).toEqual(
+    expect(firstTrail(readText, { began: false, growing: true })).toEqual(
       settledTrail(hello),
     );
-    expect(firstTrail(hello, { began: false, growing: false })).toBeNull();
+  });
+
+  it('skips reading the text of a settled block mounted during a fling', () => {
+    const read = vi.fn<typeof readText>(readText);
+    expect(firstTrail(read, { began: false, growing: false })).toBeNull();
+    expect(read).not.toHaveBeenCalled();
   });
 
   it('fades the whole of a block that starts in a message already streaming, even one the same chunk has already finished', () => {
     const whole = { text: hello, marks: [0] };
 
-    expect(firstTrail(hello, { began: true, growing: true })).toEqual(whole);
-    expect(firstTrail(hello, { began: true, growing: false })).toEqual(whole);
+    expect(firstTrail(readText, { began: true, growing: true })).toEqual(whole);
+    expect(firstTrail(readText, { began: true, growing: false })).toEqual(
+      whole,
+    );
     expect(followText(whole, hello, false)).toBe(whole);
   });
 });

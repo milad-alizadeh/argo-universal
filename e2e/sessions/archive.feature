@@ -3,6 +3,7 @@ Feature: Archive a Session
     Given a Session named "Check the live list"
     And an uncommitted file in the Session's Checkout
     When I archive the Session "Check the live list" from its row
+    And I confirm the archive after the Checkout warning
     Then the Sessions list no longer shows the live Session
     And a toast announces the archive and offers Undo
     And the Session page is read-only instead of showing the Composer

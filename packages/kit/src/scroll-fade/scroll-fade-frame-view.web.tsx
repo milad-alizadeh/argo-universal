@@ -77,7 +77,7 @@ function FadeLayer({
   children,
   ...options
 }: FadeOptions & { children: React.ReactNode }): React.JSX.Element {
-  const attach = useTrackScrollFade(Boolean(options.horizontal));
+  const attach = useTrackScrollFade(options);
 
   const className = cn(
     'scroll-fade',

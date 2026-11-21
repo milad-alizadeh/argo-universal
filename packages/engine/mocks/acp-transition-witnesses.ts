@@ -6,6 +6,7 @@ import type {
   AcpModelSnapshot,
   createAcpSessionModel,
 } from './acp-session-model';
+import { commands, elicitationWitness, title } from './acp-witness-events';
 
 type SessionEvent = EventFromLogic<typeof sessionMachine>;
 
@@ -40,25 +41,6 @@ const hooked: SessionEvent = {
   type: 'session.permissionHooked',
   requestId: 'model-request',
   answer: { optionId: 'model-allow' },
-};
-
-const commands: SessionEvent = {
-  type: 'acp.update',
-  notification: {
-    sessionId: 'model',
-    update: {
-      sessionUpdate: 'available_commands_update',
-      availableCommands: [],
-    },
-  },
-};
-
-const title: SessionEvent = {
-  type: 'acp.update',
-  notification: {
-    sessionId: 'model',
-    update: { sessionUpdate: 'session_info_update', title: 'Model title' },
-  },
 };
 
 function creationReceipt(state: AcpModelSnapshot): SessionEvent {
@@ -123,6 +105,7 @@ function permissionWitnesses(states: AcpModelSnapshot[]): Sent[] {
     { state, event: permission },
     { state: requested, event: answerNative },
     { state, event: todos },
+    elicitationWitness(state),
   ];
 }
 

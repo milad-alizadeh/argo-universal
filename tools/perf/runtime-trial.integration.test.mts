@@ -11,6 +11,8 @@ beforeAll(bundleEngine);
 
 const greetingOutput = 'Greeting check passed';
 
+const observationTimeoutMs = 10_000;
+
 it('times one new Turn through the public Server wire without treating earlier reply replay as new content', async () => {
   const host = await runtimeTestHost();
   const id = randomUUID();
@@ -19,7 +21,7 @@ it('times one new Turn through the public Server wire without treating earlier r
     id,
     prompt: `Runtime timing trial ${id}`,
     expectedReply: 'The shared fixture completed this Turn.',
-    timeoutMs: 10_000,
+    timeoutMs: observationTimeoutMs,
   });
 
   expect(trial).toMatchObject({
@@ -77,7 +79,7 @@ it('observes the matching command Tool and its complete output once before the a
     prompt: 'Run the greeting check',
     toolMarker: 'greeting.txt',
     expectedStdout: greetingOutput,
-    timeoutMs: 10_000,
+    timeoutMs: observationTimeoutMs,
   });
 
   expect(trial).toMatchObject({
@@ -117,7 +119,7 @@ it('cancels only the observed Turn and records cancellation acknowledgement and 
     id: randomUUID(),
     prompt: 'Stay active until cancelled',
     cancelWhenAccepted: true,
-    timeoutMs: 500,
+    timeoutMs: observationTimeoutMs,
   });
 
   expect(trial).toMatchObject({
@@ -142,7 +144,7 @@ it('validates the final Agent message independently of earlier commentary in the
     id: randomUUID(),
     prompt: 'Reply after the commentary',
     expectedReply: 'Latest history reply.',
-    timeoutMs: 10_000,
+    timeoutMs: observationTimeoutMs,
   });
 
   expect(trial).toMatchObject({

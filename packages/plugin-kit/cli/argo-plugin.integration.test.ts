@@ -61,6 +61,7 @@ async function writeManifest(
       label: 'Set status',
       description: 'Closes or reopens one Issue.',
       tier: 'act',
+      policy: 'allow',
       params: {
         status: {
           type: 'string',

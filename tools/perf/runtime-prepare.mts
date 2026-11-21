@@ -20,7 +20,7 @@ async function openRuntime(context: RuntimeContext): Promise<void> {
 
   if (workload.reopen)
     await client.mutation('operations.run', {
-      id: 'session.close',
+      id: 'session.reload',
       params: { sessionId: target.sessionId },
       wait: true,
     });

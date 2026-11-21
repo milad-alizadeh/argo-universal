@@ -8,6 +8,8 @@ import {
   changedPaths,
   checkChanged,
   checkFormat,
+  failedChecks,
+  joinOutput,
   parseJson,
   readableFiles,
   type Result,
@@ -20,6 +22,7 @@ import {
   nothingChecked,
   type TestScope,
 } from './verify-scope.mts';
+import { recordPassed } from './verify-stamp.mts';
 
 const vitest = path.join(root, 'node_modules/.bin/vitest');
 
@@ -45,12 +48,19 @@ const registryGeneration = [
   '--check',
 ];
 
-function* staticChecks(changed: string[]): Generator<Result> {
-  yield checkFormat(changed);
-  yield* checkChanged(changed);
-  yield run(process.execPath, ['tools/check-operation-mutations.mts']);
-  yield run(process.execPath, operationGeneration);
-  yield run(process.execPath, registryGeneration);
+function generatedChecks(): Result[] {
+  return [
+    run(process.execPath, ['tools/check-operation-mutations.mts']),
+    run(process.execPath, operationGeneration),
+    run(process.execPath, registryGeneration),
+  ];
+}
+
+// Lint and the type checks run side by side; the others are quick.
+async function staticChecks(changed: string[]): Promise<Result[]> {
+  const changedChecks = checkChanged(changed);
+
+  return [checkFormat(changed), ...generatedChecks(), ...(await changedChecks)];
 }
 
 type Listing =
@@ -145,9 +155,15 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-for (const result of staticChecks(changed)) {
-  if (result.status !== 0) process.exit(reportFailure(result));
+// A static failure stops verify before its tests, which would only fail on the same cause.
+const failed = failedChecks(await staticChecks(changed));
+
+if (failed.length > 0) {
+  process.stderr.write(`${joinOutput(failed)}\n`);
+  process.exit(failed[0]?.status ?? 1);
 }
+
+recordPassed();
 
 say('format, lint and types pass.');
 

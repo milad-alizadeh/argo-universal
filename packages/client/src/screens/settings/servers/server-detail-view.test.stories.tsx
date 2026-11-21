@@ -32,8 +32,10 @@ type Story = StoryObj<typeof meta>;
 
 export const UnpairAsksFirstAndCancelKeepsTheServer: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
-    await userEvent.click(canvas.getByRole('button', { name: 'Unpair' }));
+    const unpair = await canvas.findByRole('button', { name: 'Unpair' });
+
+    await expect(body.queryByRole('dialog')).toBeNull();
+    await userEvent.click(unpair);
 
     const alert = within(await body.findByRole('dialog'));
 

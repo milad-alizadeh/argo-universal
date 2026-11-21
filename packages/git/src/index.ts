@@ -4,7 +4,11 @@ export { createCheckout } from './checkout';
 
 export { resolveCheckoutBase, CheckoutBaseMissing } from './worktree-branch';
 
-export { discardCheckout, removeCheckout } from './checkout-removal';
+export {
+  discardCheckout,
+  removeCheckout,
+  removeArchivedCheckout,
+} from './checkout-removal';
 
 export {
   isSessionBranch,
@@ -25,3 +29,8 @@ export {
 export * from './origin';
 
 export { cloneRepository, initRepository } from './start';
+
+export {
+  checkoutCleanupRisk,
+  type CheckoutCleanupRisk,
+} from './checkout-cleanup-risk';

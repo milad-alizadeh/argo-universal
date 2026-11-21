@@ -14,12 +14,16 @@ import {
 
 const icon = { sf: 'record.circle', material: 'adjust' };
 
-const observe = async (
+async function itemsInState(
   answers: ReturnType<typeof watch>,
-  update: (items: unknown[]) => void,
-): Promise<void> => {
-  for await (const answer of answers) update(itemsOf(answer));
-};
+  state: 'Open' | 'Closed',
+): Promise<unknown[]> {
+  const answer = await until(answers, (next) =>
+    JSON.stringify(itemsOf(next)).includes(state),
+  );
+
+  return itemsOf(answer);
+}
 
 it('updates the visible Session row and bar when GitHub closes the attached Issue', async () => {
   const { test, github } = await signedInRoot();
@@ -28,40 +32,26 @@ it('updates the visible Session row and bar when GitHub closes the attached Issu
   const rows = watch(test, rowSlot);
   const bar = watch(test, barSlot);
 
-  let row = itemsOf(
-    await until(rows, (answer) =>
-      JSON.stringify(itemsOf(answer)).includes('Open'),
-    ),
-  );
+  await Promise.all([itemsInState(rows, 'Open'), itemsInState(bar, 'Open')]);
 
-  let line = itemsOf(
-    await until(bar, (answer) =>
-      JSON.stringify(itemsOf(answer)).includes('Open'),
-    ),
-  );
-
-  void observe(rows, (items) => {
-    row = items;
-  });
-  void observe(bar, (items) => {
-    line = items;
-  });
+  const closed = Promise.all([
+    itemsInState(rows, 'Closed'),
+    itemsInState(bar, 'Closed'),
+  ]);
 
   github.closeIssue(42);
   await test.clock.advance(301_000);
 
-  await expect
-    .poll(() => [row, line], { timeout: 2000 })
-    .toMatchObject([
-      [
-        {
-          text: '#42',
-          tone: 'done',
-          tooltip: 'Fixture issue from GitHub · Closed',
-        },
-      ],
-      [{ text: '#42 · Closed' }],
-    ]);
+  expect(await closed).toMatchObject([
+    [
+      {
+        text: '#42',
+        tone: 'done',
+        tooltip: 'Fixture issue from GitHub · Closed',
+      },
+    ],
+    [{ text: '#42 · Closed' }],
+  ]);
 }, 20_000);
 
 it('fills the Session row with the Issue number once an Agent attaches the Session, and with its state once it loads', async () => {

@@ -15,6 +15,7 @@ export const verifyScripts = [
   'verify.mts',
   'verify-scope.mts',
   'verify-base.mts',
+  'verify-stamp.mts',
   'hook-checks.mts',
   'check-operation-mutations.mts',
   'operation-mutation-rules.mts',

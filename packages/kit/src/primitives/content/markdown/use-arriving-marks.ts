@@ -37,7 +37,7 @@ function useFirstTrail(tokens: Tokens, growing: boolean): Trail | null {
   const { began } = useContext(ArrivalsContext);
 
   return useState(() =>
-    firstTrail(drawnText(tokens), { began: began(), growing }),
+    firstTrail(() => drawnText(tokens), { began: began(), growing }),
   )[0];
 }
 

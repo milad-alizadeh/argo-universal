@@ -67,6 +67,6 @@ it('fails with TIMEOUT when the archive has not settled within the limit', async
   const created = await promptedArchiveSession(host);
 
   await expect(
-    archiveSession(archiveSources(host), created.sessionId, 50),
+    archiveSession(archiveSources(host), created.sessionId, { limitMs: 50 }),
   ).rejects.toMatchObject({ code: 'TIMEOUT' });
 });

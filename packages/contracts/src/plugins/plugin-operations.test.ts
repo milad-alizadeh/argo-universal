@@ -6,6 +6,7 @@ const operation = {
   label: 'Set Issue status',
   description: 'Close or reopen one Issue.',
   tier: 'act',
+  policy: 'allow',
 };
 
 const param = { type: 'string', description: 'open or closed.' };
@@ -44,4 +45,18 @@ it('refuses a projectId param, which core gives an Operation that needs a Projec
       params: { projectId: param },
     }).success,
   ).toBe(false);
+});
+
+it('rejects an Operation declaration with a missing or invalid permission policy', () => {
+  for (const policy of [undefined, 'archive', 'confirm']) {
+    expect(
+      PluginOperationContribution.safeParse({
+        name: 'lookup',
+        label: 'Lookup',
+        description: 'Reads a value.',
+        tier: 'read',
+        policy,
+      }).success,
+    ).toBe(false);
+  }
 });

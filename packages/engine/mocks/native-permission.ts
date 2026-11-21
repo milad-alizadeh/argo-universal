@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import type { PendingPermission, ToolCallUpdate } from '@repo/contracts';
 import { assert, expect } from 'vitest';
@@ -37,6 +39,7 @@ export async function permissionJourney(
 const openTarget = async (host: Host): Promise<{ sessionId: string }> => {
   const target = await host.caller.session.new({
     ...emptySessionInput,
+    checkout: { type: 'worktree', baseBranch: 'main' },
     prompt: [{ type: 'text', text: 'Target' }],
   });
 
@@ -59,6 +62,7 @@ export async function askArchive(
   journey: PermissionJourney,
 ): Promise<AskedArchive> {
   const { host, session, target } = journey;
+  await protectArchiveTarget(journey);
   await beginHeldTurn(host, session.sessionId);
 
   const outcome = archiveOutcome(session, target);
@@ -161,4 +165,15 @@ export function answerPermission(
     requestId: request.requestId,
     optionId,
   });
+}
+
+export async function protectArchiveTarget({
+  host,
+  target,
+}: PermissionJourney): Promise<void> {
+  const path = (await host.caller.session.get(target)).checkout.path;
+
+  if (!path) throw new Error('Archive target has no Checkout');
+
+  writeFileSync(join(path, 'uncommitted.txt'), 'work that needs approval');
 }

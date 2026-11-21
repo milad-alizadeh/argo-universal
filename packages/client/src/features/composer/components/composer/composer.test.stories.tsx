@@ -18,7 +18,10 @@ import { agentModelLabel } from '../../../../../mocks/composer/composer-test-con
 import { agentIconId } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { spacingPrompt } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { multiline } from '../../../../../mocks/composer/draft-editing.test.mocks';
-import { editorScrollsAfterTenLines } from '../../../../../mocks/composer/editor-scroll.test.mocks';
+import {
+  attachmentsScrollWithDraft,
+  editorScrollsAfterTenLines,
+} from '../../../../../mocks/composer/editor-scroll.test.mocks';
 import { expectAgentTextFits } from '../../../../../mocks/composer/empty-layout.test.mocks';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
@@ -36,6 +39,8 @@ export const EditorScrollsAfterTenLinesPhone = editorScrollsAfterTenLines(
 export const EditorScrollsAfterTenLinesWide = editorScrollsAfterTenLines(
   layoutWidths.wide,
 );
+
+export const AttachmentsScrollWithDraft = attachmentsScrollWithDraft;
 
 export const Empty: Story = {
   play: async ({ canvas }) => {

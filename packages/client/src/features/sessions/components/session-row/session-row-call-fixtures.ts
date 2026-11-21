@@ -3,8 +3,8 @@ import { idleSession } from './session-row-fixtures';
 
 const callStartedAt = '2026-11-18T10:00:00.000Z';
 
-// A live Voice call attached to the idle Session, 2:43 in, at a fixed clock.
-export const voiceCall = {
+// A live Conversation attached to the idle Session, 2:43 in, at a fixed clock.
+export const liveConversation = {
   sessionId: idleSession.session.sessionId,
   startedAt: callStartedAt,
   muted: false,
@@ -12,13 +12,13 @@ export const voiceCall = {
 } satisfies SessionRowCall;
 
 // The same call with this App's microphone muted.
-export const mutedVoiceCall = {
-  ...voiceCall,
+export const mutedConversation = {
+  ...liveConversation,
   muted: true,
 } satisfies SessionRowCall;
 
 // The same call still connecting: it has no start time yet.
-export const connectingVoiceCall = {
-  ...voiceCall,
+export const connectingConversation = {
+  ...liveConversation,
   startedAt: null,
 } satisfies SessionRowCall;

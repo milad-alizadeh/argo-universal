@@ -9,6 +9,7 @@ import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { projectPathFor } from './empty-session.test.mocks';
 
@@ -61,7 +62,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const process = requireScriptedProcessAt(host.agent.processes);
     expect(process.terminations).toBe(0);
     expect(
-      await host.caller.session.close({ sessionId: created.sessionId }),
+      await closeTestSession(host, { sessionId: created.sessionId }),
     ).toEqual({});
     expect(process.terminations).toBe(1);
   },
@@ -121,7 +122,7 @@ it('closing a Session no prompt reached deletes its row, worktree and argo branc
 
   const opened = { worktree: existsSync(worktree), branches: readBranches() };
 
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
 
   expect({
     opened,
@@ -143,7 +144,7 @@ it('closing a prompted Session keeps its row, worktree and argo branch', async (
   await host.caller.session.prompt({ sessionId, prompt });
   await waitForAcpSessionIdle(host, sessionId);
 
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
 
   expect({
     worktree: existsSync(worktree),

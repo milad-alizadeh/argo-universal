@@ -25,7 +25,7 @@ it(
     ).rejects.toThrow('declined');
     await expect(
       run.test.operations.run({ name: 'automationSet', params, caller }),
-    ).rejects.toThrow('needs the user to confirm');
+    ).rejects.toThrow('active Turn');
     expect(run.github.autoMergeCalls()).toEqual([]);
   },
   slow,
@@ -54,10 +54,10 @@ it(
       'enable',
     ]);
 
-    await run.test.operations.run({
-      name: 'automationSet',
-      params: { ...params, on: false, sessionId },
-      caller: { projectId: project.id, person: true },
+    await run.test.pages.run({
+      operation: 'automationSet',
+      sessionId,
+      args: { ...params, on: false, projectId: project.id, sessionId },
     });
 
     expect(cards).toHaveLength(1);

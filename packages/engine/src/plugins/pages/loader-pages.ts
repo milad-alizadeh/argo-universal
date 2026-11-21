@@ -126,6 +126,7 @@ export class LoaderPages {
       name: operation,
       params: args,
       caller: { person: true, projectId, sessionId },
+      authenticatedApp: true,
       serverDevice: askedBy(asking).serverDevice,
     });
 

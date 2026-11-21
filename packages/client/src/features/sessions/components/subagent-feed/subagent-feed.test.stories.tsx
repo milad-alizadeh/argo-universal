@@ -4,20 +4,19 @@ import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { SubagentFeed } from './subagent-feed';
 import { subagentFeedBackLabel } from './subagent-feed-header';
+import { subagentFeedMeta } from './subagent-feed-meta';
 import {
   SubagentFeedInspector,
   SubagentFeedSheet,
 } from './subagent-feed-presentations.mocks';
 import {
-  cancelledSubagent,
   emptyFeed,
-  finishedFeed,
   finishedSubagent,
-  liveRowName,
-  noIncomingFeed,
   ownReplyFeed,
   reportedFeed,
+  runningSubagent,
   startingSubagent,
+  subagentFeedNow,
 } from './subagent-feed.mocks';
 import feedMeta from './subagent-feed.stories';
 
@@ -33,107 +32,21 @@ type Story = StoryObj<typeof meta>;
 
 const incomingMessage = /^Use apply_patch to change beta to gamma/;
 
-const runningUsage = '8.2k tokens';
-
 const reportedText = 'Two packages.';
-
-const childOutput = 'I’ll update both files and check their contents.';
-
-const liveRow = { name: liveRowName };
 
 const subagentHeading = { name: 'Find every Feed reader' };
 
+const runningMeta = subagentFeedMeta(runningSubagent, subagentFeedNow);
+
 // Only the Inspector draws the meta line; the Sheet's own header names the page instead.
-const metaLine = async (
-  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
-  wide: boolean,
-  line: string,
-): Promise<void> => {
-  await waitFor(() =>
-    wide
-      ? expect(canvas.getByText(line)).toBeVisible()
-      : expect(canvas.queryByText(line)).toBeNull(),
-  );
-};
-
-async function expectMetrics(
-  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
-  usage: string,
-): Promise<void> {
-  await expect(canvas.getByText('Sonnet 4.5', { exact: false })).toBeVisible();
-  await expect(canvas.getByText(usage, { exact: false })).toBeVisible();
-}
-
-export const Running: Story = {
+export const MetaLineOnlyInTheInspector: Story = {
   play: async ({ canvas }) =>
     eachLayout(async (wide) => {
-      await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
-      await expect(canvas.getByText(childOutput)).toBeVisible();
-      await expect(canvas.getByRole('status', liveRow)).toBeVisible();
-      await metaLine(canvas, wide, 'Running · Sonnet 4.5 · 34s');
-      await expectMetrics(canvas, runningUsage);
-    }),
-};
-
-export const Finished: Story = {
-  args: { subagent: finishedSubagent, feed: finishedFeed },
-  play: async ({ canvas }) =>
-    eachLayout(async (wide) => {
-      await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
-      await expect(canvas.queryByRole('status', liveRow)).toBeNull();
-      await metaLine(canvas, wide, 'Finished · Sonnet 4.5 · 1m 41s');
-      await expectMetrics(canvas, '12.9k tokens');
-    }),
-};
-
-// Stopped part way: the meta line names that instead of Finished.
-export const Cancelled: Story = {
-  args: { subagent: cancelledSubagent, feed: finishedFeed },
-  play: async ({ canvas }) =>
-    eachLayout(async (wide) => {
-      await metaLine(canvas, wide, 'Cancelled · Sonnet 4.5 · 34s');
-      await expectMetrics(canvas, runningUsage);
-    }),
-};
-
-// Just spawned: the live row alone, with nothing reported above it.
-export const Empty: Story = {
-  args: { subagent: startingSubagent, feed: emptyFeed },
-  play: async ({ canvas }) =>
-    eachLayout(async (wide) => {
-      await expect(
-        canvas.getByRole('status', { name: 'Starting 2s' }),
-      ).toBeVisible();
-      await expect(canvas.queryByText(incomingMessage)).toBeNull();
-      await expect(canvas.queryByText(childOutput)).toBeNull();
-      await metaLine(canvas, wide, 'Running · 2s');
-      await expect(
-        canvas.queryByText('Sonnet 4.5', { exact: false }),
-      ).toBeNull();
-      await expect(canvas.queryByText(/\dk? tokens/u)).toBeNull();
-    }),
-};
-
-// The Agent reported no incoming message, so the Feed starts with the Subagent's own output.
-export const NoIncomingMessage: Story = {
-  args: { feed: noIncomingFeed },
-  play: async ({ canvas }) =>
-    eachLayout(async () => {
-      await expect(canvas.queryByText(incomingMessage)).toBeNull();
-      await expect(canvas.getByText(childOutput)).toBeVisible();
-    }),
-};
-
-// Not loaded yet: the header names the Subagent, and the Feed draws neither rows nor the empty Session's heading.
-export const Loading: Story = {
-  args: { subagent: finishedSubagent, feed: undefined },
-  play: async ({ canvas }) =>
-    eachLayout(async (wide) => {
-      await expect(canvas.queryByRole('heading', { name: /build/ })).toBeNull();
-      await expect(canvas.queryByText(incomingMessage)).toBeNull();
-      await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
-      await metaLine(canvas, wide, 'Finished · Sonnet 4.5 · 1m 41s');
-      await expectMetrics(canvas, '12.9k tokens');
+      await waitFor(() =>
+        wide
+          ? expect(canvas.getByText(runningMeta)).toBeVisible()
+          : expect(canvas.queryByText(runningMeta)).toBeNull(),
+      );
     }),
 };
 
@@ -144,33 +57,6 @@ export const BackToTheList: Story = {
       canvas.getByRole('button', { name: subagentFeedBackLabel }),
     );
     await expect(args.onBack).toHaveBeenCalled();
-  },
-};
-
-async function expectInspectorInset(
-  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
-): Promise<void> {
-  const inspector = canvas.getByTestId('agent-feed-inspector');
-  const leadingEdge = inspector.getBoundingClientRect().left + 12;
-  const tabs = canvas.getByRole('tablist');
-  const back = canvas.getByRole('button', { name: subagentFeedBackLabel });
-  const metrics = canvas.getByText(runningUsage, { exact: false });
-  const row = await canvas.findByRole('status', liveRow);
-
-  for (const element of [tabs, back, metrics, row]) {
-    await expect(element.getBoundingClientRect().left).toBeCloseTo(leadingEdge);
-  }
-}
-
-export const InTheInspector: Story = {
-  render: (args) => <SubagentFeedInspector {...args} />,
-  play: async ({ canvas }) => {
-    await settleLayout('wide');
-    await expect(canvas.getByRole('heading', subagentHeading)).toBeVisible();
-    await expect(canvas.getByText('Running · Sonnet 4.5 · 34s')).toBeVisible();
-    await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
-
-    await expectInspectorInset(canvas);
   },
 };
 

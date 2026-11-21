@@ -2,6 +2,7 @@ import type { NewSessionRequest } from '@agentclientprotocol/sdk';
 import { expect, it, onTestFinished } from 'vitest';
 import { z } from 'zod';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller } from '#mocks/operations';
 import {
   createScriptedAgentProcess,
@@ -38,7 +39,7 @@ it('revokes access and stops the private process when a pending Session open is 
   await initialized.promise;
   const token = z.string().parse((await environment.promise).ARGO_TOKEN);
   const caller = await operationCaller(host, token);
-  await host.caller.session.close({ sessionId: 'session-1' });
+  await closeTestSession(host, { sessionId: 'session-1' });
   expect(await outcome).toMatchObject([
     { status: 'rejected', reason: { code: 'CONFLICT' } },
   ]);

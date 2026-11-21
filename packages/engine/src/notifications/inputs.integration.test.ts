@@ -1,6 +1,7 @@
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { connectNotificationApp } from '#mocks/notification-app';
 
 it.each(['permission', 'elicitation'] as const)(
@@ -62,7 +63,7 @@ it('observes the new input request after a fast Session reopen', async () => {
 
   if (!first) throw new Error('Expected a notification');
   await app.client.notifications.acknowledge.mutate({ id: first.id });
-  await app.client.session.close.mutate({ sessionId: 'session-1' });
+  await closeTestSession(host, { sessionId: 'session-1' });
   await app.client.session.prompt.mutate({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Second request' }],

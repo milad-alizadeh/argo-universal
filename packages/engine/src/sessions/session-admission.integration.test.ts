@@ -1,6 +1,7 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { pauseArchiveWrite, promptedArchiveSession } from '#mocks/archive';
+import { closeTestSession } from '#mocks/close-session';
 import { insertSession } from '#mocks/database';
 import { sessionSources } from '#mocks/session-sources';
 import { userOrigin } from './prompt-sender';
@@ -94,7 +95,7 @@ it('waits for a starting Session before admitting its Prompt', async () => {
 
   const { sessionId } = await promptedArchiveSession(host);
   const sessions = openSessions(host);
-  await sessions.implementations['session.close']({ sessionId });
+  await closeTestSession(host, { sessionId });
   const start = sessions.prompt({ sessionId, prompt }, userOrigin);
   await opening.entered.promise;
 
@@ -140,7 +141,5 @@ it('admits a command while the Session archives', async () => {
 it('refuses to close a Session while it archives', async () => {
   const { host, sessionId } = await archivingSession();
 
-  await expect(
-    openSessions(host).implementations['session.close']({ sessionId }),
-  ).rejects.toEqual(conflict);
+  await expect(closeTestSession(host, { sessionId })).rejects.toEqual(conflict);
 });

@@ -1,6 +1,7 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it, vi } from 'vitest';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 import {
   upsertRowEvent,
@@ -64,7 +65,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
     ]).steps,
     'vendor-1',
   );
-  const closing = feedTestHost.caller.session.close({ sessionId: 'session-1' });
+  const closing = closeTestSession(feedTestHost, { sessionId: 'session-1' });
   const events = await drainClosedFeed(updates);
   expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
   expect(events).toContainEqual(

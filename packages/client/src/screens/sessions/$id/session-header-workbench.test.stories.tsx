@@ -5,113 +5,129 @@ import { useStackPush, withStack } from '@repo/kit/story-stack';
 import { useRouter } from 'expo-router';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { expect, screen, waitFor, within } from 'storybook/test';
+import { expect, screen, waitFor } from 'storybook/test';
 import {
   meta as sessionViewMeta,
   type Story,
 } from '../../../../mocks/session-view/session-view-story.test.mocks';
+import { pullRequestMocks } from '../../../features/sessions/components/session-pull-request.mocks';
 import { coverageCardSummary } from './sections/plugin-card.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
-import { workbenchMenuSession } from './session-detail-view-panels.test.mocks';
+import { workbenchSheetSession } from './session-detail-view-panels.test.mocks';
 import { idleSession } from './session-detail-view.mocks';
-import { openWorkbench } from './session-workbench-menu.test.mocks';
+import { openWorkbench } from './session-workbench-sheet.test.mocks';
 
 const meta = {
   ...sessionViewMeta,
   title: 'Tests/Screens/Sessions/Session/HeaderWorkbench',
   decorators: [withStack({ detail: OtherScreen })],
-  args: { view: workbenchMenuSession },
+  args: { view: workbenchSheetSession },
   beforeEach: (): Promise<void> => settleLayout('phone'),
 };
 
 export default meta;
 
+const task = workbenchSheetSession.shells.shells[0];
+
+if (!task) throw new Error('Recorded catalog needs a background task.');
+
+const firstTask = task.description ?? task.command;
+
 export const ListsAvailableSectionsInOrder: Story = {
   play: async (context) => {
-    const menu = await openWorkbench(context);
+    const sheet = await openWorkbench(context);
+    const labels = ['Changes', 'Agents', 'Background Tasks', 'Coverage'];
+    const sections = labels.map((label) => sheet.getByText(label));
 
-    const labels = [
-      'Changes 4',
-      `Agents ${workbenchMenuSession.subagents.subagents.length}`,
-      `Background Tasks ${workbenchMenuSession.shells.shells.length}`,
-      'Coverage',
-    ];
+    for (const [index, section] of sections.entries()) {
+      const next = sections[index + 1];
 
-    const entries = labels.map((name) => menu.getByRole('menuitem', { name }));
-
-    await expect(menu.getAllByRole('menuitem')).toEqual(entries);
-
-    const changes = menu.getByRole('menuitem', { name: 'Changes 4' });
-    const count = within(changes).getByText('4');
-    const title = count.parentElement?.firstChild;
-
-    if (!title) throw new Error('Expected an inline Changes label.');
-
-    const range = document.createRange();
-    range.selectNodeContents(title);
-    await expect(count.getBoundingClientRect().top).toBeCloseTo(
-      range.getBoundingClientRect().top,
-      0,
-    );
-    await expect(count.getBoundingClientRect().left).toBeGreaterThanOrEqual(
-      range.getBoundingClientRect().right,
-    );
+      if (next)
+        await expect(section.compareDocumentPosition(next)).toBe(
+          Node.DOCUMENT_POSITION_FOLLOWING,
+        );
+    }
   },
 };
 
 export const OmitsSectionsWithoutWork: Story = {
   args: { view: { state: 'open', ...idleSession } },
   play: async (context) => {
-    const menu = await openWorkbench(context);
+    const sheet = await openWorkbench(context);
 
-    await expect(menu.getAllByRole('menuitem')).toHaveLength(1);
-    await expect(
-      menu.getByRole('menuitem', { name: /^Changes/ }),
-    ).toBeVisible();
+    await expect(sheet.getAllByRole('link')).toEqual([
+      sheet.getByRole('link', { name: /^Changed files/ }),
+    ]);
   },
 };
 
-function opensSheet(label: string, body?: string): Story {
+function opensDetail(rowName: RegExp, detail: string): Story {
   return {
     play: async (context) => {
-      const sheet = await openWorkbenchSheet(context, label);
+      const sheet = await openWorkbench(context);
+      const row = sheet.getByRole('link', { name: rowName });
+      await settleOverlays(row);
+      await context.userEvent.click(row);
 
-      await expect(sheet).toBeVisible();
-
-      if (body) await expect(within(sheet).getByText(body)).toBeVisible();
+      await expect(
+        await sheet.findByRole('heading', { name: detail }),
+      ).toBeVisible();
     },
   };
 }
 
-async function openWorkbenchSheet(
-  context: Parameters<NonNullable<Story['play']>>[0],
-  label: string,
-): Promise<HTMLElement> {
-  const menu = await openWorkbench(context);
-  const row = menu.getByRole('menuitem', { name: new RegExp(`^${label}`) });
-  await settleOverlays(row);
-  await context.userEvent.click(row);
+const pullRequest = pullRequestMocks.checksRunning;
 
-  return screen.findByRole('dialog', { name: label });
-}
+export const OpensPullRequest: Story = {
+  ...opensDetail(
+    new RegExp(`^#${pullRequest.number} ${pullRequest.title}$`),
+    `Change #${pullRequest.number}`,
+  ),
+  args: {
+    view: {
+      ...workbenchSheetSession,
+      header: { ...workbenchSheetSession.header, pullRequests: [pullRequest] },
+    },
+  },
+};
 
-export const OpensChanges = opensSheet('Changes');
+export const OpensChanges = opensDetail(/^Changed files/, 'Changed files');
 
-export const OpensAgents = opensSheet('Agents');
+export const OpensBackgroundTask = opensDetail(
+  new RegExp(`^${firstTask}`),
+  firstTask,
+);
 
-export const OpensBackgroundTasks = opensSheet('Background Tasks');
-
-export const OpensPluginCard = opensSheet('Coverage', coverageCardSummary);
-
-export const ClosesAgentsFromTheHeader: Story = {
+export const BackFromPluginCardReturnsToWorkbench: Story = {
   play: async (context) => {
-    const sheet = await openWorkbenchSheet(context, 'Agents');
-    const close = within(sheet).getByRole('button', { name: 'Close' });
+    const sheet = await openWorkbench(context);
+    const row = sheet.getByRole('link', { name: 'Open Coverage' });
+    await settleOverlays(row);
+    await context.userEvent.click(row);
+
+    await sheet.findByText(coverageCardSummary);
+
+    const back = await sheet.findByRole('button', {
+      name: 'Back to Workbench',
+    });
+
+    await settleOverlays(back);
+    await context.userEvent.click(back);
+    await expect(
+      await sheet.findByRole('link', { name: 'Open Coverage' }),
+    ).toBeVisible();
+  },
+};
+
+export const ClosesWorkbenchFromTheHeader: Story = {
+  play: async (context) => {
+    const sheet = await openWorkbench(context);
+    const close = sheet.getByRole('button', { name: 'Close' });
     await settleOverlays(close);
     await context.userEvent.click(close);
 
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Agents' })).toBeNull(),
+      expect(screen.queryByRole('dialog', { name: 'Workbench' })).toBeNull(),
     );
   },
 };
@@ -140,7 +156,7 @@ function NavigableSession(): JSX.Element {
   return (
     <View style={{ flex: 1 }}>
       <Button label="Open another screen" onPress={() => push('detail')} />
-      <FramedSessionPreview {...workbenchMenuSession} />
+      <FramedSessionPreview {...workbenchSheetSession} />
     </View>
   );
 }
@@ -157,13 +173,10 @@ export const OpensAfterReturningToTheSession: Story = {
       await canvas.findByRole('button', { name: 'Return to Session' }),
     );
 
-    const menu = await openWorkbench(context);
-    const agents = menu.getByRole('menuitem', { name: /^Agents \d+$/ });
+    const sheet = await openWorkbench(context);
 
-    await settleOverlays(agents);
-    await userEvent.click(agents);
     await expect(
-      await screen.findByRole('dialog', { name: 'Agents' }),
+      sheet.getByRole('link', { name: /^Changed files/ }),
     ).toBeVisible();
   },
 };

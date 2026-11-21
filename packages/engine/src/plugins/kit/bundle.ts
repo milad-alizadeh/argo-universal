@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build, type BuildOptions, type BuildResult } from 'esbuild';
 
@@ -30,8 +31,19 @@ function textOf(result: BuildResult<typeof options>): string {
   return output.text;
 }
 
+// A test run bundles the kit once and names the file here, so each Plugin host it starts reads that instead of bundling again.
+export const prebuiltKitVariable = 'ARGO_PREBUILT_PLUGIN_KIT';
+
+export const buildKit = (): Promise<string> => build(options).then(textOf);
+
+const prebuiltKit = (): Promise<string> | null => {
+  const file = process.env[prebuiltKitVariable];
+
+  return file ? readFile(file, 'utf8') : null;
+};
+
 export function bundleKit(): Promise<string> {
-  bundled ??= build(options).then(textOf);
+  bundled ??= prebuiltKit() ?? buildKit();
 
   return bundled;
 }

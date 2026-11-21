@@ -1,23 +1,51 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { List } from '@repo/kit/primitives/lists/list';
-import { type RefObject, useCallback } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useState } from 'react';
 import type * as React from 'react';
-import { View } from 'react-native';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Platform,
+  View,
+} from 'react-native';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { FeedListProps, feedListProps } from './feed-scroll';
 import { rememberFeedPosition } from './feed-scroll-memory';
+import { WebFeedViewport } from './follow-web-feed';
+import { useFeedWheel } from './scroll-web-feed';
 
 type ListRef = RefObject<LegendListRef | null>;
+
+type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+const webViewport = (): WebFeedViewport | undefined =>
+  Platform.OS === 'web' ? new WebFeedViewport() : undefined;
+
+function useWebViewport(
+  list: ListRef,
+  sessionId: string | undefined,
+  focused: boolean,
+): void {
+  const [viewport] = useState(webViewport);
+  useLayoutEffect(() => {
+    if (!focused) return;
+
+    return viewport?.watch(list.current);
+  }, [focused, list, sessionId, viewport]);
+}
 
 export function useFeedOnScroll(
   sessionId: string | undefined,
   list: ListRef,
-): () => void {
+): OnScroll {
   const focused = useScreenFocused();
+  useWebViewport(list, sessionId, focused);
 
   return useCallback(() => {
-    if (focused) rememberFeedPosition(sessionId, list);
+    if (!focused) return;
+
+    rememberFeedPosition(sessionId, list);
   }, [focused, sessionId, list]);
 }
 
@@ -26,7 +54,7 @@ interface Drawing {
   base: typeof feedListProps;
   listProps: FeedListProps;
   fade: ReturnType<typeof useFeedFade>;
-  onScroll: () => void;
+  onScroll: OnScroll;
 }
 
 export function DrawFeedScroll({
@@ -36,9 +64,11 @@ export function DrawFeedScroll({
   fade,
   onScroll,
 }: Drawing): React.JSX.Element {
+  const wheel = useFeedWheel(list);
+
   // On a wide window `feed-scrollbar` keeps the web scrollbar drawn while the Feed can scroll, rather than only while it moves.
   return (
-    <View className="feed-scrollbar min-h-0 flex-1">
+    <View ref={wheel} className="feed-scrollbar min-h-0 flex-1">
       <List ref={list} {...base} {...listProps} {...fade} onScroll={onScroll} />
     </View>
   );

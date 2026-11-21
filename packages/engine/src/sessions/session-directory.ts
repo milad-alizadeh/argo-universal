@@ -23,6 +23,8 @@ export type SessionDirectory = {
   running: (callerId: string) => string[];
   // The Session's title, read as `session` reads its row: it names a calling Session as a Prompt sender.
   title: (sessionId: string) => string;
+  // The Agent the Session runs, which a Session it starts runs too unless it names another.
+  agent: (sessionId: string) => string;
 };
 
 export function createSessionDirectory(
@@ -34,6 +36,7 @@ export function createSessionDirectory(
       directorySession(readSessionCloseTarget(sources.open, sessionId)),
     running: (callerId) => runningStartedSessions(sources, callerId),
     title: (sessionId) => sources.open.queued(sessionId).title,
+    agent: (sessionId) => sources.open.queued(sessionId).agent,
   };
 }
 

@@ -17,3 +17,5 @@ export type { ChangesPage } from './paging';
 export type { CheckoutFile } from './parse';
 
 export { hasUncommittedFiles } from './uncommitted';
+
+export { readWorktree } from './status';

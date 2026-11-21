@@ -66,17 +66,13 @@ it('applies the public Agent access setting to new launches, preserves existing 
       ),
   });
 
-  const caller = await operationCaller(host);
   const enabled = await openAgent(host, outputs);
   expect(enabled.token).toEqual(expect.any(String));
   expect(enabled.home).toBe(host.home);
   const managedDirectory = join(host.home, 'cli', 'bin');
   expect(enabled.path.split(delimiter)).toContain(managedDirectory);
   const existing = await operationCaller(host, z.string().parse(enabled.token));
-  await runOperation(caller.operations, {
-    id: 'agent.setAccess',
-    params: { enabled: false },
-  });
+  await host.caller.agent.setAccess({ enabled: false });
   const disabled = await openAgent(host, outputs);
   expect(disabled.token).toBeNull();
   expect(disabled.home).toBeNull();
@@ -102,10 +98,7 @@ it('applies the public Agent access setting to new launches, preserves existing 
   expect(stillDisabled.token).toBeNull();
   expect(stillDisabled.home).toBeNull();
   expect(stillDisabled.path.split(delimiter)).not.toContain(managedDirectory);
-  await runOperation(afterRestart.operations, {
-    id: 'agent.setAccess',
-    params: { enabled: true },
-  });
+  await restarted.caller.agent.setAccess({ enabled: true });
   const reenabled = await openAgent(restarted, outputs);
   expect(reenabled.token).toEqual(expect.any(String));
   expect(reenabled.path.split(delimiter)).toContain(managedDirectory);

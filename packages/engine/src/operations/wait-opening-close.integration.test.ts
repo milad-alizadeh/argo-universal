@@ -2,6 +2,7 @@ import { SessionNewOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { openingWaitHost } from '#mocks/operation-opening';
 import { runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -22,7 +23,7 @@ it('closes the native Session returned before storage and retires its private pr
 
   const created = SessionNewOutput.parse(started.result);
   await opening;
-  expect(await host.caller.session.close(created)).toEqual({});
+  expect(await closeTestSession(host, created)).toEqual({});
   await expect(
     user.operations.wait.mutate({ id: started.id }),
   ).rejects.toMatchObject({ data: { code: 'NOT_FOUND' } });

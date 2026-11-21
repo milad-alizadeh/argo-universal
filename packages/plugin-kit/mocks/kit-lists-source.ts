@@ -4,6 +4,7 @@ export const moveCard = {
   label: 'Move a card',
   description: 'Moves a card to a lane.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     card: { type: 'string' as const, description: 'The card', required: true },
     lane: { type: 'string' as const, description: 'The lane it lands in' },

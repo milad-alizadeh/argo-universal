@@ -9,6 +9,7 @@ export interface DesktopBridge {
   // Asks the desktop App to make sure a Supervisor runs, because a Server it started can be gone rather than out of reach.
   retryServer: () => void;
   window: {
+    getZoomFactor?(): number;
     show(): void;
     minimize(): void;
     maximize(): void;

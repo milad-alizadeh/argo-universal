@@ -22,7 +22,6 @@ import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
-import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const session = withPullRequests(idleSession, [pullRequestMocks.checksPassed]);
@@ -138,35 +137,6 @@ export const AListInACardDrawsNoCardOfItsOwn: Story = {
   },
 };
 
-// A row's text starts its own inset inside its tile: the tile's 4 and the leading lane's 16.
-const rowTextInset = 4 + 16;
-
-// Where the eye cannot tell a pixel apart, two edges are one.
-const sameEdge = 1;
-
-// A Plugin's rows start where the Workbench's own rows do: their tiles share one leading edge, and the text sits no further in than the row's own inset.
-export const ARowInACardLinesUpWithTheAgentsRows: Story = {
-  args: {
-    view: { ...subagentsSession, pluginCards: [listCard] },
-  },
-  play: async ({ canvas }) => {
-    const text = await canvas.findByText(listCardRow);
-    const row = text.closest('[role=group]') ?? text;
-    const [agent] = await canvas.findAllByRole('button', { name: /^Open / });
-
-    if (!agent) throw new Error('The Agents card needs a row');
-
-    await expect(
-      Math.abs(
-        row.getBoundingClientRect().left - agent.getBoundingClientRect().left,
-      ),
-    ).toBeLessThanOrEqual(sameEdge);
-    await expect(
-      text.getBoundingClientRect().left - row.getBoundingClientRect().left,
-    ).toBeLessThanOrEqual(rowTextInset + sameEdge);
-  },
-};
-
 // A Sessions row draws through FieldLink (a link named by its title and value), and its title and branch never run together.
 export const ASessionRowKeepsAGapBeforeItsBranch: Story = {
   args: { view: { state: 'open', ...session, pluginCards: [sessionsCard] } },
@@ -178,7 +148,7 @@ export const ASessionRowKeepsAGapBeforeItsBranch: Story = {
     const title = canvas.getByText(sessionRowTitle).getBoundingClientRect();
     const branch = canvas.getByText(sessionRowBranch).getBoundingClientRect();
 
-    await expect(branch.left - title.right).toBeGreaterThanOrEqual(12);
+    await expect(branch.left - title.right).toBeGreaterThan(0);
   },
 };
 

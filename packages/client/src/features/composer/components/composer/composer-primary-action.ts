@@ -2,11 +2,11 @@ import type { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import { sendsToQueue } from './composer-conditions';
 import type { SendLayout } from './composer-toolbar-types';
-import type { ComposerVoice } from './composer-types';
+import type { ComposerConversation } from './composer-types';
 
 export const endButtonId = 'composer-end';
 
-export const voiceButtonId = 'composer-voice';
+export const conversationButtonId = 'composer-conversation';
 
 type IconButtonProps = React.ComponentProps<typeof IconButton>;
 
@@ -26,16 +26,20 @@ function endAction(layout: SendLayout): IconButtonProps {
     accessibilityLabel: 'End',
     testID: endButtonId,
     icon: 'close',
-    onPress: (): void => endOf(layout.props.voice)?.(),
+    onPress: (): void => endOf(layout.props.conversation)?.(),
   };
 }
 
 // End belongs to a call connecting or connected here.
-const endOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
-  voice && 'onEnd' in voice ? voice.onEnd : undefined;
+const endOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
+  conversation && 'onEnd' in conversation ? conversation.onEnd : undefined;
 
-const startOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
-  voice?.kind === 'start' ? voice.onStart : undefined;
+const startOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
+  conversation?.kind === 'start' ? conversation.onStart : undefined;
 
 function stopButtonAction(layout: Pick<SendLayout, 'props'>): IconButtonProps {
   return {
@@ -46,13 +50,13 @@ function stopButtonAction(layout: Pick<SendLayout, 'props'>): IconButtonProps {
   };
 }
 
-// Option B of the Voice page's button states: Send's circle with the voice bars, which starts a call.
-function voiceAction(layout: SendLayout): IconButtonProps {
+// Option B of the Conversation page's button states: Send's circle with the voice bars, which starts a call.
+function conversationAction(layout: SendLayout): IconButtonProps {
   return {
-    accessibilityLabel: 'Start voice call',
-    testID: voiceButtonId,
+    accessibilityLabel: 'Start Conversation',
+    testID: conversationButtonId,
     icon: 'voice-bars',
-    onPress: (): void => startOf(layout.props.voice)?.(),
+    onPress: (): void => startOf(layout.props.conversation)?.(),
   };
 }
 
@@ -63,7 +67,7 @@ const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
   ready: sendAction,
   sending: sendAction,
   blocked: sendAction,
-  voice: voiceAction,
+  conversation: conversationAction,
 };
 
 export const sendButtonAction = (layout: SendLayout): IconButtonProps =>

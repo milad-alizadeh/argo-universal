@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import {
@@ -20,6 +20,7 @@ import {
   subagentStates,
 } from '../../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import { attachedIssuesBar } from '../session-detail-view-bar.mocks';
+import { SessionInspector } from '../session-inspector';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
@@ -166,4 +167,61 @@ export const CreatePullRequest: Story = {
       createPullRequest: { onPress: fn(), disabled: false },
     },
   },
+};
+
+export const Schedules: Story = {
+  args: {
+    content: {
+      ...everySection,
+      schedules: {
+        disabled: false,
+        manage: fn(),
+        items: [
+          {
+            id: 'build',
+            sessionId: 'session',
+            intervalSeconds: 300,
+            paused: false,
+            lastQueuedAt: 0,
+            nextAt: 300000,
+            prompt: [{ type: 'text', text: 'Check open pull requests' }],
+          },
+          {
+            id: 'nightly',
+            sessionId: 'session',
+            intervalSeconds: 3600,
+            paused: true,
+            lastQueuedAt: 0,
+            nextAt: 3600000,
+            prompt: [{ type: 'text', text: 'Check the nightly build' }],
+          },
+        ],
+      },
+    },
+  },
+};
+
+function OpenSchedules({
+  content,
+}: {
+  content: SessionInspectorContent;
+}): ReactElement {
+  const panels = useSessionPanels(['schedules']);
+  const [opened, setOpened] = useState(false);
+
+  if (!opened) {
+    panels.select('schedules');
+    setOpened(true);
+  }
+
+  return (
+    <View className="h-full flex-row">
+      <SessionInspector {...content} panels={panels} />
+    </View>
+  );
+}
+
+export const SchedulesInspector: Story = {
+  args: Schedules.args,
+  render: ({ content }) => <OpenSchedules content={content} />,
 };

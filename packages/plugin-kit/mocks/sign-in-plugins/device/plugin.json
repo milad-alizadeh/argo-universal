@@ -29,12 +29,14 @@
         "name": "signIn",
         "label": "Sign in",
         "description": "Starts the sign-in.",
+        "policy": "allow",
         "tier": "act"
       },
       {
         "name": "cancelSignIn",
         "label": "Cancel sign-in",
         "description": "Stops the sign-in.",
+        "policy": "allow",
         "tier": "act"
       }
     ]

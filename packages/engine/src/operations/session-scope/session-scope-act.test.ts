@@ -1,7 +1,7 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
-import { asks, runs, scoped } from './scope-fixtures';
+import { runs, scoped } from './scope-fixtures';
 
 const sessionOnly = (sessionId: string): Json => ({ sessionId });
 
@@ -18,13 +18,12 @@ const act: [OperationId, (sessionId: string) => Json][] = [
     }),
   ],
   ['shell.stop', (sessionId): Json => ({ sessionId, shellId: 'shell-1' })],
-  ['session.close', sessionOnly],
 ];
 
 const targets = ['caller', 'started', 'unrelated', 'foreign', 'opening'];
 
 it.each(act)(
-  'runs %s on the caller and its started Sessions in its Project, asks otherwise, and only closes a Session still opening',
+  'admits %s without consulting Session ownership',
   async (id, params) => {
     const outcomes: Record<string, string> = {};
 
@@ -34,19 +33,19 @@ it.each(act)(
     expect(outcomes).toEqual({
       caller: runs,
       started: runs,
-      unrelated: asks,
-      foreign: asks,
-      opening: id === 'session.close' ? runs : 'NOT_FOUND',
+      unrelated: runs,
+      foreign: runs,
+      opening: runs,
     });
   },
 );
 
-it('hangs up only the calling Session, refusing voice.hangUp for any other Session', async () => {
+it('hangs up only the calling Session, refusing conversation.hangUp for any other Session', async () => {
   const outcomes: Record<string, string> = {};
 
   for (const target of targets)
     outcomes[target] = (
-      await scoped({ id: 'voice.hangUp', params: sessionOnly(target) })
+      await scoped({ id: 'conversation.hangUp', params: sessionOnly(target) })
     ).outcome;
 
   expect(outcomes).toEqual({
@@ -58,18 +57,20 @@ it('hangs up only the calling Session, refusing voice.hangUp for any other Sessi
   });
 });
 
-it('hangs up the calling Session when voice.hangUp names no Session', async () => {
-  expect((await scoped({ id: 'voice.hangUp', params: {} })).outcome).toBe(runs);
+it('hangs up the calling Session when conversation.hangUp names no Session', async () => {
+  expect(
+    (await scoped({ id: 'conversation.hangUp', params: {} })).outcome,
+  ).toBe(runs);
 });
 
 it('shows the Operation label and description on the card', async () => {
   expect(
-    (await scoped({ id: 'session.cancel', params: sessionOnly('unrelated') }))
+    (await scoped({ id: 'session.clear', params: sessionOnly('unrelated') }))
       .cards,
   ).toEqual([
     {
-      title: 'Cancel Session',
-      description: 'Cancel the selected Session’s running Turn.',
+      title: 'Clear context',
+      description: expect.stringContaining('empty context'),
     },
   ]);
 });

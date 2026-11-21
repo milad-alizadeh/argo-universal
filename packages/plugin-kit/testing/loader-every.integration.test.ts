@@ -1,5 +1,5 @@
-import { expect, it, vi } from 'vitest';
-import { dataFixture } from '../mocks/data-fixture';
+import { expect, it } from 'vitest';
+import { dataFixture, processWait } from '../mocks/data-fixture';
 
 // A Loader page drawn again on a clock (ADR-0050), reading the fixture's count through a described Query.
 const everyPage = (every?: number): string => `
@@ -45,15 +45,13 @@ it.each([9999, 10000, 10001])(
     expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
       kind: 'unchanged',
     });
-    await vi.waitFor(
-      async () => expect(await fixture.requests()).toHaveLength(2),
-      { timeout: 5000 },
-    );
-    expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
-      kind: 'tree',
-      every: period,
-      root: { props: { children: '2' } },
-    });
+    await expect
+      .poll(() => kit.pages.draw({ path: '/', known }), processWait)
+      .toMatchObject({
+        kind: 'tree',
+        every: period,
+        root: { props: { children: '2' } },
+      });
     expect(await fixture.requests()).toHaveLength(2);
     expect(
       (await kit.log()).split('\n').filter((line) => line.includes('clamped')),

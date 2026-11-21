@@ -25,6 +25,7 @@ const operation = (name: string): DeclaredOperation => ({
   label: name,
   description: `Runs ${name}.`,
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {},
 });
 

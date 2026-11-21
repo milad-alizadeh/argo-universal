@@ -172,7 +172,7 @@ export function ScrollFadeList<T>({
   const frame = useFrame(list, { maxHeight, fitHeight }, props.horizontal);
 
   return (
-    <ScrollFadeFrame {...fading.frame} {...frame}>
+    <ScrollFadeFrame {...fading.frame} {...frame} virtualized>
       <MeasuredLegendList {...fading.list} ref={useBothRefs(list, ref)} />
     </ScrollFadeFrame>
   );

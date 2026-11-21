@@ -17,17 +17,6 @@ it('keeps each Argo instruction within the Plugin instructions limit', () => {
   expect(over).toEqual([]);
 });
 
-it('asks the Agent to keep a Todo list', () => {
-  expect(argoInstructions.map(({ name }) => name)).toContain('Todo list');
-});
-
-it('asks the Agent to declare the role of each Agent it spawns, naming the tool that runs it', () => {
-  const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
-
-  expect(agents).toContain('session.declareSubagentRole');
-  expect(agents).toContain('operation_run');
-});
-
 // A `timeout` killed a start still waiting on the person, and each retry asked again and started a duplicate.
 it('tells the Agent to wait for session.new instead of timing it out or retrying it', () => {
   const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
@@ -35,6 +24,19 @@ it('tells the Agent to wait for session.new instead of timing it out or retrying
   expect(agents).toContain('session.new');
   expect(agents).toContain('timeout');
   expect(agents).toContain('retry');
+});
+
+// Agents spent 20 to 30 seconds finding session.new and their own Project before starting a Session.
+it('gives the Agent session.new with the one param it needs', () => {
+  const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
+
+  expect(agents).toContain('session.new with params {"prompt"');
+});
+
+it('puts the Operation catalog before the Argo instructions', () => {
+  expect(argoInstructionsMarkdown()).toMatch(
+    /^## Operations\n\n[\s\S]*- session\.rename\(title, sessionId\?\)[\s\S]*## Todo list/,
+  );
 });
 
 it('names every Agent role the Agent can declare', () => {

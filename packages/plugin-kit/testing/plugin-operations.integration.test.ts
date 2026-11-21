@@ -6,6 +6,7 @@ const attach = {
   label: 'Attach the Issue',
   description: 'Attaches an Issue to the calling Session.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     number: {
       type: 'number' as const,
@@ -88,6 +89,7 @@ const setStatus = {
   label: 'Set the Issue status',
   description: 'Closes or reopens one Issue.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     status: {
       type: 'string' as const,
@@ -121,7 +123,6 @@ it('hands the handler the Project the run names, or else the caller’s', async 
       name: 'setStatus',
       params: { status: 'closed', projectId: 'project-2' },
       caller,
-      confirm: () => Promise.resolve(),
     }),
   ).resolves.toEqual({
     params: { status: 'closed' },
@@ -129,8 +130,9 @@ it('hands the handler the Project the run names, or else the caller’s', async 
   });
 });
 
-it('runs nothing in another Project than the Session’s when the user declines to confirm', async () => {
-  const fixture = await dataFixture(echo, { operations: [setStatus] });
+it('honors a refusal for a Plugin Operation whose policy requires approval', async () => {
+  const protectedStatus = { ...setStatus, policy: 'ask' as const };
+  const fixture = await dataFixture(echo, { operations: [protectedStatus] });
   const kit = await fixture.start();
   const caller = { sessionId: 'session-1', projectId: 'project-1' };
   const params = { status: 'open', projectId: 'project-2' };

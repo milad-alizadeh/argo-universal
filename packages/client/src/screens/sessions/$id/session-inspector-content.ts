@@ -4,6 +4,7 @@ import type {
   ShellPanelProps,
   SubagentListProps,
 } from '#features/sessions';
+import type { ScheduleControls } from '#features/sessions';
 import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { AgentFeedSlot } from './session-agents-tab';
 import type { CreatePullRequestAction } from './use-create-pull-request';
@@ -16,6 +17,7 @@ export interface OpenSubagentFeed {
 
 // What a Session gives its Sections to draw from.
 export interface SessionInspectorContent {
+  schedules?: ScheduleControls;
   header?: SessionHeaderProps;
   renderSubagentFeed?: AgentFeedSlot;
   subagents?: SubagentListProps;

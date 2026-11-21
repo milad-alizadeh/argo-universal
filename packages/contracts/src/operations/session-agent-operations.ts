@@ -20,6 +20,7 @@ export const sessionAgentOperations = {
     params: SessionSetTodosInput,
     result: TodoProgress,
     tier: 'act',
+    policy: 'allow',
     keywords: ['todo', 'todos', 'checklist', 'steps', 'progress', 'plan'],
   },
   'session.setTodoStep': {
@@ -31,6 +32,7 @@ export const sessionAgentOperations = {
     params: SessionSetTodoStepInput,
     result: TodoProgress,
     tier: 'act',
+    policy: 'allow',
     keywords: ['todo', 'checklist', 'step', 'progress', 'done'],
   },
   'session.declareSubagentRole': {
@@ -42,6 +44,7 @@ export const sessionAgentOperations = {
     params: SessionDeclareSubagentRoleInput,
     result: SessionDeclareSubagentRoleOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['subagent', 'spawn', 'role', 'agent', 'type'],
   },
 } as const satisfies Record<string, OperationDefinition>;

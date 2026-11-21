@@ -8,7 +8,6 @@ import { formatElapsed, millisecondsPerSecond } from '@repo/kit/format-elapsed';
 import { fullTurnDegrees } from '@repo/kit/motion';
 import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
-import { Orb } from '@repo/kit/primitives/status/orb';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { useClock } from '@repo/kit/use-clock';
 import type * as React from 'react';
@@ -23,6 +22,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { toolCallFacts } from '../../view/feed-row-facts';
+import { FeedOrb } from '../feed-orb';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallOrb } from '../tool-call-orb';
 
@@ -80,7 +80,7 @@ function toolSourceIcon(toolCall?: ToolCallUpdate): React.JSX.Element {
   return operation ? (
     <Icon name={operation.icon} className="text-muted-foreground" />
   ) : (
-    <Orb size="sm" state={toolCallOrb(toolCall)} continues />
+    <FeedOrb size="sm" state={toolCallOrb(toolCall)} continues />
   );
 }
 
@@ -90,8 +90,8 @@ const sourceIcons: Record<
 > = {
   request: () => <StatusDot testID="live-header-dot" tone="warning" pulse />,
   retry: () => <RetryIcon />,
-  working: () => <Orb size="sm" continues />,
-  thought: () => <Orb size="sm" state="solving" continues />,
+  working: () => <FeedOrb size="sm" continues />,
+  thought: () => <FeedOrb size="sm" state="solving" continues />,
   tool_call: toolSourceIcon,
 };
 

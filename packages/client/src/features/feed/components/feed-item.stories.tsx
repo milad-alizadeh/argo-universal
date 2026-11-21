@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 export const MixedTools: Story = { args: mixedTools };
 
-// What the person said on a Voice call is their message: a bubble.
+// What the person said on a Conversation is their message: a bubble.
 export const PersonSaid: Story = { args: personSaid };
 
 // Words the person is still saying: the bubble's text in the muted colour until final.

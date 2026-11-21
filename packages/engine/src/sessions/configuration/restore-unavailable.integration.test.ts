@@ -2,6 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { configuration } from './restore.test.mocks';
 
 it.each(['model', 'mode'])(
@@ -47,7 +48,7 @@ it.each(['model', 'mode'])(
       type: 'id',
       value,
     });
-    await host.caller.session.close(created);
+    await closeTestSession(host, created);
     await expect(host.caller.session.open(created)).rejects.toThrow(
       `${configId}=${value}`,
     );

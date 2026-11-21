@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
 import { FeedImageUrlContext } from '../feed-image';
 import {
+  parallelOperations,
   runningOperations,
   settledOperations,
 } from './operation-group-fixtures';
@@ -78,4 +79,8 @@ export const RunningOperation: Story = {
 
 export const SettledOperations: Story = {
   args: settledOperations,
+};
+
+export const ParallelOperations: Story = {
+  args: parallelOperations,
 };

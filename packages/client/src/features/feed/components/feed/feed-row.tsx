@@ -4,8 +4,10 @@ import { CollapsibleLayoutSyncContext } from '@repo/kit/primitives/layout/collap
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { createContext, memo, useContext, useMemo } from 'react';
+import { View } from 'react-native';
 import { SessionColumn } from '#lib/product/session-column';
 import { FeedItem } from '../feed-item';
+import { FeedRowVisibility } from '../feed-row-visibility';
 import { type FeedEntry, entryKey } from './feed-entry';
 import { LiveHeaderRow } from './live-header-row';
 
@@ -62,6 +64,22 @@ function EntryContent(props: FeedRowProps): React.JSX.Element {
   );
 }
 
+// A Tool call group's header is reusable. Its disclosure owns the identity of its body.
+const contentKey = (entry: FeedEntry): string | undefined =>
+  entry.type === 'group' || entry.type === 'exploration'
+    ? undefined
+    : entryKey(entry);
+
+function groupGap({
+  entry,
+  spaceBefore,
+}: FeedRowProps): React.JSX.Element | undefined {
+  if (entry.type === 'group' && spaceBefore)
+    return <View className={spaceBefore} />;
+
+  return undefined;
+}
+
 /*
  * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
  * same frame. The list data keeps unchanged entries, their gap and streaming state, so a row draws
@@ -76,7 +94,10 @@ export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <SessionColumn testID="feed-column" className={cn(spaceBelow, inset)}>
-        <EntryContent {...props} />
+        {groupGap(props)}
+        <FeedRowVisibility>
+          <EntryContent key={contentKey(entry)} {...props} />
+        </FeedRowVisibility>
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );

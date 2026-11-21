@@ -7,8 +7,12 @@ import {
   type PluginOperationContribution,
   type PluginOperationTier,
 } from '@repo/contracts/plugins/plugin-operations';
+import { appOnlyRefusal } from '../../operations/app-only';
+import {
+  operationPermission,
+  requirePermissionTurn,
+} from '../../operations/operation-permission';
 import type { OperationCard } from '../../sessions';
-import { isAgentCaller } from './agent-caller';
 import { checkRun, type CheckedRun } from './checked-run';
 import {
   declaredOperations,
@@ -49,7 +53,8 @@ export type OperationRun = {
   params: Json;
   caller: PluginOperationCaller;
   serverDevice?: boolean;
-  // Asks the user first, for a Session's run in a Project other than its own; a run with none is refused there.
+  authenticatedApp?: boolean;
+  // Requests approval in the calling Session’s active Turn.
   confirm?: (card: OperationCard) => Promise<void>;
 };
 
@@ -94,22 +99,43 @@ const secretValues = (
     return typeof value === 'string' ? [value] : [];
   });
 
-// The params and caller the handler is given, with its tier and secret values; a run in another Project is confirmed first.
+// The params and caller the handler is given, with its tier and secret values, once the policy allows it.
 async function checkedRun(
   { operation }: DeclaredOperation,
   input: OperationRun,
-): Promise<Omit<CheckedRun, 'outside'> & Disclosed> {
-  const { outside, ...checked } = checkRun(
-    operation,
-    input.params,
-    input.caller,
-  );
+): Promise<CheckedRun & Disclosed> {
+  const checked = checkRun(operation, input.params, input.caller);
 
-  const reason = confirmReason(operation, input.caller, outside);
-
-  if (reason) await confirmed(input, operation.label, reason);
+  await authorizePluginRun(input, operation);
 
   return { ...checked, ...disclosed(operation, checked.params) };
+}
+
+async function authorizePluginRun(
+  input: OperationRun,
+  operation: PluginOperationContribution,
+): Promise<void> {
+  const permission = operationPermission(
+    operation.policy,
+    input.authenticatedApp === true,
+  );
+
+  if (permission === 'person-only')
+    throw appOnlyRefusal(`${input.pluginId}.${input.name}`);
+
+  if (permission === 'ask') await confirmPluginRun(input, operation);
+}
+
+async function confirmPluginRun(
+  input: OperationRun,
+  operation: PluginOperationContribution,
+): Promise<void> {
+  if (!input.confirm) requirePermissionTurn();
+
+  await input.confirm({
+    title: operation.label,
+    description: operation.description,
+  });
 }
 
 // What the run reports of its Operation: the tier it declares and the values of its secret params.
@@ -122,39 +148,6 @@ const disclosed = (
   tier: operation.tier,
   secrets: secretValues(operation, given),
 });
-
-const otherProject =
-  'Run a Plugin Operation in a Project other than the calling Session’s.';
-
-const agentRun = 'An Agent asks to run this Plugin Operation.';
-
-const byAgent = (
-  { confirmAgent }: PluginOperationContribution,
-  caller: OperationRun['caller'],
-): boolean => Boolean(confirmAgent) && isAgentCaller(caller);
-
-// Why the user is asked before the run, when they are.
-const confirmReason = (
-  operation: PluginOperationContribution,
-  caller: OperationRun['caller'],
-  outside: boolean,
-): string | undefined => {
-  if (outside) return otherProject;
-
-  return byAgent(operation, caller) ? agentRun : undefined;
-};
-
-// Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first; so is an Agent's run of an Operation that says so.
-async function confirmed(
-  { confirm, name }: OperationRun,
-  label: string,
-  description: string,
-): Promise<void> {
-  if (!confirm)
-    throw new Error(`${name} in another Project needs the user to confirm`);
-
-  await confirm({ title: label, description });
-}
 
 async function declaredOperation(
   port: OperationsPort,

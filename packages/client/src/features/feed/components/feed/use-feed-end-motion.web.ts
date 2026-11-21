@@ -3,8 +3,8 @@ import { useLayoutEffect } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 import {
   type FeedEndMotion,
-  type FeedTail,
   followEnd,
+  followViewport,
 } from './feed-end-motion';
 import { WebFeedGlide } from './follow-web-feed';
 import type { ListRef } from './keep-place';
@@ -13,8 +13,6 @@ import type { ListRef } from './keep-place';
  * Legend retains gesture ownership and handles changes to the viewport and Composer.
  * One frame loop follows incoming row measurements, even when the destination moves.
  */
-const followRows = { on: { layout: true, footerLayout: true } };
-
 function watchRows(list: LegendListRef, glide: WebFeedGlide): () => void {
   const state = list.getState();
 
@@ -50,15 +48,14 @@ function useWatchFeed(list: ListRef, animated: boolean): FeedEndMotion {
     return watchFeed(list.current);
   }, [animated, list]);
 
-  return animated ? followRows : followEnd;
+  return animated ? followViewport : followEnd;
 }
 
 export function useFeedEndMotion(
   list: ListRef,
-  { turnRunning }: FeedTail,
   enabled: boolean,
 ): FeedEndMotion {
   const reduced = useReducedMotion();
 
-  return useWatchFeed(list, enabled && turnRunning && !reduced);
+  return useWatchFeed(list, enabled && !reduced);
 }

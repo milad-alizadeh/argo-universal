@@ -12,13 +12,16 @@ const meta = {
     installed: { control: 'select', options: ['written', 'updated'] },
     error: { control: 'text' },
     todoList: { control: 'boolean' },
+    screenSight: { control: 'boolean' },
   },
   parameters: { screenPreview: true },
   args: {
     access: { status: 'loaded', enabled: true },
     todoList: true,
+    screenSight: false,
     onEnabledChange: action('change Agent access'),
     onTodoListChange: action('change the Todo list setting'),
+    onScreenSightChange: action('change Screen sharing'),
     onInstall: action('add Argo instructions'),
     onRetry: action('retry loading Agent access'),
   },
@@ -35,6 +38,8 @@ export const Disabled: Story = {
 };
 
 export const TodoListOff: Story = { args: { todoList: false } };
+
+export const ScreenSightOn: Story = { args: { screenSight: true } };
 
 export const Saving: Story = { args: { saving: true } };
 

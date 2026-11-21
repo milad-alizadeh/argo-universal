@@ -6,6 +6,7 @@ type Operation = {
   label: string;
   description: string;
   tier: 'act';
+  policy: 'allow';
   params: Record<string, never>;
 };
 
@@ -14,6 +15,7 @@ const operation = (name: string): Operation => ({
   label: name,
   description: `Badge ${name}.`,
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {},
 });
 

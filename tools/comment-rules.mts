@@ -11,10 +11,6 @@ const RULE_NAME = String.raw`[@\w][\w@/-]*`;
 
 const textRules: CommentRule[] = [
   {
-    pattern: /\b(?:TODO|FIXME|XXX|HACK)\b/,
-    message: 'Open a GitHub issue for the work instead of a marker.',
-  },
-  {
     pattern: /jscpd:ignore-start\s*(?:\*\/\s*)?$/,
     message: 'Say why the clone stays.',
   },

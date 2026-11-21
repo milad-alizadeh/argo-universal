@@ -71,6 +71,8 @@ export type SessionMachineInput = SessionInput & {
   // The Engine's database writer, resolved once when the Session is opened.
   writer: WriterActorRef;
   archive?: boolean;
+  // Overrides how long an archive can be undone (tests).
+  archiveUndoMs?: number;
   // Plugin Hooks on Permission requests and settled Turns (ADR-0027).
   hooks: CoreHooks;
 };

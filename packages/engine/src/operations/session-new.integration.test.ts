@@ -24,7 +24,7 @@ it('starts a Session through the user-token Operation and generated App procedur
 
   await expect
     .poll(async () =>
-      (await user.session.list.query({})).sessions.map(
+      (await host.caller.session.list({})).sessions.map(
         (value) => value.sessionId,
       ),
     )
@@ -34,9 +34,9 @@ it('starts a Session through the user-token Operation and generated App procedur
     created.sessionId,
     (value) => value.activeTurnId !== null,
   );
-  await user.session.cancel.mutate(created);
+  await host.caller.session.cancel(created);
   await waitForAcpSessionIdle(host, created.sessionId);
-  expect(await user.session.get.query(created)).toMatchObject({
+  expect(await host.caller.session.get(created)).toMatchObject({
     projectId: 'project-1',
     title: 'Delegated investigation',
   });

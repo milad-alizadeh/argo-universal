@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { sessionBranch } from '@repo/git';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
 import {
   delegationJourney,
@@ -12,6 +13,9 @@ import {
 const worktree = { type: 'worktree' as const, baseBranch: 'main' };
 
 const starter = { type: 'starter' as const };
+
+// A short Undo window, after which an owned worktree is removed.
+const archiveUndoMs = 500;
 
 const startInStarterCheckout = {
   id: 'session.new' as const,
@@ -76,7 +80,11 @@ it("refuses the starter's Checkout to a caller that is not a Session", async () 
 });
 
 it("archives a Session that borrowed its starter's worktree without removing it", async () => {
-  const journey = await delegationJourney({ checkout: worktree });
+  const journey = await delegationJourney({
+    checkout: worktree,
+    agent: { archiveUndoMs },
+  });
+
   const started = await startDelegated(journey, journey.caller, starter);
 
   const { checkout } = await journey.host.caller.session.get({
@@ -84,7 +92,7 @@ it("archives a Session that borrowed its starter's worktree without removing it"
   });
 
   await journey.host.caller.session.archive({ sessionId: started.sessionId });
-  await journey.host.caller.session.close({ sessionId: started.sessionId });
+  await closeTestSession(journey.host, { sessionId: started.sessionId });
 
   expect(existsSync(checkout.path)).toBe(true);
   expect(

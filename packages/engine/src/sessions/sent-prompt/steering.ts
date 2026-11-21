@@ -1,17 +1,16 @@
-import { QueuedPromptId, type NonUserPromptSender } from '@repo/contracts';
+import type { SentPromptSender, QueuedPrompt } from '@repo/contracts';
 import { promptMessageId } from '../../feed';
+import type { PromptSend } from '../prompt-sender';
 import { steeredMessageId, steerQueuedPrompt } from '../queue-steering';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
 import type { PromptLanding } from '../session-prompt';
 
 // A queued Prompt: who sent it, and its queued id.
-export type QueuedSend = { sender: NonUserPromptSender; id: string };
+type QueuedSend = Pick<PromptSend<SentPromptSender>, 'sender' | 'id'>;
 
-type Steerable = { id: string; revision: number };
-
-// A Plugin's Prompt waits its turn (ADR-0055); the Voice call's and another Session's steer (ADR-0064, ADR-0054).
-const steers = ({ type }: NonUserPromptSender): boolean => type !== 'plugin';
+// A Plugin's Prompt waits its turn (ADR-0055); the Conversation's and another Session's steer (ADR-0064, ADR-0054).
+const steers = ({ type }: SentPromptSender): boolean => type !== 'plugin';
 
 const canSteer = ({
   acpLease,
@@ -23,7 +22,7 @@ const canSteer = ({
 function steerable(
   session: SessionActorRef,
   { sender, id }: QueuedSend,
-): Steerable | undefined {
+): QueuedPrompt | undefined {
   const { context } = session.getSnapshot();
 
   return steers(sender) && canSteer(context)
@@ -53,8 +52,7 @@ export function steerOrWait(
 
   if (!item) return waiting(queued, null);
 
-  const { revision } = item;
-  const id = QueuedPromptId.parse(item.id);
+  const { id, revision } = item;
 
   return steerQueuedPrompt(session, { action: 'steer', id, revision }).then(
     (turnId) => steered(turnId, queued),

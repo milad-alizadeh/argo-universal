@@ -11,7 +11,7 @@ const listOperationId = 'session.list';
 
 const projectBranchesId = 'project.listBranches';
 
-it('defaults a Session list to its caller Project and requires an active Turn to confirm a foreign Project', async () => {
+it('defaults a Session list to its caller Project and reads another Project when named', async () => {
   const fixture = await sessionAccessHost();
   const otherId = await addOtherProject(fixture.host);
   const caller = await openAccessSession(fixture, 'Caller');
@@ -44,9 +44,9 @@ it('defaults a Session list to its caller Project and requires an active Turn to
       id: listOperationId,
       params: { projectId: otherId },
     }),
-  ).rejects.toMatchObject({
-    data: { code: 'CONFLICT' },
-    message: 'A Permission request requires an active Turn',
+  ).resolves.toMatchObject({
+    sessions: [expect.objectContaining({ sessionId: foreign.sessionId })],
+    nextCursor: null,
   });
   expect((await fixture.host.caller.session.list({})).sessions).toContainEqual(
     expect.objectContaining({ sessionId: foreign.sessionId }),
@@ -64,7 +64,7 @@ it('defaults a Session list to its caller Project and requires an active Turn to
   });
 }, 30_000);
 
-it('scopes Project branch reads while keeping user access to another Project', async () => {
+it('reads another Project’s branches from either token', async () => {
   const { calling, otherId, user } = await sessionReadScope();
 
   expect(
@@ -78,10 +78,7 @@ it('scopes Project branch reads while keeping user access to another Project', a
       id: projectBranchesId,
       params: { projectId: otherId },
     }),
-  ).rejects.toMatchObject({
-    data: { code: 'CONFLICT' },
-    message: 'A Permission request requires an active Turn',
-  });
+  ).resolves.toMatchObject({ currentBranch: 'main' });
   expect(
     await runOperation(user.operations, {
       id: projectBranchesId,

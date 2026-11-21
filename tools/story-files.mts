@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { storySuffix, type StoryFile } from './story-file.mts';
+import { readStory, storySuffix, type StoryFile } from './story-file.mts';
 import { root, trackedFiles } from './tracked-files.mts';
 
 /*
@@ -17,3 +17,13 @@ export const loadSources = (pathspecs: readonly string[]): StoryFile[] =>
 export const loadStoryFiles = (
   pathspecs: readonly string[] = [`*${storySuffix}`],
 ): StoryFile[] => loadSources(pathspecs);
+
+export const packageStories = (): StoryFile[] =>
+  loadStoryFiles(['packages/*/src/**/*.stories.tsx']);
+
+// The render gates compare two drawings within the same file.
+export const drawingCount = (story: StoryFile): number => {
+  const count = readStory(story).exports.length;
+
+  return count < 2 ? 0 : count;
+};
