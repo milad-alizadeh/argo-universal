@@ -67,10 +67,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Mixed: Story = {};
 
-export const Stopped: Story = { args: { runs: stoppedRuns } };
-
-export const Starting: Story = { args: { runs: startingRuns } };
-
 export const Crashed: Story = { args: { runs: crashedRuns } };
 
 export const GroupStopped: Story = {

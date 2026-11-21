@@ -3,10 +3,7 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useState, type ReactElement } from 'react';
 import { useEnvironmentSection, useTextDraft } from '#features/settings';
 
-export type RunSettingsChange = Pick<
-  RunSettingsUpdate,
-  'env' | 'port' | 'autoStart'
->;
+type RunSettingsChange = Pick<RunSettingsUpdate, 'env' | 'port' | 'autoStart'>;
 
 export interface ProjectRunSettingsControls {
   entries: RunSettingsList;

@@ -87,7 +87,7 @@ const RunConfigurationsFile = z
 
 export type RunConfigurations = z.infer<typeof RunConfigurationsFile>;
 
-export type RunConfigurationsError = {
+type RunConfigurationsError = {
   message: string;
   line: number;
   column: number;

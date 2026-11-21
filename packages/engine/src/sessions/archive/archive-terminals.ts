@@ -1,6 +1,6 @@
 import type { RunCheckout } from '../../runs';
 
-export type ArchivedTerminals = {
+type ArchivedTerminals = {
   sessionIds: readonly string[];
   checkout?: RunCheckout;
 };
