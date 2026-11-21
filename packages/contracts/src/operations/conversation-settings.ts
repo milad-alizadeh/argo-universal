@@ -64,7 +64,7 @@ export const conversationSettingsOperations = {
     icon: 'settings',
     label: 'Change Conversation options',
     description:
-      "Change how Conversations behave: the filler line when work is handed over, the opening the voice is given, the idle timeout, the voice's volume and the microphone's gain. What is left out stays. Volume and gain change a running Conversation at once; the rest apply from the next call.",
+      "Change how Conversations behave. You can set the filler line when work is handed over, the opening the voice is given, the idle timeout, the voice's volume and the microphone's gain. What is left out stays. Volume and gain change a running Conversation at once; the rest apply from the next call.",
     params: ConversationOptionsChange,
     result: ConversationSettings,
     tier: 'confirm',
