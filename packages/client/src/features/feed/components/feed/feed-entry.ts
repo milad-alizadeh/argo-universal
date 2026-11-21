@@ -104,6 +104,7 @@ export function withLiveHeader(
     lastTurnItem === drawnItems.length - 1
       ? drawnItems
       : drawnItems.slice(0, lastTurnItem + 1);
+
   const delegated = drawnItems.slice(lastTurnItem + 1);
   const shown = shownLiveHeader(turnItems, liveHeader);
 
