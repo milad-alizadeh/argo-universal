@@ -3,7 +3,7 @@ import { expect, fn } from 'storybook/test';
 import { ColourWheel } from './colour-wheel';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Controls/Colour Wheel',
+  title: 'Tests/Design System/Primitives/Controls/ColourWheel',
   component: ColourWheel,
   args: { accessibilityLabel: 'Colour', onValueChange: fn() },
 } satisfies Meta<typeof ColourWheel>;

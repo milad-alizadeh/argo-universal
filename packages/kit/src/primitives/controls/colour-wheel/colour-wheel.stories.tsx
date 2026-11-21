@@ -3,7 +3,7 @@ import { kitArgTypes } from '#kit/kit-arg-types';
 import { ColourWheel } from './colour-wheel';
 
 const meta = {
-  title: 'Design System/Primitives/Controls/Colour Wheel',
+  title: 'Design System/Primitives/Controls/ColourWheel',
   component: ColourWheel,
   argTypes: kitArgTypes('ColourWheel'),
   args: { accessibilityLabel: 'Colour' },

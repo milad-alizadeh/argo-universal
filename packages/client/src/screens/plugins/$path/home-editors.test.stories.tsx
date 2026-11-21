@@ -8,7 +8,7 @@ import {
 } from './plugin-detail-view-fixtures';
 
 const meta = {
-  title: 'Tests/Screens/Plugins/Home editors',
+  title: 'Tests/Screens/Plugins/Plugin page/HomeEditors',
   component: PluginDetailView,
   parameters: { screenPreview: true },
   args: { callbacks: { onPageCall: fn(async () => {}) } },

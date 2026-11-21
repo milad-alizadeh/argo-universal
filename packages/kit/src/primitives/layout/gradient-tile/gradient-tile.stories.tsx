@@ -5,7 +5,7 @@ import { GradientTile } from './gradient-tile';
 import previewStops from './gradient-tile-fixture.json';
 
 const meta = {
-  title: 'Design System/Primitives/Layout/Gradient Tile',
+  title: 'Design System/Primitives/Layout/GradientTile',
   component: GradientTile,
   argTypes: kitArgTypes('GradientTile'),
   args: {
