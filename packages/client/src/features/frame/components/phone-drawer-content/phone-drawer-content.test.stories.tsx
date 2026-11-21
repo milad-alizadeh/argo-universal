@@ -112,7 +112,7 @@ export const PluginSelected = selectedRow('plugins/example/example');
 export const ListsCoreSectionsBeforePluginItems: Story = {
   play: async ({ canvas }) => {
     const rows = canvas.getAllByRole('button', {
-      name: /^(Sessions|Settings|Issues|Example)$/,
+      name: /^(Sessions|Scheduled|Settings|Issues|Example)$/,
     });
 
     await expect(rows).toHaveLength(pluginNavigationItems.length);

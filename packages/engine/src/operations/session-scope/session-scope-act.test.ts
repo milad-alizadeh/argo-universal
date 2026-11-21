@@ -1,7 +1,7 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
-import { runs, scoped } from './scope-fixtures';
+import { asks, runs, scoped } from './scope-fixtures';
 
 const sessionOnly = (sessionId: string): Json => ({ sessionId });
 
@@ -73,4 +73,28 @@ it('shows the Operation label and description on the card', async () => {
       description: expect.stringContaining('empty context'),
     },
   ]);
+});
+
+it('requires approval to schedule Sessions outside the Agent’s Project', async () => {
+  const params = {
+    agent: 'mock',
+    instructions: 'Review the build',
+    intervalSeconds: 3600,
+  };
+  expect(
+    (
+      await scoped({
+        id: 'project.scheduleCreate',
+        params: { ...params, projectId: 'p1' },
+      })
+    ).outcome,
+  ).toBe(runs);
+  expect(
+    (
+      await scoped({
+        id: 'project.scheduleCreate',
+        params: { ...params, projectId: 'p2' },
+      })
+    ).outcome,
+  ).toBe(asks);
 });

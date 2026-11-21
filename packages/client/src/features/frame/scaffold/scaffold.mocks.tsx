@@ -166,5 +166,5 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
   );
 }
 
-const mockSection = (section: Section): 'sessions' | 'settings' =>
+const mockSection = (section: Section): keyof typeof sections =>
   isCoreSection(section) ? section : 'sessions';

@@ -12,6 +12,10 @@ import {
   useNavigate,
 } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../lib/product/navigation/new-session';
+import {
+  ScheduledListScreen,
+  useScheduleContext,
+} from './scheduled/scheduled-screens';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootScreen } from './sessions/sessions-root-screen';
 import {
@@ -76,11 +80,29 @@ function settingsList(search: SettingsListScreenProps): SectionList {
 export function useSectionLists(): SectionLists {
   const path = usePathname();
   const navigate = useNavigate();
+  const scheduleContext = useScheduleContext(shownSessionId(path));
   const sessions = useSessionsViewState();
   const [query, onQueryChange] = useState('');
 
   return {
     sessions: sessionsList(sessions, path, () => navigate(newSessionHref())),
+    scheduled: {
+      list: (
+        <ScheduledListScreen
+          selectedId={shownScheduleId(path)}
+          context={scheduleContext}
+        />
+      ),
+      emptyPage: {
+        title: 'Select a Schedule',
+        description: 'Choose a Schedule from the list.',
+      },
+    },
     settings: settingsList({ query, onQueryChange }),
   };
+}
+
+function shownScheduleId(path: string): string | undefined {
+  const [section, id] = path.split('/').filter(Boolean);
+  return section === 'scheduled' && id !== 'new' ? id : undefined;
 }

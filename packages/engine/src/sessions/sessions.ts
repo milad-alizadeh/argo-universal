@@ -7,6 +7,7 @@ import type {
   PluginPromptAnswer,
   PluginWithdrawAnswer,
 } from '@repo/contracts/plugins/argo-calls';
+import { ProjectSchedules } from '../projects/project-schedules';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { SessionArchives } from './archive/session-archives';
 import { ConversationSessionWork } from './conversation-session-work';
@@ -42,6 +43,7 @@ import { createSessionWorkSource, type SessionWorkSource } from './work-source';
  * with stays behind this interface.
  */
 export class Sessions {
+  public readonly projectSchedules: ProjectSchedules;
   public readonly archives: SessionArchives;
   // The Session Operations that answer with their result, keyed by Operation id.
   public readonly implementations: SessionOperationImplementations;
@@ -58,6 +60,10 @@ export class Sessions {
     const list = createSessionList(sources);
 
     this.sources = handlerSources(sources);
+    this.projectSchedules = new ProjectSchedules(
+      this.sources,
+      sources.sessionCommandSignal,
+    );
     this.implementations = this.operations(sources, list);
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);

@@ -4,7 +4,14 @@ import { When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { expectMessage } from './new-session';
 
-const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists', 'Issues'];
+const sectionNames = [
+  'Sessions',
+  'Scheduled',
+  'Settings',
+  'Counter',
+  'Lists',
+  'Issues',
+];
 
 // A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
 export async function navigation(page: Page): Promise<Locator> {
@@ -40,7 +47,7 @@ Then(
   'the navigation lists core sections before Plugin items',
   async ({ page }): Promise<void> => {
     const items = (await navigation(page)).getByRole('button', {
-      name: /^(Sessions|Settings|Counter|Lists|Issues)$/,
+      name: /^(Sessions|Scheduled|Settings|Counter|Lists|Issues)$/,
     });
 
     await expect(items).toHaveCount(sectionNames.length);

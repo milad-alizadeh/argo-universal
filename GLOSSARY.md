@@ -311,6 +311,9 @@ _Avoid_: Shell, terminal (that is a Terminal), process
 An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
 _Avoid_: Target, loop
 
+**Project Schedule**:
+A Project’s stored instructions and cadence for starting fresh Sessions on its Server. Each occurrence can start a Session with its own Checkout. The person finds Project Schedules in Scheduled.
+
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
