@@ -31,6 +31,10 @@ export const draftStateLabels: Readonly<Record<DraftStateId, string>> = {
 // The Page state key a Draft's chosen state travels under, so it is part of the Page address and each App keeps its own.
 export const draftStateKey = 'draftState';
 
+// The Page state key a region's picked Variant travels under; like the chosen state it is part of the Page address, and each App keeps its own.
+export const draftVariantKey = (regionId: string): string =>
+  `draftVariant.${regionId}`;
+
 // The minimum states a Draft page does not declare, in minimum order.
 export const missingDraftStates = (
   declared: readonly DraftStateId[],
