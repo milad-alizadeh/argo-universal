@@ -28,8 +28,10 @@ function useBlockedActivation(
   useEffect(() => {
     const element = holder.current;
 
-    if (Platform.OS !== 'web' || !on || !(element instanceof Element))
-      return undefined;
+    const active =
+      Platform.OS === 'web' && on && element instanceof Element
+        ? element
+        : null;
 
     const block = (event: Event): void => {
       if (
@@ -43,12 +45,12 @@ function useBlockedActivation(
       event.stopPropagation();
     };
 
-    element.addEventListener('click', block, true);
-    element.addEventListener('keydown', block, true);
+    active?.addEventListener('click', block, true);
+    active?.addEventListener('keydown', block, true);
 
     return (): void => {
-      element.removeEventListener('click', block, true);
-      element.removeEventListener('keydown', block, true);
+      active?.removeEventListener('click', block, true);
+      active?.removeEventListener('keydown', block, true);
     };
   }, [holder, on]);
 }

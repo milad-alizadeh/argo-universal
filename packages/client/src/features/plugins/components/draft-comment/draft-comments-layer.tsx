@@ -38,6 +38,7 @@ function Mark({
   const { counts, picked } = useContext(MarksContext);
   const count = counts.get(pinKey(address, place)) ?? 0;
   const selected = picked === address;
+
   const box = useMeasuredBox(
     measure,
     Platform.OS === 'web' && (selected || count > 0),

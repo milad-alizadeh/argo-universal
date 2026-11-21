@@ -28,6 +28,12 @@ type Story = StoryObj<typeof meta>;
 // The editor opens in a portal, outside the story's canvas.
 const editor = (): ReturnType<typeof within> => within(document.body);
 
+const nameField = { name: 'Name' } as const;
+
+const stopCommenting = { name: 'Stop commenting' } as const;
+
+const commentMode = { name: 'Comment mode' } as const;
+
 const pairing = 'Pairing code expires';
 
 // A pointer press on a row picks the row, inside the list region, and the note is saved with its place.
@@ -150,7 +156,9 @@ export const AMovingPressPicksNothing: Story = {
     await settleLayout('wide');
 
     const row = await canvas.findByText(pairing);
+
     const { left, top } = row.getBoundingClientRect();
+
     const at = (x: number): MouseEventInit => ({
       bubbles: true,
       clientX: left + x,
@@ -174,13 +182,13 @@ export const TypedTextSurvivesTheToggle: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
 
-    const field = await canvas.findByRole('textbox', { name: 'Name' });
+    const field = await canvas.findByRole('textbox', nameField);
 
     await userEvent.type(field, 'Ada');
-    await userEvent.click(canvas.getByRole('button', { name: 'Comment mode' }));
-    await canvas.findByRole('button', { name: 'Stop commenting' });
+    await userEvent.click(canvas.getByRole('button', commentMode));
+    await canvas.findByRole('button', stopCommenting);
 
-    const after = canvas.getByRole('textbox', { name: 'Name' });
+    const after = canvas.getByRole('textbox', nameField);
 
     await expect(after).toBe(field);
     await expect(after).toHaveValue('Ada');
@@ -199,15 +207,13 @@ export const CommentModeKeepsAFieldFillingItsRow: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
 
-    const field = await canvas.findByRole('textbox', { name: 'Name' });
+    const field = await canvas.findByRole('textbox', nameField);
     const before = boxOf(field);
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Comment mode' }));
-    await canvas.findByRole('button', { name: 'Stop commenting' });
+    await userEvent.click(canvas.getByRole('button', commentMode));
+    await canvas.findByRole('button', stopCommenting);
 
-    await expect(boxOf(canvas.getByRole('textbox', { name: 'Name' }))).toBe(
-      before,
-    );
+    await expect(boxOf(canvas.getByRole('textbox', nameField))).toBe(before);
   },
 };
 
@@ -219,8 +225,8 @@ export const CommentModeKeepsAListFillingAndScrolling: Story = {
     const first = await canvas.findByText('Issue 0');
     const before = boxOf(first);
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Comment mode' }));
-    await canvas.findByRole('button', { name: 'Stop commenting' });
+    await userEvent.click(canvas.getByRole('button', commentMode));
+    await canvas.findByRole('button', stopCommenting);
 
     await expect(boxOf(canvas.getByText('Issue 0'))).toBe(before);
     // The list is still cut to its Screen, so it has not drawn its last row.

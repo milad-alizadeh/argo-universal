@@ -8,6 +8,8 @@ const dev = 'dev';
 
 const show = 'plugin.draft.show';
 
+const pickOperation = 'plugin.draft.pick';
+
 type Run = (input: { id: string; params: Json }) => Promise<{ kind: string }>;
 
 const source = `export async function register() {}`;
@@ -111,7 +113,7 @@ it('reads the recorded pick back for the Agent and the App, as at the first choi
 
   await host.caller.plugin.draft.choose({ pluginId: dev, picks, comments });
 
-  const read = await agent('plugin.draft.pick', { pluginId: dev });
+  const read = await agent(pickOperation, { pluginId: dev });
 
   expect(read).toMatchObject({
     kind: 'result',
@@ -230,7 +232,7 @@ it('hands comments on nodes outside any region to the Agent, with no pick', asyn
     comments: outside,
   });
 
-  expect(await agent('plugin.draft.pick', { pluginId: dev })).toMatchObject({
+  expect(await agent(pickOperation, { pluginId: dev })).toMatchObject({
     kind: 'result',
     result: { choice: { picks: [], comments: outside } },
   });
@@ -269,6 +271,7 @@ it('refuses a comment in a region or Variant the Draft does not declare', async 
 
 it('hands the Agent a comment in a declared region and Variant, and one naming only its region', async () => {
   const { host, agent } = await drawing();
+
   const inRegion = [
     { nodeKey: 'row-409', region: 'list', variant: 'cards', note: 'Chip' },
     { nodeKey: 'list', region: 'list', note: 'Wider' },
@@ -281,7 +284,7 @@ it('hands the Agent a comment in a declared region and Variant, and one naming o
     comments: inRegion,
   });
 
-  expect(await agent('plugin.draft.pick', { pluginId: dev })).toMatchObject({
+  expect(await agent(pickOperation, { pluginId: dev })).toMatchObject({
     kind: 'result',
     result: { choice: { comments: inRegion } },
   });

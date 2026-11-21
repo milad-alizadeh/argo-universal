@@ -117,13 +117,13 @@ function CommentTarget({
   const place = useContext(DraftPlaceContext);
   const ref = useRef<Holder>(null);
   const { address, nodeKey } = identity;
+
   const measure = (done: (box: Box) => void): void =>
     measureBox(ref.current, done);
 
   useLayoutEffect(
     () => commenting?.register({ address, nodeKey, place, measure }),
     // The measure reads the ref, which never changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [commenting, address, nodeKey, place],
   );
 

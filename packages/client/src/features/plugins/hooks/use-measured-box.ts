@@ -19,18 +19,22 @@ export function useMeasuredBox(
   const [box, setBox] = useState<Box | null>(null);
 
   useEffect(() => {
-    if (!active) return undefined;
-
     let frame = 0;
+    let following = active;
 
     const follow = (): void => {
+      if (!following) return;
+
       measure((next) => setBox((last) => (same(last, next) ? last : next)));
       frame = requestAnimationFrame(follow);
     };
 
     follow();
 
-    return (): void => cancelAnimationFrame(frame);
+    return (): void => {
+      following = false;
+      cancelAnimationFrame(frame);
+    };
     // The measure reads a ref, so it does not change what is followed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);

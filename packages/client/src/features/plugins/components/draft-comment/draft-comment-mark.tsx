@@ -2,6 +2,11 @@ import type * as React from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 import type { Box } from '../../../../lib/product/plugin-registry/draft-commenting';
 
+// The pin's side, and how far inside the node's corner it sits.
+const pinSize = 22;
+
+const pinInset = 4;
+
 export interface DraftCommentMarkProps {
   // The notes left on the node; its pin shows how many.
   count: number;
@@ -27,7 +32,10 @@ export function DraftCommentMark({
 
   const laid = box && {
     outline: { left: box.x, top: box.y, width: box.width, height: box.height },
-    pin: { left: box.x + box.width - 26, top: box.y + 4 },
+    pin: {
+      left: box.x + box.width - pinSize - pinInset,
+      top: box.y + pinInset,
+    },
   };
 
   return (
