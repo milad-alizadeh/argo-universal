@@ -42,7 +42,11 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
     draftPicksOf(entry, opening.path, pageState) ??
     (notes.length > 0 ? [] : null);
 
-  const choose = useMutation(useTRPC().plugin.draft.choose.mutationOptions());
+  const choose = useMutation({
+    ...useTRPC().plugin.draft.choose.mutationOptions(),
+    // The notes that went with the pick are gone, whichever call carried them.
+    onSuccess: (_choice, { comments }) => draftComments.sent(opening, comments),
+  });
 
   if (!bar) return null;
 
@@ -54,14 +58,11 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
     onChoose:
       picks &&
       (() => {
-        choose.mutate(
-          {
-            pluginId: opening.pluginId,
-            picks,
-            comments: draftCommentsOf(notes),
-          },
-          { onSuccess: () => draftComments.sent(opening) },
-        );
+        choose.mutate({
+          pluginId: opening.pluginId,
+          picks,
+          comments: draftCommentsOf(notes),
+        });
       }),
     commenting,
     commentCount: notes.length,

@@ -1,33 +1,82 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type * as React from 'react';
-import { View, type GestureResponderEvent } from 'react-native';
+import { Platform, View, type GestureResponderEvent } from 'react-native';
 
 // A pointer picks on any press; a phone only on a long one.
 export type Press = 'pointer' | 'long';
 
 type Holder = React.ComponentRef<typeof View>;
 
+type Point = { x: number; y: number };
+
+// A press that moves further than this is a scroll or a drag, not a pick.
+const slopPixels = 10;
+
+const pointOf = ({ nativeEvent }: GestureResponderEvent): Point => ({
+  x: nativeEvent.pageX,
+  y: nativeEvent.pageY,
+});
+
+const distance = (from: Point, to: Point): number =>
+  Math.hypot(to.x - from.x, to.y - from.y);
+
+// On the web a key press or a click would run the node under it, which the author is commenting on, not using.
+function useBlockedActivation(
+  holder: React.RefObject<Holder | null>,
+  on: boolean,
+): void {
+  useEffect(() => {
+    const element = holder.current;
+
+    if (Platform.OS !== 'web' || !on || !(element instanceof Element))
+      return undefined;
+
+    const block = (event: Event): void => {
+      if (
+        event instanceof KeyboardEvent &&
+        event.key !== 'Enter' &&
+        event.key !== ' '
+      )
+        return;
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    element.addEventListener('click', block, true);
+    element.addEventListener('keydown', block, true);
+
+    return (): void => {
+      element.removeEventListener('click', block, true);
+      element.removeEventListener('keydown', block, true);
+    };
+  }, [holder, on]);
+}
+
 /*
  * Takes every press on the page while the author comments, so the node pressed does not run, and reports where a
- * press that picks was let go. The sheet that opens on a pick is a child, laid over the page's box.
+ * press that picks began. A press that moved is a scroll, so it picks nothing. The sheet that opens on a pick is a
+ * child, laid over the page's box.
  */
 export function PressHolder(props: {
   press: Press;
   commenting: boolean;
   longPressMilliseconds: number;
-  onPick: (holder: Holder, point: { x: number; y: number }) => void;
+  onPick: (holder: Holder, point: Point) => void;
   children: React.ReactNode;
 }): React.JSX.Element {
   const { press, commenting, longPressMilliseconds, onPick, children } = props;
   const holder = useRef<Holder>(null);
-  const pressedAt = useRef(0);
+  const started = useRef({ at: 0, point: { x: 0, y: 0 }, moved: false });
+
+  useBlockedActivation(holder, commenting);
 
   const release = (event: GestureResponderEvent): void => {
-    const { pageX, pageY, timestamp } = event.nativeEvent;
-    const long = timestamp - pressedAt.current >= longPressMilliseconds;
+    const { at, point, moved } = started.current;
+    const long = event.nativeEvent.timestamp - at >= longPressMilliseconds;
 
-    if (holder.current && (press === 'pointer' || long))
-      onPick(holder.current, { x: pageX, y: pageY });
+    if (holder.current && !moved && (press === 'pointer' || long))
+      onPick(holder.current, point);
   };
 
   return (
@@ -36,7 +85,15 @@ export function PressHolder(props: {
       className="min-h-0 flex-1"
       onStartShouldSetResponderCapture={() => commenting}
       onResponderGrant={(event) => {
-        pressedAt.current = event.nativeEvent.timestamp;
+        started.current = {
+          at: event.nativeEvent.timestamp,
+          point: pointOf(event),
+          moved: false,
+        };
+      }}
+      onResponderMove={(event) => {
+        if (distance(started.current.point, pointOf(event)) > slopPixels)
+          started.current.moved = true;
       }}
       onResponderRelease={release}
     >

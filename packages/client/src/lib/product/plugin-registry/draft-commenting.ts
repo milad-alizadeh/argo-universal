@@ -43,7 +43,11 @@ export interface DraftCommenting {
   // Makes a node pickable while it is drawn; the answer takes it back.
   register: (target: CommentTarget) => () => void;
   // What the App draws over a node: its pin and, while picked, its outline.
-  Mark: ComponentType<{ address: string }>;
+  Mark: ComponentType<{
+    address: string;
+    place: DraftPlace | null;
+    measure: (done: (box: Box) => void) => void;
+  }>;
 }
 
 export const DraftCommentingContext = createContext<DraftCommenting | null>(

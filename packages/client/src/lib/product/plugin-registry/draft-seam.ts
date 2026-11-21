@@ -8,8 +8,8 @@ import { createContext, type ComponentType, type ReactElement } from 'react';
  */
 export interface DraftSeam {
   frames: (node: WireNode) => boolean;
-  // The author is picking nodes to comment on, so every node draws in a view the App can find (see `commentable`).
-  commenting?: boolean;
+  // A dev Plugin's Draft page, whose every node draws in a view the App can find (see `commentable`), whether or not the author is commenting.
+  commentable?: boolean;
   Frame: ComponentType<{ node: WireNode; children?: ReactElement }>;
 }
 

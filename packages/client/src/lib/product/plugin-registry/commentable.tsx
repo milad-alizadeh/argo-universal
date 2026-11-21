@@ -7,83 +7,136 @@ import {
   type ElementType,
 } from 'react';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View, type ViewStyle } from 'react-native';
 import {
   boxOf,
   DraftCommentingContext,
   DraftPlaceContext,
+  type Box,
   type NodeIdentity,
 } from './draft-commenting';
 import type { PluginProps } from './plugin-rendering';
 
-// The prop a node passes its wrapper; the wrapper takes it, so the kit component never sees it.
-export const identityProp = 'draftNodeIdentity';
+type Holder = React.ComponentRef<typeof View>;
 
-type Wrapped = PluginProps & { [identityProp]?: NodeIdentity };
+const wrappers = new WeakMap<object, Map<string, ElementType>>();
 
-const wrappers = new WeakMap<object, ElementType>();
+const nowhere: Box = { x: 0, y: 0, width: -1, height: -1 };
+
+// The kit components whose own view fills the room its parent leaves, so their wrapper must too where it keeps a box.
+const filling = new Set([
+  'Screen',
+  'ListDetail',
+  'Detail',
+  'List',
+  'ScrollView',
+  'Board',
+]);
 
 /*
- * The kit component drawn for a node while a Draft is open for comments: the same component inside a view the App
- * can find on screen and mark. Parents read it as the component it wraps, as they read a Fragment's children.
+ * A wrapper must not move what it holds. Web draws it with no box of its own, so a flex child keeps its width and a
+ * list keeps filling its screen; native has no such display, so its wrapper keeps a box and fills where its node does.
  */
-export function commentable(component: ElementType): ElementType {
+const boxless: ViewStyle | undefined =
+  Platform.OS === 'web' ? { display: 'contents' } : undefined;
+
+// A boxless wrapper has no size, so its box is its children's.
+function webBox(view: Holder | null): Box {
+  if (!(view instanceof Element)) return nowhere;
+
+  const rects = [...view.children].map((child) =>
+    child.getBoundingClientRect(),
+  );
+
+  if (rects.length === 0) return nowhere;
+
+  const left = Math.min(...rects.map((rect) => rect.left));
+  const top = Math.min(...rects.map((rect) => rect.top));
+
+  return {
+    x: left,
+    y: top,
+    width: Math.max(...rects.map((rect) => rect.right)) - left,
+    height: Math.max(...rects.map((rect) => rect.bottom)) - top,
+  };
+}
+
+function measureBox(view: Holder | null, done: (box: Box) => void): void {
+  if (!view) return done(nowhere);
+
+  if (Platform.OS === 'web') return done(webBox(view));
+
+  view.measureInWindow((...rect) => done(boxOf(rect)));
+}
+
+/*
+ * The kit component drawn for a node of a dev Plugin's Draft page, inside a view the App can find on screen and
+ * mark while the author comments. A node keeps its wrapper whether or not the author is commenting, so entering and
+ * leaving comment mode redraws nothing and loses no scroll or input. The wrapper is one per node, so the node's
+ * identity is not a prop a parent that spreads its child's props would pass on. Parents read it as the component it
+ * wraps, as they read a Fragment's children.
+ */
+export function commentable(
+  component: ElementType,
+  identity: NodeIdentity,
+  type: string,
+): ElementType {
   if (typeof component === 'string') return component;
 
-  const known = wrappers.get(component);
+  const known = wrappers.get(component)?.get(identity.address);
 
   if (known) return known;
 
-  function Commentable({
-    [identityProp]: identity,
-    ...props
-  }: Wrapped): React.JSX.Element {
-    const drawn = createElement(component, props);
-
-    return identity ? (
-      <CommentTarget identity={identity}>{drawn}</CommentTarget>
-    ) : (
-      drawn
+  function Commentable(props: PluginProps): React.JSX.Element {
+    return (
+      <CommentTarget identity={identity} fills={filling.has(type)}>
+        {createElement(component, props)}
+      </CommentTarget>
     );
   }
 
   const wrapper = wrappingComponent(Commentable, component);
+  const byAddress = wrappers.get(component) ?? new Map<string, ElementType>();
 
-  wrappers.set(component, wrapper);
+  byAddress.set(identity.address, wrapper);
+  wrappers.set(component, byAddress);
 
   return wrapper;
 }
 
 function CommentTarget({
   identity,
+  fills,
   children,
 }: {
   identity: NodeIdentity;
+  fills: boolean;
   children: React.ReactNode;
 }): React.JSX.Element {
   const commenting = useContext(DraftCommentingContext);
   const place = useContext(DraftPlaceContext);
-  const ref = useRef<React.ComponentRef<typeof View>>(null);
+  const ref = useRef<Holder>(null);
   const { address, nodeKey } = identity;
+  const measure = (done: (box: Box) => void): void =>
+    measureBox(ref.current, done);
 
   useLayoutEffect(
-    () =>
-      commenting?.register({
-        address,
-        nodeKey,
-        place,
-        measure: (done) =>
-          ref.current
-            ? ref.current.measureInWindow((...rect) => done(boxOf(rect)))
-            : done({ x: 0, y: 0, width: -1, height: -1 }),
-      }),
+    () => commenting?.register({ address, nodeKey, place, measure }),
+    // The measure reads the ref, which never changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [commenting, address, nodeKey, place],
   );
 
   return (
-    <View ref={ref} className="relative min-w-0 shrink">
+    <View
+      ref={ref}
+      style={boxless}
+      className={fills ? 'min-h-0 min-w-0 flex-1' : 'relative min-w-0 shrink'}
+    >
       {children}
-      {commenting && <commenting.Mark address={address} />}
+      {commenting && (
+        <commenting.Mark address={address} place={place} measure={measure} />
+      )}
     </View>
   );
 }

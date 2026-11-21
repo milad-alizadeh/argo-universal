@@ -61,10 +61,10 @@ function ConnectedFrame(props: {
   );
 }
 
-const seamOf = (ids: ReadonlySet<string>, commenting: boolean): DraftSeam => ({
+const seamOf = (ids: ReadonlySet<string>, commentable: boolean): DraftSeam => ({
   frames: (node) => ids.has(node.key),
   Frame: ConnectedFrame,
-  commenting,
+  commentable,
 });
 
 /*
@@ -73,11 +73,13 @@ const seamOf = (ids: ReadonlySet<string>, commenting: boolean): DraftSeam => ({
  */
 export function DraftRegionsProvider(props: {
   regions: DraftRegions | null;
-  // The author is picking nodes to comment on, which a Draft with no regions has too.
+  // Whether the author is picking nodes to comment on; left out for a page that is no dev Plugin's Draft, whose nodes draw as they are.
   commenting?: boolean;
   children: React.ReactNode;
 }): React.JSX.Element {
-  const { regions, commenting = false, children } = props;
+  const { regions, children } = props;
+  const draftPage = props.commenting !== undefined;
+  const commenting = props.commenting ?? false;
   const [active, setActive] = useState<string | null>(null);
 
   const ids = regions?.tags.map(({ id }) => id).join('\n');
@@ -85,10 +87,10 @@ export function DraftRegionsProvider(props: {
   // One seam while the regions stay the same, so the tree keeps what it drew.
   const seam = useMemo(
     () =>
-      ids === undefined && !commenting
+      ids === undefined && !draftPage
         ? null
-        : seamOf(new Set(ids?.split('\n')), commenting),
-    [ids, commenting],
+        : seamOf(new Set(ids?.split('\n')), draftPage),
+    [ids, draftPage],
   );
 
   return (

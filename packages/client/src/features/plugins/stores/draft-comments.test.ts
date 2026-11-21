@@ -70,3 +70,16 @@ it('sends each note by its node, region and Variant, without the address the pin
     draftCommentsOf([{ address: 'title', nodeKey: 'title', note: 'Bigger' }]),
   ).toEqual([{ nodeKey: 'title', note: 'Bigger' }]);
 });
+
+it('keeps a note left while a Choose was in flight, and drops those that went with it', () => {
+  const comments = new DraftComments();
+  const later = { ...note, address: 'title', nodeKey: 'title', note: 'Bigger' };
+
+  comments.save(page, note);
+  const sent = draftCommentsOf(comments.of(page).notes);
+
+  comments.save(page, later);
+  comments.sent(page, sent);
+
+  expect(comments.of(page).notes).toEqual([later]);
+});

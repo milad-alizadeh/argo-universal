@@ -13,6 +13,14 @@ export type DraftPageComments = {
 
 type Page = { pluginId: string; path: string };
 
+const sameNote =
+  (note: DraftNote) =>
+  (comment: DraftComment): boolean =>
+    comment.nodeKey === note.nodeKey &&
+    comment.region === note.region &&
+    comment.variant === note.variant &&
+    comment.note === note.note;
+
 const none: DraftPageComments = { notes: [], commenting: false };
 
 const keyOf = ({ pluginId, path }: Page): string => `${pluginId}\n${path}`;
@@ -48,9 +56,13 @@ export class DraftComments {
     this.set(page, { ...this.of(page), commenting });
   }
 
-  // The notes went with a Choose.
-  public sent(page: Page): void {
-    this.set(page, { ...this.of(page), notes: [] });
+  // The notes that went with a Choose are gone; one left while it was in flight stays. With none named, all are gone.
+  public sent(page: Page, comments?: readonly DraftComment[]): void {
+    const kept = comments
+      ? this.of(page).notes.filter((note) => !comments.some(sameNote(note)))
+      : [];
+
+    this.set(page, { ...this.of(page), notes: kept });
   }
 
   private set(page: Page, next: DraftPageComments): void {

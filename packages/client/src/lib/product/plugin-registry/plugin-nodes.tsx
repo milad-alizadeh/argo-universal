@@ -13,7 +13,7 @@ import {
   type ElementType,
   type ReactElement,
 } from 'react';
-import { commentable, identityProp } from './commentable';
+import { commentable } from './commentable';
 import { faded, framed as drawingFrame } from './draft-drawing-nodes';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
@@ -74,19 +74,23 @@ function drawNode({
 
   if (!definition || !drawing) return null;
 
-  // While a Draft is open for comments a node draws inside a view the App can pick.
-  const component = context.seam?.commenting ? commentable(drawing) : drawing;
-
   const input = { node, definition, context, source: node.props };
 
   const slots = renderedSlots(node, definition, context);
 
-  return renderComponent(component, input, {
-    ...slots,
-    ...(context.seam?.commenting && {
-      [identityProp]: { address: context.key, nodeKey: node.key },
-    }),
-  });
+  // A Draft page's node draws inside a view the App can pick, which the author may comment on.
+  if (context.seam?.commentable)
+    return renderComponent(
+      commentable(
+        drawing,
+        { address: context.key, nodeKey: node.key },
+        node.type,
+      ),
+      input,
+      slots,
+    );
+
+  return renderComponent(drawing, input, slots);
 }
 
 function renderComponent(

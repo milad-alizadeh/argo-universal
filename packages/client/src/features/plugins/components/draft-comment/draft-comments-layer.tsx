@@ -1,13 +1,18 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { createContext, useContext, useMemo } from 'react';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import {
   DraftCommentingContext,
+  type Box,
   type DraftCommenting,
+  type DraftPlace,
 } from '../../../../lib/product/plugin-registry/draft-commenting';
 import { useCommentPicking } from '../../hooks/use-comment-picking';
+import { useMeasuredBox } from '../../hooks/use-measured-box';
 import { useDraftComments } from '../../stores/draft-comments';
 import { titleOf } from '../../utils/draft-comment-hit';
+import { pinKey, pinKeyOf } from '../../utils/draft-pin-key';
 import type { PageOpening } from '../../utils/page-addresses';
 import { DraftCommentMark } from './draft-comment-mark';
 import { DraftCommentSheet } from './draft-comment-sheet';
@@ -21,22 +26,36 @@ type Marks = { counts: ReadonlyMap<string, number>; picked: string | null };
 const MarksContext = createContext<Marks>({ counts: new Map(), picked: null });
 
 // Drawn over every node of the tree while the author comments, from what the App knows of the notes.
-function Mark({ address }: { address: string }): React.JSX.Element {
+function Mark({
+  address,
+  place,
+  measure,
+}: {
+  address: string;
+  place: DraftPlace | null;
+  measure: (done: (box: Box) => void) => void;
+}): React.JSX.Element {
   const { counts, picked } = useContext(MarksContext);
+  const count = counts.get(pinKey(address, place)) ?? 0;
+  const selected = picked === address;
+  const box = useMeasuredBox(
+    measure,
+    Platform.OS === 'web' && (selected || count > 0),
+  );
 
   return (
     <DraftCommentMark
-      count={counts.get(address) ?? 0}
-      selected={picked === address}
+      count={count}
+      selected={selected}
+      box={Platform.OS === 'web' ? box : undefined}
     />
   );
 }
 
-function countsOf(addresses: readonly string[]): Map<string, number> {
+function countsOf(keys: readonly string[]): Map<string, number> {
   const counts = new Map<string, number>();
 
-  for (const address of addresses)
-    counts.set(address, (counts.get(address) ?? 0) + 1);
+  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
 
   return counts;
 }
@@ -78,7 +97,7 @@ function DraftPage(props: LayerProps): React.JSX.Element {
 
   const marks = useMemo<Marks>(
     () => ({
-      counts: countsOf(notes.map(({ address }) => address)),
+      counts: countsOf(notes.map(pinKeyOf)),
       picked: picked?.target.address ?? null,
     }),
     [notes, picked],
