@@ -22,6 +22,40 @@ const radians = Math.PI / (fullTurn / 2);
 
 const accessibleStep = 5;
 
+const actions = [
+  { name: 'increment', label: 'Increase hue' },
+  { name: 'decrement', label: 'Decrease hue' },
+  { name: 'increaseSaturation', label: 'Increase saturation' },
+  { name: 'decreaseSaturation', label: 'Decrease saturation' },
+];
+
+const keys = new Map([
+  ['ArrowRight', 'increment'],
+  ['ArrowLeft', 'decrement'],
+  ['ArrowUp', 'increaseSaturation'],
+  ['ArrowDown', 'decreaseSaturation'],
+]);
+
+function adjust(value: Colour | undefined, action: string): Colour | undefined {
+  const { hue, saturation } = value ?? { hue: 0, saturation: fullSaturation };
+
+  switch (action) {
+    case 'increment':
+      return { hue: (hue + accessibleStep) % fullTurn, saturation };
+    case 'decrement':
+      return { hue: (hue - accessibleStep + fullTurn) % fullTurn, saturation };
+    case 'increaseSaturation':
+      return {
+        hue,
+        saturation: Math.min(fullSaturation, saturation + accessibleStep),
+      };
+    case 'decreaseSaturation':
+      return { hue, saturation: Math.max(0, saturation - accessibleStep) };
+    default:
+      return undefined;
+  }
+}
+
 function colourAt(rawX: number, rawY: number): Colour {
   const x = rawX - radius;
   const y = rawY - radius;
@@ -59,13 +93,25 @@ export function ColourWheel(props: Props): ReactElement {
     props.onValueChange?.(colour);
   };
 
+  const nudge = (action: string): boolean => {
+    if (props.disabled) return false;
+
+    const next = adjust(value, action);
+
+    if (!next) return false;
+
+    pick(next);
+
+    return true;
+  };
+
   const input = useWheelInput(props.disabled ?? false, (x, y) =>
     pick(colourAt(x, y)),
   );
 
   return (
     <View
-      className="relative self-center web:touch-none"
+      className="relative self-center web:touch-none focus-visible:focus-ring"
       style={{ width: size, height: size }}
       accessible
       accessibilityRole="adjustable"
@@ -73,19 +119,14 @@ export function ColourWheel(props: Props): ReactElement {
       accessibilityState={{ disabled: props.disabled }}
       accessibilityValue={{ text: description }}
       aria-valuetext={description}
-      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-      onAccessibilityAction={({ nativeEvent }) => {
-        if (props.disabled) return;
+      accessibilityActions={actions}
+      onAccessibilityAction={({ nativeEvent }) => nudge(nativeEvent.actionName)}
+      focusable={!props.disabled}
+      tabIndex={props.disabled ? undefined : 0}
+      onKeyDown={(event) => {
+        const action = keys.get(event.nativeEvent.key);
 
-        const step =
-          nativeEvent.actionName === 'increment'
-            ? accessibleStep
-            : -accessibleStep;
-
-        pick({
-          hue: ((value?.hue ?? 0) + step + fullTurn) % fullTurn,
-          saturation: value?.saturation ?? fullSaturation,
-        });
+        if (action && nudge(action)) event.preventDefault();
       }}
       {...input}
     >

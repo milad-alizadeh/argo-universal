@@ -63,7 +63,10 @@ const lights = (
   isEmpty(household) ? (
     empty
   ) : (
-    <Stack direction="row" align="stretch">
+    <Stack
+      direction={{ compact: 'column', medium: 'column', wide: 'row' }}
+      align="stretch"
+    >
       <ScrollView>
         <Stack direction="column" gap={6}>
           {householdSections(household, state, to)}

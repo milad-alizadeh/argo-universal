@@ -11,7 +11,11 @@
         "key": "0",
         "props": {
           "align": "stretch",
-          "direction": "row"
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
         },
         "children": [
           {
@@ -643,7 +647,11 @@
         "key": "0",
         "props": {
           "align": "stretch",
-          "direction": "row"
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
         },
         "children": [
           {
@@ -1408,7 +1416,11 @@
         "key": "0",
         "props": {
           "align": "stretch",
-          "direction": "row"
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
         },
         "children": [
           {
@@ -2795,7 +2807,11 @@
         "key": "0",
         "props": {
           "align": "stretch",
-          "direction": "row"
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
         },
         "children": [
           {

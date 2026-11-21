@@ -1,10 +1,10 @@
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View, type ViewStyle } from 'react-native';
 import { useSizeClass } from '#kit/use-size-class/use-size-class';
-import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
+import { isRightToLeft } from '../../controls/fader/fader-direction';
 import { Gradient } from '../../controls/fader/fader-gradient';
 import { inkOver } from '../../controls/fader/fader-ink';
 import type { KitProps } from '../../kit-props';
@@ -12,6 +12,19 @@ import type { KitProps } from '../../kit-props';
 type Props = KitProps<'GradientTile'>;
 
 const heights = { compact: 112, expanded: 104 };
+
+// Native draws the gradient in the tile’s background layer, using its final bounds and corner radius.
+function nativeFill(colours: string[] | null): ViewStyle | undefined {
+  if (Platform.OS === 'web' || !colours) return undefined;
+
+  if (colours.length === 1) return { backgroundColor: colours[0] };
+
+  const direction = isRightToLeft() ? 'to left' : 'to right';
+
+  return {
+    experimental_backgroundImage: `linear-gradient(${direction}, ${colours.join(', ')})`,
+  };
+}
 
 export function GradientTile({
   title,
@@ -34,14 +47,11 @@ export function GradientTile({
       accessibilityLabel={title}
       accessibilityState={{ selected }}
       aria-pressed={selected}
-      className={cn(
-        'overflow-hidden rounded-2xl bg-muted border-2 border-transparent p-3 active:opacity-80',
-        selected && !loading && 'border-foreground',
-      )}
-      style={{ height }}
+      className="overflow-hidden rounded-2xl bg-muted p-3 active:opacity-80"
+      style={{ height, ...nativeFill(colours) }}
       onPress={onPress}
     >
-      {colours ? (
+      {Platform.OS === 'web' && colours ? (
         <View pointerEvents="none" className="absolute inset-0">
           <Gradient orientation="horizontal" fill={colours} />
         </View>
@@ -54,9 +64,15 @@ export function GradientTile({
         {title}
       </Text>
       {selected && !loading && (
-        <View className="absolute top-3 end-3 rounded-full bg-card p-1">
-          <Icon name="check" size="sm" />
-        </View>
+        <>
+          <View
+            pointerEvents="none"
+            className="absolute inset-0 rounded-2xl border-2 border-foreground"
+          />
+          <View className="absolute top-3 end-3 rounded-full bg-card p-1">
+            <Icon name="check" size="sm" />
+          </View>
+        </>
       )}
     </Pressable>
   );

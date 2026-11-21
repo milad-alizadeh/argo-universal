@@ -33,6 +33,7 @@ export function SheetScreen(props: SheetScreenProps): ReactNode {
 }
 
 export interface SheetScreenEntry {
+  closeLabel?: string;
   search?: SheetScreenSearch;
   name: string;
   title?: string;
@@ -53,6 +54,7 @@ function sheetScreens(children: ReactNode): SheetScreenEntry[] {
     .map((page) => ({
       name: page.props.name,
       title: page.props.title,
+      closeLabel: page.props.closeLabel,
       action: page.props.action,
       search: page.props.search,
       keepsHeaderInset: page.props.keepsHeaderInset,

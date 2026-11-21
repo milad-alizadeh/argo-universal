@@ -21,6 +21,7 @@ export function InspectorSheetFrame({
       <Sheet.Screen
         name="inspector"
         title={screenTitle}
+        closeLabel={inspector.closeLabel}
         search={inspectorSearch(inspector)}
         keepsHeaderInset
       >

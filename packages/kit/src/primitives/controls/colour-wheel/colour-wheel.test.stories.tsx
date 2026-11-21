@@ -33,3 +33,17 @@ export const PicksAColourFromAnUnselectedWheel: Story = {
     );
   },
 };
+
+export const AdjustsHueAndSaturationWithTheKeyboard: Story = {
+  play: async ({ canvas, args, userEvent }) => {
+    const wheel = canvas.getByRole('slider', { name: 'Colour' });
+
+    wheel.focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowDown}');
+    await expect(args.onValueChange).toHaveBeenLastCalledWith({
+      hue: 5,
+      saturation: 95,
+    });
+    await expect(wheel).toHaveAttribute('aria-valuetext', '5°, 95%');
+  },
+};

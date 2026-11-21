@@ -37,6 +37,7 @@ export interface SheetScreenSearch {
 }
 
 export interface SheetScreenProps {
+  closeLabel?: string;
   search?: SheetScreenSearch;
   name: string;
   onExit?: () => void;
