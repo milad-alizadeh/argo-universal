@@ -119,9 +119,7 @@ export const ClosesDesktopShellFromTheHeader: Story = {
       await canvas.findByRole('tabpanel', { name: firstShell }),
     );
 
-    await userEvent.click(
-      terminal.getByRole('button', { name: 'Close', exact: true }),
-    );
+    await userEvent.click(terminal.getByRole('button', { name: /^Close$/ }));
     await expect(args.closed).toHaveBeenCalledOnce();
     await expect(args.closed).toHaveBeenCalledWith('shell-1');
     await expect(
@@ -163,7 +161,7 @@ export const OpensInThePhoneRunsSheet: Story = {
     await settleOverlays(shell);
     await context.userEvent.click(shell);
     await context.userEvent.click(
-      await sheet.findByRole('button', { name: 'Close', exact: true }),
+      await sheet.findByRole('button', { name: /^Close$/ }),
     );
     await expect(context.args.closed).toHaveBeenCalledWith('shell-1');
     await expect(

@@ -193,6 +193,26 @@ it('runs commands in a real interactive shell in the Checkout', async () => {
   }
 }, 30_000);
 
+async function expectRecoveryToRefuseStaleOwner(
+  host: TestShells['host'],
+  pid: number,
+): Promise<void> {
+  const forgetStaleOwner = await recordCheckoutTerminalOwner(
+    host.home,
+    pid,
+    randomUUID(),
+  );
+
+  try {
+    await expect(
+      startEngineTestHost({ home: host.home, acp: host.agent }),
+    ).rejects.toThrow('Actor terminated');
+    expect(processIsRunning(pid)).toBe(true);
+  } finally {
+    await forgetStaleOwner();
+  }
+}
+
 it('recovery marks an interrupted shell Terminal lost and clears its process and output', async () => {
   const host = await startAcpEngine({ steps: [] });
 
@@ -225,21 +245,7 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
 
   if (pid === undefined) throw new Error('Missing Terminal process ID');
 
-  const forgetStaleOwner = await recordCheckoutTerminalOwner(
-    host.home,
-    pid,
-    randomUUID(),
-  );
-
-  try {
-    await expect(
-      startEngineTestHost({ home: host.home, acp: host.agent }),
-    ).rejects.toThrow('Actor terminated');
-    expect(processIsRunning(pid)).toBe(true);
-  } finally {
-    await forgetStaleOwner();
-  }
-
+  await expectRecoveryToRefuseStaleOwner(host, pid);
   await recordCheckoutTerminalOwner(host.home, pid, id);
   let screen = '';
   terminal.onData((text) => {

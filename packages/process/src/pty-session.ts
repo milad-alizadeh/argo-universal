@@ -41,6 +41,7 @@ async function holdsOwnerDescriptor(
 ): Promise<boolean> {
   try {
     const command = process.platform === 'darwin' ? '/usr/sbin/lsof' : 'lsof';
+
     const { stdout } = await inspectProcess(command, [
       '-a',
       '-p',
