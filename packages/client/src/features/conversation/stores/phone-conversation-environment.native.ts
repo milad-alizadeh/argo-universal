@@ -23,7 +23,7 @@ import { requestPhoneSpeakerRoute } from './phone-speaker-route';
 
 /*
  * SPIKE (latency on a phone, docs/research/voice-mode.md): the least a phone needs to carry a real Conversation, so its
- * latency can be measured against the desktop App's. iPhone only. Left out on purpose: choosing a device,
+ * latency can be measured against the desktop App's. Left out on purpose: choosing a device,
  * microphone gain, voice previews, a real spectrum and recovery from a network change.
  */
 
@@ -145,9 +145,10 @@ class PhonePeer implements VoicePeer<PhoneStream> {
  * reapplying the audio session category during playback stalls jitter-buffer output.
  */
 class PhonePlayback implements VoicePlayback {
-  private readonly cancelSpeakerRoute = requestPhoneSpeakerRoute(
-    configureConversationAudio,
-  );
+  private readonly cancelSpeakerRoute =
+    Platform.OS === 'ios'
+      ? requestPhoneSpeakerRoute(configureConversationAudio)
+      : undefined;
 
   public constructor(private readonly stream: PhoneStream) {}
 
@@ -167,7 +168,7 @@ class PhonePlayback implements VoicePlayback {
   }
 
   public stop(): void {
-    this.cancelSpeakerRoute();
+    this.cancelSpeakerRoute?.();
   }
 }
 
@@ -193,4 +194,4 @@ const environment: ConversationEnvironment<PhoneStream> = {
 };
 
 export const phoneConversationEnvironment: ConversationEnvironment<PhoneStream> | null =
-  Platform.OS === 'ios' ? environment : null;
+  Platform.OS === 'ios' || Platform.OS === 'android' ? environment : null;
