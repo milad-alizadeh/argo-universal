@@ -42,7 +42,7 @@ const sessionOf = (
   return row;
 };
 
-const checkoutOf = (
+export const runCheckoutOf = (
   database: Database,
   sessionId: string | undefined,
 ): RunCheckout => {
@@ -68,7 +68,7 @@ export function createRunOperations(deps: {
       );
     },
     'run.stop': async ({ sessionId, name }) =>
-      runs.stop(checkoutOf(database, sessionId), name),
+      runs.stop(runCheckoutOf(database, sessionId), name),
     'run.restart': async ({ sessionId, name, timeoutMs }) => {
       const { id, title, ...checkout } = sessionOf(database, sessionId);
 
@@ -79,8 +79,8 @@ export function createRunOperations(deps: {
       );
     },
     'run.status': async ({ sessionId }) =>
-      runs.status(checkoutOf(database, sessionId)),
+      runs.status(runCheckoutOf(database, sessionId)),
     'run.logs': async ({ sessionId, name, tail }) =>
-      runs.logs(checkoutOf(database, sessionId), name, tail),
+      runs.logs(runCheckoutOf(database, sessionId), name, tail),
   };
 }
