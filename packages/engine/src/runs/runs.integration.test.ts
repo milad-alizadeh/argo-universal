@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:net';
 import { join } from 'node:path';
 import type { OperationId } from '@repo/contracts/operations';
@@ -7,6 +7,8 @@ import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
+
+const runFile = '.argo/run.json';
 
 const startRun: OperationId = 'run.start';
 
@@ -473,4 +475,53 @@ it('starts a restarted Run on the port it had', async () => {
   await restarted;
 
   expect(fresh.launch.port).toBe(old.launch.port);
+});
+
+it('drafts .argo/run.json from the Checkout’s package.json and starts what it drafted', async () => {
+  const { terminals, call, project } = await startRuns();
+
+  await writeFile(
+    join(project.path, 'package.json'),
+    JSON.stringify({ scripts: { dev: 'vite --port 5173', build: 'tsc' } }),
+  );
+
+  const drafted = await call('run.draft');
+
+  expect(drafted).toEqual({
+    path: runFile,
+    configurations: [
+      {
+        name: 'dev',
+        command: 'npm run dev',
+        port: 5173,
+        source: 'package.json',
+      },
+    ],
+    skipped: [],
+  });
+  expect(await readFile(join(project.path, runFile), 'utf8')).toContain(
+    '"npm run dev"',
+  );
+  expect(terminals.started).toEqual([]);
+
+  const started = call(startRun, { name: 'dev' });
+  const terminal = await terminals.next();
+
+  expect(terminal.launch.command).toBe('npm run dev');
+  expect(terminal.launch.port).toBeGreaterThan(0);
+  void started.catch(() => {});
+});
+
+it('refuses to draft over an existing .argo/run.json unless asked', async () => {
+  const { call, project } = await startRuns({ configurations: [web] });
+
+  await writeFile(join(project.path, 'Procfile'), 'worker: node worker.js\n');
+
+  await expect(call('run.draft')).rejects.toThrow(/already exists/u);
+
+  await call('run.draft', { overwrite: true });
+
+  expect(await readFile(join(project.path, runFile), 'utf8')).toContain(
+    'worker',
+  );
 });

@@ -26,6 +26,7 @@ const defaults: Defaults = {
   'run.restart': callerSessionParam,
   'run.status': callerSessionParam,
   'run.logs': callerSessionParam,
+  'run.draft': callerSessionParam,
   'conversation.hangUp': ownSessionOnly,
 };
 

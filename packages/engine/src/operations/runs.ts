@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
-import type { RunCheckout, Runs } from '../runs';
+import { draftRunConfigurations, type RunCheckout, type Runs } from '../runs';
 import { namedParam } from '../sessions';
 import type { OperationImplementations } from './operations';
 
@@ -55,6 +55,25 @@ export function createRunOperations(deps: {
       runs.restart(checkoutOf(database, sessionId), name, timeoutMs),
     'run.status': async ({ sessionId }) =>
       runs.status(checkoutOf(database, sessionId)),
+    'run.draft': async ({ sessionId, overwrite }) => {
+      const drafted = await draftRunConfigurations(
+        checkoutOf(database, sessionId).checkoutPath,
+        overwrite ?? false,
+      );
+
+      return {
+        path: drafted.path,
+        configurations: drafted.configurations.map(
+          ({ name, command, port }) => ({
+            name,
+            command,
+            port: port ?? null,
+            source: drafted.sources[name] ?? '',
+          }),
+        ),
+        skipped: drafted.skipped,
+      };
+    },
     'run.logs': async ({ sessionId, name, tail }) =>
       runs.logs(checkoutOf(database, sessionId), name, tail),
   };
