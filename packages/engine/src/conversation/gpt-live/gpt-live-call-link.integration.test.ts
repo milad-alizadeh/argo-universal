@@ -111,6 +111,8 @@ describe('GPT-Live call losing its link', () => {
         status: 'disconnected',
       });
     call.reply(delegationItem, 'The Agent is working', 'background');
+    call.tell('Allow once or reject?', 'speak', 'live');
+    call.reply(delegationItem, 'Nothing was allowed or rejected', 'speak');
     call.tell('The design is ready for review', 'speak');
     endpoint.refuseLinks = false;
 

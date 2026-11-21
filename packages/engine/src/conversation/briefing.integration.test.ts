@@ -103,3 +103,30 @@ it('keeps the latest completed Compaction and later turns in order', () => {
     /Obsolete summary|Partial summary|Private notes/,
   );
 });
+
+it('puts a revised decision after the summary when the tail exceeds the budget', () => {
+  const sender = {
+    type: 'plugin',
+    pluginId: 'review',
+    title: 'Review',
+  } as const;
+
+  const updates = Array.from({ length: 15 }, (_, index) => ({
+    ...promptFrom(
+      sender,
+      `Update ${index}: ${'Waiting for builds. '.repeat(120)}`,
+    ),
+    id: `update-${index}`,
+    position: index + 2,
+  }));
+
+  const briefing = briefingWith(
+    compaction(0, 'completed', 'Keep the old layout.'),
+    { ...promptFrom(sender, 'Use the revised layout.'), position: 1 },
+    ...updates,
+  );
+
+  expect(briefing).toMatch(
+    /Keep the old layout\.[\s\S]+Use the revised layout\.[\s\S]+Update 14:/u,
+  );
+});

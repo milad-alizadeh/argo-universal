@@ -209,7 +209,7 @@ export class AgentRelay {
 
     this.words.takeQuestion();
     this.spoken.announced();
-    this.words.tell(announcement, 'speak');
+    this.words.tell(announcement, 'speak', 'permission');
   }
 
   // What the voice is told of a Prompt that reached the Session; a queued one waits for its Turn before it counts.

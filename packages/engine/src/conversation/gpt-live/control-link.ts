@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import type { ConversationProviderEvent } from '../provider';
+import type { ConversationProviderEvent, VoiceReplay } from '../provider';
 import { CallGone } from './gpt-live-requests';
 import { textOfFrame } from './link-events';
 import { keepAlive } from './link-keepalive';
@@ -42,7 +42,7 @@ const messageOf = (error: Error | string): string =>
  */
 export class ControlLink {
   // Only frames that could not be sent are kept, for this provider call's next link.
-  private readonly pending: string[] = [];
+  private readonly unsentFrames: string[] = [];
   private lostTimer: ReturnType<typeof setTimeout> | undefined;
   // A join is under way; the link has been down past `lostLinkMs`.
   private joining = false;
@@ -57,15 +57,15 @@ export class ControlLink {
     this.attach(link);
   }
 
-  public send(text: string): void {
+  public send(text: string, replay: VoiceReplay): void {
     if (this.link.readyState === WebSocket.OPEN) this.link.send(text);
-    else this.pending.push(text);
+    else if (replay === 'rejoin') this.unsentFrames.push(text);
   }
 
   // Anything already sent leaves before the closing frame does.
   public close(): void {
     clearTimeout(this.lostTimer);
-    this.pending.length = 0;
+    this.unsentFrames.length = 0;
     this.stopKeepalive();
     this.link.close();
   }
@@ -146,7 +146,7 @@ export class ControlLink {
     this.overdue = false;
     this.attach(link);
 
-    for (const text of this.pending.splice(0)) this.send(text);
+    for (const text of this.unsentFrames.splice(0)) this.send(text, 'rejoin');
     this.host.event({ type: 'status', status: 'connected' });
   }
 }

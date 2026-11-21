@@ -1,6 +1,17 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
-import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { createRejectionCounter } from '@repo/machine-log';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  like,
+  or,
+  sql,
+} from 'drizzle-orm';
 import {
   withoutAnalysis,
   withoutMarks,
@@ -10,7 +21,11 @@ import type { FeedDeps } from './feed';
 import { storedFeedColumns, type FeedRowWrite } from './feed-row';
 import { readFeedRows } from './merged-rows';
 import { messageText } from './message-text';
-import { clearedContextNotice } from './session-restarted';
+import {
+  clearedContextIdPrefix,
+  isContextCleared,
+  legacyContextClearedNotice,
+} from './session-restarted';
 
 export type ConversationHistorySources = Pick<
   FeedDeps,
@@ -44,13 +59,6 @@ type HistoryRow =
   | Message
   | Extract<SessionUpdate, { sessionUpdate: 'compaction_update' | 'notice' }>;
 
-const isClear = (row: SessionUpdate): boolean =>
-  row.sessionUpdate === 'notice' &&
-  row.turnId === null &&
-  row.severity === 'info' &&
-  row.title === clearedContextNotice.title &&
-  row.description === clearedContextNotice.description;
-
 const speakers = {
   user_message: 'Person',
   person_transcript: 'Person',
@@ -60,7 +68,7 @@ const speakers = {
 
 const isHistory = (row: SessionUpdate): row is HistoryRow =>
   row.sessionUpdate === 'compaction_update' ||
-  isClear(row) ||
+  isContextCleared(row) ||
   messageKinds.some((kind) => kind === row.sessionUpdate);
 
 const isTranscript = ({ sessionUpdate }: HistoryRow): boolean =>
@@ -105,6 +113,8 @@ const recentRows = 300;
 
 const earlierRows = 12;
 
+const rejections = createRejectionCounter('feed');
+
 function storedMessages(
   database: FeedDeps['database'],
   sessionId: string,
@@ -143,7 +153,7 @@ function storedSummaries(
       and(
         eq(feedRow.sessionId, sessionId),
         eq(feedRow.sessionUpdate, 'compaction_update'),
-        sql`json_extract(${feedRow.payload}, '$.status') = 'completed'`,
+        sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') = 'completed' else false end`,
       ),
     )
     .orderBy(desc(feedRow.position))
@@ -163,9 +173,14 @@ function storedClear(
         eq(feedRow.sessionId, sessionId),
         eq(feedRow.sessionUpdate, 'notice'),
         isNull(feedRow.turnId),
-        sql`json_extract(${feedRow.payload}, '$.title') = ${clearedContextNotice.title}`,
-        sql`json_extract(${feedRow.payload}, '$.description') = ${clearedContextNotice.description}`,
-        sql`json_extract(${feedRow.payload}, '$.severity') = 'info'`,
+        or(
+          like(feedRow.id, `${clearedContextIdPrefix}%`),
+          sql`case when json_valid(${feedRow.payload}) then
+            json_extract(${feedRow.payload}, '$.title') = ${legacyContextClearedNotice.title}
+            and json_extract(${feedRow.payload}, '$.description') = ${legacyContextClearedNotice.description}
+            and json_extract(${feedRow.payload}, '$.severity') = 'info'
+            else false end`,
+        ),
       ),
     )
     .orderBy(desc(feedRow.position))
@@ -179,20 +194,30 @@ function historyRows(
 ): HistoryRow[] {
   const { database } = sources;
 
+  const clears = storedClear(database, sessionId);
+
   const stored = [
     ...storedMessages(database, sessionId),
     ...storedSummaries(database, sessionId),
-    ...storedClear(database, sessionId),
+    ...clears,
   ];
 
-  const { rows } = readFeedRows(sources, sessionId, {
+  const { rows, rejected } = readFeedRows(sources, sessionId, {
     stored,
     keep: isHistory,
   });
 
+  for (const _ of rejected)
+    rejections.report('rejected Conversation history row');
+
   rows.sort(byPosition);
 
-  return rows.slice(rows.findLastIndex(isClear) + 1);
+  const cutoff = Math.max(
+    clears[0]?.position ?? -1,
+    rows.findLast(isContextCleared)?.position ?? -1,
+  );
+
+  return rows.filter(({ position }) => position > cutoff);
 }
 
 // Keep the attribution and the opening and closing words of an oversized message.
@@ -229,7 +254,9 @@ function recentLines(lines: readonly string[], room: number): string[] {
 }
 
 // Retain earlier topics across the window. Sample in Feed order when they cannot all fit.
-function earlierLines(lines: readonly string[], room: number): string[] {
+type Excerpt = { index: number; text: string };
+
+function earlierLines(lines: readonly string[], room: number): Excerpt[] {
   const count = Math.min(lines.length, earlierRows);
   const limit = Math.floor(room / earlierRows) - 1;
 
@@ -238,10 +265,13 @@ function earlierLines(lines: readonly string[], room: number): string[] {
   // Keep the ends of the older window and space the other samples between them.
   const stride = (lines.length - 1) / Math.max(1, count - 1);
 
-  return Array.from(
-    { length: count },
-    (_, index) => lines[Math.round(index * stride)],
-  ).flatMap((line) => (line === undefined ? [] : [clip(line, limit)]));
+  return Array.from({ length: count }, (_, index) =>
+    Math.round(index * stride),
+  ).flatMap((index) => {
+    const line = lines[index];
+
+    return line === undefined ? [] : [{ index, text: clip(line, limit) }];
+  });
 }
 
 type HistoryOptions = {
@@ -310,14 +340,12 @@ function historyBriefing(rows: readonly HistoryRow[], room: number): string {
   const recent = recentLines(messages, available);
 
   if (recent.length === messages.length && prior.length === 0)
-    return sections([], summary, recent);
+    return sections({ before: [], after: [], tail: recent }, summary);
 
-  const { earlier, tail } = splitHistory(prior, messages, available);
-
-  return sections(earlier, summary, tail);
+  return sections(splitHistory(prior, messages, available), summary);
 }
 
-type SplitHistory = { earlier: string[]; tail: string[] };
+type SplitHistory = { before: string[]; after: string[]; tail: string[] };
 
 function splitHistory(
   prior: string[],
@@ -332,20 +360,28 @@ function splitHistory(
     ...messages.slice(0, messages.length - tail.length),
   ];
 
-  return {
-    earlier: earlierLines(earlier, earlierBudget - earlierHeading.length - 1),
-    tail,
-  };
+  const before: string[] = [];
+  const after: string[] = [];
+  const headingRoom = (earlierHeading.length + 1) * (prior.length ? 2 : 1);
+
+  for (const { index, text } of earlierLines(
+    earlier,
+    earlierBudget - headingRoom,
+  )) {
+    (index < prior.length ? before : after).push(text);
+  }
+
+  return { before, after, tail };
 }
 
 function sections(
-  earlier: string[],
+  { before, after, tail }: SplitHistory,
   summary: string | undefined,
-  recent: string[],
 ): string {
   return [
-    ...(earlier.length ? [earlierHeading, ...earlier] : []),
+    ...(before.length ? [earlierHeading, ...before] : []),
     ...(summary ? [summary] : []),
-    ...(recent.length ? [recentHeading, ...recent] : []),
+    ...(after.length ? [earlierHeading, ...after] : []),
+    ...(tail.length ? [recentHeading, ...tail] : []),
   ].join('\n');
 }
