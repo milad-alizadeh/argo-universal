@@ -178,6 +178,12 @@ it('auto-starts an opted-in Run after a new Session opens in the Project', async
     });
 });
 
+const controlConfiguration = {
+  ...configuration,
+  name: 'worker',
+  command: 'pnpm worker',
+};
+
 it.each([
   { command: 'pnpm dev:other' },
   { cwd: 'app' },
@@ -192,22 +198,48 @@ it.each([
       file,
     } = await setUp();
 
-    await ready(terminals, caller.run.start(target));
-    await caller.run.stop(target);
-    await caller.run.updateSettings({ ...target, autoStart: true });
     await writeFile(
       file,
-      JSON.stringify({ configurations: [{ ...configuration, ...changed }] }),
+      JSON.stringify({ configurations: [configuration, controlConfiguration] }),
+    );
+
+    for (const { name } of [configuration, controlConfiguration]) {
+      const run = { ...target, name };
+
+      await ready(terminals, caller.run.start(run));
+      await caller.run.stop(run);
+      await caller.run.updateSettings({ ...run, autoStart: true });
+    }
+
+    await writeFile(
+      file,
+      JSON.stringify({
+        configurations: [
+          { ...configuration, ...changed },
+          controlConfiguration,
+        ],
+      }),
     );
 
     const { sessionId } = await caller.session.new(emptySessionInput);
+
+    // Launches are serialized in file order, so the control queues behind any launch of the changed Run.
+    const terminal = await terminals.next();
+    expect(terminal.launch.command).toBe(controlConfiguration.command);
+    terminal.print('Ready');
+
+    await expect
+      .poll(() => caller.run.status({ sessionId }))
+      .toMatchObject({
+        configurations: [
+          { name, status: 'stopped' },
+          { name: controlConfiguration.name, status: 'ready' },
+        ],
+      });
     await expect(
       caller.run.getSettings({ sessionId, name }),
     ).resolves.toMatchObject({ autoStart: false, canAutoStart: false });
-    await expect(caller.run.status({ sessionId })).resolves.toMatchObject({
-      configurations: [{ name, status: 'stopped' }],
-    });
-    expect(terminals.started).toHaveLength(1);
+    expect(terminals.started).toHaveLength(3);
   },
 );
 

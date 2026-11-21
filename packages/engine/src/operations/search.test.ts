@@ -16,6 +16,9 @@ const appOnly = new Set([
   'voice.getPreviewClip',
   'voice.storePreviewClip',
   'terminal.resize',
+  'run.getSettings',
+  'run.listSettings',
+  'run.updateSettings',
 ]);
 
 it('lists every Operation but the App-only ones with its description, enabled', () => {
