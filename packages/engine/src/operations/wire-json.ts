@@ -1,13 +1,14 @@
-import type {
-  OperationExecution,
-  OperationRow,
-} from '@repo/contracts/operations';
+import type { OperationExecution } from '@repo/contracts/operations';
+import type { OperationInputRow } from '@repo/contracts/operations/control';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { z } from 'zod';
 import type { OperationResult } from './implementations';
 
 // What an Operation answers or records: its own result, the Operations it listed, or the work it started.
-type OperationOutput = OperationResult | OperationRow[] | OperationExecution;
+type OperationOutput =
+  | OperationResult
+  | OperationInputRow[]
+  | OperationExecution;
 
 // As the wire carries it: a parsed or live value may hold `undefined` fields, which JSON leaves out.
 export const wireJson = (value: OperationOutput): Json =>

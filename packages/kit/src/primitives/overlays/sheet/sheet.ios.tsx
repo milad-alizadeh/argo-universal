@@ -159,7 +159,11 @@ function useSheetModifiers(props: PresentationProps): ModifierConfig[] {
   return [
     ...(detents ? [detentsModifier(detents, props.initialDetent)] : []),
     ...(colors.content ? [presentationBackground(colors.content)] : []),
-    presentationDragIndicator('visible'),
+    presentationDragIndicator(
+      !isDismissible(props.dismissible) && detents?.length === 1
+        ? 'hidden'
+        : 'visible',
+    ),
     interactiveDismissDisabled(!isDismissible(props.dismissible)),
     preferredColorScheme(colorScheme),
   ];

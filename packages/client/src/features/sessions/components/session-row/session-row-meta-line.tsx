@@ -1,6 +1,7 @@
 import { type DrawMore, FittedRow } from '@repo/kit/fitted-row/fitted-row';
 import { useSpacing } from '@repo/kit/use-spacing';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { SessionRowItem } from './session-row-item';
 import { argoMetaParts, type MetaPart } from './session-row-metadata';
 import {
@@ -64,7 +65,9 @@ const drawMore =
 export function sessionMetaLine(props: SessionRowProps): React.ReactNode {
   const line = metaLine(props);
 
-  if (!line.parts.length && !line.held.length) return undefined;
+  // Keep the web press layer in place when Plugin items arrive during a press.
+  if (!line.parts.length && !line.held.length)
+    return Platform.OS === 'web' ? null : undefined;
 
   return <FittedMetaLine {...line} />;
 }

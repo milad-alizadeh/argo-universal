@@ -20,8 +20,17 @@ export type SessionGoneReason = Extract<
 
 // Something the Engine tells the voice: the answer to a request for work, a word it did not ask for, or an Agent's result for it to read out.
 export type VoiceSay =
-  | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
-  | { kind: 'tell' | 'result'; text: string; delivery: VoiceDelivery }
+  | {
+      kind: 'reply';
+      requestId: string;
+      text: string;
+      delivery: VoiceDelivery;
+    }
+  | {
+      kind: 'tell' | 'result' | 'permission';
+      text: string;
+      delivery: VoiceDelivery;
+    }
   // One still picture of the screen, given to the voice as background and never kept.
   | { kind: 'image'; image: ScreenImage };
 

@@ -247,8 +247,10 @@ it('removes a Checkout while another Checkout has a Run still launching', async 
   });
 
   const removing = await promptedArchiveSession(engine.host);
+
   const { sessionId: launching } =
     await engine.host.caller.session.new(emptySessionInput);
+
   const project = (await engine.host.caller.project.list())[0];
 
   if (!project) throw new Error('No Project');

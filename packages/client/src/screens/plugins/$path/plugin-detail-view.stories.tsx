@@ -3,13 +3,25 @@ import {
   runListRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState, type ReactElement } from 'react';
 import { action } from 'storybook/actions';
-import { PluginDetailView } from './plugin-detail-view';
+import {
+  PluginDetailView,
+  type PluginDetailViewProps,
+} from './plugin-detail-view';
 import {
   loading,
   loadingJiraList,
   developmentPace,
   homeConnect,
+  homeFaders,
+  homeFilteredScenes,
+  homeManyScenes,
+  homeNoMatchingScenes,
+  homeNoScenes,
+  homeOffLight,
+  homeLightEditor,
+  homeScenesEditor,
   homeLights,
   homeSignedOut,
   homeUnreachable,
@@ -115,3 +127,89 @@ export const HomeConnect: StoryObj<typeof meta> = { args: homeConnect };
 export const HomeUnreachable: StoryObj<typeof meta> = { args: homeUnreachable };
 
 export const HomeSignedOut: StoryObj<typeof meta> = { args: homeSignedOut };
+
+const homeEditors = new Map([
+  ['light:light-desk', homeLightEditor.root],
+  ['light:light-ceiling', homeOffLight.root],
+  ['room:room-office', homeScenesEditor.root],
+]);
+
+// Keep the closed Inspector mounted while its native sheet dismisses, as the Home page does.
+function closedHome(
+  root: PluginDetailViewProps['root'],
+): typeof homeFaders.root {
+  const layout = homeFaders.root.children[0];
+
+  const inspector = root?.children[0]?.children.find(
+    (node) => node.type === 'Inspector',
+  );
+
+  if (!layout || !inspector) return homeFaders.root;
+
+  return {
+    ...homeFaders.root,
+    children: [
+      {
+        ...layout,
+        children: [
+          ...layout.children,
+          { ...inspector, props: { ...inspector.props, open: false } },
+        ],
+      },
+    ],
+  };
+}
+
+function InteractiveHome(props: PluginDetailViewProps): ReactElement {
+  const [root, setRoot] = useState(props.root);
+
+  return (
+    <PluginDetailView
+      {...props}
+      root={root}
+      callbacks={{
+        ...props.callbacks,
+        onPageCall: async (call, event) => {
+          if ('pageState' in call) {
+            const { editor, editorOpen } = call.pageState;
+
+            if (editorOpen === false) setRoot(closedHome);
+            else if (editorOpen === true && typeof editor === 'string')
+              setRoot(homeEditors.get(editor) ?? homeFaders.root);
+          }
+
+          await props.callbacks.onPageCall?.(call, event);
+        },
+      }}
+    />
+  );
+}
+
+export const HomeFaders: StoryObj<typeof meta> = {
+  args: homeFaders,
+  render: (args) => <InteractiveHome {...args} />,
+};
+
+export const HomeLightEditor: StoryObj<typeof meta> = {
+  args: homeLightEditor,
+  render: (args) => <InteractiveHome {...args} />,
+};
+
+export const HomeScenesEditor: StoryObj<typeof meta> = {
+  args: homeScenesEditor,
+  render: (args) => <InteractiveHome {...args} />,
+};
+
+export const HomeManyScenes: StoryObj<typeof meta> = { args: homeManyScenes };
+
+export const HomeFilteredScenes: StoryObj<typeof meta> = {
+  args: homeFilteredScenes,
+};
+
+export const HomeNoMatchingScenes: StoryObj<typeof meta> = {
+  args: homeNoMatchingScenes,
+};
+
+export const HomeNoScenes: StoryObj<typeof meta> = { args: homeNoScenes };
+
+export const HomeOffLight: StoryObj<typeof meta> = { args: homeOffLight };

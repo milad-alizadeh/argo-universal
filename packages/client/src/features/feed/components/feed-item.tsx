@@ -11,6 +11,7 @@ import {
 } from '../view/feed-view';
 import { ChildReply, ParentResult } from './child-reply';
 import { CommandRow } from './command-row/command-row';
+import { DelegatedFeedRow } from './delegated-feed-row';
 import { EditRow } from './edit-row/edit-row';
 import { FeedImageUrlContext } from './feed-image';
 import { renderRow } from './feed-message-row';
@@ -125,6 +126,8 @@ function renderFeedItem(
   item: Exclude<FeedViewItem, { type: 'turn_end' }>,
   drawing: Drawing,
 ): React.JSX.Element | null {
+  if (item.type === 'delegated') return <DelegatedFeedRow item={item} />;
+
   if (item.type === 'row')
     return renderRow(item.row, drawing, 'partial' in item && item.partial);
 
@@ -132,7 +135,7 @@ function renderFeedItem(
 }
 
 function renderNonRow(
-  item: Exclude<FeedViewItem, { type: 'turn_end' | 'row' }>,
+  item: Exclude<FeedViewItem, { type: 'turn_end' | 'row' | 'delegated' }>,
   drawing: Drawing,
 ): React.JSX.Element | null {
   if (item.type === 'child_reply') return <ChildReply row={item.row} />;
@@ -146,7 +149,7 @@ function renderNonRow(
 function renderRemaining(
   item: Exclude<
     FeedViewItem,
-    { type: 'turn_end' | 'row' | 'child_reply' | 'parent_result' }
+    { type: 'turn_end' | 'row' | 'child_reply' | 'parent_result' | 'delegated' }
   >,
   drawing: Drawing,
 ): React.JSX.Element | null {
@@ -171,7 +174,15 @@ function explorationRows(rows: ToolCall[]): React.JSX.Element {
 function renderActivityItem(
   item: Exclude<
     FeedViewItem,
-    { type: 'turn_end' | 'row' | 'subagent' | 'child_reply' | 'parent_result' }
+    {
+      type:
+        | 'turn_end'
+        | 'row'
+        | 'subagent'
+        | 'child_reply'
+        | 'parent_result'
+        | 'delegated';
+    }
   >,
   now: number | undefined,
 ): React.JSX.Element {

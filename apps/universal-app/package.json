@@ -16,6 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@config-plugins/react-native-webrtc": "catalog:",
     "@expo/material-symbols": "catalog:",
     "@expo/metro-runtime": "catalog:",
     "@expo/ui": "catalog:",
@@ -63,6 +64,7 @@
     "react-native-screens": "catalog:",
     "react-native-svg": "catalog:",
     "react-native-web": "catalog:",
+    "react-native-webrtc": "catalog:",
     "react-native-worklets": "catalog:",
     "react-native-zeroconf": "catalog:",
     "storybook": "catalog:",

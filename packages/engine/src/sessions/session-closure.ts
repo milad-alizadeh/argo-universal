@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { readSessionCloseTarget } from './close-target';
 import type { OpenSessions } from './open-sessions';
+import { closeFollowThrough } from './orchestration/result-store';
 import { requireWritableSession, sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 
@@ -55,13 +56,14 @@ export const closeSession = async (
 };
 
 // Reads the Session as a Session caller's scope does, with the Writer's queued rows.
-export const cancelSession = (
-  sessions: ClosingSessions,
+export const cancelSession = async (
+  sessions: ClosingSessions & Pick<OpenSessions, 'write'>,
   sessionId: string,
-): SessionCancelOutput => {
+): Promise<SessionCancelOutput> => {
   sessions.admit();
   requireWritableSession(sessions.queued(sessionId));
   sendSessionCommand(sessions.live(sessionId), { type: 'session.cancel' });
+  await sessions.write(closeFollowThrough(sessionId));
 
   return {};
 };

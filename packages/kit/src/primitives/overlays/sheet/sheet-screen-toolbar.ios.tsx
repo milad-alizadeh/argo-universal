@@ -38,7 +38,13 @@ function toolbarItems(props: ToolbarProps): ReactElement[] {
 
   return [
     ...(props.onClose
-      ? [<CloseItem key="close" onClose={props.onClose} />]
+      ? [
+          <CloseItem
+            key="close"
+            label={props.page.closeLabel}
+            onClose={props.onClose}
+          />,
+        ]
       : []),
     ...(action ? [<ScreenAction key="action" action={action} />] : []),
   ];
@@ -48,10 +54,20 @@ function toolbarItems(props: ToolbarProps): ReactElement[] {
  * SwiftUI's own close button (Button/index.d.ts, role `close`): given no label the system draws it as the
  * xmark, the glyph every other sheet on the platform is dismissed by.
  */
-function CloseItem({ onClose }: { onClose: () => void }): ReactElement {
+function CloseItem({
+  label,
+  onClose,
+}: {
+  label?: string;
+  onClose: () => void;
+}): ReactElement {
   return (
-    <ToolbarItem placement="topBarLeading">
-      <Button role="close" onPress={onClose} />
+    <ToolbarItem placement={label ? 'topBarTrailing' : 'topBarLeading'}>
+      <Button
+        role={label ? undefined : 'close'}
+        label={label}
+        onPress={onClose}
+      />
     </ToolbarItem>
   );
 }

@@ -12,6 +12,7 @@ import {
   quoteAndBreakMarkdown,
   codeMarkdown,
   tableMarkdown,
+  longCellTableMarkdown,
   streamingMarkdown,
   startingParagraphMarkdown,
 } from './markdown-fixtures';
@@ -37,6 +38,8 @@ export const QuoteAndBreak: Story = { args: quoteAndBreakMarkdown };
 export const Code: Story = { args: codeMarkdown };
 
 export const Table: Story = { args: tableMarkdown };
+
+export const TableLongCells: Story = { args: longCellTableMarkdown };
 
 export const Streaming: Story = { args: streamingMarkdown };
 

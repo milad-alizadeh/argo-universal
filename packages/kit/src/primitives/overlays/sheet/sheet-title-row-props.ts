@@ -2,7 +2,10 @@ import type { IconName } from '@repo/contracts/kit-symbols';
 import type { SheetScreenAction } from './sheet-props';
 import type { SheetScreenEntry } from './sheet-screens';
 
-export type TitleRowProps = Pick<SheetScreenEntry, 'title' | 'action'> & {
+export type TitleRowProps = Pick<
+  SheetScreenEntry,
+  'title' | 'action' | 'closeLabel'
+> & {
   // A pushed page's way back to the page below it.
   backLabel?: string;
   onBack: () => void;

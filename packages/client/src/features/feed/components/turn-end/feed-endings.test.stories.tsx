@@ -126,9 +126,7 @@ function hiddenEnding(width: number, end: TurnEnd): Story {
     args: { items: turnEndItems(end) },
     play: async ({ canvas }) => {
       await settleLayout(width);
-      await expect(
-        canvas.getByRole('heading', { name: 'What should we build?' }),
-      ).toBeVisible();
+      await expect(canvas.queryByRole('heading')).not.toBeInTheDocument();
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
     },

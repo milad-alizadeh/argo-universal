@@ -1,5 +1,5 @@
 appId: dev.argo.app
-name: The Attach menu's Slash Commands puts a slash in the Composer and opens the list
+name: The Attach menu's Commands puts a slash in the Composer and opens the list
 ---
 # Opens Composer → Composer → Suggestions, whose draft is "/" and whose Agent offers inspect and review.
 - openLink: "argo://storybook?STORYBOOK_STORY_ID=composer-composer--suggestions"
@@ -12,7 +12,7 @@ name: The Attach menu's Slash Commands puts a slash in the Composer and opens th
 - assertNotVisible: "/inspect Review changes"
 - hideKeyboard
 - tapOn: "^Attach$"
-- tapOn: "Slash Commands"
+- tapOn: "^Commands$"
 # The Composer's field now holds the slash and the list is open again.
 - assertVisible: "^/$"
 - assertVisible: "/inspect Review changes"

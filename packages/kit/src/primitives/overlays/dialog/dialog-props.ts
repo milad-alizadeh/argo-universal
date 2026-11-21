@@ -18,8 +18,8 @@ export type DialogContentProps = {
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
   showClose?: boolean;
-  // A centred dialog's width: `sm` for a short form of one or two fields, such as a rename.
-  size?: 'sm' | 'md';
+  // A centred dialog's width: `sm` for short forms and `lg` for wider forms.
+  size?: 'sm' | 'md' | 'lg';
   onCloseAutoFocus?: (event: Event) => void;
   children: ReactNode;
 };
@@ -53,6 +53,10 @@ export type DialogFormProps = Omit<DialogContentProps, 'accessibilityLabel'> & {
   // Names the dialog and heads the form.
   title: string;
   description?: string;
+  // The compact form hands its title to the Sheet's screen header.
+  sheetHeader?: boolean;
+  // The sections of a tall centred form can scroll between the heading and its pinned actions.
+  scrolls?: boolean;
   // The actions, and a failure's message above them: under the sections on a centred dialog, pinned below them on a sheet.
   footer?: ReactNode;
 };

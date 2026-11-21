@@ -29,8 +29,13 @@ export function useConnectedFeed(
   sessionId: string,
   shown: boolean,
 ): ConnectedFeed {
-  const schedules = useSchedules(sessionId, shown);
   const feed = useSessionFeed(sessionId, undefined, shown);
+
+  const schedules = useSchedules(
+    sessionId,
+    shown,
+    feed.snapshot?.archivedAt === null,
+  );
 
   return {
     feed,

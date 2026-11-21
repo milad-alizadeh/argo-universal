@@ -37,8 +37,8 @@ export const withPluginCards = (
 export const offeredWith =
   (
     cards: readonly SessionPluginCard[],
-    scheduleCount = 0,
+    followUpsAvailable = false,
     runNames?: readonly string[],
   ) =>
   (work: SessionItems): string[] =>
-    offeredSections({ ...work, scheduleCount, runNames }, cards);
+    offeredSections({ ...work, followUpsAvailable, runNames }, cards);

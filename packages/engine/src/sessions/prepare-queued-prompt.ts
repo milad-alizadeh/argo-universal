@@ -2,6 +2,11 @@ import type { ContentBlock } from '@repo/contracts';
 import { blobsFolderIn, attachmentsFolderIn } from '../blob';
 import { readAcpPromptContent } from './acp/prompts/prompt-content';
 import type { LocalSubmission } from './acp/prompts/submission';
+import {
+  canDispatchQueuedPrompt,
+  requireNativeCommandAuthority,
+  runPromptSubmitHook,
+} from './prompt-authorization';
 import type { SessionContext } from './session-context';
 
 type Preparation = Pick<
@@ -11,6 +16,7 @@ type Preparation = Pick<
   | 'sessionId'
   | 'projectId'
   | 'acpLease'
+  | 'slashCommands'
 > & {
   input: Pick<
     SessionContext['input'],
@@ -26,9 +32,12 @@ export async function prepareQueuedPrompt(
   const answer = await runHook(context, submission);
 
   if ('drop' in answer) return null;
+  requireNativeCommandAuthority(answer.prompt, submission.sender);
   await validateQueuedContent(context, answer.prompt);
 
-  return { ...submission, content: answer.prompt };
+  const prepared = { ...submission, content: answer.prompt };
+
+  return canDispatchQueuedPrompt(context, prepared) ? prepared : null;
 }
 
 function requireSubmission(
@@ -43,7 +52,7 @@ function runHook(
   context: Pick<Preparation, 'sessionId' | 'projectId' | 'input'>,
   submission: LocalSubmission,
 ): ReturnType<SessionContext['input']['hooks']['prompt.submit']> {
-  return context.input.hooks['prompt.submit']({
+  return runPromptSubmitHook(context.input.hooks['prompt.submit'], {
     sessionId: context.sessionId,
     projectId: context.projectId,
     prompt: submission.content,

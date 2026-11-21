@@ -14,7 +14,7 @@ const meta = { ...composerMeta, title: 'Tests/Composer/SlashCommands' };
 
 export default meta;
 
-const slashCommandsItem = 'Slash Commands';
+const slashCommandsItem = 'Commands';
 
 async function chooseSlashCommands({ canvas }: PlayContext): Promise<void> {
   await userEvent.click(await canvas.findByRole('button', { name: 'Attach' }));

@@ -12,7 +12,7 @@ export const conversationDeviceOperations = {
     icon: 'voice',
     label: 'List Conversation devices',
     description:
-      'List the microphones and speakers of the App a Conversation uses, and the ones it chose: the App carrying the running Conversation, else the one that started the last Conversation, else the one connected last. Refused when no App that can carry a Conversation is connected.',
+      'List the Conversation App’s available and chosen microphones and speakers. The App carries the running Conversation, started the last one, or connected last. Refused when no App that can carry a Conversation is connected.',
     params: z.strictObject({}).default({}),
     result: ConversationDeviceList,
     tier: 'read',

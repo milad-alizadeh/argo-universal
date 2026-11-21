@@ -24,6 +24,8 @@ export type ConversationProviderEvent =
   | { type: 'status'; status: ConversationConnectionStatus }
   // What the person said; `final` is false while the words may still change.
   | { type: 'person.transcript'; id: string; text: string; final: boolean }
+  // The provider confirmed the whole utterance. A transcript finalized early for the Feed does not count.
+  | { type: 'person.turn.completed'; id: string; text: string }
   // What the voice said; `final` is false while it is still speaking.
   | { type: 'voice.transcript'; id: string; text: string; final: boolean }
   // The person asked for work; answer it with `reply` under this id. `turnId` is the person's turn it was heard in, when the provider names one: the id their transcript comes under.
@@ -53,6 +55,9 @@ export type ConversationProviderEvent =
 
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.
 export type VoiceDelivery = 'speak' | 'background';
+
+// Time-sensitive instructions such as permission questions only go over a live link.
+export type VoiceReplay = 'rejoin' | 'live';
 
 // What the person chose for every call: the voice, how it speaks, and what it is told.
 export interface ConversationSetup {
@@ -93,7 +98,7 @@ export interface ConversationProviderCall {
   // Answer a request for work.
   reply: (requestId: string, text: string, delivery: VoiceDelivery) => void;
   // Tell the voice something it did not ask for.
-  tell: (text: string, delivery: VoiceDelivery) => void;
+  tell: (text: string, delivery: VoiceDelivery, replay?: VoiceReplay) => void;
   // Gives the voice one still picture of the person's screen as background it may look at. A call that cannot take images leaves it out, and the Engine never captures for it. Never stored.
   look?: (image: ScreenImage) => void;
   // End the call; ending an ended call does nothing.

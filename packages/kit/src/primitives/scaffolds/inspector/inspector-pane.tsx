@@ -5,12 +5,14 @@ import { InspectorActions } from './inspector-actions';
 
 export { InspectorActions } from './inspector-actions';
 
+import { Button } from '#primitives/actions/button';
 import { ChromeIconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { InspectorControlsContext } from './inspector-controls-context';
 import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
 import type { InspectorProps } from './inspector-props';
 import { InspectorScroll } from './inspector-scroll';
+import { InspectorSearch } from './inspector-search';
 import { InspectorTabs } from './inspector-tabs';
 
 export type InspectorPaneProps = InspectorProps & {
@@ -109,6 +111,14 @@ function InspectorHeader(props: InspectorPaneProps): ReactElement {
     >
       <InspectorHeading {...props} />
       <InspectorActions>{props.actions}</InspectorActions>
+      {props.closeLabel && (
+        <Button
+          label={props.closeLabel}
+          variant="text"
+          size="sm"
+          onPress={() => props.onOpenChange(false)}
+        />
+      )}
       <InspectorControls {...props} />
     </View>
   );
@@ -122,11 +132,13 @@ export type InspectorBodyProps = InspectorProps & {
 export function InspectorBody(props: InspectorBodyProps): ReactElement {
   const { toolbar, children, scrollState } = props;
 
-  if (props.contentScrolls) return <OwnedScrollBody {...props} />;
+  if (props.scrollable === false || props.contentScrolls)
+    return <OwnedScrollBody {...props} />;
 
   return (
     <>
       {toolbar}
+      <InspectorSearch {...props} />
       <InspectorScroll {...props} key={scrollState?.key}>
         {children}
       </InspectorScroll>
@@ -134,14 +146,12 @@ export function InspectorBody(props: InspectorBodyProps): ReactElement {
   );
 }
 
-function OwnedScrollBody({
-  toolbar,
-  children,
-}: InspectorBodyProps): ReactElement {
+function OwnedScrollBody(props: InspectorBodyProps): ReactElement {
   return (
     <>
-      {toolbar}
-      {children}
+      {props.toolbar}
+      <InspectorSearch {...props} />
+      {props.children}
     </>
   );
 }
@@ -168,7 +178,7 @@ function InspectorControls(props: InspectorPaneProps): ReactElement | null {
   return (
     <View className="shrink-0 flex-row items-center gap-0.5">
       <ExpandButton {...props} />
-      <CloseButton {...props} />
+      {!props.closeLabel && <CloseButton {...props} />}
     </View>
   );
 }

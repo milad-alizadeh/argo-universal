@@ -1,4 +1,5 @@
 import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
+import { pressTarget } from '@repo/kit/mocks/press-target';
 import {
   eachLayout,
   type LayoutName,
@@ -144,7 +145,10 @@ function archiveFromARowAt(layout: LayoutName): Story {
       const [title] = await canvas.findAllByText(idleRow.title);
 
       if (!title) throw new Error('Missing idle row');
-      await userEvent.pointer({ keys: '[MouseRight]', target: title });
+      await userEvent.pointer({
+        keys: '[MouseRight]',
+        target: pressTarget(title),
+      });
       const menu = within(await screen.findByRole('menu'));
       await userEvent.click(menu.getByRole('menuitem', { name: 'Archive' }));
       await expect(onArchive).toHaveBeenCalledWith(idleRow.sessionId);

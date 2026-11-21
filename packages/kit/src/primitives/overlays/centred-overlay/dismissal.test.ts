@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { dismissesOnBackdropPress, mayDismiss } from './dismissal';
+import {
+  beginsOnBackdrop,
+  dismissesOnBackdropPress,
+  mayDismiss,
+} from './dismissal';
 
 interface Overrides {
   target?: string;
@@ -25,12 +29,22 @@ describe('mayDismiss', () => {
   });
 });
 
+describe('beginsOnBackdrop', () => {
+  it('counts a pointer that goes down on the bare backdrop', () => {
+    expect(beginsOnBackdrop(press())).toBe(true);
+  });
+
+  it('ignores a pointer that goes down inside the card', () => {
+    expect(beginsOnBackdrop(press({ target: 'card' }))).toBe(false);
+  });
+});
+
 describe('dismissesOnBackdropPress', () => {
   it('closes on a press on the bare backdrop', () => {
     expect(dismissesOnBackdropPress(press(), true)).toBe(true);
   });
 
-  it('ignores a press that began inside the card', () => {
+  it('ignores a press that ends inside the card', () => {
     expect(dismissesOnBackdropPress(press({ target: 'card' }), true)).toBe(
       false,
     );

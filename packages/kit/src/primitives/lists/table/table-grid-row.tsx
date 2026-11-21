@@ -46,9 +46,10 @@ function SelectedTint(): ReactElement {
 }
 
 // Cells start on one line, whatever each holds: a wrapping cell grows down, it does not push its row's text off-centre.
-const rowClass = (look: ListLook): string =>
+const rowClass = (look: ListLook, pressable: boolean): string =>
   cn(
-    'flex-row items-start gap-4 p-3 web:select-none web:hover:bg-hover',
+    'flex-row items-start gap-4 p-3 web:hover:bg-hover',
+    pressable && 'web:select-none',
     !look.ripple && 'active:bg-pressed',
     tintTransitionClassName,
   );
@@ -59,7 +60,7 @@ function usePressProps(props: RowProps): PressableProps {
   return {
     onPress,
     disabled: !onPress,
-    className: rowClass(useListLook()),
+    className: rowClass(useListLook(), Boolean(onPress)),
     ...useRowHighlight(),
   };
 }

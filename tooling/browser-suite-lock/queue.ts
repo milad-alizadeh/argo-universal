@@ -1,13 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { appendFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { connect, createServer, type Server } from 'node:net';
+import { connect, createServer, type Server, type Socket } from 'node:net';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
 import { predecessors } from './queue-journal.ts';
 
 const missingSocket = z.object({ code: z.enum(['ENOENT', 'ECONNREFUSED']) });
+
+const resetSocket = z.object({ code: z.literal('ECONNRESET') });
 
 // A unique socket proves the process is alive even when the OS reuses its pid.
 function address(token: string): string {
@@ -16,8 +18,10 @@ function address(token: string): string {
     : path.join('/tmp', `argo-suite-${token}.sock`);
 }
 
-async function alive(token: string): Promise<boolean> {
-  const socket = connect(address(token));
+type Dial = (address: string) => Socket;
+
+async function blocksTurn(token: string, dial: Dial): Promise<boolean> {
+  const socket = dial(address(token));
 
   try {
     await once(socket, 'connect');
@@ -25,6 +29,10 @@ async function alive(token: string): Promise<boolean> {
     return true;
   } catch (error) {
     if (missingSocket.safeParse(error).success) return false;
+
+    // A listener can close during connect. Probe again before discarding its ticket.
+    if (resetSocket.safeParse(error).success) return true;
+
     throw error;
   } finally {
     socket.destroy();
@@ -43,9 +51,13 @@ function discard(file: string, token: string): void {
   if (process.platform !== 'win32') rmSync(address(token), { force: true });
 }
 
-async function first(file: string, earlier: string[]): Promise<boolean> {
+async function first(
+  file: string,
+  earlier: string[],
+  dial: Dial,
+): Promise<boolean> {
   for (let token = earlier.at(0); token; token = earlier.at(0)) {
-    if (await alive(token)) return false;
+    if (await blocksTurn(token, dial)) return false;
     discard(file, token);
     earlier.shift();
   }
@@ -71,20 +83,6 @@ export interface QueueTicket {
   close: () => void;
 }
 
-function register(file: string, token: string, socket: Server): QueueTicket {
-  record(file, token, 'request');
-  const earlier = predecessors(readFileSync(file, 'utf8'), token);
-
-  return {
-    first: () => first(file, earlier),
-    acquired: () => record(file, token, 'acquire'),
-    close() {
-      socket.close();
-      record(file, token, 'release');
-    },
-  };
-}
-
 async function listen(token: string): Promise<Server> {
   const socket = createServer((connection) => connection.end());
   socket.listen(address(token));
@@ -96,12 +94,25 @@ async function listen(token: string): Promise<Server> {
 export async function enqueue(
   port: number,
   production: boolean,
+  dial: Dial = connect,
 ): Promise<QueueTicket> {
   const token = randomUUID();
   const socket = await listen(token);
 
   try {
-    return register(journal(port, production), token, socket);
+    const file = journal(port, production);
+
+    record(file, token, 'request');
+    const earlier = predecessors(readFileSync(file, 'utf8'), token);
+
+    return {
+      first: () => first(file, earlier, dial),
+      acquired: () => record(file, token, 'acquire'),
+      close() {
+        socket.close();
+        record(file, token, 'release');
+      },
+    };
   } catch (error) {
     socket.close();
     throw error;

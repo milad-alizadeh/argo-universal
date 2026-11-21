@@ -68,7 +68,8 @@ const enableOf =
 const forgetOf =
   (execute: Execute): FixStore['forget'] =>
   async (link) => {
-    await execute(run(`DELETE FROM pull_auto_fix WHERE ${where}`, keyOf(link)));
+    // Keep the first-enable receipt even when this pull request is detached.
+    await execute(run(upsert, [...keyOf(link), 0, null]));
     await execute(
       run(`DELETE FROM pull_auto_fix_events WHERE ${where}`, keyOf(link)),
     );
@@ -100,6 +101,14 @@ const writingOf = (
     unrecord: unrecordedBy(execute),
     ...sentWritersOf(execute),
     enable: enableOf(execute, set),
+    enableFirst: async (link) => {
+      await execute(
+        run(
+          'INSERT INTO pull_auto_fix (project_id, session_id, repository, number, enabled, stop_head) VALUES (?, ?, ?, ?, 1, NULL) ON CONFLICT DO NOTHING',
+          keyOf(link),
+        ),
+      );
+    },
     disable: (link) => set(link, 0, null),
     stop: (link, head) => set(link, 0, head),
     forget: forgetOf(execute),

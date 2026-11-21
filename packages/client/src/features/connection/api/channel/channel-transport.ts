@@ -103,6 +103,9 @@ export function createChannelTransport(
       randomBytes: platform.randomBytes,
       onRefused,
     }),
-    fetch: channelFetch({ openChannel: open }),
+    fetch: channelFetch({
+      openChannel: open,
+      randomBytes: platform.randomBytes,
+    }),
   };
 }

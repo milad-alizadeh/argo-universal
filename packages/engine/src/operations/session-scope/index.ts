@@ -34,6 +34,8 @@ const parsed = <Id extends TargetedId>(
   params: Json,
 ): ParsedOperation<Id> => ({ id, params: validateParams(id, params) });
 
+const projectTarget = z.object({ projectId: z.string() });
+
 const sessionTarget = z.object({ sessionId: z.string() });
 
 const terminalTarget = z.object({
@@ -128,6 +130,16 @@ export class SessionScope {
 
     if (policy !== 'ask-outside-project')
       return operationPermission(policy, false);
+
+    if (id.startsWith('project.')) {
+      const { projectId } = projectTarget.parse(params);
+
+      return operationPermission(
+        policy,
+        false,
+        projectId !== context.caller.projectId,
+      );
+    }
 
     const { sessionId } = sessionTarget.parse(params);
     const target = this.ports.directory.session(sessionId);

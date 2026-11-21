@@ -44,7 +44,31 @@ const textAreaProps = z.object({
     ),
 });
 
+const colourLimits = { hue: 359, saturation: 100 };
+
+const colourSelection = z.object({
+  hue: z.number().min(0).max(colourLimits.hue),
+  saturation: z.number().min(0).max(colourLimits.saturation),
+});
+
+const colourWheelProps = z.object({
+  accessibilityLabel: stringLabel,
+  value: colourSelection.optional(),
+  disabled: z.boolean().optional(),
+  onValueChange: handler('onValueChange').optional(),
+});
+
 export const controlsComponents = {
+  ColourWheel: defineKitComponent(
+    'A circular hue and saturation picker.',
+    colourWheelProps,
+    {
+      group: 'controls',
+      events: {
+        onValueChange: colourSelection.meta({ throttleMs: 150, blocks: false }),
+      },
+    },
+  ),
   TextArea: defineKitComponent(
     'A multi-line text field that grows with its text, on a card with one action beside it, such as Send.',
     textAreaProps,

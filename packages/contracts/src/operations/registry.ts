@@ -85,7 +85,7 @@ export const registryOperations = {
     label: 'Set Agent Environment',
     icon: 'settings',
     description:
-      'Replace an Installed Agent’s saved launch environment and close its pooled Agent connections, so its next Session starts with it.',
+      'Set an Installed Agent’s launch environment. The next Session uses it after pooled connections close.',
     params: RegistryAgentId.extend({ env: AgentServerEnvironment }),
     result: z.null(),
     tier: 'act',

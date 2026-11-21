@@ -116,4 +116,40 @@ describe('a Prompt that reaches a Session waiting on an Elicitation (#2507)', ()
     expect(snapshot.pendingPermission).not.toBeNull();
     expect(permissions).toEqual([]);
   });
+
+  it('queues a due Session follow-up without cancelling the Elicitation', async () => {
+    const elicitations: CreateElicitationResponse[] = [];
+    const agent = await askingSession(asking(elicitations, []).elicitation);
+    const { host, sessionId, prompts } = agent;
+    const pending = await waitForElicitation(host, sessionId, question);
+
+    await host.caller.session.schedulePrompt({
+      sessionId,
+      onceAt: Date.now() + 1000,
+      prompt: [{ type: 'text', text: useHue }],
+    });
+
+    const snapshot = await waitForAcpSnapshot(
+      host,
+      sessionId,
+      (next) =>
+        next.promptQueue.items.length > 0 || next.pendingElicitation === null,
+    );
+
+    expect(snapshot.pendingElicitation?.requestId).toBe(pending.requestId);
+    expect(snapshot.promptQueue.items).toMatchObject([
+      { prompt: [{ type: 'text', text: useHue }] },
+    ]);
+    expect(elicitations).toEqual([]);
+    expect(promptTexts(prompts)).not.toContain(useHue);
+
+    await host.caller.session.answerElicitation({
+      sessionId,
+      requestId: pending.requestId,
+      action: 'decline',
+    });
+
+    await expect.poll(() => elicitations).toEqual([{ action: 'decline' }]);
+    await expect.poll(() => promptTexts(prompts)).toContain(useHue);
+  });
 });

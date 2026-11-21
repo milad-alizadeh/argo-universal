@@ -4,11 +4,7 @@ import { action } from 'storybook/actions';
 import { SessionColumn } from '#lib/product/session-column';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { Composer } from './composer';
-import {
-  bandConnectingComposer,
-  bandListeningComposer,
-  bandTalkingComposer,
-} from './composer-conversation-band-fixtures';
+import { bandConnectingComposer } from './composer-conversation-band-fixtures';
 import {
   callElsewhereComposer,
   conversationBothMutedComposer,
@@ -83,7 +79,3 @@ export const ConversationInAnotherSession: Story = {
  * states are in `Conversation/ConversationBand`.
  */
 export const BandConnecting: Story = { args: bandConnectingComposer };
-
-export const BandListening: Story = { args: bandListeningComposer };
-
-export const BandTalking: Story = { args: bandTalkingComposer };

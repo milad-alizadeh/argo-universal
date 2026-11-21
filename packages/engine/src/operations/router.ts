@@ -3,6 +3,7 @@ import {
   OperationRunResponse,
 } from '@repo/contracts/operations';
 import {
+  OperationInputRow,
   OperationRunRequest,
   OperationWaitRequest,
   PluginInstruction,
@@ -21,6 +22,10 @@ const discoveryRouter = routerFactory((engine: Operations) =>
     list: publicProcedure
       .input(DiscoveryInput)
       .query(({ ctx, input }) => engine.list(ctx.token, input?.filter)),
+    inputSchema: publicProcedure
+      .input(z.strictObject({ id: z.string().min(1) }))
+      .output(z.array(OperationInputRow))
+      .query(({ ctx, input }) => engine.inputSchema(ctx.token, input.id)),
   }),
 );
 
