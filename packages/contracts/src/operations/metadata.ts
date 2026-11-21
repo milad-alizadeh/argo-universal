@@ -41,6 +41,10 @@ export const OperationRow = z.object({
 
 export type OperationRow = z.infer<typeof OperationRow>;
 
+export const OperationInputRow = OperationRow.omit({ result: true });
+
+export type OperationInputRow = z.infer<typeof OperationInputRow>;
+
 export const discoveryOperation = {
   id: 'operations.list',
   label: 'Discover Operations',

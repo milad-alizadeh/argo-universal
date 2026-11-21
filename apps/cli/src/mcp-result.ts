@@ -1,6 +1,6 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type {
-  OperationRow,
+  OperationInputRow,
   OperationRunResponse,
 } from '@repo/contracts/operations/control';
 import { z } from 'zod';
@@ -10,7 +10,7 @@ const capturedScreen = z.looseObject({
   image: z.looseObject({ data: z.string(), mimeType: z.string() }),
 });
 
-type Answer = OperationRow[] | OperationRunResponse;
+type Answer = OperationInputRow[] | OperationRunResponse;
 
 const capturedAnswer = z.looseObject({
   kind: z.literal('result'),

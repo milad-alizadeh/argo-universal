@@ -5,7 +5,7 @@ export {
   OperationWaitId,
 } from './execution';
 
-export { OperationRow } from './metadata';
+export { OperationInputRow, OperationRow } from './metadata';
 
 export {
   OperationRunRequest,
