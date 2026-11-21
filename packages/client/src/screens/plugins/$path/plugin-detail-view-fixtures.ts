@@ -2,6 +2,7 @@ import { WireNode } from '@repo/contracts/plugins/wire';
 import { Platform } from 'react-native';
 import { loadingTree } from '#features/plugins';
 import homeC2 from './home-c2-fixture.json';
+import homePower from './home-power-pending-fixture.json';
 import paceTrees from './plugin-detail-view-development-pace.json' with { type: 'json' };
 import homeTrees from './plugin-detail-view-home.json' with { type: 'json' };
 import trees from './plugin-detail-view-issue-filters.json' with { type: 'json' };
@@ -66,6 +67,8 @@ export const homeUnreachable = { root: WireNode.parse(homeTrees.failed) };
 export const homeSignedOut = { root: WireNode.parse(homeTrees.signedOut) };
 
 export const homeFaders = { root: WireNode.parse(homeC2.tiles) };
+
+export const homePowerPending = { root: WireNode.parse(homePower) };
 
 export const homeLightEditor = { root: WireNode.parse(homeC2.light) };
 
