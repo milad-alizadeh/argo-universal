@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { type ReactElement, type ReactNode, useContext } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 import { ListTileContext } from '../../../list-context';
 import { CanvasBoundary, CanvasFallback } from '../canvas/canvas-boundary';
@@ -23,12 +23,38 @@ const inlineFrame = {
 
 const stretch = { flex: 1 } as const;
 
-interface DrawingProps {
+const pressProps = (props: ChartProps): PressableProps => ({
+  accessible: true,
+  accessibilityLabel: props.label,
+  accessibilityRole: props.onPress ? 'button' : 'image',
+  onPress: props.onPress,
+  style: stretch,
+});
+
+function ChartImage({
+  props,
+  children,
+}: {
   props: ChartProps;
-  draws: boolean;
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <Pressable {...pressProps(props)}>
+      {/* The Pressable names the chart; the drawing and its fallback would name it twice. */}
+      <View aria-hidden style={stretch}>
+        {children}
+      </View>
+    </Pressable>
+  );
 }
 
-function Drawing({ props, draws }: DrawingProps): React.JSX.Element {
+function LabelledDrawing({
+  props,
+  draws,
+}: {
+  props: ChartProps;
+  draws: boolean;
+}): React.JSX.Element {
   return draws ? (
     <CanvasBoundary label={props.label} source={props.series}>
       <ChartLoader {...props} />
@@ -38,36 +64,40 @@ function Drawing({ props, draws }: DrawingProps): React.JSX.Element {
   );
 }
 
-const pressProps = (props: ChartProps): PressableProps => ({
-  accessible: true,
-  accessibilityLabel: props.label,
-  accessibilityRole: props.onPress ? 'button' : 'image',
-  onPress: props.onPress,
-  style: stretch,
-});
-
-function ChartImage({ props, draws }: DrawingProps): React.JSX.Element {
-  return (
-    <Pressable {...pressProps(props)}>
-      {/* The Pressable names the chart; the drawing and its fallback would name it twice. */}
-      <View aria-hidden style={stretch}>
-        <Drawing props={props} draws={draws} />
-      </View>
-    </Pressable>
-  );
-}
-
 // Data in, drawing out: Plugins never see Victory or Skia, so the renderer can change (ADR-0028).
-export function Chart(props: ChartProps): React.JSX.Element {
+export function Chart({
+  fallback,
+  ...props
+}: ChartProps & { fallback?: ReactElement }): React.JSX.Element {
   const tile = useContext(ListTileContext);
   const draws = useSvgDrawing('skia');
   const table = useTableMounted();
 
+  if (fallback && !draws) return fallback;
+
   // The table sits beside the labelled drawing: inside it, an image or button would hide the rows.
-  return (
+  const chart = (
     <View style={tile ? tileFrame : inlineFrame}>
-      <ChartImage props={props} draws={draws} />
+      <ChartImage props={props}>
+        {fallback ? (
+          <ChartLoader {...props} />
+        ) : (
+          <LabelledDrawing props={props} draws={draws} />
+        )}
+      </ChartImage>
       {table ? <ChartTable props={props} /> : null}
     </View>
+  );
+
+  if (!fallback) return chart;
+
+  return (
+    <CanvasBoundary
+      label={props.label}
+      source={props.series}
+      fallback={fallback}
+    >
+      {chart}
+    </CanvasBoundary>
   );
 }

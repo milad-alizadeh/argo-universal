@@ -1,3 +1,3 @@
 export { Markdown } from './markdown';
 
-export type { MarkdownProps } from './markdown-props';
+export type { MarkdownFence, MarkdownProps } from './markdown-props';

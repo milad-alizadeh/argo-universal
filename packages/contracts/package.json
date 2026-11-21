@@ -98,6 +98,7 @@
     "./plugins/replacement-tree": "./src/plugins/replacement-tree.ts",
     "./plugins/prepare-tree": "./src/plugins/prepare-tree.ts",
     "./kit-tokens": "./src/kit-tokens.ts",
+    "./chart-fence": "./src/chart/chart-fence.ts",
     "./kit-diagram": "./src/diagram/index.ts",
     "./kit-moves": "./src/kit-moves.ts",
     "./plugins/wire-node-key": "./src/plugins/wire-node-key.ts",
