@@ -6,6 +6,7 @@ import { listOperations } from './search';
 const appOnly = new Set([
   'session.submit',
   'session.queue',
+  'plugin.draft.choose',
   'conversation.status',
   'conversation.start',
   'conversation.end',
