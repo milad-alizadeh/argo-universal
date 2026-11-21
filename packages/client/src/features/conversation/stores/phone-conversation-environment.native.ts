@@ -1,4 +1,5 @@
 import { requireOptionalNativeModule } from 'expo';
+import { setAudioModeAsync } from 'expo-audio';
 import { Platform } from 'react-native';
 import {
   mediaDevices,
@@ -13,6 +14,7 @@ import type {
   VoicePlayback,
 } from '../types/conversation-environment';
 import { peerStatsOf, type PeerStats } from '../utils/peer-stats';
+import { requestPhoneSpeakerRoute } from './phone-speaker-route';
 
 /*
  * SPIKE (latency on a phone, docs/research/voice-mode.md): the least a phone needs to carry a real Conversation, so its
@@ -21,13 +23,27 @@ import { peerStatsOf, type PeerStats } from '../utils/peer-stats';
  */
 
 interface AudioRouteModule {
-  // Moves the call from the earpiece to the loudspeaker, leaving headphones and Bluetooth alone; returns the output's name.
-  preferLoudspeaker: () => string;
   route: () => string;
 }
 
 const audioRoute =
   requireOptionalNativeModule<AudioRouteModule>('ArgoAudioRoute');
+
+function preferLoudspeaker(): void {
+  void setAudioModeAsync({
+    playsInSilentMode: true,
+    allowsRecording: true,
+    shouldRouteThroughEarpiece: false,
+    interruptionMode: 'doNotMix',
+    shouldPlayInBackground: false,
+  }).catch((cause: unknown) => {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    console.error(
+      'Could not set the iPhone Conversation speaker route',
+      message,
+    );
+  });
+}
 
 export const phoneAudioRoute = (): string | undefined => audioRoute?.route();
 
@@ -148,17 +164,13 @@ class PhonePeer implements VoicePeer {
   }
 }
 
-// The phone sets its audio session up as the call's sound starts, so the loudspeaker is asked for then and twice after.
-const loudspeakerRetriesMs = [0, 500, 1500];
-
 /*
- * The voice on a phone plays by itself once its track arrives; this only sets its volume and puts it on the
- * loudspeaker, since a call starts on the earpiece.
+ * The voice on a phone plays by itself once its track arrives. Set the route once:
+ * reapplying the audio session category during playback stalls jitter-buffer output.
  */
 class PhonePlayback implements VoicePlayback {
-  private readonly timers = loudspeakerRetriesMs.map((delay) =>
-    setTimeout(() => audioRoute?.preferLoudspeaker(), delay),
-  );
+  private readonly cancelSpeakerRoute =
+    requestPhoneSpeakerRoute(preferLoudspeaker);
 
   public constructor(private readonly stream: PhoneStream) {}
 
@@ -178,7 +190,7 @@ class PhonePlayback implements VoicePlayback {
   }
 
   public stop(): void {
-    for (const timer of this.timers) clearTimeout(timer);
+    this.cancelSpeakerRoute();
   }
 }
 
