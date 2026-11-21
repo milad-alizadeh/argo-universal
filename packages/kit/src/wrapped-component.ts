@@ -7,8 +7,8 @@ const wraps = new WeakMap<Component, Component>();
 const markPrefix = 'argo.kit.';
 
 /*
- * A dev-only wrapper that draws a kit component in its place, as the App's Draft comment mode does, is read by a
- * parent as that component: it is recorded here and takes the marks the component wore.
+ * A wrapper that draws a kit component in its place is read by a parent as that component: it is recorded here
+ * and takes the marks the component wore.
  */
 export function wrappingComponent<Wrapper extends Component>(
   wrapper: Wrapper,
