@@ -85,9 +85,9 @@ export { type PluginEntry, usePluginEntries } from './hooks/use-plugin-entries';
 
 export { invalidatePluginState } from './utils/plugin-state-refresh';
 
-export { DraftBar } from './components/draft-bar/draft-bar';
+export { PluginDraftBar } from './components/draft-bar/plugin-draft-bar';
 
-export { DraftBarDock } from './components/draft-bar/draft-bar-dock';
+export { DraftBar } from './components/draft-bar/draft-bar';
 
 export { useDraftBar } from './hooks/use-draft-bar';
 

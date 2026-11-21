@@ -13,8 +13,8 @@ import { usePageAddresses } from './use-page-addresses';
 export type DraftBarState = DraftBarModel & {
   // Redraws the page at the state; each App keeps its own, as the Page state is.
   onStateChange: (state: DraftStateId) => void;
-  // Sends this App's pick, one Variant per region, to the Session's Agent; each App sends its own.
-  onChoose: () => void;
+  // Sends this App's pick, one Variant per region, to the Session's Agent; each App sends its own. Null for a Draft page with no regions, which has nothing to pick.
+  onChoose: (() => void) | null;
 };
 
 /*
@@ -26,6 +26,7 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
   const { entry, pageState } = useDraftEntry(opening);
 
   const bar = draftBarOf(entry, opening.path, pageState);
+  const picks = draftPicksOf(entry, opening.path, pageState);
   const choose = useMutation(useTRPC().plugin.draft.choose.mutationOptions());
 
   if (!bar) return null;
@@ -35,12 +36,10 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
     onStateChange: (state) => {
       void addresses.change(opening, { [draftStateKey]: state });
     },
-    onChoose: () => {
-      choose.mutate({
-        pluginId: opening.pluginId,
-        picks: draftPicksOf(entry, opening.path, pageState) ?? [],
-        comments: [],
-      });
-    },
+    onChoose:
+      picks &&
+      (() => {
+        choose.mutate({ pluginId: opening.pluginId, picks, comments: [] });
+      }),
   };
 }

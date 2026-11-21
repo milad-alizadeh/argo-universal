@@ -25,12 +25,12 @@ export function draftPicksOf(
 
   if (!regions?.length) return null;
 
-  return regions.map(({ id, variants }) => ({
-    region: id,
-    variant:
-      variants.find((variant) => variant.id === pageState[draftVariantKey(id)])
-        ?.id ??
-      variants[0]?.id ??
-      '',
-  }));
+  return regions.flatMap(({ id, variants }) => {
+    const shown =
+      variants.find(
+        (variant) => variant.id === pageState[draftVariantKey(id)],
+      ) ?? variants[0];
+
+    return shown ? [{ region: id, variant: shown.id }] : [];
+  });
 }

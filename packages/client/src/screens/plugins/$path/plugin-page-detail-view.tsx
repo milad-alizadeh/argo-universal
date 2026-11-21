@@ -1,11 +1,9 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { useDeferredValue } from 'react';
 import type * as React from 'react';
 import {
-  DraftBar,
-  DraftBarDock,
   DraftRegionsProvider,
   type PageOpening,
+  PluginDraftBar,
   PluginSessionRowProvider,
   useOpenPluginPage,
   useDraftBar,
@@ -57,26 +55,8 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
           {...{ onBack, loadingTree }}
         />
       </DraftRegionsProvider>
-      <PageDraftBar bar={bar} />
+      <PluginDraftBar bar={bar} />
     </PluginSymbol>
-  );
-}
-
-// A dev Plugin's Draft page gets the Draft bar over it; any other page draws none (ADR-0057).
-function PageDraftBar({
-  bar,
-}: {
-  bar: ReturnType<typeof useDraftBar>;
-}): React.ReactNode {
-  if (!bar) return null;
-
-  return (
-    <DraftBarDock>
-      <DraftBar
-        {...bar}
-        choose={<Button label="Choose" size="sm" onPress={bar.onChoose} />}
-      />
-    </DraftBarDock>
   );
 }
 
