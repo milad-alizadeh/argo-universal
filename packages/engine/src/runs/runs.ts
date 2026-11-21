@@ -6,6 +6,7 @@ import type {
   RunConfigurationStatus,
   RunLogsResult,
   RunStartResult,
+  RunStatusResult,
   RunStopResult,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
@@ -25,6 +26,7 @@ import {
 import { allocatePort, bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
+import { RunUpdates } from './run-updates';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
 
 // The Checkout a Run belongs to: Sessions on the same one see the same Runs.
@@ -68,6 +70,7 @@ export class Runs {
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
   private readonly launching = new Map<string, Promise<LiveRun>>();
+  private readonly updates = new RunUpdates();
   public constructor(private readonly input: RunsInput) {}
 
   public async start(
@@ -113,6 +116,13 @@ export class Runs {
         ...this.row(this.record(checkout, name)),
       })),
     };
+  }
+
+  public watchStatus(
+    checkout: RunCheckout,
+    signal: AbortSignal,
+  ): AsyncIterable<RunStatusResult> {
+    return this.updates.watch(checkout, () => this.status(checkout), signal);
   }
 
   public async logs(
@@ -324,11 +334,15 @@ export class Runs {
     await this.store(run.record);
   }
 
-  private store(record: RunRecord, replaced: string[] = []): Promise<void> {
-    return writeDatabaseJobAndWaitForCommit(
+  private async store(
+    record: RunRecord,
+    replaced: string[] = [],
+  ): Promise<void> {
+    await writeDatabaseJobAndWaitForCommit(
       this.input.writer,
       new RunWriteJob(record, replaced),
     );
+    this.updates.changed(record);
   }
 
   private async end(run: LiveRun | undefined): Promise<void> {
