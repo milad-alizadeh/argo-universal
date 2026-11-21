@@ -60,20 +60,17 @@ async function holdsOwnerDescriptor(
   }
 }
 
-async function requirePtyOwner(
+async function isPtyOwner(
   owner: PtySessionOwner,
   members: readonly PtySessionMember[],
-): Promise<void> {
+): Promise<boolean> {
   const leader = members.find(({ pid }) => pid === owner.pid);
   const command = leader && (await commandsOf(leader.pid));
 
-  if (command?.includes(owner.token)) return;
+  if (command) return command.includes(owner.token);
 
   // The old leader can be gone and its PID reused later, so confirm the surviving session against the original file.
-  if (!command && (await holdsOwnerDescriptor(members, owner.outputPath)))
-    return;
-
-  throw new Error('PTY session identity changed');
+  return holdsOwnerDescriptor(members, owner.outputPath);
 }
 
 function killGroups(members: readonly PtySessionMember[]): void {
@@ -83,7 +80,14 @@ function killGroups(members: readonly PtySessionMember[]): void {
     try {
       process.kill(-group, 'SIGKILL');
     } catch (error) {
-      if (!(error instanceof Error && hasStatus(error, 'ESRCH'))) throw error;
+      // macOS can report EPERM when only zombies remain. The next snapshot checks liveness.
+      if (
+        !(
+          error instanceof Error &&
+          (hasStatus(error, 'ESRCH') || hasStatus(error, 'EPERM'))
+        )
+      )
+        throw error;
     }
   }
 }
@@ -95,7 +99,13 @@ export async function releasePtySession(owner: PtySessionOwner): Promise<void> {
 
   while (members.length > 0) {
     if (Date.now() >= deadline) throw new Error('PTY session did not close');
-    await requirePtyOwner(owner, members);
+
+    if (!(await isPtyOwner(owner, members))) {
+      if ((await ptySessionMembers(owner.pid)).length === 0) return;
+
+      throw new Error('PTY session identity changed');
+    }
+
     killGroups(members);
     await delay(releasePollMs);
 
