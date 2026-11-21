@@ -39,7 +39,7 @@ function CardEmptyState(props: EmptyStateProps): React.JSX.Element {
       <Text accessibilityRole="heading" aria-level={2} role="body">
         {props.title}
       </Text>
-      {!!props.description && (
+      {props.description && (
         <Text role="secondary" tone="muted">
           {props.description}
         </Text>
@@ -56,7 +56,7 @@ function EmptyStateText({
   return (
     <View className="items-center gap-1">
       <EmptyStateTitle title={title} />
-      {!!description && <EmptyStateDescription description={description} />}
+      {description && <EmptyStateDescription description={description} />}
     </View>
   );
 }

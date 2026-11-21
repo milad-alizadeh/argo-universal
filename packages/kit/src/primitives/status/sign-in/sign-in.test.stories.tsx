@@ -32,7 +32,7 @@ export const EmptyDescriptionDrawsNoText: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('heading')).toBeVisible();
     await expect(
-      reports.filter((report) => report.includes('Unexpected text node')),
+      reports.filter((entry) => entry.includes('Unexpected text node')),
     ).toHaveLength(0);
   },
 };
