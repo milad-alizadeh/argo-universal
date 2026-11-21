@@ -1,9 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import type { DraftNote } from '../../stores/draft-comments';
 import {
   ChooseBarMock,
   type ChooseCall,
 } from '../../hooks/draft-bar-choose.mocks';
+
+const note: DraftNote = {
+  address: 'list/row-409',
+  nodeKey: 'row-409',
+  region: 'list',
+  variant: 'rows',
+  note: 'Use a coloured chip',
+};
 
 const chooseCalls = (calls: ChooseCall[]): ChooseCall[] =>
   calls.filter(({ path }) => path === 'plugin.draft.choose');
@@ -45,5 +54,49 @@ export const NoChooseWithoutRegions: Story = {
     ).toBeVisible();
     await expect(canvas.queryByRole('button', { name: 'Choose' })).toBeNull();
     await expect(chooseCalls(args.calls)).toHaveLength(0);
+  },
+};
+
+export const ChooseCarriesTheComments: Story = {
+  args: {
+    notes: [note, { address: 'title', nodeKey: 'title', note: 'Bigger' }],
+    calls: [],
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Choose · 2 comments' }),
+    );
+
+    await waitFor(() => expect(chooseCalls(args.calls)).toHaveLength(1));
+    await expect(chooseCalls(args.calls)[0]?.input).toMatchObject({
+      comments: [
+        {
+          nodeKey: 'row-409',
+          region: 'list',
+          variant: 'rows',
+          note: 'Use a coloured chip',
+        },
+        { nodeKey: 'title', note: 'Bigger' },
+      ],
+    });
+    // Sent, the notes are gone and Choose is as it was.
+    await expect(
+      await canvas.findByRole('button', { name: 'Choose' }),
+    ).toBeVisible();
+  },
+};
+
+export const RegionlessDraftChoosesOnceItHasAComment: Story = {
+  args: { withRegions: false, notes: [note], calls: [] },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Choose · 1 comment' }),
+    );
+
+    await waitFor(() => expect(chooseCalls(args.calls)).toHaveLength(1));
+    await expect(chooseCalls(args.calls)[0]?.input).toMatchObject({
+      picks: [],
+      comments: [{ nodeKey: 'row-409' }],
+    });
   },
 };

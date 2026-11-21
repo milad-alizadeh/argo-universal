@@ -5,6 +5,11 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import { draftBarOf, type DraftBarModel } from '../utils/draft-bar-model';
+import {
+  draftComments,
+  draftCommentsOf,
+  useDraftComments,
+} from '../stores/draft-comments';
 import { draftPicksOf } from '../utils/draft-picks';
 import type { PageOpening } from '../utils/page-addresses';
 import { useDraftEntry } from './use-draft-entry';
@@ -13,8 +18,12 @@ import { usePageAddresses } from './use-page-addresses';
 export type DraftBarState = DraftBarModel & {
   // Redraws the page at the state; each App keeps its own, as the Page state is.
   onStateChange: (state: DraftStateId) => void;
-  // Sends this App's pick, one Variant per region, to the Session's Agent; each App sends its own. Null for a Draft page with no regions, which has nothing to pick.
+  // Sends this App's pick, one Variant per region, and its comments to the Session's Agent; each App sends its own. Null for a Draft page with no regions and no comment, which has nothing to send.
   onChoose: (() => void) | null;
+  // Whether this App is picking nodes to comment on, and how many notes Choose will carry.
+  commenting: boolean;
+  commentCount: number;
+  onToggleComments: () => void;
 };
 
 /*
@@ -26,7 +35,13 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
   const { entry, pageState } = useDraftEntry(opening);
 
   const bar = draftBarOf(entry, opening.path, pageState);
-  const picks = draftPicksOf(entry, opening.path, pageState);
+  const { notes, commenting } = useDraftComments(opening);
+
+  // A Draft with no regions has nothing to pick, so only a comment gives its author something to send.
+  const picks =
+    draftPicksOf(entry, opening.path, pageState) ??
+    (notes.length > 0 ? [] : null);
+
   const choose = useMutation(useTRPC().plugin.draft.choose.mutationOptions());
 
   if (!bar) return null;
@@ -39,7 +54,17 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
     onChoose:
       picks &&
       (() => {
-        choose.mutate({ pluginId: opening.pluginId, picks, comments: [] });
+        choose.mutate(
+          {
+            pluginId: opening.pluginId,
+            picks,
+            comments: draftCommentsOf(notes),
+          },
+          { onSuccess: () => draftComments.sent(opening) },
+        );
       }),
+    commenting,
+    commentCount: notes.length,
+    onToggleComments: () => draftComments.setCommenting(opening, !commenting),
   };
 }

@@ -41,8 +41,22 @@ const entry = (dev?: boolean, declared: Drafts = drafts): DraftEntry => ({
 
 it('tags each region with its label and its first Variant until one is picked', () => {
   expect(draftRegionsOf(entry(true), '/', {})).toEqual([
-    { id: 'header', label: 'Header', letter: 'A', position: 1, count: 3 },
-    { id: 'list', label: 'List', letter: 'A', position: 1, count: 2 },
+    {
+      id: 'header',
+      label: 'Header',
+      variant: 'compact',
+      letter: 'A',
+      position: 1,
+      count: 3,
+    },
+    {
+      id: 'list',
+      label: 'List',
+      variant: 'rows',
+      letter: 'A',
+      position: 1,
+      count: 2,
+    },
   ]);
 });
 
@@ -56,6 +70,7 @@ it('reads each region pick from the Page state, so picks mix across regions', ()
     ['B', 2],
     ['A', 1],
   ]);
+  expect(tags?.map(({ variant }) => variant)).toEqual(['tabs', 'rows']);
 });
 
 it('falls back to the first Variant for a pick the Draft no longer declares', () => {

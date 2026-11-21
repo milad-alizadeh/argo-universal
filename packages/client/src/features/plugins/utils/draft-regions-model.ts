@@ -10,6 +10,8 @@ type Region = NonNullable<PluginDrafts[number]['regions']>[number];
 export type DraftRegionTag = {
   id: string;
   label: string;
+  // The id of the Variant the region shows, which a comment on a node inside it names.
+  variant: string;
   letter: string;
   position: number;
   count: number;
@@ -49,6 +51,7 @@ function tagOf(region: Region, pageState: PageState): DraftRegionTag {
   return {
     id: region.id,
     label: capitalised(region.id),
+    variant: region.variants[index]?.id ?? '',
     letter: letters[index] ?? String(index + 1),
     position: index + 1,
     count: region.variants.length,

@@ -7,6 +7,7 @@ import type { DraftRegionTag } from '../../utils/draft-regions-model';
 export const headerTag: DraftRegionTag = {
   id: 'header',
   label: 'Header',
+  variant: 'tabs',
   letter: 'B',
   position: 2,
   count: 3,
@@ -16,6 +17,7 @@ export const headerTag: DraftRegionTag = {
 export const listTag: DraftRegionTag = {
   id: 'list',
   label: 'List',
+  variant: 'rows',
   letter: 'A',
   position: 1,
   count: 2,

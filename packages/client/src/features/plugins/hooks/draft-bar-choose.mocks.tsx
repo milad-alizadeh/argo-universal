@@ -7,6 +7,7 @@ import { observable } from '@trpc/server/observable';
 import * as React from 'react';
 import { View } from 'react-native';
 import { TRPCProvider } from '#features/connection';
+import { draftComments, type DraftNote } from '../stores/draft-comments';
 import { PluginDraftBar } from '../components/draft-bar/plugin-draft-bar';
 import type { PageOpening } from '../utils/page-addresses';
 import { useDraftBar } from './use-draft-bar';
@@ -100,12 +101,19 @@ function clientOver(
 export function ChooseBarMock(props: {
   withRegions: boolean;
   calls: ChooseCall[];
+  // Notes the author has already left on the page.
+  notes?: DraftNote[];
 }): React.JSX.Element {
   const [queryClient] = React.useState(() => new QueryClient());
 
   const [client] = React.useState(() =>
     clientOver(props.withRegions, props.calls),
   );
+
+  React.useState(() => {
+    draftComments.sent(opening);
+    for (const note of props.notes ?? []) draftComments.save(opening, note);
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
