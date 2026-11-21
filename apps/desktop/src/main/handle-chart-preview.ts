@@ -1,11 +1,14 @@
 import { once } from 'node:events';
 import { validateChartFence } from '@repo/contracts/chart-fence';
 import {
+  chartPreviewFragment,
+  chartPreviewRendererKey,
+  ChartPreviewBounds,
   ChartPreviewDraft,
+  type ChartPreviewRenderer,
   type ChartPreviewAnswer,
 } from '@repo/contracts/operations/chart';
 import { BaseWindow, ipcMain, session, WebContentsView } from 'electron';
-import { z } from 'zod';
 import { appOrigin, handleAppProtocol } from './app-protocol';
 import { isTrustedWindow } from './trusted-window';
 
@@ -13,51 +16,18 @@ const deadlineMs = 17_000;
 
 const viewportHeight = 760;
 
-const Rect = z.strictObject({
-  x: z.number().int().nonnegative(),
-  y: z.number().int().nonnegative(),
-  width: z.number().int().positive(),
-  height: z.number().int().positive(),
-});
-
 function unavailable(reason: string): ChartPreviewAnswer {
   return { status: 'unavailable', reason };
 }
 
-// This script runs only in the fixed preview document. The draft is data, never interpolated as code.
+// The document owns drawing readiness and crop geometry. Desktop waits for its bridge.
 function previewScript(draft: ChartPreviewDraft): string {
+  const draw: keyof ChartPreviewRenderer = 'draw';
+
   return `(async () => {
-    const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
-    while (!window.argoDrawChart) await frame();
-    if (!window.argoDrawChart(${JSON.stringify(draft)})) return null;
-
-    const read = () => {
-      const root = document.getElementById('chart-preview');
-      const canvas = root?.querySelector('canvas');
-      const labels = root?.querySelector('[data-testid="chart-axes"], [data-testid="chart-legend"]');
-
-      if (!canvas?.width || !canvas.height || !labels?.childElementCount) return null;
-
-      const rect = root.getBoundingClientRect();
-      const plot = canvas.getBoundingClientRect();
-
-      if (rect.width > 0 && rect.height > 0 && plot.width > 0 && plot.height > 0) {
-        return {
-          x: Math.floor(rect.left),
-          y: Math.floor(rect.top),
-          width: Math.ceil(rect.right) - Math.floor(rect.left),
-          height: Math.ceil(rect.bottom) - Math.floor(rect.top),
-        };
-      }
-      return null;
-    };
-
-    while (!read()) await frame();
-    await document.fonts.ready;
-    await frame();
-    await frame();
-
-    return read();
+    const bridge = () => window[${JSON.stringify(chartPreviewRendererKey)}];
+    while (!bridge()) await new Promise(requestAnimationFrame);
+    return bridge()[${JSON.stringify(draw)}](${JSON.stringify(draft)});
   })()`;
 }
 
@@ -76,7 +46,7 @@ async function draw({
 
   await contents.loadURL(page);
 
-  const bounds = Rect.safeParse(
+  const bounds = ChartPreviewBounds.safeParse(
     await contents.executeJavaScript(previewScript(draft)),
   );
 
@@ -168,7 +138,9 @@ export function handleChartPreview(
   if (!developmentUrl)
     handleAppProtocol(exportDirectory, rendererSession.protocol);
 
-  const page = new URL('/chart-preview', developmentUrl ?? appOrigin).href;
+  const page = new URL(developmentUrl ?? appOrigin);
+
+  page.hash = chartPreviewFragment;
 
   ipcMain.handle(
     'chart:preview',
@@ -184,7 +156,7 @@ export function handleChartPreview(
       if (!draft.success || !validateChartFence(draft.data.fence).valid)
         return unavailable('The Chart data could not be drawn.');
 
-      return capture(draft.data, page, rendererSession);
+      return capture(draft.data, page.href, rendererSession);
     },
   );
 }

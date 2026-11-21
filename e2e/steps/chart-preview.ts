@@ -34,20 +34,17 @@ const fence = [
 
 type DesktopApp = App & { desktop: NonNullable<App['desktop']> };
 
-async function requestPreviewOnce({
-  page,
-  httpUrl,
-  desktop,
-}: DesktopApp): Promise<
-  z.output<typeof OperationReply>['result']['data']['result']
-> {
+async function requestPreviewOnce(
+  { page, httpUrl, desktop }: DesktopApp,
+  draft: string,
+): Promise<z.output<typeof OperationReply>['result']['data']['result']> {
   const token = await readControlToken(desktop.home);
 
   const response = await page.request.post(`${httpUrl}/trpc/operations.run`, {
     headers: { authorization: `Bearer ${token}` },
     data: {
       id: 'chart.preview',
-      params: { fence, width: requestedWidth, theme: 'dark' },
+      params: { fence: draft, width: requestedWidth, theme: 'dark' },
     },
   });
 
@@ -62,9 +59,12 @@ type PreviewResult = z.output<
   typeof OperationReply
 >['result']['data']['result'];
 
-function requestPreview(app: DesktopApp): Promise<PreviewResult> {
+function requestPreview(
+  app: DesktopApp,
+  draft = fence,
+): Promise<PreviewResult> {
   return pollUntil(async () => {
-    const reply = await requestPreviewOnce(app);
+    const reply = await requestPreviewOnce(app, draft);
 
     return NoRenderer.safeParse(reply).success ? undefined : reply;
   }, 'The desktop Chart renderer did not subscribe');
@@ -187,5 +187,28 @@ Then(
       status: 'unavailable',
       reason: 'The Chart and its labels did not finish drawing.',
     });
+  },
+);
+
+const emptyDonut = [
+  '```chart',
+  '{"kind":"donut","label":"No deliveries yet","series":[]}',
+  '```',
+].join('\n');
+
+Then(
+  'the Chart preview Operation returns a PNG of the empty donut',
+  async ({ app }) => {
+    const { desktop } = app;
+
+    if (!desktop) throw new Error('Expected the desktop App');
+
+    const result = await requestPreview({ ...app, desktop }, emptyDonut);
+
+    expect(result).toMatchObject({ status: 'captured' });
+
+    const chart = ChartCapture.parse(result);
+
+    expectCroppedPng(Buffer.from(chart.image.data, 'base64'));
   },
 );

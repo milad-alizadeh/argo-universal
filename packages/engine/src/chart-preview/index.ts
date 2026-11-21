@@ -4,8 +4,7 @@ import {
   type ChartPreviewAnswer,
   type ChartPreviewDraft,
 } from '@repo/contracts/operations/chart';
-import { isLocalDesktop } from '../app-navigation';
-import { Queue } from '../app-navigation/queue';
+import { isLocalDesktop, Queue } from '../app-navigation';
 import type { RpcConnection } from '../rpc';
 
 type Receiver = {

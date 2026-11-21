@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { tones } from '../kit-tokens';
-import { chartProps } from '../plugins/visual-props';
+import {
+  chartLimits,
+  chartProps,
+  visualLabelLength,
+} from '../plugins/visual-props';
 import type { OperationDefinition } from './index';
 
 const example = [
@@ -34,6 +38,23 @@ export const ChartPreviewDraft = z.strictObject({
 });
 
 export type ChartPreviewDraft = z.infer<typeof ChartPreviewDraft>;
+
+export const chartPreviewFragment = '#argo-chart-preview';
+
+export const chartPreviewRendererKey = 'argoChartPreview';
+
+export const ChartPreviewBounds = z.strictObject({
+  x: z.number().int().nonnegative(),
+  y: z.number().int().nonnegative(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
+export type ChartPreviewBounds = z.infer<typeof ChartPreviewBounds>;
+
+export interface ChartPreviewRenderer {
+  draw(draft: ChartPreviewDraft): Promise<ChartPreviewBounds | null>;
+}
 
 const ChartPreviewImage = z.strictObject({
   mimeType: z.literal('image/png'),
@@ -79,17 +100,17 @@ const ChartPreviewInput = z.strictObject({
   fence: z.string().meta({
     description:
       'Supply one complete chart fence, including the opening and closing markers, with strict JSON inside. ' +
-      `Set kind to one of ${chartProps.shape.kind.options.join(', ')} and give the Chart a label of 1 to 120 characters. ` +
-      'Use series for up to 8 named series. Each series has a name of 1 to 120 characters, a distinct tone, and up to 2000 points. ' +
+      `Set kind to one of ${chartProps.shape.kind.options.join(', ')} and give the Chart a label of ${visualLabelLength.minimum} to ${visualLabelLength.maximum} characters. ` +
+      `Use series for up to ${chartLimits.series} named series. Each series has a name of ${visualLabelLength.minimum} to ${visualLabelLength.maximum} characters, a distinct tone, and up to ${chartLimits.pointsPerSeries} points. ` +
       `The available tones are ${tones.join(', ')}. Each point has finite numeric x and y values. Each x must be unique within its series. ` +
       'The optional stacked and grid fields are booleans. Omit action fields.',
     examples: [example],
   }),
   width: ChartPreviewWidth.optional().describe(
-    'Feed content width in CSS pixels. Defaults to 390.',
+    `Feed content width in CSS pixels. Defaults to ${defaultChartPreviewWidth}.`,
   ),
   theme: ChartPreviewTheme.optional().describe(
-    'Web theme for the preview. Defaults to light.',
+    `Web theme for the preview. Defaults to ${defaultChartPreviewTheme}.`,
   ),
 });
 

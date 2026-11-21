@@ -156,6 +156,6 @@ export { ScheduledDetailScreen } from './screens/scheduled/$id/schedule-detail-s
 export { useChartPreview } from './features/chart-preview/use-chart-preview';
 
 export {
-  ChartPreviewPage,
-  isChartPreviewPage,
-} from './features/feed/components/agent-message/chart-preview-page';
+  ChartPreviewDocument,
+  isChartPreviewDocument,
+} from './features/feed/components/agent-message/chart-preview-document';
