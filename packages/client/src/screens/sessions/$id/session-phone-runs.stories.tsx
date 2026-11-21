@@ -1,10 +1,14 @@
+import type { RunConfigurationRow } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { RunTerminal, type SessionRuns } from '#features/sessions';
 import { runTabKey } from './sections/runs-section';
 import { idleSession } from './session-detail-view.mocks';
-import { recordRun, runActions } from './session-run-inspector-fixtures';
+import {
+  createPhoneRunLog,
+  runActions,
+} from './session-run-inspector-fixtures';
 import {
   WorkbenchRunList,
   workbenchRunPages,
@@ -13,17 +17,28 @@ import { SessionWorkbenchSheet } from './session-workbench-sheet';
 
 type Page = 'before' | 'overview' | 'list' | 'terminal';
 
+function PhoneRunTerminal({
+  run,
+  connected,
+}: {
+  run: RunConfigurationRow;
+  connected: boolean;
+}): ReactElement {
+  const [log] = useState(createPhoneRunLog);
+
+  return (
+    <RunTerminal
+      {...{ run, connected, ...log }}
+      compact
+      onResize={(): void => {}}
+    />
+  );
+}
+
 const controls = {
   ...runActions,
   renderTerminal: (run, visible): ReactElement => (
-    <RunTerminal
-      {...{ run }}
-      compact
-      connected={visible}
-      listen={recordRun}
-      onInput={(): void => {}}
-      onResize={(): void => {}}
-    />
+    <PhoneRunTerminal run={run} connected={visible} />
   ),
 } satisfies SessionRuns;
 
