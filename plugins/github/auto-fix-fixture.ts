@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import { reference, repository } from './auto-merge-fixture';
 import { sha } from './github-fixture';
 import type { FixtureComment } from './github-fixture-types';
-import { project, settled, type Journey } from './journey-fixture';
+import { project, type Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
 import { shortHead } from './pull-reads';
 
@@ -62,7 +62,7 @@ const watchIntervalMs = 60_000;
 
 // Argo's Watch clock ticks once, and the run it starts has finished.
 export async function watch(run: Journey): Promise<void> {
-  await settled(run);
+  await run.test.settled();
 
   const before = await completed(run);
 

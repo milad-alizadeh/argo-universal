@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { settled } from './journey-fixture';
 import {
   attached,
   changePull,
@@ -34,7 +33,7 @@ it(
       { id: idOf(1), stage: 'closed' },
       { id: idOf(2), stage: 'open' },
     ]);
-    await settled(run);
+    await run.test.settled();
     const [closedReads, openReads] = [readsOf(run, 1), readsOf(run, 2)];
 
     expect(closedReads).toBeGreaterThan(1);
