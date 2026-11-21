@@ -1,8 +1,10 @@
-import { access, readFile, realpath } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, open, realpath } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { TRPCError } from '@trpc/server';
 import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { z } from 'zod';
+import { noFollow, stillAtPath } from './run-checkout-file';
 
 // A Run Configuration as drafted: the fields of `.argo/run.json` that a source can know.
 export type Draft = {
@@ -47,7 +49,11 @@ const readIfPresent = async (
     if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
       return undefined;
 
-    return await readFile(path, 'utf8');
+    await using handle = await open(path, constants.O_RDONLY | noFollow);
+
+    return (await stillAtPath(path, await handle.stat()))
+      ? await handle.readFile('utf8')
+      : undefined;
   } catch {
     return undefined;
   }

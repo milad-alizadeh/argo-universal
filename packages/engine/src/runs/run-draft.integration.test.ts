@@ -1,4 +1,5 @@
 import {
+  link,
   mkdir,
   mkdtemp,
   readFile,
@@ -345,6 +346,21 @@ it('refuses to overwrite a linked run.json outside the Checkout', async () => {
 
   await expect(draftRunConfigurations(checkout, true)).rejects.toThrow(
     /run\.json.*symbolic link/u,
+  );
+  await expect(readFile(target, 'utf8')).resolves.toBe('original');
+});
+
+it('refuses to overwrite a Run Configuration linked to another file', async () => {
+  const checkout = await checkoutWith({
+    [packageJson]: { scripts: { dev: 'vite' } },
+  });
+  const outside = await checkoutWith({ 'run.json': 'original' });
+  const target = join(outside, 'run.json');
+  await mkdir(join(checkout, '.argo'));
+  await link(target, join(checkout, '.argo', 'run.json'));
+
+  await expect(draftRunConfigurations(checkout, true)).rejects.toThrow(
+    /run\.json.*single link/u,
   );
   await expect(readFile(target, 'utf8')).resolves.toBe('original');
 });
