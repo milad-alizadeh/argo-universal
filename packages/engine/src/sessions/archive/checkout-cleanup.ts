@@ -7,7 +7,7 @@ import {
 } from '@repo/git';
 import { eq } from 'drizzle-orm';
 import { readProjectPath } from '../../projects';
-import { endCheckoutRuns } from '../../runs';
+import { removeCheckoutWithRuns, type RunCheckout } from '../../runs';
 import type { WriterActorRef } from '../../storage';
 import type { SessionData } from '../session-data';
 import { ownsStoredWorktree } from '../session-record';
@@ -87,11 +87,10 @@ const keepReason = (risk: CheckoutCleanupRisk): string =>
     ? risk.reason
     : 'Argo could not verify that the Checkout’s work is recoverable.';
 
-const endRunsOf = (database: Database, data: Target): Promise<void> =>
-  endCheckoutRuns(database, {
-    projectId: data.projectId,
-    checkoutPath: data.checkout.path,
-  });
+const runCheckoutOf = (data: Target): RunCheckout => ({
+  projectId: data.projectId,
+  checkoutPath: data.checkout.path,
+});
 
 async function attemptCleanup(
   database: Database,
@@ -103,15 +102,16 @@ async function attemptCleanup(
   const risk = await checkoutCleanupRisk(projectPath, data.checkout.path);
 
   // Runs end once the Checkout is going away, never while Archive keeps it.
-  if (risk.kind === 'absent') return endRunsOf(database, data);
+  const checkout = runCheckoutOf(data);
+  if (risk.kind === 'absent')
+    return removeCheckoutWithRuns(database, checkout, () => Promise.resolve());
 
   const removal = { signal: options.signal, force: risk.kind === 'loss' };
 
-  if (canRemove(risk, approval)) {
-    await endRunsOf(database, data);
-
-    return removeArchivedCheckout(projectPath, data.checkout, removal);
-  }
+  if (canRemove(risk, approval))
+    return removeCheckoutWithRuns(database, checkout, () =>
+      removeArchivedCheckout(projectPath, data.checkout, removal),
+    );
 
   const target = { sessionId: data.sessionId, reason: keepReason(risk) };
 

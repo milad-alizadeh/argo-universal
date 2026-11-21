@@ -15,7 +15,7 @@ type LiveRunInput = {
 
 // What a Run is in memory while its terminal lives; the stored record follows it.
 export class LiveRun {
-  public stopping = false;
+  public stopping?: Promise<void>;
   public record: RunRecord;
   public readonly terminal: TerminalProcess;
   public readonly outputPath: string;

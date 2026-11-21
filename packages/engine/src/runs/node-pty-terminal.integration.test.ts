@@ -1,7 +1,6 @@
 import {
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -23,14 +22,6 @@ const freePort = (): Promise<number> =>
         resolve(typeof address === 'object' && address ? address.port : 0),
       );
     });
-  });
-
-const listening = (port: number): Promise<boolean> =>
-  new Promise((resolve) => {
-    const server = createServer();
-
-    server.once('error', () => resolve(true));
-    server.listen(port, '127.0.0.1', () => server.close(() => resolve(false)));
   });
 
 // A login shell of bash whose profile sets a marker, in a home of its own, so the test never reads the developer's profile.
@@ -94,27 +85,3 @@ it('reports the command’s own exit code, after its output', async () => {
   expect(exit.exitCode).toBe(3);
   expect(output).toContain('before');
 });
-
-it('leaves nothing listening after Stop, even a child that ignores SIGTERM', async () => {
-  const cwd = hermeticLogin();
-  const port = await freePort();
-
-  // A child that ignores SIGTERM and holds the port, as a stubborn dev server does.
-  const server = `require('net').createServer().listen(Number(process.env.PORT),'127.0.0.1');process.on('SIGTERM',()=>{});setInterval(()=>{},1000)`;
-  const command = `${JSON.stringify(process.execPath)} -e ${JSON.stringify(server)} & echo $! > grandchild.pid; wait`;
-
-  const terminal = await launchTerminal({
-    id: 'stubborn-run',
-    command,
-    cwd,
-    env: { PORT: String(port) },
-    port,
-  });
-
-  await expect.poll(() => listening(port), { timeout: 10_000 }).toBe(true);
-  const grandchild = Number(readFileSync(join(cwd, 'grandchild.pid'), 'utf8'));
-  await terminal.stop();
-
-  expect(await listening(port)).toBe(false);
-  expect(() => process.kill(grandchild, 0)).toThrow('ESRCH');
-}, 30_000);

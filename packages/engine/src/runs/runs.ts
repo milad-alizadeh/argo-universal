@@ -15,6 +15,7 @@ import {
 import { LiveRun } from './live-run';
 import type { RunConfiguration } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
+import { RunLaunches } from './run-launches';
 import {
   readRunOutputTail,
   removeRunOutput,
@@ -66,7 +67,7 @@ export class Runs {
   private readonly live = new Map<string, LiveRun>();
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
-  private readonly launching = new Map<string, Promise<LiveRun>>();
+  private readonly launches = new RunLaunches();
   public constructor(private readonly input: RunsInput) {}
 
   public async start(
@@ -84,7 +85,7 @@ export class Runs {
     name: string,
   ): Promise<RunStopResult> {
     await this.configuration(checkout, name);
-    await this.end(this.live.get(keyOf(checkout, name)));
+    await this.endByKey(keyOf(checkout, name));
 
     return { name, status: statusOf(this.record(checkout, name)) };
   }
@@ -95,7 +96,7 @@ export class Runs {
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
-    await this.end(this.live.get(keyOf(checkout, name)));
+    await this.endByKey(keyOf(checkout, name));
 
     return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
@@ -136,25 +137,30 @@ export class Runs {
     };
   }
 
-  // Ends every Run of a Checkout that is going away, those still starting included.
-  public async endCheckout({
-    projectId,
-    checkoutPath,
-  }: RunCheckout): Promise<void> {
-    await Promise.allSettled(this.launching.values());
-
-    const ending = this.live
-      .values()
-      .filter(({ record }) => record.projectId === projectId)
-      .filter(({ record }) => record.checkoutPath === checkoutPath)
-      .map((run) => this.end(run));
-
-    await Promise.all(ending);
+  // End this Checkout's Runs before Git removes it.
+  public removeCheckout(
+    checkout: RunCheckout,
+    remove: () => Promise<void>,
+  ): Promise<void> {
+    return this.launches.removeCheckout(checkout, async () => {
+      await this.endCheckoutRuns(checkout);
+      await remove();
+    });
   }
 
-  // Ends every Run: the Server never leaves one behind.
   public async close(): Promise<void> {
-    await Promise.all([...this.live.values()].map((run) => this.end(run)));
+    await this.launches.close();
+    await Promise.all(this.live.values().map((run) => this.end(run)));
+  }
+
+  private async endCheckoutRuns(checkout: RunCheckout): Promise<void> {
+    await Promise.all(
+      this.live
+        .values()
+        .filter(({ record }) => record.projectId === checkout.projectId)
+        .filter(({ record }) => record.checkoutPath === checkout.checkoutPath)
+        .map((run) => this.end(run)),
+    );
   }
 
   private row(
@@ -188,20 +194,18 @@ export class Runs {
     checkout: RunCheckout,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
+    this.launches.requireOpen(checkout);
     const key = keyOf(checkout, configuration.name);
     const existing = this.live.get(key);
 
+    if (existing?.stopping)
+      return existing.stopping.then(() => this.running(checkout, configuration));
+
     if (existing) return Promise.resolve(existing);
 
-    const launching =
-      this.launching.get(key) ??
-      this.launch(checkout, configuration).finally(() =>
-        this.launching.delete(key),
-      );
-
-    this.launching.set(key, launching);
-
-    return launching;
+    return this.launches.start(key, checkout, () =>
+      this.launch(checkout, configuration),
+    );
   }
 
   private async launch(
@@ -296,7 +300,7 @@ export class Runs {
     run: LiveRun,
     exitCode: number,
   ): Promise<void> {
-    this.live.delete(key);
+    if (!run.stopping) this.live.delete(key);
     await run.flushed();
     await this.update(key, run, {
       status: run.stopping ? 'stopped' : 'crashed',
@@ -309,12 +313,13 @@ export class Runs {
   private async becomeReady(key: string, run: LiveRun): Promise<void> {
     const pattern = readyPattern(run.configuration);
 
-    while (this.live.get(key) === run) {
+    while (this.live.get(key) === run && !run.stopping) {
       const ready = pattern
         ? run.matches(pattern)
         : await portListening(run.record.port);
 
-      if (ready) return this.markReady(key, run);
+      if (ready && this.live.get(key) === run && !run.stopping)
+        return this.markReady(key, run);
       await delay(readyPollMs);
     }
   }
@@ -346,10 +351,22 @@ export class Runs {
     );
   }
 
+  private async endByKey(key: string): Promise<void> {
+    const run = this.live.get(key) ?? (await this.launches.get(key));
+    await this.end(run);
+  }
+
   private async end(run: LiveRun | undefined): Promise<void> {
     if (!run) return;
-    run.stopping = true;
+    run.stopping ??= Promise.resolve().then(() => this.finishStopping(run));
+    await run.stopping;
+  }
+
+  private async finishStopping(run: LiveRun): Promise<void> {
     await run.terminal.stop();
     await run.ended.promise;
+
+    // The stopping terminal still owns its port while it cleans up listeners.
+    this.live.delete(keyOf(run.record, run.record.name));
   }
 }

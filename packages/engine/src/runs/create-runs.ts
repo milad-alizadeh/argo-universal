@@ -14,9 +14,10 @@ export const createRuns = (
   return runs;
 };
 
-// Ends the Runs of a Checkout the Engine is removing; a Checkout with none, or an Engine without Runs, is left alone.
-export const endCheckoutRuns = (
+// Blocks new Runs while the Checkout's existing Runs end and Git removes it.
+export const removeCheckoutWithRuns = (
   database: Database,
   checkout: RunCheckout,
+  remove: () => Promise<void>,
 ): Promise<void> =>
-  enginesRuns.get(database)?.endCheckout(checkout) ?? Promise.resolve();
+  enginesRuns.get(database)?.removeCheckout(checkout, remove) ?? remove();
