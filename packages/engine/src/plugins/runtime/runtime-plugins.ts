@@ -42,6 +42,14 @@ export class RuntimePlugins {
     for (const plugin of this.plugins.values()) plugin.flushReload();
   }
 
+  showDraft(pluginId: string): Promise<string | null> {
+    const plugin = this.plugins.get(pluginId);
+
+    return plugin
+      ? plugin.showDraft()
+      : Promise.resolve('Plugin is not running');
+  }
+
   runningIds(): string[] {
     return this.plugins
       .entries()
