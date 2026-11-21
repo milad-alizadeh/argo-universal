@@ -1,8 +1,10 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
+import { LatencyPanel } from '../components/latency-panel/latency-panel';
 import { useConversationStatus } from '../hooks/use-conversation-status';
 import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
 import type { ConversationConnection } from '../types/conversation-connection';
+import type { ConversationEnvironment } from '../types/conversation-environment';
 import { followConversation } from '../utils/follow-conversation';
 import {
   browserCarriesAudio,
@@ -10,13 +12,23 @@ import {
 } from './browser-conversation-environment';
 import { ConversationConnectionProvider } from './conversation-connection-context';
 import { useConversationDeviceChoice } from './conversation-device-choice';
+import { phoneConversationEnvironment } from './phone-conversation-environment';
 import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
-// The desktop App carries a Conversation's audio itself; any other page offers no voice button.
-const connectionFor = (desktop: boolean): ConversationConnection | null =>
+const environmentFor = (desktop: boolean): ConversationEnvironment | null =>
   desktop && browserCarriesAudio()
-    ? createWebRtcConversationConnection(browserConversationEnvironment)
-    : null;
+    ? browserConversationEnvironment
+    : phoneConversationEnvironment;
+
+/*
+ * The desktop App carries a Conversation's audio itself; any other page offers no voice button.
+ * SPIKE (latency on a phone): an iPhone carries it too, through its own environment.
+ */
+function connectionFor(desktop: boolean): ConversationConnection | null {
+  const environment = environmentFor(desktop);
+
+  return environment ? createWebRtcConversationConnection(environment) : null;
+}
 
 interface HostProps {
   connection: ConversationConnection;
@@ -68,14 +80,19 @@ function FollowsDeviceChoice({
 
 type Props = { desktop: boolean; children: ReactNode };
 
+// SPIKE (latency on a phone): a phone chooses no device, and both draw the latency panel over the App.
 function Hosted(props: {
   connection: ConversationConnection;
+  desktop: boolean;
   children: ReactNode;
 }): JSX.Element {
   return (
     <ServerConversationHost connection={props.connection}>
-      <FollowsDeviceChoice connection={props.connection} />
+      {props.desktop ? (
+        <FollowsDeviceChoice connection={props.connection} />
+      ) : null}
       {props.children}
+      <LatencyPanel />
     </ServerConversationHost>
   );
 }
@@ -87,7 +104,9 @@ export function DesktopConversationProvider({
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
 
   return connection ? (
-    <Hosted connection={connection}>{children}</Hosted>
+    <Hosted connection={connection} desktop={desktop}>
+      {children}
+    </Hosted>
   ) : (
     <ConversationConnectionProvider value={null}>
       {children}

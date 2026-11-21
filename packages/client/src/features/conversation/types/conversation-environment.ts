@@ -1,4 +1,5 @@
 import type { VoicePreviewClip } from '@repo/contracts';
+import type { PeerStats } from '../utils/peer-stats';
 
 // The microphone as the connection uses it: something to let go of. The browser's own carries the sound.
 export interface Microphone {
@@ -40,6 +41,8 @@ export interface VoicePeer {
   accept: (answer: string) => Promise<void>;
   // Calls the listener with the voice's sound when it arrives.
   onVoice: (listener: (stream: MediaStream) => void) => void;
+  // SPIKE (latency on a phone): one reading of the connection's stats, for the latency probe.
+  stats?: () => Promise<PeerStats>;
   close: () => void;
 }
 

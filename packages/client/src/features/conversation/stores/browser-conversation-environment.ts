@@ -4,6 +4,7 @@ import type {
   VoicePeer,
   VoicePlayback,
 } from '../types/conversation-environment';
+import { peerStatsOf, type PeerStats } from '../utils/peer-stats';
 import { BrowserClipPlayback, BrowserRecording } from './browser-clips';
 import { BrowserMicrophone } from './browser-microphone';
 import { BrowserSilence } from './browser-silence';
@@ -78,6 +79,11 @@ class BrowserPeer implements VoicePeer {
 
       if (voice) listener(voice);
     });
+  }
+
+  // SPIKE (latency on a phone): the desktop baseline reads the same stats the phone does.
+  public async stats(): Promise<PeerStats> {
+    return peerStatsOf(await this.connection.getStats());
   }
 
   public close(): void {

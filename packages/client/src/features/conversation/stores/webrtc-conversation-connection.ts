@@ -22,6 +22,7 @@ import {
   openChosen,
   type HeldSound,
 } from './held-conversation';
+import { latencyProbe } from './latency-probe';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
@@ -52,16 +53,22 @@ class WebRtcConversationConnection implements ConversationConnection {
   public async createOffer(): Promise<string> {
     this.close();
     this.endPreview();
+    // SPIKE (latency on a phone): the call's clock starts here, as near the tap as the connection gets.
+    latencyProbe.begin();
 
     const microphone = await openChosen(
       this.environment,
       this.devices.microphone,
     );
 
+    latencyProbe.mark('microphone');
     const held = this.hold(microphone);
     this.held = held;
+    const offer = await held.peer.offer(microphone);
+    latencyProbe.mark('offer');
+    latencyProbe.watch(held.peer);
 
-    return held.peer.offer(microphone);
+    return offer;
   }
 
   public async preview(
@@ -125,7 +132,9 @@ class WebRtcConversationConnection implements ConversationConnection {
   }
 
   public async accept(answer: string): Promise<void> {
+    latencyProbe.mark('answer');
     await this.held?.peer.accept(answer);
+    latencyProbe.mark('accepted');
   }
 
   public setMicrophoneMuted(muted: boolean): void {
@@ -175,6 +184,7 @@ class WebRtcConversationConnection implements ConversationConnection {
     const { held } = this;
     this.held = undefined;
     this.store.reset();
+    latencyProbe.stop();
     held?.release();
   }
 }

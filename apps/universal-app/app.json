@@ -58,6 +58,13 @@
           }
         }
       ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "microphonePermission": "Argo uses the microphone so you can talk to a Session.",
+          "cameraPermission": "Argo uses the camera to read the code on your computer."
+        }
+      ],
       "./plugins/with-custom-symbols.mjs",
       "./plugins/with-font-scale-config-change.mjs",
       [
