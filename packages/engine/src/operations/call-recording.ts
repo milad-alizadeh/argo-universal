@@ -3,6 +3,7 @@ import {
   operations,
   type OperationId,
 } from '@repo/contracts/operations';
+import { ChartPreviewCapturedResult } from '@repo/contracts/operations/chart';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { CalledOperation, SessionOperationCall } from '../sessions';
 import type { OperationResult, OperationRunResult } from './implementations';
@@ -56,9 +57,14 @@ const shownScreenshot = (result: OperationResult): Json => {
     : wireJson(result);
 };
 
+const shownChartPreview = (result: OperationResult): Json =>
+  ChartPreviewCapturedResult.safeParse(result).success
+    ? { valid: true, status: 'captured' }
+    : wireJson(result);
+
 // What an Operation's Tool call shows of its result where that is less than the whole of it; the rest show their own result.
 const shownBy: Partial<Record<OperationId, (result: OperationResult) => Json>> =
-  { 'app.screenshot': shownScreenshot };
+  { 'app.screenshot': shownScreenshot, 'chart.preview': shownChartPreview };
 
 // A Session's Tool call shows the Operation's own result, as its Operation says it may.
 export const recordedOutput =

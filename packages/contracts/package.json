@@ -47,6 +47,7 @@
     "./operations/control": "./src/operations/control.ts",
     "./operations/registry": "./src/operations/registry.ts",
     "./operations/diagram": "./src/operations/diagram.ts",
+    "./operations/chart": "./src/operations/chart.ts",
     "./operations/catalog": "./src/operations/catalog.ts",
     "./operations/plugin-guide": "./src/operations/plugin-guide.ts",
     "./plugins/plugin-template": "./src/plugins/plugin-template.ts",

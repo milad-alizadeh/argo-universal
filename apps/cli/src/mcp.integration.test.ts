@@ -1,4 +1,8 @@
 import { OperationExecution } from '@repo/contracts/operations/control';
+import {
+  chartPreviewImage,
+  connectChartPreviewApp,
+} from '@repo/engine/mocks/chart-preview-app';
 import { startPermissionWaitHost } from '@repo/engine/mocks/operation-waits';
 import {
   capturedImage,
@@ -263,5 +267,43 @@ it('hands an Agent a captured screen as an image, not as text', async () => {
       text: JSON.stringify({ kind: 'result', result: { status: 'captured' } }),
     },
     { type: 'image', data: capturedImage.data, mimeType: 'image/png' },
+  ]);
+}, 30_000);
+
+it('hands the Agent a Chart PNG and its render metadata as separate content', async () => {
+  const host = await startCliHost();
+  const app = connectChartPreviewApp(host.url);
+
+  await app.ready;
+
+  const client = await connectMcp(host.home);
+
+  const fence = [
+    '```chart',
+    '{"kind":"line","label":"Orders","series":[{"name":"Orders","tone":"info","points":[{"x":1,"y":8}]}]}',
+    '```',
+  ].join('\n');
+
+  const seen = await callMcp(client, {
+    id: 'chart.preview',
+    params: { fence, width: 360, theme: 'dark' },
+    wait: true,
+  });
+
+  expect(seen.content).toEqual([
+    {
+      type: 'text',
+      text: JSON.stringify({
+        kind: 'result',
+        result: {
+          valid: true,
+          status: 'captured',
+          platform: 'web',
+          width: 360,
+          theme: 'dark',
+        },
+      }),
+    },
+    { type: 'image', ...chartPreviewImage },
   ]);
 }, 30_000);

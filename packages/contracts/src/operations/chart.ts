@@ -9,6 +9,72 @@ const example = [
   '```',
 ].join('\n');
 
+export const defaultChartPreviewWidth = 390;
+
+export const defaultChartPreviewTheme = 'light';
+
+const minimumContentWidth = 240;
+
+const maximumContentWidth = 1200;
+
+const maximumBase64Length = 4_194_304;
+
+const ChartPreviewWidth = z
+  .number()
+  .int()
+  .min(minimumContentWidth)
+  .max(maximumContentWidth);
+
+const ChartPreviewTheme = z.enum(['light', 'dark']);
+
+export const ChartPreviewDraft = z.strictObject({
+  fence: z.string(),
+  width: ChartPreviewWidth,
+  theme: ChartPreviewTheme,
+});
+
+export type ChartPreviewDraft = z.infer<typeof ChartPreviewDraft>;
+
+const ChartPreviewImage = z.strictObject({
+  mimeType: z.literal('image/png'),
+  data: z.base64().min(1).max(maximumBase64Length),
+});
+
+const ChartPreviewUnavailable = z.strictObject({
+  status: z.literal('unavailable'),
+  reason: z.string(),
+});
+
+const ChartPreviewCaptured = z.strictObject({
+  status: z.literal('captured'),
+  image: ChartPreviewImage,
+});
+
+export const ChartPreviewAnswer = z.discriminatedUnion('status', [
+  ChartPreviewUnavailable,
+  ChartPreviewCaptured,
+]);
+
+export type ChartPreviewAnswer = z.infer<typeof ChartPreviewAnswer>;
+
+export const ChartPreviewRequest = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('ready') }),
+  z.strictObject({
+    type: z.literal('capture'),
+    requestId: z.string(),
+    draft: ChartPreviewDraft,
+  }),
+]);
+
+export type ChartPreviewRequest = z.infer<typeof ChartPreviewRequest>;
+
+export const ChartPreviewReply = z.strictObject({
+  requestId: z.string(),
+  answer: ChartPreviewAnswer,
+});
+
+export type ChartPreviewReply = z.infer<typeof ChartPreviewReply>;
+
 const ChartPreviewInput = z.strictObject({
   fence: z.string().meta({
     description:
@@ -19,6 +85,19 @@ const ChartPreviewInput = z.strictObject({
       'The optional stacked and grid fields are booleans. Omit action fields.',
     examples: [example],
   }),
+  width: ChartPreviewWidth.optional().describe(
+    'Feed content width in CSS pixels. Defaults to 390.',
+  ),
+  theme: ChartPreviewTheme.optional().describe(
+    'Web theme for the preview. Defaults to light.',
+  ),
+});
+
+export const ChartPreviewCapturedResult = ChartPreviewCaptured.extend({
+  valid: z.literal(true),
+  platform: z.literal('web'),
+  width: ChartPreviewWidth,
+  theme: ChartPreviewTheme,
 });
 
 const ChartPreviewResult = z.discriminatedUnion('valid', [
@@ -31,11 +110,10 @@ const ChartPreviewResult = z.discriminatedUnion('valid', [
       }),
     ),
   }),
-  z.strictObject({
-    valid: z.literal(true),
-    status: z.literal('unavailable'),
-    reason: z.string(),
-  }),
+  z.discriminatedUnion('status', [
+    ChartPreviewUnavailable.extend({ valid: z.literal(true) }),
+    ChartPreviewCapturedResult,
+  ]),
 ]);
 
 export const chartOperations = {

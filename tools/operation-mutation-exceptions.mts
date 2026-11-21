@@ -14,6 +14,7 @@ const retained = new Map<string, readonly string[]>([
   ['notifications/router.ts', ['attention', 'acknowledge']],
   // A desktop App answers the capture request the Server sent it over its own Connection: App plumbing, and only the Connection that was asked can answer.
   ['screen-sight/router.ts', ['answer']],
+  ['chart-preview/router.ts', ['answer']],
   ['blob/router.ts', ['upload']],
   // How the Server Device runs is the owner's alone: ADR-0044's exception for what is the user's alone, which ADR-0045 extends. Staying out of the registry means no Agent can reach it as an Operation, and `serverDeviceProcedure` refuses every Paired Device (#1497); neither stops an Agent that reaches loopback tRPC as the Server Device, which is #1696.
   ['system/router.ts', ['setKeepRunning']],
