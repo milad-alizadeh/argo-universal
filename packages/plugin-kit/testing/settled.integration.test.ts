@@ -64,20 +64,27 @@ describe.each([
     const controller = new AbortController();
     const answers = collected(kit, controller.signal);
 
-    await expect
-      .poll(() => itemOf(answers.at(-1)), { timeout: 10_000 })
-      .toEqual({ text: 'count 0' });
+    try {
+      await expect
+        .poll(() => itemOf(answers.at(-1)), { timeout: 10_000 })
+        .toEqual({ text: 'count 0' });
 
-    await kit.operations.run({ name: 'bump', params: {} });
-    await kit.settled();
+      await kit.operations.run({ name: 'bump', params: {} });
+      await kit.settled();
 
-    /*
-     * On a test clock the Plugin calls the change set off are waited for too, so the answer is already there. On the
-     * real clock only the window is waited for, and the Slot's read behind it lands a moment later.
-     */
-    await expect
-      .poll(() => itemOf(answers.at(-1)), { timeout: 10_000 })
-      .toEqual({ text: 'count 1' });
-    controller.abort();
+      /*
+       * On a test clock the Plugin calls the change set off are waited for too, so the answer is already there and a
+       * `settled()` that did nothing fails here. On the real clock only the window is waited for, and the Slot's read
+       * behind it lands a moment later. The kit has no clock reading, so none is compared across `settled()`.
+       */
+      const waitMs = options.clockStart === undefined ? 10_000 : 1;
+
+      await expect
+        .poll(() => itemOf(answers.at(-1)), { timeout: waitMs })
+        .toEqual({ text: 'count 1' });
+    } finally {
+      controller.abort();
+      await kit.close();
+    }
   });
 });
