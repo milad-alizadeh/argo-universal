@@ -680,6 +680,19 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      draft: router({
+        show: authenticatedAppProcedure
+          .input(operations['plugin.draft.show'].params)
+          .output(operations['plugin.draft.show'].result)
+          .mutation(({ input, ctx }) =>
+            runner.run({
+              kind: 'app',
+              id: 'plugin.draft.show',
+              params: input,
+              connectionSignal: ctx.connection.signal,
+            }),
+          ),
+      }),
       setEnabled: authenticatedAppProcedure
         .input(operations['plugin.setEnabled'].params)
         .output(operations['plugin.setEnabled'].result)
