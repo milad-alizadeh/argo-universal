@@ -81,7 +81,7 @@ function CalloutText(props: CalloutProps): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 gap-0.5 wide:pt-1">
       <CalloutTitle {...props} />
-      {props.description && (
+      {!!props.description && (
         <Text role="secondary" className="text-muted-foreground">
           {props.description}
         </Text>
