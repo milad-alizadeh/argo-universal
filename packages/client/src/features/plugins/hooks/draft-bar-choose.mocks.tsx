@@ -1,4 +1,5 @@
 import { PluginList, PluginManifest } from '@repo/contracts/plugins';
+import type { PluginDrafts } from '@repo/contracts/plugins/drafts';
 import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTRPCClient, type TRPCLink } from '@trpc/client';
@@ -6,13 +7,15 @@ import { observable } from '@trpc/server/observable';
 import * as React from 'react';
 import { View } from 'react-native';
 import { TRPCProvider } from '#features/connection';
-import { useDraftBar } from '../../hooks/use-draft-bar';
-import type { PageOpening } from '../../utils/page-addresses';
-import { PluginDraftBar } from './plugin-draft-bar';
+import { PluginDraftBar } from '../components/draft-bar/plugin-draft-bar';
+import type { PageOpening } from '../utils/page-addresses';
+import { useDraftBar } from './use-draft-bar';
 
 const opening: PageOpening = { pluginId: 'tracker', path: '/issues' };
 
-const regionsOf = (withRegions: boolean) =>
+const regionsOf = (
+  withRegions: boolean,
+): Pick<PluginDrafts[number], 'regions'> =>
   withRegions
     ? {
         regions: [
@@ -99,6 +102,7 @@ export function ChooseBarMock(props: {
   calls: ChooseCall[];
 }): React.JSX.Element {
   const [queryClient] = React.useState(() => new QueryClient());
+
   const [client] = React.useState(() =>
     clientOver(props.withRegions, props.calls),
   );

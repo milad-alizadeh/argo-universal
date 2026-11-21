@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { ChooseBarMock, type ChooseCall } from './draft-bar-choose.mocks';
+import {
+  ChooseBarMock,
+  type ChooseCall,
+} from '../../hooks/draft-bar-choose.mocks';
 
 const chooseCalls = (calls: ChooseCall[]): ChooseCall[] =>
   calls.filter(({ path }) => path === 'plugin.draft.choose');
