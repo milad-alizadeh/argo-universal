@@ -2,10 +2,10 @@ import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Dialog } from '@repo/kit/primitives/overlays/dialog';
-import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
+import { FramePagePreview } from '../../features/frame/frame/frame-page-preview.mocks';
 import { SessionDetailView } from '../sessions/$id/session-detail-view';
 import { idleSession } from '../sessions/$id/session-detail-view.mocks';
 import { SessionPageHeader } from '../sessions/$id/session-page-header';
@@ -46,7 +46,8 @@ function ScheduleHistoryPreview(): ReactElement {
   };
 
   return (
-    <ListDetail
+    <FramePagePreview
+      section="scheduled"
       list={
         <>
           <ScheduledListView
@@ -78,7 +79,7 @@ function ScheduleHistoryPreview(): ReactElement {
           </Dialog>
         </>
       }
-      detail={
+      page={
         <SessionDetailView
           key={shown}
           state="open"
@@ -146,6 +147,7 @@ export const KeepsTheEarlierSessionOpenWhenTheLatestChanges: Story = {
     const historyDialog = await screen.findByRole('dialog', {
       name: 'History',
     });
+
     await settleOverlays(historyDialog);
     const dialog = within(historyDialog);
 
@@ -160,6 +162,11 @@ export const KeepsTheEarlierSessionOpenWhenTheLatestChanges: Story = {
     if (!previous) throw new Error('Fixture needs an earlier Session');
     await settleOverlays(previous);
     await userEvent.click(previous);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'History' }),
+      ).not.toBeInTheDocument(),
+    );
     await expect(await canvas.findByText('earlier-session')).toBeVisible();
 
     await userEvent.click(

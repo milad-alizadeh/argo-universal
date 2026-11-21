@@ -30,13 +30,14 @@ const defaultClock = '09:00';
 const deviceTimeZone = (): string =>
   Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
+function intervalUnitOf(seconds: number): IntervalUnit {
+  if (seconds % secondsPerHour === 0) return 'hour';
+
+  return seconds % secondsPerMinute === 0 ? 'minute' : 'second';
+}
+
 function intervalDraft(seconds: number): Partial<ScheduleCadenceDraft> {
-  const unit =
-    seconds % secondsPerHour === 0
-      ? 'hour'
-      : seconds % secondsPerMinute === 0
-        ? 'minute'
-        : 'second';
+  const unit = intervalUnitOf(seconds);
 
   return {
     interval: String(seconds / intervalSeconds[unit]),
