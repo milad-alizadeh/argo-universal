@@ -3,22 +3,37 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
+import { RunTerminal } from '#features/sessions';
 import { workbenchRuns } from '../../../../mocks/run-configurations';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
+import { recordRun } from './session-run-inspector-fixtures';
 import { openWorkbench } from './session-workbench-sheet.test.mocks';
 
 const start = fn<(name: string) => void>();
 
 const stop = fn<(name: string) => void>();
 
+const pressed = fn<(key: string) => void>();
+
+const resize = fn<(cols: number, rows: number) => void>();
+
 const runs = {
   runs: workbenchRuns,
   onStart: start,
   onStop: stop,
   onRestart: fn(),
-  renderTerminal: (): null => null,
+  renderTerminal: (run: (typeof workbenchRuns)[number]): ReactElement => (
+    <RunTerminal
+      {...{ run }}
+      connected
+      compact
+      listen={recordRun}
+      onInput={pressed}
+      onResize={resize}
+    />
+  ),
 };
 
 const meta = {
@@ -69,5 +84,35 @@ export const ControlsRunsAndOpensTheTerminalInTheSheet: Story = {
     await expect(
       sheet.queryByRole('link', { name: 'http://localhost:3100' }),
     ).toBeNull();
+
+    await sendTerminalKeys(sheet, context.userEvent);
   },
 };
+
+type Inside = ReturnType<typeof within>;
+
+type User = Parameters<NonNullable<Story['play']>>[0]['userEvent'];
+
+async function sendTerminalKeys(sheet: Inside, userEvent: User): Promise<void> {
+  const region = within(
+    await sheet.findByRole('region', { name: 'web Terminal' }),
+  );
+  const keys = within(region.getByRole('toolbar', { name: 'Terminal keys' }));
+  const escape = keys.getByRole('button', { name: 'Esc' });
+
+  await settleOverlays(escape);
+  await userEvent.click(escape);
+  await userEvent.click(keys.getByRole('button', { name: 'Ctrl' }));
+  await userEvent.keyboard('c');
+  await userEvent.click(keys.getByRole('button', { name: 'Tab' }));
+  await userEvent.click(keys.getByRole('button', { name: '↑' }));
+
+  await waitFor(() =>
+    expect(pressed.mock.calls).toEqual([
+      ['\u001b'],
+      ['\u0003'],
+      ['\t'],
+      ['\u001b[A'],
+    ]),
+  );
+}

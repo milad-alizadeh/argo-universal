@@ -272,7 +272,9 @@ export { SchedulePreview, ScheduleList } from './components/schedule-list';
 
 export { RunInspector } from './components/run-inspector';
 
-export { RunTerminal, type RunOutputSource } from './components/run-terminal';
+export { RunTerminal } from './components/run-terminal';
+
+export type { RunOutputSource } from './components/run-terminal-props';
 
 export {
   WorkbenchRuns,

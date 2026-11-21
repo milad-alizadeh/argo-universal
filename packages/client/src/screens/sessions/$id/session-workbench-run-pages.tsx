@@ -11,7 +11,11 @@ import type { WorkbenchGroup } from './session-workbench-sheet-rows';
 
 const listKey = 'runs';
 
-function RunList({ runs }: { runs: SessionRuns }): ReactElement {
+export function WorkbenchRunList({
+  runs,
+}: {
+  runs: SessionRuns;
+}): ReactElement {
   const { push } = useSheet();
 
   return (
@@ -35,7 +39,7 @@ export function workbenchRunGroup(
           key: listKey,
           label: 'Runs',
           value: String(runs.runs.filter(active).length),
-          page: { title: 'Runs', children: <RunList runs={runs} /> },
+          page: { title: 'Runs', children: <WorkbenchRunList runs={runs} /> },
         },
       ],
     },
