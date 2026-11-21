@@ -36,8 +36,9 @@ export function pageInputOf<State extends PageState>(
 export const loaderInputOf = <State extends PageState>(
   input: PageInput<State>,
   read: DrawReader,
+  fresh: boolean,
 ): LoaderInput<State> =>
-  Object.freeze({ ...input, read: (query) => read(query, false) });
+  Object.freeze({ ...input, read: (query) => read(query, fresh) });
 
 /*
  * The App's Page state is input, and the App keeps it across visits: a kept value whose type is no longer its

@@ -93,6 +93,7 @@ it(
     ).toMatchObject({ every: 10_000 });
 
     if (deskLamp) deskLamp.on = false;
+    await home.test.clock.advance(10_000);
     await page.draw();
 
     expect(shown(page, toggleOf(desk))).toBe('false');
@@ -110,6 +111,8 @@ it(
       status: 503,
       json: { errors: [{ description: 'Bridge is offline' }], data: [] },
     });
+    await home.test.pages.draw({ path: '/', serverDevice: true, pull: true });
+
     const page = await homePage(home);
 
     expect(page.find(homeWords.failed).props).toMatchObject({
@@ -134,6 +137,8 @@ it(
       status: 403,
       json: { errors: [{ description: 'unauthorized user' }], data: [] },
     });
+    await home.test.pages.draw({ path: '/', serverDevice: true, pull: true });
+
     const page = await homePage(home);
 
     expect(page.findText(homeWords.connect)).toBeDefined();
@@ -152,6 +157,8 @@ it(
       name: 'Desk strip',
       on: false,
       brightness: 30,
+      xy: null,
+      reachable: true,
     });
     const page = await connected(home);
 

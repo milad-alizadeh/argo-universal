@@ -10,10 +10,12 @@ import { homeWords } from '../home-words';
 import { appSettings, grantedCode } from './hue-data';
 import { hueService, type HueService } from './hue-service';
 
+export const homeAgent = { projectId: 'project-1', sessionId: 'session-1' };
+
 /*
  * The Home Plugin over a fixture Hue cloud, with the person's Remote API app set in its secret Settings unless a test
- * says otherwise. A browser that approves at once stands in for the person. No Project is registered: the lights are
- * the household's, and the Home page is drawn for none.
+ * says otherwise. A browser that approves at once stands in for the person. The Project and Session let an Agent
+ * call Operations, while the Home page is drawn without a Project.
  */
 export type HomeJourney = { test: PluginTest; hue: HueService; opened: URL[] };
 
@@ -48,6 +50,17 @@ export async function startHome(
   const test = await startPluginTest({
     ...plugin,
     network: hue.network,
+    projects: [
+      { id: homeAgent.projectId, name: 'Home tests', originUrl: null },
+    ],
+    projectPaths: { [homeAgent.projectId]: plugin.directory },
+    sessions: {
+      [homeAgent.sessionId]: {
+        projectId: homeAgent.projectId,
+        branch: null,
+        title: 'Home tests',
+      },
+    },
     openBrowser: approving(opened),
     settings: new Map(settings),
     clockStart: 0,
