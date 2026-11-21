@@ -254,11 +254,6 @@ export {
 } from './components/session-row/session-row-props';
 
 export {
-  NewSessionQuestion,
-  newSessionQuestion,
-} from './components/new-session-question/new-session-question';
-
-export {
   SessionBar,
   type SessionBarEntry,
   type SessionBarProps,
@@ -268,7 +263,20 @@ export { sessionBarCards } from './components/session-bar/session-bar-cards';
 
 export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
 
+export { FollowUpEditor } from './components/schedule-form';
+
 export { SchedulePreview, ScheduleList } from './components/schedule-list';
+
+export { sessionsListLook } from './components/sessions-list/sessions-list-look';
+
+export {
+  headingClassName as sessionsListHeadingClassName,
+  useRowClassName as useSessionsListRowClassName,
+} from './components/sessions-list/sessions-list-row-motion';
+
+export { standardTopPadding as sessionsListTopPadding } from './components/sessions-list/sessions-list-top-padding';
+
+export { sidebarRows as sessionsListSidebarRows } from './components/session-row/session-row-sidebar';
 
 export { RunInspector } from './components/run-inspector';
 

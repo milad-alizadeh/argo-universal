@@ -2,6 +2,7 @@ import type {
   AgentMessage,
   LiveHeader,
   PlanUpdate,
+  SessionInfo,
   SessionRecord,
   Turn,
   PendingPermission,
@@ -25,5 +26,5 @@ export interface SessionInfoFixture {
   feed: { maxRevision: number; activityAt: number } | null;
   liveHeader: LiveHeader | null;
   activeTurnId: string | null;
-  children: readonly SessionRecord[];
+  subagents: SessionInfo['subagents'];
 }

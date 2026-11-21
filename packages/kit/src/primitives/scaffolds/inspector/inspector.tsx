@@ -17,9 +17,11 @@ export function Inspector(props: InspectorProps): ReactElement | null {
 
   if (!useWide()) return <InspectorSheet {...props} />;
 
-  if (place) return <HostedInspector {...props} place={place} />;
+  const pane = { ...props, scrollable: undefined };
 
-  return <InspectorColumn {...props} />;
+  if (place) return <HostedInspector {...pane} place={place} />;
+
+  return <InspectorColumn {...pane} />;
 }
 
 // The Frame draws it, with its expand and its width; the page draws nothing here.

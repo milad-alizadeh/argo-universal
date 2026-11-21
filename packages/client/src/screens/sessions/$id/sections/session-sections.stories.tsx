@@ -3,6 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import {
+  type ScheduleControls,
   type SessionBarProps,
   SessionWorkbenchColumn,
   useSessionPanels,
@@ -69,6 +70,15 @@ function SectionsWorkbench({
   );
 }
 
+const emptyFollowUps: ScheduleControls = {
+  canCreate: true,
+  items: [],
+  disabled: false,
+  create: fn(async () => {}),
+  setEnd: fn(async () => {}),
+  manage: fn(),
+};
+
 const meta = {
   title: 'Screens/Sessions/Session/Sections',
   component: SectionsWorkbench,
@@ -85,7 +95,7 @@ const meta = {
         "The Plugins' Session bar lines, each drawn as its own card.",
     },
   },
-  args: { content: everySection },
+  args: { content: { ...everySection, schedules: emptyFollowUps } },
 } satisfies Meta<typeof SectionsWorkbench>;
 
 export default meta;
@@ -180,13 +190,14 @@ export const Schedules: Story = {
     content: {
       ...everySection,
       schedules: {
-        disabled: false,
-        manage: fn(),
+        ...emptyFollowUps,
         items: [
           {
             id: 'build',
             sessionId: 'session',
             intervalSeconds: 300,
+            state: 'active',
+            endsAt: 86_400_000,
             paused: false,
             lastQueuedAt: 0,
             nextAt: 300000,
@@ -196,6 +207,8 @@ export const Schedules: Story = {
             id: 'nightly',
             sessionId: 'session',
             intervalSeconds: 3600,
+            state: 'paused',
+            endsAt: null,
             paused: true,
             lastQueuedAt: 0,
             nextAt: 3600000,

@@ -15,3 +15,10 @@ export const secretInvalid = {
   secure: true,
   error: 'Enter a valid value.',
 } satisfies Omit<FieldTextProps, 'onChangeText'>;
+
+export const longLabel = {
+  title: 'Remote application client secret',
+  value: '',
+  placeholder: 'Placeholder',
+  secure: true,
+} satisfies Omit<FieldTextProps, 'onChangeText'>;

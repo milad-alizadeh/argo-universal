@@ -25,11 +25,13 @@ type ModelProps = {
 };
 
 // The form's fields on one page: a FieldGroup, its rows grouped in sections that end at a field's description.
-export function ElicitationFields({ model }: ModelProps): ReactElement {
+export function ElicitationFields({ model }: ModelProps): ReactElement | null {
   const meta = useStore(model.form.store, (state) => state.fieldMeta);
 
   // Choices are drawn from the values, so a change redraws them.
   useStore(model.form.store, (state) => state.values);
+
+  if (model.page.length === 0) return null;
 
   return (
     <FieldGroup disabled={model.inactive}>

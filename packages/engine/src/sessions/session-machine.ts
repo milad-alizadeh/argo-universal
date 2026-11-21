@@ -1047,8 +1047,10 @@ const sessionSetup = setup({
       pendingInputRequest(context)?.kind === 'permission',
     hasElicitation: ({ context }): boolean =>
       pendingInputRequest(context)?.kind === 'elicitation',
-    appendsPrompt: ({ event }): boolean =>
-      event.type === 'session.queue' && event.command.action === 'append',
+    appendsUnscheduledPrompt: ({ event }): boolean =>
+      event.type === 'session.queue' &&
+      event.command.action === 'append' &&
+      event.sender?.type !== 'schedule',
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
       answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
@@ -1724,12 +1726,12 @@ export const sessionMachine = sessionSetup.createMachine({
                   tags: ['running', 'requiresAction'],
                   entry: 'answerHookedPermission',
                 },
-                // A Prompt settles the Elicitations it waits on; a Permission request waits for its answer whatever arrives.
+                // A Prompt settles waiting Elicitations, while a Session follow-up waits in the queue.
                 awaitingElicitation: {
                   tags: ['running', 'requiresAction'],
                   on: {
                     'session.queue': {
-                      guard: 'appendsPrompt',
+                      guard: 'appendsUnscheduledPrompt',
                       target: 'working',
                       actions: ['changePromptQueue', 'cancelElicitations'],
                     },

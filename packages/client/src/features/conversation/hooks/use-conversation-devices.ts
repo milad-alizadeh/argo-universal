@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useConversationConnection } from '../stores/conversation-connection-context';
+import { usePageConversationConnection } from '../stores/conversation-connection-context';
 import {
   useConversationDeviceChoice,
   type ConversationDeviceChoice,
@@ -33,7 +33,7 @@ export function useAudioDevices(watching: boolean): AudioDevices {
 
 // What Settings › Conversation shows and changes about this Device's microphone and speaker.
 export function useConversationDevices(): ConversationDeviceControls {
-  const holdsCalls = useConversationConnection() !== null;
+  const holdsCalls = usePageConversationConnection() !== null;
   const devices = useAudioDevices(holdsCalls);
   const { choice, choose } = useConversationDeviceChoice();
 

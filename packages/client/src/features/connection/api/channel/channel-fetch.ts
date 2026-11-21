@@ -1,26 +1,10 @@
-import { exchange, type HttpRequest } from './http-exchange';
+import { channelRequest } from './channel-request';
+import { exchange } from './http-exchange';
 import type { OpenedChannel } from './open-channel';
 
 export interface ChannelFetchDeps {
   readonly openChannel: () => Promise<OpenedChannel>;
-}
-
-// Nothing is ever fetched from this name; it only gives a path somewhere to be relative to.
-const channelBase = 'https://argo.channel';
-
-const absolute = (input: RequestInfo | URL): string =>
-  new URL(input instanceof Request ? input.url : input, channelBase).href;
-
-// The request as bytes on a channel. Reading it through `Request` is what writes a form's multipart body and sets its boundary.
-async function httpRequest(request: Request): Promise<HttpRequest> {
-  const url = new URL(request.url);
-
-  return {
-    method: request.method,
-    path: url.pathname + url.search,
-    headers: Object.fromEntries(request.headers),
-    body: new Uint8Array(await request.arrayBuffer()),
-  };
+  readonly randomBytes: (length: number) => Uint8Array;
 }
 
 /*
@@ -30,7 +14,7 @@ async function httpRequest(request: Request): Promise<HttpRequest> {
 export const channelFetch =
   (deps: ChannelFetchDeps): typeof fetch =>
   async (input, init) => {
-    const request = await httpRequest(new Request(absolute(input), init));
+    const request = await channelRequest(input, init, deps.randomBytes);
     const { head, body } = await exchange(await deps.openChannel(), request);
 
     return new Response(body.length > 0 ? new Uint8Array(body) : null, {

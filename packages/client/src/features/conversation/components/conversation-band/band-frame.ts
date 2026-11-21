@@ -66,8 +66,11 @@ export const newSim = (): BandSim => ({
 const half = 0.5;
 
 // Where bar `index` of `count` stands along the strip, 0 at the left end and 1 at the right.
-const positionOf = (index: number, count: number): number =>
-  count > 1 ? index / (count - 1) : half;
+const positionOf = (index: number, count: number): number => {
+  'worklet';
+
+  return count > 1 ? index / (count - 1) : half;
+};
 
 // Everything one frame draws from.
 interface Field {
@@ -87,21 +90,31 @@ const targetAt = (field: Field, position: number): number => {
 
   return Math.min(
     1,
-    reachAt(field.voices, field.pose, position) + pulseHeight(field.pose, near),
+    reachAt(field.voices, field.pose, { position, time: field.time }) +
+      pulseHeight(field.pose, near),
   );
 };
 
-const springsOf = (sim: BandSim, field: Field): Spring[] =>
-  Array.from({ length: field.count }, (_, index) =>
+const springsOf = (sim: BandSim, field: Field): Spring[] => {
+  'worklet';
+
+  return Array.from({ length: field.count }, (_, index) =>
     springStep(
       sim.springs[index] ?? resting,
       targetAt(field, positionOf(index, field.count)),
       field.tick,
     ),
   );
+};
 
-const heightOf = ([lift]: Spring): number =>
-  Math.min(barReach, barWidth + Math.max(0, lift) * (barReach - barWidth));
+const heightOf = ([lift]: Spring): number => {
+  'worklet';
+
+  return Math.min(
+    barReach,
+    barWidth + Math.max(0, lift) * (barReach - barWidth),
+  );
+};
 
 const fillAt = (spring: Spring, index: number, field: Field): string => {
   'worklet';

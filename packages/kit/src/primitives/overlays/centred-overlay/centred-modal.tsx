@@ -1,5 +1,10 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
-import type { ReactElement, ReactNode } from 'react';
+import {
+  useRef,
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { type GestureResponderEvent, Pressable, View } from 'react-native';
 import {
   triggerChild,
@@ -13,7 +18,11 @@ import { CentredModalProvider } from './centred-modal-provider';
 import { useCentredModalState } from './centred-modal-state';
 import { CentredModalTitle } from './centred-modal-text';
 import { CentredOverlayScope } from './centred-overlay';
-import { dismissesOnBackdropPress, mayDismiss } from './dismissal';
+import {
+  beginsOnBackdrop,
+  dismissesOnBackdropPress,
+  mayDismiss,
+} from './dismissal';
 
 /*
  * The web's centred modal, on Radix Dialog (`@radix-ui/react-dialog`): Root `open`/`onOpenChange`, Trigger,
@@ -66,24 +75,35 @@ function Scrim(props: {
   dismissible?: boolean;
   children: ReactNode;
 }): ReactElement {
-  const onPress = useScrimPress(props.dismissible);
+  const press = useScrimPress(props.dismissible);
 
   return (
     <RadixDialog.Overlay>
-      <Pressable className={scrimClass} onPress={onPress}>
+      <Pressable className={scrimClass} {...press}>
         {props.children}
       </Pressable>
     </RadixDialog.Overlay>
   );
 }
 
-function useScrimPress(
-  dismissible: boolean | undefined,
-): (press: GestureResponderEvent) => void {
-  const { onOpenChange } = useCentredModalState();
+type ScrimPress = Pick<
+  ComponentProps<typeof Pressable>,
+  'onPointerDown' | 'onPress'
+>;
 
-  return (press) => {
-    if (dismissesOnBackdropPress(press, dismissible)) onOpenChange(false);
+// The press must begin and end on the bare scrim; every pointer down inside the modal, the card's included, is read.
+function useScrimPress(dismissible: boolean | undefined): ScrimPress {
+  const { onOpenChange } = useCentredModalState();
+  const began = useRef(false);
+
+  return {
+    onPointerDown: (pointer): void => {
+      began.current = beginsOnBackdrop(pointer);
+    },
+    onPress: (press: GestureResponderEvent): void => {
+      if (began.current && dismissesOnBackdropPress(press, dismissible))
+        onOpenChange(false);
+    },
   };
 }
 

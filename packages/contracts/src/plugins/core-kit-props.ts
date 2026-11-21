@@ -113,7 +113,9 @@ export const svgProps = z.object({
 });
 
 export const stackProps = layoutProps.extend({
-  direction: z.enum(['row', 'column']).describe('The direction of the layout.'),
+  direction: perSizeClass(z.enum(['row', 'column'])).describe(
+    'The direction of the layout, optionally by Size class.',
+  ),
 });
 
 export const emptyStateProps = z.object({

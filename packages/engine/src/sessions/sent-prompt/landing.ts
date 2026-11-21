@@ -33,20 +33,26 @@ const hasWork = ({
     promptQueue.pauseReason !== null,
   ].some(Boolean);
 
-// Appends under the id the Server chose, behind everything already queued; it never resumes a paused queue.
+/*
+ * Appends under the id the Server chose, behind everything already queued; it never resumes a paused queue. The
+ * Conversation's Prompt may instead join its own still waiting, and then lands under that one's id (ADR-0064).
+ */
 async function queuePrompt(
   sources: SendSources,
   session: SessionActorRef,
   { input, sender, id, signal }: Sending,
 ): Promise<PromptLanding> {
   sources.open.admit(signal);
+  let landedId = id;
+
   await sendQueueCommand(session, {
     command: { action: 'append', prompt: input.prompt },
     sender,
     queuedId: id,
+    landed: (queuedId) => (landedId = queuedId),
   });
 
-  return steerOrWait(session, { sender, id });
+  return steerOrWait(session, { sender, id: landedId });
 }
 
 // An idle Session starts a Turn with the Prompt; a busy or paused one queues it, and steers it when it can.

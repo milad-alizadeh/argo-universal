@@ -102,3 +102,11 @@ Owner amendment, 2026-11-20 (#2506, #2507). A Session started during a Conversat
 - **Stuck means waiting on the person.** A watched Session that waits on an Input request is said; there is no timer for a Turn that is merely slow, as Codex has none.
 - **What the Agent says outside a Turn is read whole.** A reply to a hand-back or a task notification can settle with no Turn and keep growing while the Agent streams it, so the voice hears it once it stops growing. A result is spoken; progress stays background and silent analysis stays silent, since no Turn end comes to speak them.
 - **Nothing new is drawn.** What the voice says is stored as the voice's transcript rows, as before.
+
+## A busy Session holds one waiting Prompt from its Conversation
+
+Owner amendment, 2026-11-21. While the Session's Turn ran and its Agent could not be steered, every request the voice handed over waited as a Queued Prompt of its own, so a voice that kept asking filled the queue, and each Prompt repeated the voice instruction because none had started yet.
+
+- **A request joins the Conversation's Prompt still waiting.** While a Queued Prompt from the Conversation waits, is not starting and no App holds it for editing, a new request from the Conversation is added to its end instead of queuing a Prompt of its own. One Turn takes them together, and every request in it follows that Turn. Once that Prompt starts, or while the person edits it, the next request queues as before. Prompts from anyone else never join.
+- **Only the first Prompt carries the voice instruction.** It is counted as given once a Prompt carrying it is sent, even if that Prompt is still queued; it is given again only when that Prompt is refused or leaves the queue without a Turn.
+- **The queue shows what the person asked.** A Queued Prompt's row is read without the voice instruction, and editing it keeps the instruction for the Agent.

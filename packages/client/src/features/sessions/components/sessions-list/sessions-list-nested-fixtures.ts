@@ -37,3 +37,13 @@ export const orphanSessions = {
   query: 'Review',
   sessions: [child],
 };
+
+const todoProgress = { done: 1, inProgress: 1, total: 4 };
+
+export const nestedTodos = {
+  ...nestedSessions,
+  sessions: nestedSessions.sessions.map((session) => ({
+    ...session,
+    plan: todoProgress,
+  })),
+};

@@ -2,8 +2,10 @@ import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createLiveHeaderReader } from '../../live-header';
 import type { SessionInput } from '../../session-data';
+import type { SessionActorRef } from '../../session-machine';
 import { readQueuedSessionRows } from '../../session-storage';
 import { latestTurnOf } from '../../stored-turn';
+import { createSubagentsReader } from '../../subagents/reader';
 import { isSubagentOf } from '../../subagents/subagent-of';
 import type { WriterChange } from '../observation';
 import type { SessionListState } from '../state';
@@ -41,8 +43,14 @@ class ListReader {
   private readonly parents = new SessionListParents();
   private readonly rejections = createRejectionCounter('sessions');
   private readonly readHeader: ReturnType<typeof createLiveHeaderReader>;
+  private readonly readSubagents: ReturnType<typeof createSubagentsReader>;
   public constructor(private readonly options: ListReaderOptions) {
     this.readHeader = createLiveHeaderReader(options);
+    this.readSubagents = createSubagentsReader({
+      database: options.database,
+      findWriter: options.writer,
+      findFeed: (id) => this.openSession(id)?.getSnapshot().children.feed,
+    });
   }
 
   public read(sessionIds: readonly string[] | undefined): SessionListState {
@@ -129,9 +137,11 @@ class ListReader {
 
   // The input an open Session was created with, which holds its first prompt.
   private inputOf(sessionId: string): SessionInput | undefined {
-    const open = this.options.sessions.getSnapshot().context.sessions;
+    return this.openSession(sessionId)?.getSnapshot().context.input;
+  }
 
-    return open[sessionId]?.getSnapshot().context.input;
+  private openSession(sessionId: string): SessionActorRef | undefined {
+    return this.options.sessions.getSnapshot().context.sessions[sessionId];
   }
 
   private project(
@@ -139,13 +149,21 @@ class ListReader {
     row: SessionRecord,
     { children, turns }: FamilyTurns,
   ): SessionListState[number] | undefined {
+    const agents = this.readSubagents(row.id, {
+      children: children.filter(
+        (child) => !input.rejectedSessions.has(child.id),
+      ),
+      latestTurn: (id) => latestTurnOf(turns, id),
+    });
+
     return readSessionInformation({
       ...input,
-      actor: this.options.sessions.getSnapshot().context.sessions[row.id],
+      actor: this.openSession(row.id),
       turns,
-      rows: children.filter(
-        (child): boolean => !input.rejectedSessions.has(child.id),
-      ),
+      subagents: {
+        total: agents.length,
+        running: agents.filter(({ state }) => state !== 'idle').length,
+      },
       row,
     });
   }

@@ -47,7 +47,10 @@ const landedMs = slowGithubMs + 1_000;
 // Real time for the attach to reach the Slot before its budget runs out.
 const attachedMs = 100;
 
-// Real time for Argo's change window (ADR-0060) to pass, so the Slot is asked again before its budget runs out.
+/*
+ * Real time for Argo's change window (ADR-0060) to pass, so the Slot is asked again before its budget runs out. Not
+ * `test.settled()`: that waits for Plugin calls in flight, and this test leaves the slow read in flight on purpose.
+ */
 const askedAgainMs = 600;
 
 it('keeps an Issue in its state colour while GitHub is slow to answer a read again', async () => {

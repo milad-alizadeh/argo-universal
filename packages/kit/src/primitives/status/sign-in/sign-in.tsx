@@ -63,7 +63,7 @@ function SignInTitles(props: SignInProps): React.JSX.Element {
       <Text accessibilityRole="heading" aria-level={2} role="heading">
         {props.title}
       </Text>
-      {props.description && (
+      {!!props.description && (
         <Text role="secondary" tone="muted">
           {props.description}
         </Text>

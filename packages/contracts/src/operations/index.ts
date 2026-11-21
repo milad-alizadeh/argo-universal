@@ -8,6 +8,7 @@ import { conversationSettingsOperations } from './conversation-settings';
 import { diagramOperations } from './diagram';
 import type { OperationTier, OperationPolicy } from './metadata';
 import { pluginOperations } from './plugins';
+import { projectScheduleOperations } from './project-schedules';
 import { projectOperations } from './projects';
 import { readerOperations } from './readers';
 import { registryOperations } from './registry';
@@ -51,6 +52,17 @@ export { readerOperations } from './readers';
 
 export { sessionOperations } from './sessions';
 
+export {
+  ProjectSchedule,
+  type ProjectScheduleHistoryEntry,
+  type ProjectScheduleHistoryPage,
+  ProjectScheduleCadence,
+  ProjectScheduleInput,
+  ProjectScheduleOccurrence,
+  ScheduleWeekday,
+  projectScheduleOperations,
+} from './project-schedules';
+
 export { ProjectAdded, projectOperations } from './projects';
 
 export { runOperations } from './runs';
@@ -83,6 +95,7 @@ export const operations = {
   ...pluginOperations,
   ...registryOperations,
   ...projectOperations,
+  ...projectScheduleOperations,
   ...runOperations,
   ...terminalOperations,
 } as const satisfies Record<string, OperationDefinition>;

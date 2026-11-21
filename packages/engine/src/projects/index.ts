@@ -1,4 +1,5 @@
 export {
+  isFolder,
   readProjectPath,
   readProjectPaths,
   readProjects,

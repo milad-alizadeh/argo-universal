@@ -79,9 +79,10 @@ export const ReadsEarlierWithWheel: Story = {
     for (let i = 0; i < 4; i++)
       scroll.dispatchEvent(new WheelEvent('wheel', fine));
     await expect(scroll.scrollTop).toBe(before - 121);
-    await expect(
-      await canvas.findByRole('button', { name: jumpLabel }),
-    ).toBeVisible();
+    // The button mounts before its entrance fade makes it visible.
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: jumpLabel })).toBeVisible(),
+    );
   },
 };
 

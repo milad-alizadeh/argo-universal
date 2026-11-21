@@ -26,6 +26,7 @@ export type FixStore = {
   enabledIn: (projectId: string) => Promise<FixRecord[]>;
   // Turns it on at once: clears the reason, starts the count again on this head, and lets current problems be prompted.
   enable: (link: Link, head: string) => Promise<void>;
+  enableFirst: (link: Link) => Promise<void>;
   disable: (link: Link) => Promise<void>;
   // Turns it off and remembers the commit it gave up on.
   stop: (link: Link, head: string) => Promise<void>;

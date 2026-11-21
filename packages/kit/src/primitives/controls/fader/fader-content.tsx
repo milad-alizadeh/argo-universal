@@ -22,15 +22,15 @@ interface InkClasses {
   secondary: string | undefined;
 }
 
-// The ink, and the same ink at reduced emphasis for the secondary role.
+// Surface ink overrides the text role's default colour, with reduced emphasis for secondary text.
 const inkClass = {
-  dark: { text: 'text-ink-on-light', secondary: 'text-ink-on-light/70' },
-  light: { text: 'text-ink-on-dark', secondary: 'text-ink-on-dark/70' },
+  dark: { text: 'text-ink-on-light!', secondary: 'text-ink-on-light/70!' },
+  light: { text: 'text-ink-on-dark!', secondary: 'text-ink-on-dark/70!' },
 } as const satisfies Record<Ink, InkClasses>;
 
 const accentInk = {
-  text: 'text-primary-foreground',
-  secondary: 'text-primary-foreground/70',
+  text: 'text-primary-foreground!',
+  secondary: 'text-primary-foreground/70!',
 };
 
 // Over the unfilled part the text keeps its normal colours.

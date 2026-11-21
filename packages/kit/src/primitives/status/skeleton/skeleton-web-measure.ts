@@ -17,7 +17,7 @@ type Report = (placeholders: SkeletonPlaceholder[]) => void;
 
 interface Scheduler {
   schedule: () => void;
-  cancel: () => void;
+  dispose: () => void;
 }
 
 interface Observers {
@@ -76,13 +76,19 @@ const isOutsideOverlay = (record: MutationRecord): boolean => {
 
 function createScheduler(run: () => void): Scheduler {
   let frame = 0;
+  let disposed = false;
 
   return {
     schedule: (): void => {
+      if (disposed) return;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(run);
     },
-    cancel: (): void => cancelAnimationFrame(frame),
+    dispose: (): void => {
+      // The fonts-ready promise can still call schedule after cleanup.
+      disposed = true;
+      cancelAnimationFrame(frame);
+    },
   };
 }
 
@@ -117,7 +123,7 @@ function watchSkeleton(root: Element, report: Report): () => void {
   void document.fonts.ready.then(scheduler.schedule);
 
   return (): void => {
-    scheduler.cancel();
+    scheduler.dispose();
     observers.disconnect();
     clearPage(root);
     root.removeAttribute(rootAttribute);

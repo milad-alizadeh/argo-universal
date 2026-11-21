@@ -34,7 +34,12 @@ export const mergeOf = async (run: Journey): Promise<AutomationState> =>
 
 export const set = (
   run: Journey,
-  params: { reference?: string; kind: string; on: boolean },
+  params: {
+    reference?: string;
+    kind: string;
+    on: boolean;
+    firstEnable?: boolean;
+  },
   as: Caller = caller,
 ): ReturnType<Journey['test']['operations']['run']> =>
   run.test.operations.run({

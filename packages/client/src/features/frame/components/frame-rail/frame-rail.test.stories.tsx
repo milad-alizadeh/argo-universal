@@ -37,7 +37,7 @@ const sidebarToggle = /^(Hide|Show) sidebar$/;
 export const ListsAndPicksPluginItems: Story = {
   play: async ({ args, canvas, userEvent }) => {
     const tiles = canvas.getAllByRole('button', {
-      name: /^(Sessions|Settings|Issues|Example)$/,
+      name: /^(Sessions|Scheduled|Settings|Issues|Example)$/,
     });
 
     await expect(tiles).toHaveLength(pluginNavigationItems.length);

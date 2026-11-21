@@ -18,3 +18,5 @@ Git icons are small SVG components, one per icon, drawn the same on every platfo
 The Queued Prompt drag grip also uses this renderer (owner, 2026-11-14): six dots in two columns, matching the supplied reference on every platform. It is a content-lane icon, not a native menu or toolbar icon. The existing SF reorder arrows remain available for other reorder actions.
 
 Amended by [ADR-0058](0058-plugins-may-ship-a-monochrome-svg-icon.md): a Plugin's own icon is a third kind of drawing, its sanitized one-colour markup, drawn like these components in `currentColor` and, like them, drawing no image where a native surface holds no React Native view.
+
+The iOS icon button hosts its SVG glyph (owner, 2026-11-21): SwiftUI's Button draws a label view, and Expo UI's `RNHostView` puts a React Native view in it, so an icon button whose icon is an SVG icon draws that icon in its circle instead of its spoken name. The hosted glyph takes no touches, so the Button presses once, and VoiceOver hears the Button's spoken name. Native menu rows and system toolbar buttons still draw no image for an SVG icon.

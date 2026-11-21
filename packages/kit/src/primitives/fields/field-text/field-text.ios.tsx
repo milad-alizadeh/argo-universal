@@ -1,5 +1,6 @@
 import {
-  HStack,
+  LabeledContent,
+  VStack,
   SecureField,
   TextField,
   type TextFieldProps,
@@ -12,12 +13,9 @@ import {
   accessibilityHint,
   autocorrectionDisabled,
   textInputAutocapitalization,
-  frame,
   keyboardType,
-  lineLimit,
   multilineTextAlignment,
   onSubmit,
-  truncationMode,
 } from '@expo/ui/swift-ui/modifiers';
 import { type ReactElement, type RefObject, useEffect, useRef } from 'react';
 import { RowTitle } from '#primitives/fields/field-row';
@@ -26,35 +24,40 @@ import { fieldTextTone } from './field-text-tone';
 
 type SwiftKeyboard = Parameters<typeof keyboardType>[0];
 
-/*
- * A stock Settings form row (Settings > VPN > Add Configuration): the title, then the input, its text
- * leading-aligned. The title takes a fixed width and truncates on one line, so the inputs of a section's rows
- * start in one column.
- */
+type FieldAlignment = 'leading' | 'trailing';
+
 export function FieldText(props: FieldTextProps): ReactElement {
-  const field = useFieldProps(props);
+  const alignment = props.hideTitle
+    ? 'leading'
+    : (props.iosValuePlacement ?? 'leading');
+
+  const field = useFieldProps(props, alignment);
+
+  const input = props.secure ? (
+    <SecureField {...field} />
+  ) : (
+    <TextField {...field} />
+  );
+
+  const title = props.hideTitle ? null : (
+    <RowTitle {...props} tone={fieldTextTone(props.error)} />
+  );
+
+  if (alignment === 'trailing')
+    return <LabeledContent label={title}>{input}</LabeledContent>;
 
   return (
-    <HStack spacing={8}>
-      {props.hideTitle ? null : (
-        <HStack modifiers={titleColumn}>
-          <RowTitle {...props} tone={fieldTextTone(props.error)} />
-        </HStack>
-      )}
-      {props.secure ? <SecureField {...field} /> : <TextField {...field} />}
-    </HStack>
+    <VStack alignment="leading" spacing={8}>
+      {title}
+      {input}
+    </VStack>
   );
 }
 
-const titleWidth = 100;
-
-const titleColumn = [
-  frame({ width: titleWidth, alignment: 'leading' }),
-  lineLimit(1),
-  truncationMode('tail'),
-];
-
-function useFieldProps(props: FieldTextProps): TextFieldProps {
+function useFieldProps(
+  props: FieldTextProps,
+  alignment: FieldAlignment,
+): TextFieldProps {
   const text = useSwiftFieldText(props.value);
   const ref = useRef<TextFieldRef>(null);
 
@@ -66,7 +69,7 @@ function useFieldProps(props: FieldTextProps): TextFieldProps {
     placeholder: props.placeholder,
     onTextChange: props.onChangeText,
     onFocusChange: (focused) => focusChanged(props, ref, focused),
-    modifiers: modifiers(props),
+    modifiers: modifiers(props, alignment),
   };
 }
 
@@ -88,9 +91,12 @@ function selectAll(
     void ref.current?.setSelection(0, props.value.length);
 }
 
-function modifiers(props: FieldTextProps): TextFieldProps['modifiers'] {
+function modifiers(
+  props: FieldTextProps,
+  alignment: FieldAlignment,
+): TextFieldProps['modifiers'] {
   return [
-    multilineTextAlignment('leading'),
+    multilineTextAlignment(alignment),
     accessibilityLabel(props.title),
     ...errorHint(props.error),
     ...secureModifiers(props.secure),

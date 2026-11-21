@@ -56,6 +56,12 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
+  if (deps.sessionCommandSignal)
+    sessions.startDelegatedResults(
+      deps.sessionCommandSignal,
+      deps.logSessionResult ?? ((): void => {}),
+    );
+
   attachSessionActs(deps, sessions);
   attachConversation(deps, sessions);
 

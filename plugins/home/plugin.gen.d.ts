@@ -52,5 +52,49 @@ declare module '@argo/plugin-kit' {
         }
       }
     };
+    listHousehold: {
+      "params": {}
+    };
+    listScenes: {
+      "params": {
+        "roomId": {
+          "type": "string",
+          "required": true
+        },
+        "search": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        }
+      }
+    };
+    setColour: {
+      "params": {
+        "id": {
+          "type": "string",
+          "required": true
+        },
+        "hue": {
+          "type": "number",
+          "required": true
+        },
+        "saturation": {
+          "type": "number",
+          "required": true
+        }
+      }
+    };
+    recallScene: {
+      "params": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      }
+    };
   }
 }

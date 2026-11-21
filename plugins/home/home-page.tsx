@@ -4,23 +4,26 @@ import {
   EmptyState,
   ScrollView,
   Screen,
+  SignInRequired,
   Stack,
+  type Argo,
   type GatedPage,
-  type PageState,
+  type NamedQuery,
   type PageTo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { householdSections } from './home-cards';
+import { householdSections, type HomeState } from './home-cards';
+import { homeEditor } from './home-editor';
 import { homeWords } from './home-words';
-import { pollMs } from './hue';
-import { homeData, type HueCalls } from './hue-client';
+import { hueHost, pollMs } from './hue';
+import { homeData } from './hue-client';
 import type { HomeData, Household } from './hue-model';
 
 /*
  * The Home page: the household's lights, read again every ten seconds while it is on screen. Before the Bridge is
  * connected it offers to connect it, and a failed read says so with a way to try again.
  */
-const connect = (to: PageTo): JSX.Element => (
+const connect = (to: PageTo<HomeState>): JSX.Element => (
   <Stack direction="column" gap={4}>
     <EmptyState
       icon="lightbulb"
@@ -34,7 +37,7 @@ const connect = (to: PageTo): JSX.Element => (
   </Stack>
 );
 
-const failed = (reason: string, to: PageTo): JSX.Element => (
+const failed = (reason: string, to: PageTo<HomeState>): JSX.Element => (
   <Stack direction="column" gap={4}>
     <Callout tone="danger" title={homeWords.failed} description={reason} />
     <Button label={homeWords.retry} onPress={to.set({})} />
@@ -52,29 +55,54 @@ const empty = (
 const isEmpty = ({ rooms, others }: Household): boolean =>
   rooms.length === 0 && others.length === 0;
 
-const lights = (household: Household, to: PageTo): JSX.Element =>
+const lights = (
+  household: Household,
+  state: HomeState,
+  to: PageTo<HomeState>,
+): JSX.Element =>
   isEmpty(household) ? (
     empty
   ) : (
-    <ScrollView>
-      <Stack direction="column" gap={6}>
-        {householdSections(household, to)}
-      </Stack>
-    </ScrollView>
+    <Stack
+      direction={{ compact: 'column', medium: 'column', wide: 'row' }}
+      align="stretch"
+    >
+      <ScrollView>
+        <Stack direction="column" gap={6}>
+          {householdSections(household, state, to)}
+        </Stack>
+      </ScrollView>
+      {homeEditor(household, state, to)}
+    </Stack>
   );
 
-function body(data: HomeData, to: PageTo): JSX.Element {
+function body(
+  data: HomeData,
+  state: HomeState,
+  to: PageTo<HomeState>,
+): JSX.Element {
   if (data.kind === 'connect') return connect(to);
 
   return data.kind === 'failed'
     ? failed(data.reason, to)
-    : lights(data.household, to);
+    : lights(data.household, state, to);
 }
 
-export const homePage = (argo: HueCalls): GatedPage<PageState, HomeData> => ({
+export const defineHouseholdQuery = (argo: Argo): NamedQuery<HomeData> =>
+  argo.queries.define('household', () => homeData(argo))({});
+
+export const homePage = (
+  argo: Argo,
+  household: NamedQuery<HomeData>,
+): GatedPage<HomeState, HomeData> => ({
   every: pollMs,
-  load: () => homeData(argo),
-  render: (data, to) => (
-    <Screen title={homeWords.title}>{body(data, to)}</Screen>
+  state: { editor: '', editorOpen: false, sceneSearch: '' },
+  load: async ({ read }) => {
+    if (!(await argo.accounts.get(hueHost))) throw new SignInRequired();
+
+    return read(household);
+  },
+  render: (data, to, { state }) => (
+    <Screen title={homeWords.title}>{body(data, state, to)}</Screen>
   ),
 });

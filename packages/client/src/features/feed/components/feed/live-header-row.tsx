@@ -7,7 +7,10 @@ import {
 } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
-import Animated, { FadeOut } from 'react-native-reanimated';
+import Animated, {
+  FadeOut,
+  LayoutAnimationConfig,
+} from 'react-native-reanimated';
 import { LiveHeader } from '../live-header/live-header';
 import type { LiveHeaderEntry } from './feed-entry';
 
@@ -51,9 +54,16 @@ export function LiveHeaderRow(props: Props): React.JSX.Element {
   const [height] = useContext(MeasuredHeight);
   const { closing } = props.entry;
 
+  // Fade into reserved space only. If the whole row leaves, another row can take its place.
   return (
-    <View style={closing ? { height } : undefined} aria-hidden={closing}>
-      {!closing && <WorkingLine {...props} />}
-    </View>
+    <LayoutAnimationConfig skipExiting>
+      <View
+        collapsable={false}
+        style={closing ? { height } : undefined}
+        aria-hidden={closing}
+      >
+        {!closing && <WorkingLine {...props} />}
+      </View>
+    </LayoutAnimationConfig>
   );
 }

@@ -22,7 +22,12 @@ export function SheetTitleRow(props: TitleRowProps): ReactElement {
         <TopAppBar.Title>
           <Title title={props.title} />
         </TopAppBar.Title>
-        <TopAppBar.Actions>{trailing(props.action)}</TopAppBar.Actions>
+        <TopAppBar.Actions>
+          {trailing(props.action)}
+          {props.closeLabel && props.onClose && (
+            <TextAction label={props.closeLabel} onPress={props.onClose} />
+          )}
+        </TopAppBar.Actions>
       </TopAppBar>
     </Host>
   );
@@ -57,7 +62,7 @@ function LeadingButton(props: TitleRowProps): ReactElement | null {
       />
     );
 
-  if (!props.onClose) return null;
+  if (!props.onClose || props.closeLabel) return null;
 
   return (
     <HeaderIconButton icon="close" label="Close" onPress={props.onClose} />

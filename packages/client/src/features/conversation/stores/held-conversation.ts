@@ -13,7 +13,7 @@ import type { ConversationDeviceChoice } from './conversation-device-choice';
 
 // The chosen microphone, or the system's when the chosen one is gone, so a missing device never fails the call.
 export const openChosen = (
-  environment: ConversationEnvironment,
+  environment: Pick<ConversationEnvironment, 'openMicrophone'>,
   device: string | null,
 ): Promise<Microphone> =>
   environment
@@ -34,7 +34,7 @@ export interface HeldSound {
 }
 
 // What one call holds until it is released: the microphone, the peer and the voice's playback.
-export class HeldConversation {
+export class HeldConversation<Stream = MediaStream> {
   public playback: VoicePlayback | undefined;
   private speakerMuted = false;
   private microphoneMuted = false;
@@ -42,7 +42,7 @@ export class HeldConversation {
 
   public constructor(
     private microphone: Microphone,
-    public readonly peer: VoicePeer,
+    public readonly peer: VoicePeer<Stream>,
     private sound: HeldSound,
   ) {
     microphone.setGain(sound.gain);
@@ -81,7 +81,7 @@ export class HeldConversation {
   public async follow(
     previous: ConversationDeviceChoice,
     choice: ConversationDeviceChoice,
-    environment: ConversationEnvironment,
+    environment: Pick<ConversationEnvironment, 'openMicrophone'>,
   ): Promise<void> {
     if (choice.speaker !== previous.speaker) this.moveSpeaker(choice.speaker);
 
@@ -95,7 +95,7 @@ export class HeldConversation {
 
   // When the new microphone cannot open, the call keeps the one it has.
   private async moveMicrophone(
-    environment: ConversationEnvironment,
+    environment: Pick<ConversationEnvironment, 'openMicrophone'>,
     device: string | null,
   ): Promise<void> {
     const microphone = await environment

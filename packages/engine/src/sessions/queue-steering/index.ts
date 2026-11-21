@@ -1,6 +1,8 @@
 import { steerAcpSession, type AcpSessionLease } from '../../agents';
 import { promptStorage } from '../acp-operations';
 import { readAcpPromptContent } from '../acp/prompts/prompt-content';
+import { withConversationContext } from '../conversation-prompt-context';
+import { requireNativeCommandAuthority } from '../prompt-authorization';
 import { sendSessionCommand } from '../session-command';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
@@ -50,7 +52,18 @@ async function inject(
 ): Promise<void> {
   const context = session.getSnapshot().context;
   const lease = requireLease(context);
-  const prompt = await readSteeringPrompt(context, steering);
+  requireNativeCommandAuthority(steering.prompt, steering.sender);
+  const blocks = await readSteeringPrompt(context, steering);
+  const { database, writer } = context.input;
+
+  const prompt = withConversationContext(
+    {
+      database,
+      findWriter: () => writer,
+      findFeed: () => session.getSnapshot().children.feed,
+    },
+    { sessionId: context.sessionId, sender: steering.sender, prompt: blocks },
+  );
 
   await steerAcpSession(lease, prompt);
 }

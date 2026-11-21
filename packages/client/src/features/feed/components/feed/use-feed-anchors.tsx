@@ -25,7 +25,7 @@ const visibleContentPosition = (
 
 type AnchorInput = Pick<
   FeedScrollProps,
-  'list' | 'atEnd' | 'turnRunning' | 'opensAtStart'
+  'list' | 'atEnd' | 'turnRunning' | 'opensAtStart' | 'conversationActive'
 >;
 
 type FeedAnchors = Pick<
@@ -56,15 +56,26 @@ const followsFeedEnd = (enabled: boolean, atEnd: boolean): boolean =>
 export function useFeedAnchors(input: AnchorInput): FeedAnchors {
   const shown = useScreenFocused();
   const enabled = shown && !input.opensAtStart;
-  const animationEnabled = enabled ? input.turnRunning : false;
-  const motion = useFeedEndMotion(input.list, animationEnabled);
+  const animatesTurn = enabled && input.turnRunning;
+
+  const followsLiveRows =
+    Platform.OS === 'ios' &&
+    enabled &&
+    (animatesTurn || input.conversationActive === true);
+
+  const motion = useFeedEndMotion(input.list, animatesTurn, followsLiveRows);
+
   const follows = followsFeedEnd(enabled, input.atEnd);
 
   return {
     maintainScrollAtEnd: endMotion(input.opensAtStart, shown, motion),
     maintainVisibleContentPosition: visibleContentPosition(follows),
     alignItemsAtEnd: false,
-    renderScrollComponent: feedScrollRenderer(follows),
+    /*
+     * The native footer pin follows the estimated height of a new row before it is measured.
+     * Let Legend alone animate to the measured end during live updates.
+     */
+    renderScrollComponent: feedScrollRenderer(follows && !followsLiveRows),
     endContent: <FeedEnd />,
   };
 }

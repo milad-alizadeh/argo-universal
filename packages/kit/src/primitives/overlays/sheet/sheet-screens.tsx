@@ -22,6 +22,7 @@ import type {
   SheetNavigation,
   SheetScreenAction,
   SheetScreenProps,
+  SheetScreenSearch,
   SheetProps,
 } from './sheet-props';
 import { popScreen, useLatest, type SheetReports } from './sheet-state';
@@ -32,6 +33,8 @@ export function SheetScreen(props: SheetScreenProps): ReactNode {
 }
 
 export interface SheetScreenEntry {
+  closeLabel?: string;
+  search?: SheetScreenSearch;
   name: string;
   title?: string;
   action?: SheetScreenAction;
@@ -51,7 +54,9 @@ function sheetScreens(children: ReactNode): SheetScreenEntry[] {
     .map((page) => ({
       name: page.props.name,
       title: page.props.title,
+      closeLabel: page.props.closeLabel,
       action: page.props.action,
+      search: page.props.search,
       keepsHeaderInset: page.props.keepsHeaderInset,
       placeholder: page.props.placeholder,
       onExit: page.props.onExit,

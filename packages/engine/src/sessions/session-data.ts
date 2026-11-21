@@ -7,6 +7,7 @@ export type SessionCreationInput = SessionNewInput & {
   projectPath: string;
   turnId: string;
   startedBySessionId?: string;
+  rememberCheckout?: boolean;
 };
 
 export type SessionInput = {

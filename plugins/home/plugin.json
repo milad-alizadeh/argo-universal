@@ -2,12 +2,28 @@
   "id": "home",
   "name": "Home",
   "version": "0.0.1",
-  "engines": { "argo": ">=0.0.0 <1.0.0" },
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
   "main": "index.tsx",
-  "icon": { "sf": "lightbulb", "material": "lightbulb" },
+  "icon": {
+    "sf": "lightbulb",
+    "material": "lightbulb"
+  },
   "contributes": {
-    "nav": [{ "id": "home", "title": "Home", "path": "/" }],
-    "accounts": [{ "host": "api.meethue.com", "page": "/sign-in" }],
+    "nav": [
+      {
+        "id": "home",
+        "title": "Home",
+        "path": "/"
+      }
+    ],
+    "accounts": [
+      {
+        "host": "api.meethue.com",
+        "page": "/sign-in"
+      }
+    ],
     "settings": [
       {
         "key": "hue-client-id",
@@ -97,6 +113,81 @@
           "brightness": {
             "type": "number",
             "description": "The brightness from 1 to 100.",
+            "required": true
+          }
+        }
+      },
+      {
+        "name": "listHousehold",
+        "label": "List the household's lights",
+        "description": "Lists the Hue rooms with their lights: each room's All lights level, and each light's power, brightness, colour (hue 0-359, saturation 0-100) and whether the Bridge can reach it, then the lights in no room.",
+        "tier": "read",
+        "policy": "allow",
+        "keywords": ["hue", "lights", "rooms", "household", "list", "colour"]
+      },
+      {
+        "name": "listScenes",
+        "label": "List a room's scenes",
+        "description": "Lists the scenes of one Hue room: each one's id, name, gradient colours as hex and whether it is the active scene. Optionally narrowed by a search of the name and paged.",
+        "tier": "read",
+        "policy": "allow",
+        "keywords": ["hue", "scenes", "room", "list"],
+        "params": {
+          "roomId": {
+            "type": "string",
+            "description": "The Hue id of the room, from listHousehold.",
+            "required": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Only scenes whose name contains this text, ignoring case."
+          },
+          "limit": {
+            "type": "number",
+            "description": "The most scenes to answer, from 1 to 100. Default 25."
+          },
+          "offset": {
+            "type": "number",
+            "description": "How many scenes to skip, for the next page. Default 0."
+          }
+        }
+      },
+      {
+        "name": "setColour",
+        "label": "Set a light's colour",
+        "description": "Sets the colour of one Hue light from a hue and a saturation, kept within the colours that light can show. A white-only or unreachable light is refused.",
+        "tier": "act",
+        "policy": "allow",
+        "keywords": ["hue", "light", "colour", "color", "hue", "saturation"],
+        "params": {
+          "id": {
+            "type": "string",
+            "description": "The Hue id of the light.",
+            "required": true
+          },
+          "hue": {
+            "type": "number",
+            "description": "The hue from 0 to 359 degrees.",
+            "required": true
+          },
+          "saturation": {
+            "type": "number",
+            "description": "The saturation from 0 to 100.",
+            "required": true
+          }
+        }
+      },
+      {
+        "name": "recallScene",
+        "label": "Recall a room's scene",
+        "description": "Recalls a Hue scene so its room takes its lights and colours. The active scene shows once Hue confirms.",
+        "tier": "act",
+        "policy": "allow",
+        "keywords": ["hue", "scene", "room", "recall", "activate"],
+        "params": {
+          "id": {
+            "type": "string",
+            "description": "The Hue id of the scene, from listScenes.",
             "required": true
           }
         }

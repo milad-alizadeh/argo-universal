@@ -40,6 +40,7 @@ export {
   type MenuRows,
   type NativeMenuItem,
   nativeMenuItems,
+  nativeMenuSections,
 } from './menu-native-items';
 
 export { menuActionTitle } from './menu-props';

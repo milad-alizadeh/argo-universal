@@ -1,14 +1,12 @@
-import { type FeedProps, withPartialTranscripts } from '#features/feed';
+import { type FeedProps } from '#features/feed';
 import type { OpenSession } from './session-composer-props';
 import type { StoppedTurn } from './stopped-turn';
 
-// The Feed's items, with what is being said on a Conversation drawn last.
+// Leave out the ending drawn above the Composer.
 export const feedItems = (
   open: OpenSession,
   stoppedEnding: StoppedTurn['ending'] | undefined,
 ): FeedProps['items'] =>
-  withPartialTranscripts(
-    open.view.items.filter((item) => item !== stoppedEnding),
-    open.partials ?? [],
-    open.sessionId,
-  );
+  stoppedEnding
+    ? open.view.items.filter((item) => item !== stoppedEnding)
+    : open.view.items;

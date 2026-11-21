@@ -49,9 +49,12 @@ describe('a request for work while a Turn runs', () => {
     await work.start();
     work.provider.call.requestWork('r1', longJob);
     await expect.poll(() => work.prompts.length).toBe(2);
+    work.provider.call.personSays('Use the desktop header on both.');
     work.provider.call.requestWork('r2', extra);
 
-    expect(JSON.stringify(await work.steered)).toContain(extra);
+    const steered = JSON.stringify(await work.steered);
+    expect(steered).toContain(extra);
+    expect(steered).toContain('Use the desktop header on both.');
     await expect
       .poll(() => work.provider.call.sent)
       .toContainEqual(

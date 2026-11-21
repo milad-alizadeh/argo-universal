@@ -16,7 +16,11 @@ function operationParams<Schema extends z.ZodType>(
     return schema.parse(params);
   } catch (cause) {
     if (!(cause instanceof z.ZodError)) throw cause;
-    throw new TRPCError({ code: 'BAD_REQUEST', message: cause.message, cause });
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: z.prettifyError(cause),
+      cause,
+    });
   }
 }
 

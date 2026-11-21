@@ -29,10 +29,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Listening: the person's voice lights the bars from the left, in orange, and the colour front rests at the left.
 export const Listening: Story = {};
 
-// Talking: the Agent's voice lights the bars from the right, in blue. Coming from listening, the colour sweeps across in about 0.4 s.
 export const Talking: Story = {
   args: { call: { ...connected, state: 'talking' }, elapsed: '2:51' },
 };

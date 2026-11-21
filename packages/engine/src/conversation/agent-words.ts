@@ -11,6 +11,9 @@ type TurnMemory = { resultSent: boolean; last: string | null };
 
 const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 
+// A question can sit inside a result or a Markdown heading. A question mark inside a URL is not one.
+const questionMark = /\?(?=$|[\s*_'"”’])/u;
+
 // The sections of an Agent message the voice may hear: all but silent analysis.
 const sayable = (text: string): VoiceMessage[] =>
   readConversationSections(text).filter(({ kind }) => kind !== 'analysis');
@@ -26,19 +29,32 @@ export type Said = Extract<
  */
 export class AgentWords {
   private turn = freshTurn();
+  private awaitingAnswer = false;
 
   public constructor(private readonly speak: (say: VoiceSay) => void) {}
 
   public said(happening: Said): void {
     if (happening.type === 'agent.message')
       this.agentSaid(happening.text, happening.turnless);
-    else this.tell(relayWords.typed(happening.text), 'background');
+    else {
+      this.takeQuestion();
+      this.tell(relayWords.typed(happening.text), 'background');
+    }
+  }
+
+  // An utterance can answer the last question once.
+  public takeQuestion(): boolean {
+    const asked = this.awaitingAnswer;
+
+    this.awaitingAnswer = false;
+
+    return asked;
   }
 
   public tell(
     text: string,
     delivery: VoiceDelivery,
-    kind: 'tell' | 'result' = 'tell',
+    kind: 'tell' | 'result' | 'permission' = 'tell',
   ): void {
     for (const piece of inPieces(text))
       this.speak({ kind, text: piece, delivery });
@@ -53,7 +69,9 @@ export class AgentWords {
   }
 
   // The Agent's answer, for the voice to read out.
-  private handOver(text: string): void {
+  private handOver(text: string, followsResult = false): void {
+    this.awaitingAnswer =
+      questionMark.test(text) || (followsResult && this.awaitingAnswer);
     this.tell(text, 'speak', 'result');
   }
 
@@ -62,17 +80,16 @@ export class AgentWords {
    * progress at, so only its result is spoken (#2506).
    */
   private agentSaid(text: string, turnless: boolean): void {
+    let followsResult = !turnless && this.turn.resultSent;
+
     for (const section of sayable(text)) {
-      this.pass(section);
+      if (section.kind === 'result') {
+        this.handOver(section.body, followsResult);
+        followsResult = true;
+      } else this.tell(section.body, 'background');
 
       if (!turnless) this.remember(section);
     }
-  }
-
-  // A result is read out; progress is background.
-  private pass({ kind, body }: VoiceMessage): void {
-    if (kind === 'result') this.handOver(body);
-    else this.tell(body, 'background');
   }
 
   private remember({ kind, body }: VoiceMessage): void {

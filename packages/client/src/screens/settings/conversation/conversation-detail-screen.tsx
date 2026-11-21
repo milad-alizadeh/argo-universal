@@ -5,7 +5,7 @@ import {
 import type * as React from 'react';
 import {
   useDeviceMeters,
-  useConversationConnection,
+  usePageConversationConnection,
   useConversationDevices,
   type DeviceMetersState,
 } from '#features/conversation';
@@ -21,7 +21,7 @@ type DeviceRows = Pick<ConversationDetailViewState, 'adjustsGain'>;
 
 // Where this App carries a Conversation's sound it sets the microphone's gain; elsewhere the row does not show.
 function useDeviceRows(): DeviceRows {
-  const carries = useConversationConnection() !== null;
+  const carries = usePageConversationConnection() !== null;
 
   return carries ? { adjustsGain: true } : {};
 }

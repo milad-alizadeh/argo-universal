@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import type { ConversationProviderEvent } from '../provider';
+import type { ConversationProviderEvent, VoiceReplay } from '../provider';
 import { CallGone } from './gpt-live-requests';
 import { textOfFrame } from './link-events';
 import { keepAlive } from './link-keepalive';
@@ -41,6 +41,8 @@ const messageOf = (error: Error | string): string =>
  * no longer has the call, which ends the call at once. A link that stops answering pings is dropped and counts as lost.
  */
 export class ControlLink {
+  // Only frames that could not be sent are kept, for this provider call's next link.
+  private readonly unsentFrames: string[] = [];
   private lostTimer: ReturnType<typeof setTimeout> | undefined;
   // A join is under way; the link has been down past `lostLinkMs`.
   private joining = false;
@@ -55,22 +57,24 @@ export class ControlLink {
     this.attach(link);
   }
 
-  public send(text: string): void {
+  public send(text: string, replay: VoiceReplay): void {
     if (this.link.readyState === WebSocket.OPEN) this.link.send(text);
+    else if (replay === 'rejoin') this.unsentFrames.push(text);
   }
 
   // Anything already sent leaves before the closing frame does.
   public close(): void {
     clearTimeout(this.lostTimer);
+    this.unsentFrames.length = 0;
     this.stopKeepalive();
     this.link.close();
   }
 
   private attach(link: WebSocket): void {
     this.link = link;
-    link.on('message', (data, isBinary) =>
-      this.host.frame(textOfFrame(data, isBinary)),
-    );
+    link.on('message', (data, isBinary) => {
+      if (this.holds(link)) this.host.frame(textOfFrame(data, isBinary));
+    });
     link.on('close', (code, reason) =>
       this.onClose(link, closeNote(code, reason)),
     );
@@ -141,6 +145,8 @@ export class ControlLink {
     this.lostTimer = undefined;
     this.overdue = false;
     this.attach(link);
+
+    for (const text of this.unsentFrames.splice(0)) this.send(text, 'rejoin');
     this.host.event({ type: 'status', status: 'connected' });
   }
 }

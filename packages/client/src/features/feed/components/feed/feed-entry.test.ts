@@ -23,6 +23,15 @@ const openGroup: FeedViewItem = {
   items: [],
 };
 
+const delegatedRequest: FeedViewItem = {
+  type: 'delegated',
+  id: 'delegated-request',
+  sourceSessionId: 'started-session',
+  title: 'Reviewer',
+  kind: 'permission',
+  onOpen: () => {},
+};
+
 describe('withLiveHeader', () => {
   it('gives the newest open group the live header as its title', () => {
     expect(withLiveHeader([openGroup], thought)).toEqual([
@@ -74,6 +83,13 @@ describe('withLiveHeader', () => {
     ]);
   });
 
+  it('keeps delegated requests in the Feed after the Turn’s live header', () => {
+    expect(withLiveHeader([openGroup, delegatedRequest], thought)).toEqual([
+      { ...openGroup, liveHeader: thought },
+      delegatedRequest,
+    ]);
+  });
+
   it('leaves an open group alone without a live header', () => {
     expect(withLiveHeader([openGroup], null)).toEqual([openGroup]);
   });
@@ -100,6 +116,10 @@ const message = (
 describe('isStreamingEntry', () => {
   it('holds for an open message at the end of the Feed', () => {
     expect(isStreamingEntry(message('open'))).toBe(true);
+  });
+
+  it('keeps the caret when a delegated request follows the writing Agent', () => {
+    expect(isStreamingEntry(message('open'), delegatedRequest)).toBe(true);
   });
 
   it('holds for an open message with only the live header after it', () => {

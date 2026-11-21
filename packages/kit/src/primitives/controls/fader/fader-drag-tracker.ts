@@ -3,7 +3,7 @@ import { dragged, type FaderRange } from './fader-math';
 import type { FaderProps } from './fader-props';
 
 // A touch that has moved this far along the surface is a drag, not a tap on its content.
-const slop = 6;
+export const faderDragThreshold = 6;
 
 export interface DragSource {
   orientation: NonNullable<FaderProps['orientation']>;
@@ -35,7 +35,7 @@ const crossOf = (
 ): number => (orientation === 'vertical' ? moved.dx : moved.dy);
 
 const isAlong = (main: number, cross: number): boolean =>
-  Math.abs(main) > slop && Math.abs(main) > Math.abs(cross);
+  Math.abs(main) > faderDragThreshold && Math.abs(main) > Math.abs(cross);
 
 // Whether a finger that has moved so far is dragging along the surface rather than across it.
 export const along = (moved: Moved, source: DragSource): boolean =>
@@ -74,11 +74,6 @@ export class DragTracker {
     this.source = source;
   }
 
-  // The native responder asks first, claims the touch, then reports each move.
-  public takes(moved: Moved): boolean {
-    return along(moved, this.source);
-  }
-
   public begin(): void {
     this.from = this.source.value;
   }
@@ -115,7 +110,7 @@ export class DragTracker {
   }
 
   private begins(moved: Moved): boolean {
-    const began = !this.dragging && this.takes(moved);
+    const began = !this.dragging && along(moved, this.source);
 
     this.dragging = this.dragging || began;
 

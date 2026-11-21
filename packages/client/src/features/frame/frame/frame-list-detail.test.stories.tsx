@@ -24,6 +24,7 @@ const section = pluginSectionId('example', 'example');
 
 const lists: SectionLists = {
   sessions: { list: null },
+  scheduled: { list: null },
   settings: { list: null },
 };
 

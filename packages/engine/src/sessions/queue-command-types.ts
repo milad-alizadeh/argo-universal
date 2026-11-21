@@ -33,6 +33,8 @@ export type QueueSessionCommand =
       sender?: SentPromptSender;
       // The id a Plugin's appended Prompt takes, chosen by the Server so the Plugin can withdraw it.
       queuedId?: string;
+      // Told the id of the row an append landed in: its own, or the Conversation's waiting Prompt it joined (ADR-0064).
+      landed?: (queuedId: string) => void;
       // Stored atomically with admission of a scheduled Prompt.
       commitWith?: WriterJob;
       committed: PromiseWithResolvers<void>;

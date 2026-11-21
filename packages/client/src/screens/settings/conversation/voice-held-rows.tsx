@@ -1,5 +1,4 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { FieldLabelScope } from '@repo/kit/primitives/fields/field-row';
 import { useEffect, useState, type ReactElement } from 'react';
 import { percentLabel } from './conversation-options';
 import { SettledValue } from './settled-value';
@@ -39,15 +38,10 @@ const textRowProps = (
   },
 });
 
-/*
- * A text the Server keeps, sent when the field is left and only when it changed. Its title sits above the field on a
- * wide window, so a long title is never cut short.
- */
+// A text the Server keeps, sent when the field is left and only when it changed.
 export function HeldTextRow(props: TextRowProps): ReactElement {
   return (
-    <FieldLabelScope>
-      <FieldGroup.TextField {...textRowProps(props, useHeld(props.value))} />
-    </FieldLabelScope>
+    <FieldGroup.TextField {...textRowProps(props, useHeld(props.value))} />
   );
 }
 
