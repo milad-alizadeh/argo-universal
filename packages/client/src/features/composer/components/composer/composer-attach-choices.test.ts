@@ -16,7 +16,7 @@ function layoutOf(
   };
 }
 
-const slashCommands = 'Slash Commands';
+const slashCommands = 'Commands';
 
 const command = { name: 'review', description: 'Review a file' };
 
