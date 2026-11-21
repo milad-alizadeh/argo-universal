@@ -4,9 +4,14 @@ import {
   commandOfProcessGroupLeader,
   releaseProcessGroup,
 } from '@repo/process/group';
-import { inArray } from 'drizzle-orm';
+import { inArray, isNotNull } from 'drizzle-orm';
 import { terminalOwnerToken } from '../lib/terminal-owner';
-import { removeRunOutput, retainRunOutput, runOutputPath } from './run-output';
+import {
+  removeRunOutput,
+  removeSealedRunScratch,
+  retainRunOutput,
+  runOutputPath,
+} from './run-output';
 import { type RunRecord, RunWriteJob } from './run-store';
 
 const ownsRunGroup = (pid: number, id: string): boolean =>
@@ -23,6 +28,14 @@ export async function recoverRuns(input: RunRecovery): Promise<void> {
     .all();
 
   for (const record of left) await recoverRun(input, record);
+
+  const sealed = input.database
+    .select({ id: run.id, outputBlobId: run.outputBlobId })
+    .from(run)
+    .where(isNotNull(run.outputBlobId))
+    .all();
+
+  for (const record of sealed) await removeSealedRunScratch(input.home, record);
 }
 
 async function recoverRun(

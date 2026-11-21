@@ -293,6 +293,12 @@ export class Runs {
       run,
       () => this.live.get(key) === run,
       () => this.markReady(key, run),
+    ).catch((error: Error) =>
+      logRecordingFailure(
+        this.input.home,
+        `Could not store readiness for Run ${run.record.id}`,
+        error,
+      ),
     );
     await stored;
 
@@ -336,10 +342,17 @@ export class Runs {
     replaced?: readonly string[],
     output?: OutputBlobMetadata,
   ): Promise<void> {
-    await writeDatabaseJobAndWaitForCommit(
-      this.input.writer,
-      new RunWriteJob(record, replaced, output),
-    );
-    this.view.changed(record);
+    const waitForRetry =
+      record.status === 'starting' || record.status === 'ready';
+
+    try {
+      await writeDatabaseJobAndWaitForCommit(
+        this.input.writer,
+        new RunWriteJob(record, replaced, output),
+        waitForRetry,
+      );
+    } finally {
+      this.view.changed(record);
+    }
   }
 }

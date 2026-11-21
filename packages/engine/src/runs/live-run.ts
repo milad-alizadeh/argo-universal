@@ -3,7 +3,6 @@ import type { OutputBlobMetadata } from '../blob';
 import type { RunConfiguration } from './run-configurations';
 import {
   logRecordingFailure,
-  removeRunOutput,
   retainRunOutput,
   runOutputFor,
   runOutputPath,
@@ -146,8 +145,6 @@ export class LiveRun {
       },
       (record) => save(record, output),
     );
-
-    if (output) await removeRunOutput(this.recording.path);
   }
 
   private save(change: Partial<RunRecord>, save: SaveRun): Promise<void> {

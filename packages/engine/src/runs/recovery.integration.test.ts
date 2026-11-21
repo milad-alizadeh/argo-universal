@@ -85,15 +85,24 @@ it('retains a lost Run’s scratch recording in the shared Blob vault', async ()
     status: 'lost',
     outputBlobId: blobId,
   });
-  await expect(readFile(join(home, 'blobs', blobId), 'utf8')).resolves.toBe(
-    bytes,
-  );
+  const sealed = join(home, 'blobs', blobId);
+
+  await expect(readFile(sealed, 'utf8')).resolves.toBe(bytes);
+  await expect(readFile(scratch)).rejects.toMatchObject({ code: 'ENOENT' });
+
+  await writeFile(scratch, bytes);
+  await writeFile(sealed, 'damaged recording');
+  await recoverRuns({ database, home, now: () => 9 });
+  await expect(readFile(scratch, 'utf8')).resolves.toBe(bytes);
+
+  await writeFile(sealed, bytes);
+  await recoverRuns({ database, home, now: () => 9 });
   await expect(readFile(scratch)).rejects.toMatchObject({ code: 'ENOENT' });
 });
 
 // A real process group, as a Run's terminal leads one: its shell's `$0` carries the token.
 const startGroup = (token: string): number => {
-  const child = spawn('/bin/sh', ['-c', 'sleep 60', token], {
+  const child = spawn('/bin/sh', ['-c', 'sleep 60; exit $?', token], {
     detached: true,
     stdio: 'ignore',
   });

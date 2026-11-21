@@ -1,4 +1,11 @@
-import { appendFile, mkdir, open, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  appendFile,
+  mkdir,
+  open,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { writeLog } from '@repo/machine-log';
@@ -55,6 +62,32 @@ export async function retainRunOutput(
     );
 
     return undefined;
+  }
+}
+
+// A reader that already picked the scratch path can finish after the Blob is published.
+export async function removeSealedRunScratch(
+  home: string,
+  record: Pick<RunRecord, 'id' | 'outputBlobId'>,
+): Promise<void> {
+  if (record.outputBlobId === null) return;
+  const scratch = runOutputPath(home, record.id);
+
+  try {
+    await access(scratch);
+    const output = await terminalOutputBlob(runOutputFor(home, record));
+
+    if (output.metadata.id === record.outputBlobId)
+      await removeRunOutput(scratch);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
+      return;
+
+    logRecordingFailure(
+      home,
+      `Could not verify recording for Run ${record.id}`,
+      error instanceof Error ? error : new Error(String(error)),
+    );
   }
 }
 

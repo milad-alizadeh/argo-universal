@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RunLogsResult, RunStartResult } from '@repo/contracts';
 import { isAlive } from '@repo/process';
+import { commandOfProcessGroupLeader } from '@repo/process/group';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { operationCaller, runOperation } from '#mocks/operations';
@@ -137,7 +138,7 @@ it('stops the Run’s real process group and listener through run.stop', async (
   const run = await startRealRun(
     {
       name: 'stubborn',
-      command: `${JSON.stringify(process.execPath)} tree.cjs; exit $?`,
+      command: `exec ${JSON.stringify(process.execPath)} tree.cjs`,
       ready: { pattern: 'Listening: \\d+ \\d+ \\d+' },
     },
     { 'tree.cjs': stubbornProcessTree },
@@ -153,6 +154,11 @@ it('stops the Run’s real process group and listener through run.stop', async (
   if (!group) throw new Error('The Run did not report its processes');
 
   const pids = group.slice(1).map(Number);
+  const [leader] = pids;
+
+  if (leader === undefined)
+    throw new Error('The Run did not report its group leader');
+  expect(commandOfProcessGroupLeader(leader)).toContain('argo-run-');
 
   await expect(canConnect(started.port)).resolves.toBe(true);
   expect(pids.map(isAlive)).toEqual([true, true, true]);

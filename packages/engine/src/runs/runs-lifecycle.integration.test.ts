@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
+import { run } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
@@ -95,6 +96,39 @@ async function archiveWithRemoval(
     checkoutApproval: checkoutConfirmation.fingerprint,
   });
 }
+
+it('starts a replacement while the Writer retries a refused exit', async () => {
+  const engine = await startEngine();
+  const { host } = engine;
+  const created = await host.caller.session.new(emptySessionInput);
+  const { checkout } = await host.caller.session.get(created);
+  await configure(checkout.path);
+
+  const first = await startReady(engine, created.sessionId);
+  host.database.$client.exec(
+    "CREATE TRIGGER hold_run_exit BEFORE UPDATE OF status ON run WHEN NEW.status = 'crashed' BEGIN SELECT RAISE(FAIL, 'hold old Run exit'); END",
+  );
+  onTestFinished(() =>
+    host.database.$client.exec('DROP TRIGGER IF EXISTS hold_run_exit'),
+  );
+  first.exit(9);
+
+  const log = join(host.home, 'logs', 'engine.log');
+
+  await expect
+    .poll(() => readFile(log, 'utf8'))
+    .toContain('Could not finish storing Run');
+
+  const start = engine.call('run.start', created.sessionId);
+  const replacement = await engine.terminals.next();
+
+  host.database.$client.exec('DROP TRIGGER hold_run_exit');
+  replacement.print('Local: replacement');
+  await expect(start).resolves.toMatchObject({ ready: true });
+  expect(host.database.select({ status: run.status }).from(run).all()).toEqual([
+    { status: 'ready' },
+  ]);
+});
 
 it('ends owned Runs on archive even when the Project keeps its Checkout', async () => {
   const engine = await startEngine();

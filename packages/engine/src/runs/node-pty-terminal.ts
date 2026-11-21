@@ -98,7 +98,7 @@ export const launchTerminal: TerminalSpawner = async (
   const token = terminalOwnerToken(launch.id);
 
   const child = spawn(
-    launch.shell ? '/bin/sh' : shell,
+    '/bin/sh',
     launch.shell
       ? [
           '-c',
@@ -107,7 +107,7 @@ export const launchTerminal: TerminalSpawner = async (
           shell,
           launch.shell.outputPath,
         ]
-      : ['-l', '-c', launch.command, token],
+      : ['-c', '"$1" -l -c "$2" "$0"; exit $?', token, shell, launch.command],
     {
       cwd: launch.cwd,
       env: { ...base, ...launch.env, TERM: 'xterm-256color' },
