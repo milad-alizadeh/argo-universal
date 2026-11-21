@@ -4,16 +4,19 @@ import {
   EmptyState,
   ScrollView,
   Screen,
+  SignInRequired,
   Stack,
+  type Argo,
   type GatedPage,
+  type NamedQuery,
   type PageState,
   type PageTo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { householdSections } from './home-cards';
 import { homeWords } from './home-words';
-import { pollMs } from './hue';
-import { homeData, type HueCalls } from './hue-client';
+import { hueHost, pollMs } from './hue';
+import { homeData } from './hue-client';
 import type { HomeData, Household } from './hue-model';
 
 /*
@@ -71,9 +74,19 @@ function body(data: HomeData, to: PageTo): JSX.Element {
     : lights(data.household, to);
 }
 
-export const homePage = (argo: HueCalls): GatedPage<PageState, HomeData> => ({
+export const defineHouseholdQuery = (argo: Argo): NamedQuery<HomeData> =>
+  argo.queries.define('household', () => homeData(argo))({});
+
+export const homePage = (
+  argo: Argo,
+  household: NamedQuery<HomeData>,
+): GatedPage<PageState, HomeData> => ({
   every: pollMs,
-  load: () => homeData(argo),
+  load: async ({ read }) => {
+    if (!(await argo.accounts.get(hueHost))) throw new SignInRequired();
+
+    return read(household);
+  },
   render: (data, to) => (
     <Screen title={homeWords.title}>{body(data, to)}</Screen>
   ),

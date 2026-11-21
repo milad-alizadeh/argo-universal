@@ -81,7 +81,7 @@ function drawRunOf<State extends PageState, Data, Item>(
 
   return {
     pageInput,
-    input: loaderInputOf(pageInput, read),
+    input: loaderInputOf(pageInput, read, event.pull === true),
     event,
     read,
   };
