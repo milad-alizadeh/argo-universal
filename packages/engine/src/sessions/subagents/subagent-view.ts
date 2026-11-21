@@ -5,7 +5,10 @@ import type {
   Turn,
 } from '@repo/contracts';
 
-type ChildSession = Pick<SessionRecord, 'id' | 'parentSessionId' | 'title'>;
+export type ChildSession = Pick<
+  SessionRecord,
+  'id' | 'parentSessionId' | 'title'
+>;
 
 // A child Session with its latest Turn; a Started Session is no Subagent, so it is listed under its starter and never here.
 export function toSubagent(

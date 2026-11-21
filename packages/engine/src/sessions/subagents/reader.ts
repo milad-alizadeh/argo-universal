@@ -16,23 +16,39 @@ import {
 } from '../../feed';
 import { readLatestTurns, type RowSources } from '../session-storage';
 import { readChildSessions } from './children';
-import { toSubagent } from './subagent-view';
+import { type ChildSession, toSubagent } from './subagent-view';
 
 type SubagentDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
+type SubagentFamily = {
+  children: readonly ChildSession[];
+  latestTurn: (sessionId: string) => Turn | undefined;
+};
+
 export function createSubagentsReader(
   deps: SubagentDeps,
-): (sessionId: string) => Subagent[] {
+): (sessionId: string, family?: SubagentFamily) => Subagent[] {
   const reader = new SubagentsReader(deps);
 
-  return (sessionId): Subagent[] => reader.read(sessionId);
+  return (sessionId, family): Subagent[] => reader.read(sessionId, family);
 }
 
 class SubagentsReader {
   private readonly rejections = createRejectionCounter('sessions');
   public constructor(private readonly deps: SubagentDeps) {}
 
-  public read(sessionId: string): Subagent[] {
+  public read(
+    sessionId: string,
+    family = this.readFamily(sessionId),
+  ): Subagent[] {
+    const { children, latestTurn } = family;
+
+    return children.length
+      ? this.subagents(children, latestTurn, this.updates(sessionId))
+      : [];
+  }
+
+  private readFamily(sessionId: string): SubagentFamily {
     const sources = {
       database: this.deps.database,
       writer: this.deps.findWriter(),
@@ -40,18 +56,18 @@ class SubagentsReader {
 
     const children = this.children(sources, sessionId);
 
-    if (children.length === 0) return [];
+    const latestTurn = children.length
+      ? readLatestTurns(
+          sources,
+          children.map((child): string => child.id),
+        )
+      : (): undefined => undefined;
 
-    const latestTurn = readLatestTurns(
-      sources,
-      children.map((child): string => child.id),
-    );
-
-    return this.subagents(children, latestTurn, this.updates(sessionId));
+    return { children, latestTurn };
   }
 
   private subagents(
-    children: SessionRecord[],
+    children: readonly ChildSession[],
     latestTurn: (sessionId: string) => Turn | undefined,
     updates: SubagentUpdate[],
   ): Subagent[] {
@@ -107,7 +123,7 @@ class SubagentsReader {
 }
 
 function readSubagent(
-  child: SessionRecord,
+  child: ChildSession,
   latest: Turn | undefined,
   updates: SubagentUpdate[],
 ): Subagent[] {

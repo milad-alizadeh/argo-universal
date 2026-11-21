@@ -37,7 +37,7 @@ export const idle: SessionInfoFixture = {
   feed: null,
   liveHeader: null,
   activeTurnId: null,
-  children: [],
+  subagents: { total: 0, running: 0 },
 };
 
 export const live = {

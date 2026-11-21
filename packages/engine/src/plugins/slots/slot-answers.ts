@@ -1,12 +1,12 @@
 import type {
   ItemsSlotItem,
   SlotItemsInput,
-} from '@repo/contracts/plugins/wire';
+} from "@repo/contracts/plugins/wire";
 import {
   itemsSlot,
   withContexts,
   type AnyItemsSlot,
-} from '@repo/contracts/plugins/wire';
+} from "@repo/contracts/plugins/wire";
 import {
   checked,
   contextKey,
@@ -18,9 +18,9 @@ import {
   type ItemsAnswer,
   type LeftOut,
   type Reply,
-} from './kept-items';
-import { LastGoodItems } from './last-good-items';
-import type { Shown } from './slot-refresh';
+} from "./kept-items";
+import { LastGoodItems } from "./last-good-items";
+import type { Shown } from "./slot-refresh";
 
 // What a worker answered for one Slot, by context key.
 type Kept = Map<string, readonly ItemsSlotItem[]>;
@@ -34,10 +34,9 @@ type SlotWorker = {
   // Bumped on every change signal, so an answer asked for before it is never kept.
   epoch: number;
   kept: Map<string, Kept>;
-  /*
-   * A Plugin that threw or answered off-schema is not asked again, nor waited on, until it changes. One that ran late
-   * is not asked again for the contexts it lacks until its late call lands.
-   */
+  // An outstanding late call blocks another ask for its contexts until the call lands.
+  late: Set<SlotItemsInput>;
+  // A thrown or invalid answer leaves out the Slot until it changes.
   failed: Map<string, LeftOut>;
 };
 
@@ -116,6 +115,7 @@ export class SlotAnswers {
     if (!worker) return;
 
     invalidate(worker);
+    worker.late.clear();
 
     for (const list of shown) forgetShown(worker, list);
   }
@@ -128,6 +128,7 @@ export class SlotAnswers {
 
     invalidate(worker);
     worker.kept.clear();
+    worker.late.clear();
     worker.failed.clear();
   }
 
@@ -151,7 +152,13 @@ export class SlotAnswers {
 
     if (kept?.generation === generation) return kept;
 
-    const worker = { generation, epoch: 0, kept: new Map(), failed: new Map() };
+    const worker = {
+      generation,
+      epoch: 0,
+      kept: new Map(),
+      late: new Set<SlotItemsInput>(),
+      failed: new Map(),
+    };
 
     this.workers.set(pluginId, worker);
 
@@ -160,13 +167,13 @@ export class SlotAnswers {
 
   // Answers a list from what the worker kept, asking once for every context it has not answered.
   private keptAnswer(
-    asking: Omit<Asking, 'entry'>,
+    asking: Omit<Asking, "entry">,
     input: SlotItemsInput,
   ): Promise<ItemsAnswer> {
     const entry = entryOf(input);
     const failed = asking.worker.failed.get(entry.id);
 
-    return failed && failed.reason !== itemsLeftOut.late
+    return failed
       ? Promise.resolve(failed)
       : this.knownAnswer({ ...asking, entry }, input);
   }
@@ -179,11 +186,10 @@ export class SlotAnswers {
     const kept = keptOf(worker, entry);
     const missing = missingOf(entry, kept, input);
 
-    // While a late call is out (the one failure let by above), the contexts it lacks wait for it; kept ones answer.
-    const asked =
-      missing.contexts.length > 0 && worker.failed.has(entry.id)
-        ? leftOut(itemsLeftOut.late)
-        : await this.askMissing(asking, missing);
+    // A late call blocks only requests missing one of its contexts.
+    const asked = hasLateContext(worker, entry, missing)
+      ? leftOut(itemsLeftOut.late)
+      : await this.askMissing(asking, missing);
 
     if (!asked.ok) return asked;
 
@@ -207,7 +213,11 @@ export class SlotAnswers {
 
     const answer = requested(entry, input, checked(entry, reply));
 
-    ifCurrent(worker, epoch, () => remember(worker, entry, answer));
+    ifCurrent(worker, epoch, () => {
+      if (!answer.ok && answer.reason === itemsLeftOut.late)
+        worker.late.add(input);
+      else remember(worker, entry, answer);
+    });
 
     return answer;
   }
@@ -225,7 +235,7 @@ export class SlotAnswers {
       const entry = entryOf(input);
       const answer = requested(entry, input, checked(entry, reply));
 
-      worker.failed.delete(entry.id);
+      worker.late.delete(input);
 
       if (answer.ok || answer.reason !== itemsLeftOut.late)
         remember(worker, entry, answer);
@@ -234,6 +244,22 @@ export class SlotAnswers {
       this.onChange();
     });
   }
+}
+
+function hasLateContext(
+  worker: SlotWorker,
+  entry: AnyItemsSlot,
+  input: SlotItemsInput,
+): boolean {
+  const keys = new Set(
+    input.contexts.map((context) => contextKey(entry, context)),
+  );
+
+  return [...worker.late].some(
+    (late) =>
+      late.slotId === input.slotId &&
+      late.contexts.some((context) => keys.has(contextKey(entry, context))),
+  );
 }
 
 function keptOf(worker: SlotWorker, entry: AnyItemsSlot): Kept {
@@ -272,7 +298,7 @@ function remember(
 // Drops what the worker kept for the contexts one list shows, and the failure that left its Slot out.
 function forgetShown(
   worker: SlotWorker,
-  { slotId, contexts }: Pick<SlotItemsInput, 'slotId' | 'contexts'>,
+  { slotId, contexts }: Pick<SlotItemsInput, "slotId" | "contexts">,
 ): void {
   const entry = itemsSlot(slotId);
 

@@ -1,12 +1,19 @@
-import type { DelegatedInput } from '@repo/contracts';
+import type { DelegatedInput, DelegatedSkillOffer } from '@repo/contracts';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import type { FeedDelegated } from '#features/feed';
+import type { ElicitationFormProps } from '#features/requests';
 import { sessionHref, useNavigate } from '#lib/product/navigation/navigation';
+import { skillOfferElicitation } from './skill-offer-elicitation';
 
-export function useDelegatedFeedItems(sessionId: string): FeedDelegated[] {
+type DelegatedAttention = {
+  items: FeedDelegated[];
+  elicitation?: ElicitationFormProps;
+};
+
+export function useDelegatedAttention(sessionId: string): DelegatedAttention {
   const navigate = useNavigate();
   const trpc = useTRPC();
   const openRequest = useDelegatedRequestLink(navigate);
@@ -16,9 +23,10 @@ export function useDelegatedFeedItems(sessionId: string): FeedDelegated[] {
   );
 
   useResubscribeOnReconnect(stream);
-  const answer = useMutation(trpc.session.confirmSkill.mutationOptions());
+  const skills = stream.data?.skills ?? [];
+  const elicitation = useSkillElicitation(sessionId, skills[0]);
 
-  return [
+  const items = [
     ...(stream.data?.requests ?? []).map((request): FeedDelegated => ({
       type: 'delegated',
       id: JSON.stringify([
@@ -31,23 +39,41 @@ export function useDelegatedFeedItems(sessionId: string): FeedDelegated[] {
       kind: request.kind,
       onOpen: () => openRequest(request),
     })),
-    ...(stream.data?.skills ?? []).map((offer): FeedDelegated => ({
+    ...skills.map((offer): FeedDelegated => ({
       type: 'delegated',
       id: `delegated-skill:${offer.id}`,
       sourceSessionId: offer.starterId,
       title: 'the starter Session',
       kind: 'offered_skill',
-      command: [`/${offer.name}`, offer.arguments].filter(Boolean).join(' '),
-      answering: answer.isPending && answer.variables?.offerId === offer.id,
-      error:
-        answer.variables?.offerId === offer.id
-          ? answer.error?.message
-          : undefined,
       onOpen: () => navigate(sessionHref(offer.starterId)),
-      onAnswer: (decision) =>
-        answer.mutate({ sessionId, offerId: offer.id, decision }),
     })),
   ];
+
+  return { items, elicitation };
+}
+
+function useSkillElicitation(
+  sessionId: string,
+  offer: DelegatedSkillOffer | undefined,
+): ElicitationFormProps | undefined {
+  const trpc = useTRPC();
+  const answer = useMutation(trpc.session.confirmSkill.mutationOptions());
+
+  if (!offer) return;
+
+  const answering = answer.variables?.offerId === offer.id;
+
+  if (answering && answer.isSuccess) return;
+
+  const props = skillOfferElicitation(offer, (decision) =>
+    answer.mutate({ sessionId, offerId: offer.id, decision }),
+  );
+
+  return {
+    ...props,
+    state: { kind: answering && answer.isPending ? 'submitting' : 'open' },
+    error: answering ? answer.error?.message : undefined,
+  };
 }
 
 function useDelegatedRequestLink(
