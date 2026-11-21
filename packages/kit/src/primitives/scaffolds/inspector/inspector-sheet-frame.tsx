@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Sheet } from '#primitives/overlays/sheet';
 import type { InspectorProps } from './inspector-props';
+import { inspectorSearch } from './inspector-search';
 
 interface InspectorSheetFrameProps {
   inspector: InspectorProps;
@@ -17,7 +18,13 @@ export function InspectorSheetFrame({
 }: InspectorSheetFrameProps): ReactElement {
   return (
     <Sheet {...sheetProps(inspector)}>
-      <Sheet.Screen name="inspector" title={screenTitle} keepsHeaderInset>
+      <Sheet.Screen
+        name="inspector"
+        title={screenTitle}
+        closeLabel={inspector.closeLabel}
+        search={inspectorSearch(inspector)}
+        keepsHeaderInset
+      >
         {children}
       </Sheet.Screen>
     </Sheet>
