@@ -98,7 +98,6 @@ export { messageText } from './message-text';
 export {
   readConversationSections,
   withVoiceInstruction,
-  withoutVoiceInstruction,
   type VoiceMessage,
 } from './conversation-markers';
 

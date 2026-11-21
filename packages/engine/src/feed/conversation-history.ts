@@ -11,6 +11,7 @@ import {
   like,
   or,
   sql,
+  type SQL,
 } from 'drizzle-orm';
 import {
   withoutAnalysis,
@@ -115,6 +116,25 @@ const earlierRows = 12;
 
 const rejections = createRejectionCounter('feed');
 
+type HistoryWindow = {
+  filter: SQL | undefined;
+  limit: number;
+};
+
+function storedHistory(
+  database: FeedDeps['database'],
+  sessionId: string,
+  { filter, limit }: HistoryWindow,
+): FeedRowWrite[] {
+  return database
+    .select(storedFeedColumns)
+    .from(feedRow)
+    .where(and(eq(feedRow.sessionId, sessionId), filter))
+    .orderBy(desc(feedRow.position))
+    .limit(limit)
+    .all();
+}
+
 function storedMessages(
   database: FeedDeps['database'],
   sessionId: string,
@@ -142,51 +162,23 @@ function storedMessages(
   ];
 }
 
-function storedSummaries(
-  database: FeedDeps['database'],
-  sessionId: string,
-): FeedRowWrite[] {
-  return database
-    .select(storedFeedColumns)
-    .from(feedRow)
-    .where(
-      and(
-        eq(feedRow.sessionId, sessionId),
-        eq(feedRow.sessionUpdate, 'compaction_update'),
-        sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') = 'completed' else false end`,
-      ),
-    )
-    .orderBy(desc(feedRow.position))
-    .limit(earlierRows)
-    .all();
-}
+const summaryFilter = and(
+  eq(feedRow.sessionUpdate, 'compaction_update'),
+  sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') = 'completed' else false end`,
+);
 
-function storedClear(
-  database: FeedDeps['database'],
-  sessionId: string,
-): FeedRowWrite[] {
-  return database
-    .select(storedFeedColumns)
-    .from(feedRow)
-    .where(
-      and(
-        eq(feedRow.sessionId, sessionId),
-        eq(feedRow.sessionUpdate, 'notice'),
-        isNull(feedRow.turnId),
-        or(
-          like(feedRow.id, `${clearedContextIdPrefix}%`),
-          sql`case when json_valid(${feedRow.payload}) then
-            json_extract(${feedRow.payload}, '$.title') = ${legacyContextClearedNotice.title}
-            and json_extract(${feedRow.payload}, '$.description') = ${legacyContextClearedNotice.description}
-            and json_extract(${feedRow.payload}, '$.severity') = 'info'
-            else false end`,
-        ),
-      ),
-    )
-    .orderBy(desc(feedRow.position))
-    .limit(1)
-    .all();
-}
+const clearFilter = and(
+  eq(feedRow.sessionUpdate, 'notice'),
+  isNull(feedRow.turnId),
+  or(
+    like(feedRow.id, `${clearedContextIdPrefix}%`),
+    sql`case when json_valid(${feedRow.payload}) then
+      json_extract(${feedRow.payload}, '$.title') = ${legacyContextClearedNotice.title}
+      and json_extract(${feedRow.payload}, '$.description') = ${legacyContextClearedNotice.description}
+      and json_extract(${feedRow.payload}, '$.severity') = 'info'
+      else false end`,
+  ),
+);
 
 function historyRows(
   sources: ConversationHistorySources,
@@ -194,11 +186,17 @@ function historyRows(
 ): HistoryRow[] {
   const { database } = sources;
 
-  const clears = storedClear(database, sessionId);
+  const clears = storedHistory(database, sessionId, {
+    filter: clearFilter,
+    limit: 1,
+  });
 
   const stored = [
     ...storedMessages(database, sessionId),
-    ...storedSummaries(database, sessionId),
+    ...storedHistory(database, sessionId, {
+      filter: summaryFilter,
+      limit: earlierRows,
+    }),
     ...clears,
   ];
 
