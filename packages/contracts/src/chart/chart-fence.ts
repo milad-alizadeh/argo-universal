@@ -2,9 +2,9 @@ import { chartProps } from '../plugins/visual-props';
 
 const chartData = chartProps.omit({ onPress: true });
 
-const openingFence = /^ {0,3}(`{3,}|~{3,})[ \t]*chart[ \t]*$/iu;
+const openingFence = /^ {0,3}(`{3,}|~{3,})[ \t]*chart[ \t]*(?![\s\S])/iu;
 
-const closingFence = /^ {0,3}(`{3,}|~{3,})[ \t]*$/u;
+const closingFence = /^ {0,3}(`{3,}|~{3,})[ \t]*(?![\s\S])/u;
 
 interface ChartFenceProblem {
   path: (string | number)[];
@@ -55,7 +55,9 @@ function validateJson(source: string): ChartFenceResult {
 
 // Both the Feed token and the preview Operation supply the full fence, including its markers.
 export function validateChartFence(fence: string): ChartFenceResult {
-  const lines = fence.trimEnd().split(/\r?\n/u);
+  const lines = fence.split(/\r\n|[\r\n]/u);
+
+  while (lines.length > 1 && !/[^ \t]/u.test(lines.at(-1) ?? '')) lines.pop();
 
   const marker = openingFence.exec(lines[0] ?? '')?.[1];
 

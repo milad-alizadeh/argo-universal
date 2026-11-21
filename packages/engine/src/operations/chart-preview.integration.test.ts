@@ -64,6 +64,26 @@ it('rejects the same JSON when the fence is still open', async () => {
   );
 });
 
+it('accepts the Feed’s CRLF and bare CR line endings', async () => {
+  const windowsFence = validFence.replaceAll('\n', '\r\n');
+
+  const classicFence = validFence.replaceAll('\n', '\r');
+
+  expect(await preview(windowsFence)).toMatchObject({ valid: true });
+  expect(await preview(classicFence)).toMatchObject({ valid: true });
+});
+
+it('leaves a closing marker with a nonbreaking space open', async () => {
+  const incompleteFence = validFence.replaceAll('```', '~~~') + '\u00a0';
+
+  expect(await preview(incompleteFence)).toMatchObject({
+    valid: false,
+    problems: [
+      { path: [], message: expect.stringContaining('complete chart fence') },
+    ],
+  });
+});
+
 it('discovers the accepted fields and a copyable fence', async () => {
   const host = await startEngineTestHost({ fixtureAgents: [] });
   const { operations } = await operationCaller(host);
