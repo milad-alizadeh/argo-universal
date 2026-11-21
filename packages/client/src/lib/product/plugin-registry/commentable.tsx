@@ -9,15 +9,17 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
+  boxOf,
   DraftCommentingContext,
   DraftPlaceContext,
   type NodeIdentity,
 } from './draft-commenting';
+import type { PluginProps } from './plugin-rendering';
 
 // The prop a node passes its wrapper; the wrapper takes it, so the kit component never sees it.
 export const identityProp = 'draftNodeIdentity';
 
-type Wrapped = Record<string, unknown> & { [identityProp]?: NodeIdentity };
+type Wrapped = PluginProps & { [identityProp]?: NodeIdentity };
 
 const wrappers = new WeakMap<object, ElementType>();
 
@@ -71,7 +73,9 @@ function CommentTarget({
         nodeKey,
         place,
         measure: (done) =>
-          ref.current ? ref.current.measureInWindow(done) : done(0, 0, -1, -1),
+          ref.current
+            ? ref.current.measureInWindow((...rect) => done(boxOf(rect)))
+            : done({ x: 0, y: 0, width: -1, height: -1 }),
       }),
     [commenting, address, nodeKey, place],
   );

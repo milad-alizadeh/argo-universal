@@ -1,21 +1,24 @@
 import type { ReactElement } from 'react';
 
-// Where a wrapper keeps the component it draws in place of.
-const wrapsKey = Symbol.for('argo.kit.wraps');
+type Component = Exclude<ReactElement['type'], string>;
+
+const wraps = new WeakMap<Component, Component>();
+
+const markPrefix = 'argo.kit.';
 
 /*
- * A dev-only wrapper that draws a kit component in its place, as the App's Draft comment mode does, carries the
- * component and the marks it wore, so a parent that reads its children by type still recognises them.
+ * A dev-only wrapper that draws a kit component in its place, as the App's Draft comment mode does, is read by a
+ * parent as that component: it is recorded here and takes the marks the component wore.
  */
-export function wrappingComponent<Wrapper extends object>(
+export function wrappingComponent<Wrapper extends Component>(
   wrapper: Wrapper,
-  wrapped: object,
+  wrapped: Component,
 ): Wrapper {
-  for (const key of Reflect.ownKeys(wrapped))
-    if (typeof key === 'symbol' && key.description?.startsWith('argo.kit.'))
-      Object.defineProperty(wrapper, key, { value: true, configurable: true });
+  for (const mark of Object.getOwnPropertySymbols(wrapped))
+    if (mark.description?.startsWith(markPrefix))
+      Object.defineProperty(wrapper, mark, { value: true, configurable: true });
 
-  Object.defineProperty(wrapper, wrapsKey, { value: wrapped });
+  wraps.set(wrapper, wrapped);
 
   return wrapper;
 }
@@ -29,7 +32,5 @@ export function kitTypeOf(element: ReactElement): ReactElement['type'] {
 
   if (typeof type === 'string') return type;
 
-  const wrapped: unknown = Reflect.get(type, wrapsKey);
-
-  return typeof wrapped === 'function' ? (wrapped as typeof type) : type;
+  return wraps.get(type) ?? type;
 }

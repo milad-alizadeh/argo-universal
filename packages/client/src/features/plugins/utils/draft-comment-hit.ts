@@ -1,5 +1,5 @@
 // A node's box in the window, by its address in the tree.
-export type Box = {
+export type Placed = {
   address: string;
   x: number;
   y: number;
@@ -7,7 +7,7 @@ export type Box = {
   height: number;
 };
 
-const contains = (box: Box, { x, y }: { x: number; y: number }): boolean =>
+const contains = (box: Placed, { x, y }: { x: number; y: number }): boolean =>
   x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
 
 /*
@@ -15,10 +15,10 @@ const contains = (box: Box, { x, y }: { x: number; y: number }): boolean =>
  * it. The later of two equal boxes sits over the earlier. A point outside every node picks none.
  */
 export function innermostAt(
-  boxes: readonly Box[],
+  boxes: readonly Placed[],
   point: { x: number; y: number },
-): Box | null {
-  return boxes.reduce<Box | null>((best, box) => {
+): Placed | null {
+  return boxes.reduce<Placed | null>((best, box) => {
     if (!contains(box, point)) return best;
 
     const smaller = !best || box.width * box.height <= best.width * best.height;

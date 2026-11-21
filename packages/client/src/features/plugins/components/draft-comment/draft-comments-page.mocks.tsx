@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { fn } from 'storybook/test';
 import { PluginTree } from '../../../../lib/product/plugin-registry/plugin-registry';
 import { draftComments, type DraftNote } from '../../stores/draft-comments';
 import { DraftRegionsProvider } from '../draft-region/draft-regions';
@@ -10,6 +11,7 @@ import { DraftCommentsLayer } from './draft-comments-layer';
 function seeded(notes: DraftNote[]): true {
   draftComments.sent(issuesPage);
   draftComments.setCommenting(issuesPage, true);
+
   for (const note of notes) draftComments.save(issuesPage, note);
 
   return true;
@@ -26,9 +28,9 @@ export function CommentingPage(props: {
   const [ready] = [seeded(notes)];
 
   return (
-    <View className="h-[640px] w-full bg-content p-4">
+    <View className="h-96 w-full bg-content p-4">
       <DraftRegionsProvider
-        regions={ready ? { tags: regionTags, onStep: () => undefined } : null}
+        regions={ready ? { tags: regionTags, onStep: fn() } : null}
         commenting={commenting}
       >
         <DraftCommentsLayer

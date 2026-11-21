@@ -1,7 +1,6 @@
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
-import { useWide } from '@repo/kit/use-wide/use-wide';
 import type * as React from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import {
   DraftCommentEditor,
   type DraftCommentEditorProps,
@@ -10,10 +9,7 @@ import {
 // Where the node is, in the box the sheet's popover is placed against.
 export type Anchor = { x: number; y: number; width: number; height: number };
 
-export type DraftCommentSheetProps = Omit<
-  DraftCommentEditorProps,
-  'longPressed'
-> & {
+export type DraftCommentSheetProps = DraftCommentEditorProps & {
   open: boolean;
   anchor: Anchor;
 };
@@ -27,33 +23,33 @@ export function DraftCommentSheet({
   anchor,
   ...editor
 }: DraftCommentSheetProps): React.JSX.Element {
-  const wide = useWide();
-
   return (
-    <Sheet
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) editor.onCancel();
-      }}
-      label="Comment"
-      inset
-      popoverPlacement={{ side: 'bottom', align: 'start' }}
-      trigger={
-        <Pressable
-          accessible={false}
-          focusable={false}
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: anchor.x,
-            top: anchor.y,
-            width: anchor.width,
-            height: anchor.height,
-          }}
-        />
-      }
-    >
-      <DraftCommentEditor {...editor} longPressed={!wide} />
-    </Sheet>
+    <View pointerEvents="box-none" className="absolute inset-0">
+      <Sheet
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) editor.onCancel();
+        }}
+        label="Comment"
+        inset
+        popoverPlacement={{ side: 'bottom', align: 'start' }}
+        trigger={
+          <Pressable
+            accessible={false}
+            focusable={false}
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: anchor.x,
+              top: anchor.y,
+              width: anchor.width,
+              height: anchor.height,
+            }}
+          />
+        }
+      >
+        <DraftCommentEditor {...editor} />
+      </Sheet>
+    </View>
   );
 }

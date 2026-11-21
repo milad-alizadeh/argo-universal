@@ -8,7 +8,7 @@ import { issuesPage } from './draft-comment-fixtures';
 import { CommentingPage, holdOn } from './draft-comments-page.mocks';
 
 const meta = {
-  title: 'Tests/Plugins/DraftComments',
+  title: 'Tests/Plugins/DraftComments/Layer',
   component: CommentingPage,
   args: { commenting: true },
 } satisfies Meta<typeof CommentingPage>;
@@ -89,7 +89,7 @@ export const CommentModeDrawsEveryNodeAndRunsNone: Story = {
 // Outside comment mode a press picks nothing.
 export const NothingIsPickedOutsideCommentMode: Story = {
   args: { commenting: false },
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     await settleLayout('wide');
     await pointer.click(await canvas.findByText(pairing));
 

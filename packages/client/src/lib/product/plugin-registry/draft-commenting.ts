@@ -17,12 +17,21 @@ export type DraftPlace = {
   letter: string;
 };
 
+// A box in the window.
+export type Box = { x: number; y: number; width: number; height: number };
+
+// The box a window measure reports: left, top, width, height.
+export const boxOf = ([x, y, width, height]: readonly [
+  number,
+  number,
+  number,
+  number,
+]): Box => ({ x, y, width, height });
+
 // A node the author can pick: where it is on screen now, measured when asked.
 export interface CommentTarget extends NodeIdentity {
   place: DraftPlace | null;
-  measure: (
-    done: (x: number, y: number, width: number, height: number) => void,
-  ) => void;
+  measure: (done: (box: Box) => void) => void;
 }
 
 /*

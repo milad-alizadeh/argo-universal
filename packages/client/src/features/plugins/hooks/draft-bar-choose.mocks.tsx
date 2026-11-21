@@ -112,6 +112,7 @@ export function ChooseBarMock(props: {
 
   React.useState(() => {
     draftComments.sent(opening);
+
     for (const note of props.notes ?? []) draftComments.save(opening, note);
   });
 

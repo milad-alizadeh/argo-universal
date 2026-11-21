@@ -1,4 +1,5 @@
 import type { DraftComment } from '@repo/contracts/operations/plugin-drafts';
+import { listenerSet } from '@repo/kit/listener-set';
 import { useSyncExternalStore } from 'react';
 
 // A note on one node of a Draft page, by the node's address in the tree, so its pin finds it again.
@@ -26,7 +27,7 @@ export const draftCommentsOf = (notes: readonly DraftNote[]): DraftComment[] =>
  */
 export class DraftComments {
   private readonly pages = new Map<string, DraftPageComments>();
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = listenerSet();
 
   public of(page: Page): DraftPageComments {
     return this.pages.get(keyOf(page)) ?? none;
@@ -55,15 +56,11 @@ export class DraftComments {
   private set(page: Page, next: DraftPageComments): void {
     this.pages.set(keyOf(page), next);
 
-    for (const listener of this.listeners) listener();
+    this.listeners.notify();
   }
 
   // The answer unsubscribes.
-  public subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => this.listeners.delete(listener);
-  };
+  public subscribe = this.listeners.subscribe;
 }
 
 export const draftComments = new DraftComments();

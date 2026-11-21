@@ -1,22 +1,25 @@
 import { expect, it } from 'vitest';
-import { innermostAt, titleOf, type Box } from './draft-comment-hit';
+import { innermostAt, titleOf, type Placed } from './draft-comment-hit';
 
-const page: Box = { address: 'page', x: 0, y: 0, width: 400, height: 600 };
-const list: Box = {
+const page: Placed = { address: 'page', x: 0, y: 0, width: 400, height: 600 };
+
+const list: Placed = {
   address: 'page/list',
   x: 10,
   y: 100,
   width: 380,
   height: 300,
 };
-const row: Box = {
+
+const row: Placed = {
   address: 'page/list/row',
   x: 10,
   y: 150,
   width: 380,
   height: 50,
 };
-const chip: Box = {
+
+const chip: Placed = {
   address: 'page/list/row/chip',
   x: 300,
   y: 160,

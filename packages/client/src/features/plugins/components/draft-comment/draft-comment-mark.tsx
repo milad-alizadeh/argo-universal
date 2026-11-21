@@ -1,6 +1,5 @@
-import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 
 export interface DraftCommentMarkProps {
   // The notes left on the node; its pin shows how many.
@@ -43,11 +42,9 @@ export function DraftCommentPin({
       pointerEvents="none"
       role="img"
       aria-label={count === 1 ? '1 comment' : `${count} comments`}
-      className="absolute right-1 top-1 size-[22px] items-center justify-center rounded-b-[11px] rounded-bl-[2px] rounded-t-[11px] bg-tone-warning-500 shadow-control"
+      className="absolute right-1 top-1 size-5.5 items-center justify-center rounded-full rounded-bl-grouped-inner bg-warning shadow-control"
     >
-      <Text role="badge" className="text-white">
-        {count}
-      </Text>
+      <Text className="type-badge text-primary-foreground">{count}</Text>
     </View>
   );
 }
