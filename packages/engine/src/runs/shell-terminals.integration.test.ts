@@ -1,5 +1,6 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { createFakeTerminals } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 
@@ -74,3 +75,52 @@ it('lets the person type and the Agent read a shell while refusing Agent input',
   });
   expect(terminal.written).toEqual(['pwd\r']);
 });
+
+it('archiving one Session closes only its shells on a shared Checkout', async () => {
+  const { host, terminals, sessionId } = await projectWithTerminalSpawner();
+  const { caller } = host;
+  const own = await caller.terminal.open({ sessionId });
+  const first = await terminals.next();
+  const other = await caller.session.new(emptySessionInput);
+  const surviving = await caller.terminal.open(other);
+  const second = await terminals.next();
+
+  await caller.session.prompt({
+    sessionId,
+    prompt: [{ type: 'text', text: 'Keep this Session' }],
+  });
+  await waitForAcpSessionIdle(host, sessionId);
+  await caller.session.archive({ sessionId });
+
+  expect(first.stopped).toBe(true);
+  expect(second.stopped).toBe(false);
+  await expect(caller.run.status(other)).resolves.toMatchObject({
+    shells: [surviving],
+  });
+  await expect(
+    caller.terminal.read({ ...other, shellId: own.id }),
+  ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  await expect(caller.terminal.open({ sessionId })).rejects.toMatchObject({
+    code: 'CONFLICT',
+  });
+});
+
+it('runs commands in a real interactive shell in the Checkout', async () => {
+  const { caller } = await startAcpEngine({ steps: [] });
+  const { sessionId } = await caller.session.new(emptySessionInput);
+  const { checkout } = await caller.session.get({ sessionId });
+  const { id: shellId } = await caller.terminal.open({ sessionId });
+  const target = { sessionId, shellId };
+
+  try {
+    await caller.terminal.send({
+      ...target,
+      input: 'printf \'ArgoShell:%s\\n\' "$PWD"\r',
+    });
+    await expect
+      .poll(async () => (await caller.terminal.read(target)).screen)
+      .toContain(`ArgoShell:${checkout.path}`);
+  } finally {
+    await caller.terminal.close(target);
+  }
+}, 30_000);

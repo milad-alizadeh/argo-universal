@@ -1,6 +1,7 @@
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
+import { closeArchivedShells } from '../../runs';
 import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
@@ -51,17 +52,6 @@ const archivedSessionIds = (
   ...borrowerIds(context, archivedAt),
 ];
 
-const archiveJob = (
-  context: SessionContext,
-  archivedAt: number | null,
-): SessionArchiveJob =>
-  new SessionArchiveJob(
-    archivedSessionIds(context, archivedAt),
-    archivedAt,
-    archivedAt !== null &&
-      projectKeepsCheckout(context.input.database, context.projectId),
-  );
-
 // The parent's archive and its borrowed Checkouts share one Writer commit.
 export async function saveSessionArchive(
   context: SessionContext,
@@ -70,11 +60,24 @@ export async function saveSessionArchive(
 ): Promise<void> {
   if (!writer) throw new Error('Database Writer is unavailable');
 
+  const { database } = context.input;
+  const sessionIds = archivedSessionIds(context, archivedAt);
+  const keep =
+    archivedAt !== null && projectKeepsCheckout(database, context.projectId);
+
   await writeDatabaseJobAndWaitForCommit(
     writer,
-    archiveJob(context, archivedAt),
+    new SessionArchiveJob(sessionIds, archivedAt, keep),
     true,
   );
+
+  if (archivedAt !== null)
+    await closeArchivedShells(database, sessionIds).catch((error: unknown) => {
+      console.error(
+        `Session ${context.sessionId}: could not close shell Terminals`,
+        error,
+      );
+    });
 }
 
 type ArchivedCheckout = Pick<

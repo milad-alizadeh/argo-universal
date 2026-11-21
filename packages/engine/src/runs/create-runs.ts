@@ -21,3 +21,10 @@ export const removeCheckoutWithRuns = (
   remove: () => Promise<void>,
 ): Promise<void> =>
   enginesRuns.get(database)?.removeCheckout(checkout, remove) ?? remove();
+
+export const closeArchivedShells = async (
+  database: Database,
+  sessionIds: readonly string[],
+): Promise<void> => {
+  await enginesRuns.get(database)?.shells.closeOwners(new Set(sessionIds));
+};

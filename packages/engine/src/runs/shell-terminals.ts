@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import type {
   RunOutput,
   RunOutputCursor,
@@ -6,9 +7,10 @@ import type {
   TerminalSendResult,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import { recordShellGroup, removeShellRecord } from '../sessions';
 import type { RunBlocks } from './run-blocks';
 import type { RunLifecycle } from './run-lifecycle';
-import { createRunOutput, removeRunOutput, runOutputPath } from './run-output';
+import { createRunOutput, removeRunOutput } from './run-output';
 import { watchRunOutput } from './run-replay';
 import { RunUpdates } from './run-updates';
 import type { RunCheckout, RunsInput } from './runs';
@@ -24,6 +26,7 @@ type OpenShell = {
   terminal: TerminalProcess;
   recording: TerminalRecording;
   closed: AbortController;
+  ownerRecord: Promise<string | undefined>;
   stopping?: Promise<void>;
 };
 
@@ -32,6 +35,9 @@ const sameCheckout = (left: RunCheckout, right: RunCheckout): boolean =>
   left.checkoutPath === right.checkoutPath;
 
 const defaultScrollbackLines = 100;
+
+export const shellTerminalOutputFolder = (home: string): string =>
+  join(home, 'shell-terminal-output');
 
 export class ShellTerminals {
   private readonly updates = new RunUpdates();
@@ -187,7 +193,7 @@ export class ShellTerminals {
       { name },
       undefined,
     );
-    const path = runOutputPath(this.input.home, id);
+    const path = join(shellTerminalOutputFolder(this.input.home), `${id}.log`);
     await createRunOutput(path);
     let terminal: TerminalProcess;
 
@@ -213,6 +219,10 @@ export class ShellTerminals {
       terminal,
       recording: new TerminalRecording(path),
       closed: new AbortController(),
+      ownerRecord:
+        terminal.pid === undefined
+          ? Promise.resolve(undefined)
+          : recordShellGroup(this.input.home, { pid: terminal.pid, token: id }),
     };
     this.live.set(id, entry);
     terminal.onData((data) => {
@@ -224,6 +234,12 @@ export class ShellTerminals {
     terminal.onExit(() => {
       if (!entry.stopping) this.stop(entry).catch(() => {});
     });
+    try {
+      await entry.ownerRecord;
+    } catch (error) {
+      await this.stop(entry);
+      throw error;
+    }
     this.changed(checkout);
 
     return shell;
@@ -250,6 +266,7 @@ export class ShellTerminals {
 
   private async remove({
     closed,
+    ownerRecord,
     recording,
     record,
     shell,
@@ -259,5 +276,8 @@ export class ShellTerminals {
     this.changed(record);
     await recording.dispose();
     await removeRunOutput(recording.path);
+    const path = await ownerRecord.catch(() => undefined);
+
+    if (path) await removeShellRecord(path);
   }
 }

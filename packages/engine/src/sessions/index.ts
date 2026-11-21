@@ -72,7 +72,11 @@ export { recoverArchivedCheckouts } from './archive/archive-operations';
 
 export { recoverShells } from './shells/recovery';
 
-export { releaseShellGroups } from './shells/shell-record';
+export {
+  recordShellGroup,
+  releaseShellGroups,
+  removeShellRecord,
+} from './shells/shell-record';
 
 export {
   type CalledOperation,

@@ -4,7 +4,11 @@ export { launchTerminal } from './node-pty-terminal';
 
 export { recoverRuns } from './recovery';
 
-export { createRuns, removeCheckoutWithRuns } from './create-runs';
+export {
+  closeArchivedShells,
+  createRuns,
+  removeCheckoutWithRuns,
+} from './create-runs';
 
 export {
   type RunCheckout,
@@ -14,3 +18,5 @@ export {
 } from './runs';
 
 export type { TerminalSpawner } from './terminal';
+
+export { shellTerminalOutputFolder } from './shell-terminals';
