@@ -112,7 +112,10 @@ export class Runs {
     name: string,
     timeoutMs?: number,
   ): Promise<RunStartResult> {
-    const configuration = await this.configuration(checkout, name);
+    const configuration = await requireRunConfiguration(
+      checkout.checkoutPath,
+      name,
+    );
 
     return this.startConfiguration(checkout, configuration, timeoutMs);
   }
@@ -135,7 +138,10 @@ export class Runs {
     name: string,
     timeoutMs?: number,
   ): Promise<RunStartResult> {
-    const configuration = await this.configuration(checkout, name);
+    const configuration = await requireRunConfiguration(
+      checkout.checkoutPath,
+      name,
+    );
     await this.lifecycle.stop(keyOf(checkout, name));
 
     return this.startConfiguration(checkout, configuration, timeoutMs);
@@ -171,13 +177,6 @@ export class Runs {
       this.latest.get(keyOf(checkout, name)) ??
       latestRun(this.input.database, checkout, name)
     );
-  }
-
-  private configuration(
-    checkout: RunCheckout,
-    name: string,
-  ): Promise<RunConfiguration> {
-    return requireRunConfiguration(checkout.checkoutPath, name);
   }
 
   private async startConfiguration(

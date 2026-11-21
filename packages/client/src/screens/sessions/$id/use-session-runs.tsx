@@ -54,9 +54,13 @@ export function useSessionRuns(
   const restart = useMutation(trpc.run.restart.mutationOptions());
   const shells = useShellControls(sessionId, active, status.shells);
 
-  const error = start.error ?? stop.error ?? restart.error ?? shells.error;
+  const message =
+    start.error?.message ??
+    stop.error?.message ??
+    restart.error?.message ??
+    shells.failure;
 
-  useErrorToast(error ? { title: 'Runs', message: error.message } : undefined);
+  useErrorToast(message ? { title: 'Runs', message } : undefined);
   const defaultGroup = useRunGroupControls(sessionId, status.defaultGroup);
 
   return {
@@ -77,22 +81,25 @@ export function useSessionRuns(
   };
 }
 
-type ShellControls = Pick<
-  SessionRuns,
-  'shells' | 'openShell' | 'closeShell' | 'renderShell'
->;
+type ShellControls = {
+  controls: Pick<
+    SessionRuns,
+    'shells' | 'openShell' | 'closeShell' | 'renderShell'
+  >;
+  failure: string | undefined;
+};
 
 function useShellControls(
   sessionId: string,
   active: boolean,
   shells: SessionRuns['shells'],
-): { controls: ShellControls; error: Error | null } {
+): ShellControls {
   const trpc = useTRPC();
   const open = useMutation(trpc.terminal.open.mutationOptions());
   const close = useMutation(trpc.terminal.close.mutationOptions());
 
   return {
-    error: open.error ?? close.error,
+    failure: open.error?.message ?? close.error?.message,
     controls: {
       shells,
       openShell: active
