@@ -45,6 +45,7 @@ export const DrawsWhenFenceCloses: Story = {
     await expect(
       await canvas.findByRole('img', { name: chartLabel }),
     ).toBeVisible();
+
     const table = within(
       await canvas.findByRole('table', { name: `${chartLabel} data` }),
     );
@@ -59,9 +60,18 @@ export const DrawsWhenFenceCloses: Story = {
 
 export const DrawsWithoutPreview: Story = {
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByRole('img', { name: chartLabel }),
-    ).toBeVisible();
+    await settleLayout('phone');
+
+    const image = await canvas.findByRole('img', { name: chartLabel });
+
+    // This x-axis label appears only after the plot lays out, outside the data table.
+    const axisLabel = await within(image).findByText(
+      '3',
+      {},
+      { timeout: 10_000 },
+    );
+
+    await expect(axisLabel).toBeVisible();
   },
 };
 
