@@ -19,10 +19,40 @@ import {
 
 type Speak = (say: VoiceSay) => void;
 
+type HandOver = 'delegated' | 'completed' | 'recovered';
+
+const shortAnswer = /^(?:yes|yeah|yep|yup|ok|okay)[.!]*$/iu;
+
+const hangUpCommands = new Set([
+  'hang up',
+  'end this conversation',
+  'end the conversation',
+  'end this call',
+  'end the call',
+]);
+
+function isGoodbye(text: string): boolean {
+  const words = text
+    .toLowerCase()
+    .replace(/[.!]$/u, '')
+    .split(/\s+/u)
+    .join(' ');
+
+  if (words === 'bye' || words === 'goodbye') return true;
+
+  return hangUpCommands.has(
+    words
+      .replace(/^goodbye,? /u, '')
+      .replace(/^please /u, '')
+      .replace(/,? please$/u, ''),
+  );
+}
+
 // What the relay reports back to the call: what the voice should be told, and whether a Prompt it sent is still at work.
 export interface RelayReports {
   speak: Speak;
   turnsRunning: (running: boolean) => void;
+  hangUp: () => void;
 }
 
 /*
@@ -34,6 +64,7 @@ export class AgentRelay {
   private readonly permission = new WaitingPermission();
   private readonly words: AgentWords;
   private readonly spoken: SpokenConsent;
+  private readonly handOvers = new Map<string, HandOver>();
 
   public constructor(
     private readonly sessions: ConversationSessions,
@@ -57,6 +88,25 @@ export class AgentRelay {
     text: string,
     turnId?: string,
   ): Promise<void> {
+    if (turnId === undefined) this.words.takeQuestion();
+    else {
+      const prior = this.handOvers.get(turnId);
+
+      if (prior === 'recovered') {
+        this.reports.speak({
+          kind: 'reply',
+          requestId,
+          text: 'Argo already handled this reply.',
+          delivery: 'background',
+        });
+
+        return;
+      }
+
+      if (prior === undefined) this.words.takeQuestion();
+      this.handOvers.set(turnId, 'delegated');
+    }
+
     const control = this.spoken.answer(text, turnId);
 
     this.reply(
@@ -69,6 +119,35 @@ export class AgentRelay {
 
   public personSaid(words: PersonWords): void {
     this.spoken.heard(words);
+  }
+
+  // GPT-Live sometimes transcribes a reply, then only acknowledges it locally.
+  public async personTurnCompleted({
+    id,
+    text,
+  }: {
+    id: string;
+    text: string;
+  }): Promise<void> {
+    if (this.handOvers.has(id)) return;
+
+    this.handOvers.set(id, 'completed');
+
+    if (isGoodbye(text)) return this.reports.hangUp();
+
+    const asked = this.words.takeQuestion();
+
+    // Permission answers still need a provider hand-over and the spoken consent checks.
+    if (!asked || this.permission.announced || !shortAnswer.test(text)) return;
+
+    this.handOvers.set(id, 'recovered');
+
+    const outcome = await this.work(text);
+
+    const sent =
+      outcome === relayWords.started || outcome === relayWords.steered;
+
+    this.words.tell(outcome, sent ? 'background' : 'speak');
   }
 
   // The call ended: nothing the person said applies any more.
@@ -117,6 +196,8 @@ export class AgentRelay {
       { type: 'turn.ended' } | PermissionHappening
     >,
   ): void {
+    if (happening.type === 'elicitation.waiting') this.words.takeQuestion();
+
     if (isTold(happening)) this.words.tell(speechOf(happening), 'speak');
     else this.words.said(happening);
   }
@@ -125,6 +206,8 @@ export class AgentRelay {
     const announcement = this.permission.heard(happening);
 
     if (announcement === null) return;
+
+    this.words.takeQuestion();
     this.spoken.announced();
     this.words.tell(announcement, 'speak');
   }

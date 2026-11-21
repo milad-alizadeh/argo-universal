@@ -89,6 +89,47 @@ describe('an Agent hangs up the Conversation', () => {
   });
 });
 
+it('keeps the Conversation open for a pause', async () => {
+  const pauseWords = 'Please pause and wait';
+
+  const work = await startConversationWork([
+    { prompt: pauseWords, messages: ['[COMPLETE] Paused.'] },
+  ]);
+
+  await work.start();
+  const call = work.provider.call;
+
+  call.requestWork('wait', pauseWords, 'pause');
+  call.personSays(pauseWords, 'pause');
+  call.emit({ type: 'person.turn.completed', id: 'pause', text: pauseWords });
+  await expect.poll(work.turnEnds).toHaveLength(2);
+  expect((await statusOf(work)).conversation).not.toBeNull();
+});
+
+it('ends on a completed goodbye without a hand-over', async () => {
+  const goodbyeWords = 'Goodbye, please end this Conversation';
+  const work = await startConversationWork([]);
+
+  await work.start();
+  const call = work.provider.call;
+
+  call.personSays(goodbyeWords, 'bye');
+  expect((await statusOf(work)).conversation).not.toBeNull();
+  call.emit({
+    type: 'person.turn.completed',
+    id: 'bye',
+    text: goodbyeWords,
+  });
+  await expect
+    .poll(() => statusOf(work))
+    .toMatchObject({
+      conversation: null,
+      ended: { reason: 'person' },
+    });
+  expect(work.prompts).toHaveLength(1);
+  expect(call.ended).toBe(true);
+});
+
 describe('the provider reports its allowance', () => {
   it('shows a warning on the call status while the call runs', async () => {
     const work = await startConversationWork([]);

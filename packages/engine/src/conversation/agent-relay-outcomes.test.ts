@@ -36,6 +36,7 @@ function relayAnswering(outcomes: PromptOutcome[]): Answering {
     {
       speak: (): void => {},
       turnsRunning: (now): number => running.push(now),
+      hangUp: (): void => {},
     },
   );
 
