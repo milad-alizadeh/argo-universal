@@ -40,7 +40,6 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
-  delegatedInputs?: React.ReactNode;
   // Sign-in or launch trouble, drawn above the Composer.
   callout?: SessionCalloutProps;
   // The Feed's last Turn ended in an error, drawn above the Composer with its Retry.

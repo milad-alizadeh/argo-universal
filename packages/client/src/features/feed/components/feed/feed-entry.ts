@@ -96,15 +96,33 @@ export function withLiveHeader(
   liveHeader: LiveHeaderValue | null,
   toolCall?: ToolCallUpdate,
 ): FeedEntry[] {
-  const shown = shownLiveHeader(drawnItems, liveHeader);
+  const lastTurnItem = drawnItems.findLastIndex(
+    ({ type }) => type !== 'delegated',
+  );
+
+  const turnItems =
+    lastTurnItem === drawnItems.length - 1
+      ? drawnItems
+      : drawnItems.slice(0, lastTurnItem + 1);
+  const delegated = drawnItems.slice(lastTurnItem + 1);
+  const shown = shownLiveHeader(turnItems, liveHeader);
 
   if (!shown) return drawnItems;
-  const group = newestGroup(drawnItems.at(-1), shown.source.type);
+
+  const group = newestGroup(turnItems.at(-1), shown.source.type);
 
   if (group)
-    return [...drawnItems.slice(0, -1), { ...group, liveHeader: shown }];
+    return [
+      ...turnItems.slice(0, -1),
+      { ...group, liveHeader: shown },
+      ...delegated,
+    ];
 
-  return [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }];
+  return [
+    ...turnItems,
+    { type: 'live_header', liveHeader: shown, toolCall },
+    ...delegated,
+  ];
 }
 
 /*
@@ -119,7 +137,7 @@ const isOpenAgentMessage = (entry: FeedEntry): boolean =>
   isAgentMessage(entry) && entry.row.state === 'open';
 
 const endsFeed = (next?: FeedEntry): boolean =>
-  !next || next.type === 'live_header';
+  !next || next.type === 'live_header' || next.type === 'delegated';
 
 export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {
   const newestItem = drawnItems.at(-1);

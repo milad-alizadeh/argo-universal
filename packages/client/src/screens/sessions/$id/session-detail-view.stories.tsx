@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
-import { DelegatedInputs } from '#features/sessions';
+import type { FeedDelegated } from '#features/feed';
 import { composerTodos } from '../../../../mocks/composer-mock';
 import {
   elicitationProps,
@@ -207,66 +207,52 @@ export const ChangesAndTodos: Story = {
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
-export const DelegatedInput: Story = {
-  args: { state: 'open', ...runningSession },
-  render: (args): React.JSX.Element =>
-    args.state === 'open' ? (
-      <SessionDetailView
-        {...args}
-        delegatedInputs={
-          <DelegatedInputs
-            requests={[
-              {
-                sessionId: 'reviewer',
-                title: 'Review the checkout',
-                requestId: 'permission',
-                kind: 'permission',
-              },
-              {
-                sessionId: 'tester',
-                title: 'Run the checks',
-                requestId: 'question',
-                kind: 'elicitation',
-              },
-            ]}
-            onOpen={fn()}
-          />
-        }
-      />
-    ) : (
-      <SessionDetailView {...args} />
-    ),
-};
-
-const delegatedSkillStory = (commandArguments: string): Story => ({
-  args: { state: 'open', ...runningSession },
-  render: (args): React.JSX.Element =>
-    args.state === 'open' ? (
-      <SessionDetailView
-        {...args}
-        delegatedInputs={
-          <DelegatedInputs
-            requests={[]}
-            skills={[
-              {
-                id: 'offer',
-                name: 'implement',
-                arguments: commandArguments,
-                starterId: 'starter',
-              },
-            ]}
-            onOpen={fn()}
-            onConfirm={fn()}
-          />
-        }
-      />
-    ) : (
-      <SessionDetailView {...args} />
-    ),
+const delegatedStory = (items: FeedDelegated[]): Story => ({
+  args: {
+    state: 'open',
+    ...runningSession,
+    feed: {
+      ...runningSession.feed,
+      items: [...runningSession.feed.items, ...items],
+    },
+  },
 });
 
-export const DelegatedSkill = delegatedSkillStory('#12345');
+export const DelegatedInput = delegatedStory([
+  {
+    type: 'delegated',
+    id: 'permission',
+    sourceSessionId: 'reviewer',
+    title: 'Review the checkout',
+    kind: 'permission',
+    onOpen: fn(),
+  },
+  {
+    type: 'delegated',
+    id: 'question',
+    sourceSessionId: 'tester',
+    title: 'Run the checks',
+    kind: 'elicitation',
+    onOpen: fn(),
+  },
+]);
+
+const delegatedSkillStory = (command: string): Story =>
+  delegatedStory([
+    {
+      type: 'delegated',
+      id: 'offer',
+      sourceSessionId: 'starter',
+      title: 'the starter Session',
+      kind: 'offered_skill',
+      command,
+      onOpen: fn(),
+      onConfirm: fn(),
+    },
+  ]);
+
+export const DelegatedSkill = delegatedSkillStory('/implement #12345');
 
 export const DelegatedSkillLong = delegatedSkillStory(
-  '#12345 Review changes in the destination Checkout and run the verification requested in the original Session.',
+  '/implement #12345 Review changes in the destination Checkout and run the verification requested in the original Session.',
 );
