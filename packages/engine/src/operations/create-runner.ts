@@ -22,11 +22,15 @@ export function createRunner(deps: OperationsDeps): OperationRunner {
       directory,
       createId: deps.createId,
       chains,
-      openedByPerson: (sessionId, name) =>
-        deps.runs.terminals.openedByPerson(
-          runCheckoutOf(deps.database, sessionId),
-          name,
-        ),
+      canReadShell: (callerId, targetId) => {
+        const caller = runCheckoutOf(deps.database, callerId);
+        const target = runCheckoutOf(deps.database, targetId);
+
+        return (
+          caller.projectId === target.projectId &&
+          caller.checkoutPath === target.checkoutPath
+        );
+      },
     }),
   });
 }

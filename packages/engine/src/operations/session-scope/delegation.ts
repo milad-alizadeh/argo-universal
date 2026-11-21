@@ -21,8 +21,7 @@ export type ScopePorts = {
   directory: SessionDirectory;
   createId: () => string;
   chains: PromptChains;
-  // Whether the person opened this Terminal themselves, in the Checkout of this Session: an Agent never types into one.
-  openedByPerson: (sessionId: string, name: string) => boolean;
+  canReadShell: (callerId: string, targetId: string) => boolean;
 };
 
 // Each native start's own delegation rule, keyed by the one list of native starts.

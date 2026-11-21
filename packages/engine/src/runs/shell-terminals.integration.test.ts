@@ -1,6 +1,7 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 async function projectWithTerminalSpawner() {
   const terminals = createFakeTerminals();
@@ -38,4 +39,38 @@ it('opens a plain shell in the Session Checkout and lists it until Close stops t
   await expect(caller.run.status({ sessionId })).resolves.toEqual({
     configurations: [],
   });
+});
+
+it('lets the person type and the Agent read a shell while refusing Agent input', async () => {
+  const { host, terminals, sessionId } = await projectWithTerminalSpawner();
+  const { caller } = host;
+  const shell = await caller.terminal.open({ sessionId });
+  const terminal = await terminals.next();
+  const target = { shellId: shell.id };
+
+  await caller.terminal.send({ ...target, sessionId, input: 'pwd\r' });
+  expect(terminal.written).toEqual(['pwd\r']);
+  terminal.print('opened checkout\r\n');
+
+  const { projectId } = await caller.session.get({ sessionId });
+  const access = host.engine
+    .getSnapshot()
+    .context.sessionTokens.issue(sessionId, projectId);
+  onTestFinished(() => access.release());
+  const agent = await operationCaller(host, access.token);
+
+  await expect(
+    runOperation(agent.operations, { id: 'terminal.read', params: target }),
+  ).resolves.toMatchObject({
+    screen: 'opened checkout',
+  });
+  await expect(
+    runOperation(agent.operations, {
+      id: 'terminal.send',
+      params: { ...target, input: 'exit\r' },
+    }),
+  ).rejects.toMatchObject({
+    data: { code: 'FORBIDDEN' },
+  });
+  expect(terminal.written).toEqual(['pwd\r']);
 });

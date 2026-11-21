@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { RunConfigurationStatus } from './run';
+import { shellId } from './shell-terminal';
 
 const sessionId = z
   .string()
@@ -17,30 +18,30 @@ const longestInput = 10_000;
 
 const mostScrollback = 1000;
 
-export const TerminalReadParams = z.strictObject({
-  sessionId,
-  name,
-  scrollback: z
-    .int()
-    .min(0)
-    .max(mostScrollback)
-    .optional()
-    .describe('How many lines above the screen to read; 100 by default.'),
-});
+const scrollback = z
+  .int()
+  .min(0)
+  .max(mostScrollback)
+  .optional()
+  .describe('How many lines above the screen to read; 100 by default.');
+
+const input = z
+  .string()
+  .min(1)
+  .max(longestInput)
+  .describe('The keystrokes to type, exactly. Add \\r to press Enter.');
+
+export const TerminalReadParams = z.union([
+  z.strictObject({ sessionId, name, scrollback }),
+  z.strictObject({ sessionId, shellId, scrollback }),
+]);
 
 export type TerminalReadParams = z.infer<typeof TerminalReadParams>;
 
-export const TerminalSendParams = z.strictObject({
-  sessionId,
-  name,
-  input: z
-    .string()
-    .min(1)
-    .max(longestInput)
-    .describe(
-      'The keystrokes to type, exactly: add \\r to press Enter and \\u001b for Escape.',
-    ),
-});
+export const TerminalSendParams = z.union([
+  z.strictObject({ sessionId, name, input }),
+  z.strictObject({ sessionId, shellId, input }),
+]);
 
 export type TerminalSendParams = z.infer<typeof TerminalSendParams>;
 
@@ -65,11 +66,14 @@ const maxTerminalColumns = 512;
 
 const maxTerminalRows = 256;
 
-export const TerminalResizeParams = z.strictObject({
-  sessionId,
-  name,
+const terminalDimensions = {
   columns: z.int().min(2).max(maxTerminalColumns),
   rows: z.int().min(1).max(maxTerminalRows),
-});
+};
+
+export const TerminalResizeParams = z.union([
+  z.strictObject({ sessionId, name, ...terminalDimensions }),
+  z.strictObject({ sessionId, shellId, ...terminalDimensions }),
+]);
 
 export const TerminalResizeResult = z.strictObject({});

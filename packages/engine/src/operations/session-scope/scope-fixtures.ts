@@ -57,8 +57,7 @@ export const newScope = (chains = new PromptChains()): SessionScope =>
     directory,
     createId: () => 'new-session',
     chains,
-    // The one Terminal the person opened.
-    openedByPerson: (_sessionId, name) => name === 'my-shell',
+    canReadShell: (callerId, targetId) => callerId === targetId,
   });
 
 export const sessionCaller = (sessionId: string): SessionCaller => ({

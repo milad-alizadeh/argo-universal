@@ -1,8 +1,19 @@
-import type { ShellTerminal } from '@repo/contracts';
+import type {
+  RunOutput,
+  RunOutputCursor,
+  ShellTerminal,
+  TerminalReadResult,
+  TerminalSendResult,
+} from '@repo/contracts';
+import { TRPCError } from '@trpc/server';
 import type { RunBlocks } from './run-blocks';
 import type { RunLifecycle } from './run-lifecycle';
+import { createRunOutput, removeRunOutput, runOutputPath } from './run-output';
+import { watchRunOutput } from './run-replay';
+import { RunUpdates } from './run-updates';
 import type { RunCheckout, RunsInput } from './runs';
 import type { TerminalProcess } from './terminal';
+import { TerminalRecording } from './terminal-recording';
 
 type OpenShell = {
   shell: ShellTerminal;
@@ -11,6 +22,8 @@ type OpenShell = {
   block: number;
   starter: string;
   terminal: TerminalProcess;
+  recording: TerminalRecording;
+  closed: AbortController;
   stopping?: Promise<void>;
 };
 
@@ -18,7 +31,10 @@ const sameCheckout = (left: RunCheckout, right: RunCheckout): boolean =>
   left.projectId === right.projectId &&
   left.checkoutPath === right.checkoutPath;
 
+const defaultScrollbackLines = 100;
+
 export class ShellTerminals {
+  private readonly updates = new RunUpdates();
   private readonly live = new Map<string, OpenShell>();
   private readonly pending = new Map<
     string,
@@ -26,7 +42,7 @@ export class ShellTerminals {
   >();
 
   public constructor(
-    private readonly input: Pick<RunsInput, 'createId' | 'spawn'>,
+    private readonly input: Pick<RunsInput, 'createId' | 'home' | 'spawn'>,
     private readonly lifecycle: RunLifecycle,
     private readonly blocks: RunBlocks,
     private readonly changed: (checkout: RunCheckout) => void,
@@ -52,6 +68,68 @@ export class ShellTerminals {
     this.pending.set(id, { checkout, ownerId, opening });
 
     return opening;
+  }
+
+  public async read(
+    checkout: RunCheckout,
+    id: string,
+    scrollback = defaultScrollbackLines,
+  ): Promise<TerminalReadResult> {
+    const { shell, recording } = this.require(checkout, id);
+    const drawn = await recording.screen.read(scrollback);
+
+    return { ...drawn, name: shell.name, status: 'ready', exitCode: null };
+  }
+
+  public send(
+    checkout: RunCheckout,
+    id: string,
+    input: string,
+  ): TerminalSendResult {
+    const { terminal, shell } = this.require(checkout, id);
+    terminal.write(input);
+
+    return { name: shell.name, status: 'ready' };
+  }
+
+  public resize(
+    checkout: RunCheckout,
+    id: string,
+    { columns, rows }: { columns: number; rows: number },
+  ): void {
+    const { terminal, recording } = this.require(checkout, id);
+    recording.screen.resize(columns, rows);
+    terminal.resize(columns, rows);
+  }
+
+  public watchOutput(
+    checkout: RunCheckout,
+    { shellId, cursor }: { shellId: string; cursor?: RunOutputCursor },
+    signal: AbortSignal,
+  ): AsyncIterable<RunOutput> {
+    const { recording, closed } = this.require(checkout, shellId);
+
+    return watchRunOutput(
+      {
+        current: () => ({ runId: shellId, path: recording.path }),
+        listen: (changed) =>
+          this.updates.listenToOutput(checkout, shellId, changed),
+      },
+      cursor,
+      AbortSignal.any([signal, closed.signal]),
+    );
+  }
+
+  private require(checkout: RunCheckout, id: string): OpenShell {
+    const entry = this.live.get(id);
+
+    if (!entry || !sameCheckout(entry.record, checkout) || entry.stopping)
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No open shell Terminal in this Checkout.',
+      });
+
+    return entry;
   }
 
   public async close(checkout: RunCheckout, id: string): Promise<void> {
@@ -109,14 +187,23 @@ export class ShellTerminals {
       { name },
       undefined,
     );
-    const terminal = await this.input.spawn({
-      id,
-      cwd: shell.cwd,
-      command: '',
-      env,
-      port,
-      shell: true,
-    });
+    const path = runOutputPath(this.input.home, id);
+    await createRunOutput(path);
+    let terminal: TerminalProcess;
+
+    try {
+      terminal = await this.input.spawn({
+        id,
+        cwd: shell.cwd,
+        command: '',
+        env,
+        port,
+        shell: true,
+      });
+    } catch (error) {
+      await removeRunOutput(path);
+      throw error;
+    }
     const entry: OpenShell = {
       shell,
       record: { ...checkout, name, port },
@@ -124,10 +211,18 @@ export class ShellTerminals {
       block,
       starter: name,
       terminal,
+      recording: new TerminalRecording(path),
+      closed: new AbortController(),
     };
     this.live.set(id, entry);
+    terminal.onData((data) => {
+      entry.recording.append(data);
+      void entry.recording
+        .flushed()
+        .then(() => this.updates.outputChanged(checkout, id));
+    });
     terminal.onExit(() => {
-      if (!entry.stopping) this.remove(entry);
+      if (!entry.stopping) this.stop(entry).catch(() => {});
     });
     this.changed(checkout);
 
@@ -145,13 +240,24 @@ export class ShellTerminals {
   }
 
   private stop(entry: OpenShell): Promise<void> {
-    entry.stopping ??= entry.terminal.stop().then(() => this.remove(entry));
+    entry.stopping ??= Promise.resolve().then(async () => {
+      await entry.terminal.stop();
+      await this.remove(entry);
+    });
 
     return entry.stopping;
   }
 
-  private remove({ shell, record }: OpenShell): void {
+  private async remove({
+    closed,
+    recording,
+    record,
+    shell,
+  }: OpenShell): Promise<void> {
     this.live.delete(shell.id);
+    closed.abort();
     this.changed(record);
+    await recording.dispose();
+    await removeRunOutput(recording.path);
   }
 }

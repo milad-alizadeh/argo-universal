@@ -21,7 +21,7 @@ it('types into a Run for the calling Session when terminal.send names no Session
 
 it('refuses a Session that types into a Terminal the person opened', async () => {
   const { outcome, invoked } = await scoped(
-    operation(send, { name: shell, input: 'ls\r' }),
+    operation(send, { shellId: shell, input: 'ls\r' }),
   );
 
   expect(outcome).toBe('FORBIDDEN');
@@ -29,7 +29,9 @@ it('refuses a Session that types into a Terminal the person opened', async () =>
 });
 
 it('lets a Session read a Terminal the person opened', async () => {
-  const { outcome } = await scoped(operation('terminal.read', { name: shell }));
+  const { outcome } = await scoped(
+    operation('terminal.read', { shellId: shell }),
+  );
 
   expect(outcome).toBe(runs);
 });

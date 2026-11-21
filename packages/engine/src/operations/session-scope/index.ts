@@ -36,7 +36,10 @@ const parsed = <Id extends TargetedId>(
 
 const sessionTarget = z.object({ sessionId: z.string() });
 
-const terminalTarget = z.object({ sessionId: z.string(), name: z.string() });
+const terminalTarget = z.object({
+  sessionId: z.string(),
+  shellId: z.string().optional(),
+});
 
 type Admission = {
   id: OperationId;
@@ -84,21 +87,26 @@ export class SessionScope {
     invoke: (params: OperationParams<Id>) => Promise<Result>,
   ): Promise<Result> {
     const scoped = scopedParams(id, params, context.caller);
-    this.refuseOtherTerminals(id, scoped);
+    this.admitTerminal(context.caller.sessionId, id, scoped);
     const policy = this.permission(context, id, scoped);
 
     return this.permitted(context, { id, policy }, () => invoke(scoped));
   }
-  // ADR-0063: an Agent reads a Terminal the person opened but never types into it.
-  private refuseOtherTerminals(id: OperationId, params: OperationParams): void {
-    if (id !== 'terminal.send') return;
+  // An Agent may read a shell in its Checkout. An Agent never types into a person's shell (ADR-0063).
+  private admitTerminal(
+    callerId: string,
+    id: OperationId,
+    params: OperationParams,
+  ): void {
+    if (id !== 'terminal.send' && id !== 'terminal.read') return;
+    const { sessionId, shellId } = terminalTarget.parse(params);
 
-    const { sessionId, name } = terminalTarget.parse(params);
+    if (shellId === undefined) return;
 
-    if (this.ports.openedByPerson(sessionId, name))
+    if (id === 'terminal.send' || !this.ports.canReadShell(callerId, sessionId))
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: `A Session never types into "${name}": the person opened that Terminal`,
+        message: 'The Session can only read shell Terminals in its Checkout.',
       });
   }
   private permitted<Result>(

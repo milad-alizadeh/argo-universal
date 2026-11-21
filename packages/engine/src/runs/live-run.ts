@@ -1,13 +1,8 @@
 import { stripVTControlCharacters } from 'node:util';
 import type { RunConfiguration } from './run-configurations';
-import { appendRunOutput } from './run-output';
-import { RunScreen } from './run-screen';
 import type { RunRecord } from './run-store';
-import {
-  terminalColumns,
-  terminalRows,
-  type TerminalProcess,
-} from './terminal';
+import type { TerminalProcess } from './terminal';
+import { TerminalRecording } from './terminal-recording';
 
 const memoryCharacters = 65_536;
 
@@ -32,9 +27,11 @@ export class LiveRun {
   public readonly starter: string;
   public readonly ended = Promise.withResolvers<void>();
   public readonly ready = Promise.withResolvers<void>();
-  public readonly screen = new RunScreen(terminalColumns, terminalRows);
+  private readonly recording: TerminalRecording;
+  public get screen(): TerminalRecording['screen'] {
+    return this.recording.screen;
+  }
   private output = '';
-  private pendingWrites: Promise<void> = Promise.resolve();
   public constructor(input: LiveRunInput) {
     this.record = input.record;
     this.terminal = input.terminal;
@@ -42,17 +39,15 @@ export class LiveRun {
     this.configuration = input.configuration;
     this.block = input.block;
     this.starter = input.starter;
-    void this.ended.promise.then(() => this.screen.dispose());
+    this.recording = new TerminalRecording(this.outputPath);
+    void this.ended.promise.then(() => this.recording.dispose());
   }
   public append(data: string): void {
-    this.screen.write(data);
+    this.recording.append(data);
     this.output = (this.output + data).slice(-memoryCharacters);
-    this.pendingWrites = this.pendingWrites.then(() =>
-      appendRunOutput(this.outputPath, data).catch((): void => undefined),
-    );
   }
   public flushed(): Promise<void> {
-    return this.pendingWrites;
+    return this.recording.flushed();
   }
   // Whether the output so far matches the pattern the Run Configuration is ready by.
   public matches(pattern: RegExp): boolean {

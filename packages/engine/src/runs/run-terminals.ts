@@ -60,8 +60,4 @@ export class RunTerminals {
     live.screen.resize(columns, rows);
     live.terminal.resize(columns, rows);
   }
-  // Whether the person opened this Terminal. Every Terminal is a Run until shell Terminals arrive.
-  public openedByPerson(_checkout: RunCheckout, _name: string): boolean {
-    return false;
-  }
 }
