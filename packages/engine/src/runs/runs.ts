@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import type {
@@ -15,9 +14,10 @@ import {
   type WriterActorRef,
 } from '../storage';
 import { LiveRun } from './live-run';
-import { RunBlocks, serially, starterName } from './run-blocks';
+import { RunBlocks, starterName } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
+import { RunLifecycle } from './run-lifecycle';
 import {
   readRunOutputTail,
   removeRunOutput,
@@ -77,12 +77,10 @@ export class Runs {
   private readonly live = new Map<string, LiveRun>();
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
-  private readonly launching = new Map<string, Promise<LiveRun>>();
+  private readonly lifecycle = new RunLifecycle(this.live);
   private readonly updates = new RunUpdates();
   public readonly terminals = new RunTerminals(this);
   private readonly blocks: RunBlocks;
-  // Launches queue, so two Runs of one Checkout never each reserve a block.
-  private readonly queued = serially();
   public constructor(private readonly input: RunsInput) {
     this.blocks = new RunBlocks(
       () => this.live.values(),
@@ -105,7 +103,7 @@ export class Runs {
     name: string,
   ): Promise<RunStopResult> {
     await this.configuration(checkout, name);
-    await this.end(this.live.get(keyOf(checkout, name)));
+    await this.lifecycle.stop(keyOf(checkout, name));
 
     return { name, status: statusOf(this.record(checkout, name)) };
   }
@@ -116,7 +114,7 @@ export class Runs {
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
-    await this.end(this.live.get(keyOf(checkout, name)));
+    await this.lifecycle.stop(keyOf(checkout, name));
 
     return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
@@ -164,25 +162,35 @@ export class Runs {
     };
   }
 
-  // The Run of a Run Configuration as it stands now: its terminal while it lives, and its latest record.
+  // The current Terminal, or its recording if it has exited or is being stopped.
   public async standing(
     checkout: RunCheckout,
     name: string,
   ): Promise<Standing> {
     await this.configuration(checkout, name);
-    const live = this.live.get(keyOf(checkout, name));
+    const current = this.live.get(keyOf(checkout, name));
+
+    if (current?.stopping) await current.flushed();
+
     const record = this.record(checkout, name);
 
     return {
-      live,
+      live: current?.stopping ? undefined : current,
       record,
       output: record && runOutputPath(this.input.home, record.id),
     };
   }
 
-  // Ends every Run: the Server never leaves one behind.
-  public async close(): Promise<void> {
-    await Promise.all([...this.live.values()].map((run) => this.end(run)));
+  // End this Checkout's Runs before Git removes it.
+  public removeCheckout(
+    checkout: RunCheckout,
+    remove: () => Promise<void>,
+  ): Promise<void> {
+    return this.lifecycle.removeCheckout(checkout, remove);
+  }
+
+  public close(): Promise<void> {
+    return this.lifecycle.close();
   }
 
   private row(
@@ -216,20 +224,11 @@ export class Runs {
     checkout: RunRequest,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
-    const key = keyOf(checkout, configuration.name);
-    const existing = this.live.get(key);
-
-    if (existing) return Promise.resolve(existing);
-
-    const launching =
-      this.launching.get(key) ??
-      this.queued(() => this.launch(checkout, configuration)).finally(() =>
-        this.launching.delete(key),
-      );
-
-    this.launching.set(key, launching);
-
-    return launching;
+    return this.lifecycle.start(
+      keyOf(checkout, configuration.name),
+      checkout,
+      () => this.launch(checkout, configuration),
+    );
   }
 
   private async launch(
@@ -330,7 +329,7 @@ export class Runs {
     run: LiveRun,
     exitCode: number,
   ): Promise<void> {
-    this.live.delete(key);
+    if (!run.stopping) this.live.delete(key);
     await run.flushed();
     await this.update(key, run, {
       status: run.stopping ? 'stopped' : 'crashed',
@@ -343,12 +342,13 @@ export class Runs {
   private async becomeReady(key: string, run: LiveRun): Promise<void> {
     const pattern = readyPattern(run.configuration);
 
-    while (this.live.get(key) === run) {
+    while (this.live.get(key) === run && !run.stopping) {
       const ready = pattern
         ? run.matches(pattern)
         : await portListening(run.record.port);
 
-      if (ready) return this.markReady(key, run);
+      if (ready && this.live.get(key) === run && !run.stopping)
+        return this.markReady(key, run);
       await delay(readyPollMs);
     }
   }
@@ -383,15 +383,4 @@ export class Runs {
     );
     this.updates.changed(record);
   }
-
-  private async end(run: LiveRun | undefined): Promise<void> {
-    if (!run) return;
-    run.stopping = true;
-    await run.terminal.stop();
-    await run.ended.promise;
-  }
 }
-
-export const createRuns = (
-  input: Omit<RunsInput, 'createId'> & Partial<Pick<RunsInput, 'createId'>>,
-): Runs => new Runs({ createId: randomUUID, ...input });
