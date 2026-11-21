@@ -14,10 +14,7 @@ import { useConversationDeviceChoice } from './conversation-device-choice';
 import { phoneConversationEnvironment } from './phone-conversation-environment';
 import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
-/*
- * The desktop App carries a Conversation's audio itself; any other page offers no voice button.
- * SPIKE (latency on a phone): an iPhone carries it too, through its own environment.
- */
+// Desktop and supported native Apps carry Conversation audio through their respective environments.
 function connectionFor(desktop: boolean): ConversationConnection | null {
   if (desktop && browserCarriesAudio())
     return createWebRtcConversationConnection(browserConversationEnvironment);

@@ -1,4 +1,3 @@
-import { requireOptionalNativeModule } from 'expo';
 import { setAudioModeAsync } from 'expo-audio';
 import { Platform } from 'react-native';
 import {
@@ -23,39 +22,24 @@ import { requestPhoneSpeakerRoute } from './phone-speaker-route';
 
 /*
  * SPIKE (latency on a phone, docs/research/voice-mode.md): the least a phone needs to carry a real Conversation, so its
- * latency can be measured against the desktop App's. iPhone only. Left out on purpose: choosing a device,
+ * latency can be measured against the desktop App's. Left out on purpose: choosing a device,
  * microphone gain, voice previews, a real spectrum and recovery from a network change.
  */
 
-interface AudioRouteModule {
-  preferLoudspeaker: () => string;
-  route: () => string;
-}
-
-const audioRoute =
-  requireOptionalNativeModule<AudioRouteModule>('ArgoAudioRoute');
-
-function configureConversationAudio(signal: AbortSignal): void {
+function configureConversationAudio(): void {
   void setAudioModeAsync({
     playsInSilentMode: true,
     allowsRecording: true,
-    shouldRouteThroughEarpiece: true,
+    shouldRouteThroughEarpiece: false,
     interruptionMode: 'doNotMix',
     shouldPlayInBackground: true,
     allowsBackgroundRecording: true,
-  })
-    .then(() => {
-      // The native route check switches only the built-in receiver to the speaker.
-      if (!signal.aborted) audioRoute?.preferLoudspeaker();
-    })
-    .catch((cause: unknown) => {
-      const message = cause instanceof Error ? cause.message : String(cause);
+  }).catch((cause: unknown) => {
+    const message = cause instanceof Error ? cause.message : String(cause);
 
-      console.error('Could not configure iPhone Conversation audio', message);
-    });
+    console.error('Could not configure iPhone Conversation audio', message);
+  });
 }
-
-export const phoneAudioRoute = (): string | undefined => audioRoute?.route();
 
 // The levels the peer's stats gave last. A phone has no AnalyserNode, so the band is moved by these.
 const levels = { input: 0, output: 0 };
@@ -145,9 +129,10 @@ class PhonePeer implements VoicePeer<PhoneStream> {
  * reapplying the audio session category during playback stalls jitter-buffer output.
  */
 class PhonePlayback implements VoicePlayback {
-  private readonly cancelSpeakerRoute = requestPhoneSpeakerRoute(
-    configureConversationAudio,
-  );
+  private readonly cancelSpeakerRoute =
+    Platform.OS === 'ios'
+      ? requestPhoneSpeakerRoute(configureConversationAudio)
+      : undefined;
 
   public constructor(private readonly stream: PhoneStream) {}
 
@@ -167,7 +152,7 @@ class PhonePlayback implements VoicePlayback {
   }
 
   public stop(): void {
-    this.cancelSpeakerRoute();
+    this.cancelSpeakerRoute?.();
   }
 }
 
@@ -193,4 +178,4 @@ const environment: ConversationEnvironment<PhoneStream> = {
 };
 
 export const phoneConversationEnvironment: ConversationEnvironment<PhoneStream> | null =
-  Platform.OS === 'ios' ? environment : null;
+  Platform.OS === 'ios' || Platform.OS === 'android' ? environment : null;
