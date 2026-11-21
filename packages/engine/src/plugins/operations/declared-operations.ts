@@ -35,6 +35,7 @@ export const operationRow = (declared: DeclaredOperation): OperationRow => ({
   result: { description: `What ${declared.pluginName} answers.` },
   tier: declared.operation.tier,
   policy: declared.operation.policy,
+  ...(declared.operation.askWhen && { askWhen: declared.operation.askWhen }),
   keywords: operationKeywords(declared),
   enabled: declared.enabled,
   disabledReason: disabledReason(declared),
