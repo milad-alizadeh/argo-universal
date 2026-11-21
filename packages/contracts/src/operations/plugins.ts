@@ -54,7 +54,7 @@ export const pluginOperations = {
     label: 'Show Draft',
     icon: 'plug',
     description:
-      'After finishing a region of a Plugin Draft, rebuild the dev Plugin at once, even while a Turn runs, and swap its worker only when the build passes. A broken build keeps the current worker, so the Draft on screen never blanks, and the build error is returned as the refusal. Every other source change still waits for the Turn to end. Needs a Server running with --watch.',
+      'Rebuild a Draft now, even mid-Turn. Call it after each region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only if the build passes; a broken build keeps the current one and its error is the refusal. Needs --watch.',
     params: z.strictObject({
       pluginId: PluginIdentifier,
       // The region the Agent is writing next, which Apps frame until it lands; optional.
