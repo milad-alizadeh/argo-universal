@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { cn } from '#kit/utils';
+import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { Adjustable } from './fader-adjustable';
 import { Gradient } from './fader-gradient';
 import { fractionOf } from './fader-math';
@@ -63,6 +64,10 @@ export type SurfaceProps = FaderProps & {
 
 // The unfilled part, the fill and the adjustable element, behind the content.
 export function Surface(props: SurfaceProps): ReactElement {
+  const loading = useSkeletonLoading();
+
+  if (loading) return <Unfilled />;
+
   const share = fractionOf(props.control.value, props);
 
   return (

@@ -103,7 +103,9 @@ function showingOn(
  * Waits for the Plugin's changes to settle and, on a test clock, for the reads a draw left running behind it, so a
  * page marked by them draws again as the App would (ADR-0060). On the real clock only the changes are waited for.
  */
-async function readsLanded({ testControl }: PluginRuntime): Promise<void> {
+export async function readsLanded({
+  testControl,
+}: PluginRuntime): Promise<void> {
   await testControl.changesSettled();
 
   if (testControl.workerStart() !== undefined) {

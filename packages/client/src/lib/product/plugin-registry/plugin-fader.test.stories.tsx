@@ -1,5 +1,6 @@
 import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import { WireNode } from '@repo/contracts/plugins/wire';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -79,5 +80,17 @@ export const FaderKeyDispatchesItsValue: Story = {
       { bind: 'level' },
       expect.objectContaining<Partial<PageEvent>>({ payload: 79 }),
     );
+  },
+};
+
+export const LoadingFaderKeepsTheShellWithoutItsFill: Story = {
+  render: () => (
+    <Skeleton loading>
+      <PluginTree root={page} onPageCall={onPageCall} />
+    </Skeleton>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.queryByRole('slider')).not.toBeInTheDocument();
+    await expect(canvasElement.querySelector('linearGradient')).toBeNull();
   },
 };

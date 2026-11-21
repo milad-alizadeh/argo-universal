@@ -3,13 +3,25 @@ import {
   runListRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState, type ReactElement } from 'react';
 import { action } from 'storybook/actions';
-import { PluginDetailView } from './plugin-detail-view';
+import {
+  PluginDetailView,
+  type PluginDetailViewProps,
+} from './plugin-detail-view';
 import {
   loading,
   loadingJiraList,
   developmentPace,
   homeConnect,
+  homeFaders,
+  homeFilteredScenes,
+  homeManyScenes,
+  homeNoMatchingScenes,
+  homeNoScenes,
+  homeOffLight,
+  homeLightEditor,
+  homeScenesEditor,
   homeLights,
   homeSignedOut,
   homeUnreachable,
@@ -115,3 +127,49 @@ export const HomeConnect: StoryObj<typeof meta> = { args: homeConnect };
 export const HomeUnreachable: StoryObj<typeof meta> = { args: homeUnreachable };
 
 export const HomeSignedOut: StoryObj<typeof meta> = { args: homeSignedOut };
+
+export const HomeFaders: StoryObj<typeof meta> = { args: homeFaders };
+
+// A recorded open editor can dismiss by applying the same Page state patch as the App.
+function DismissibleHomeEditor(props: PluginDetailViewProps): ReactElement {
+  const [root, setRoot] = useState(props.root);
+
+  return (
+    <PluginDetailView
+      {...props}
+      root={root}
+      callbacks={{
+        ...props.callbacks,
+        onPageCall: async (call, event) => {
+          if ('pageState' in call && call.pageState.editor === '')
+            setRoot(homeFaders.root);
+
+          await props.callbacks.onPageCall?.(call, event);
+        },
+      }}
+    />
+  );
+}
+
+export const HomeLightEditor: StoryObj<typeof meta> = {
+  args: homeLightEditor,
+  render: (args) => <DismissibleHomeEditor {...args} />,
+};
+
+export const HomeScenesEditor: StoryObj<typeof meta> = {
+  args: homeScenesEditor,
+};
+
+export const HomeManyScenes: StoryObj<typeof meta> = { args: homeManyScenes };
+
+export const HomeFilteredScenes: StoryObj<typeof meta> = {
+  args: homeFilteredScenes,
+};
+
+export const HomeNoMatchingScenes: StoryObj<typeof meta> = {
+  args: homeNoMatchingScenes,
+};
+
+export const HomeNoScenes: StoryObj<typeof meta> = { args: homeNoScenes };
+
+export const HomeOffLight: StoryObj<typeof meta> = { args: homeOffLight };

@@ -15,7 +15,7 @@ import {
 import { steppedClock } from './clock-until';
 import { PageClock } from './page-clock';
 import { itemsConnection, testConnection } from './test-connection';
-import { testOperations, testPages } from './test-operations';
+import { readsLanded, testOperations, testPages } from './test-operations';
 import { TestProjects } from './test-projects';
 import { configureTest } from './test-runtime';
 import { secretStoreFor, type HostedTest } from './test-secret-store';
@@ -79,6 +79,7 @@ class HostedPlugin implements PluginTest {
     },
     idle: () => this.runtime.testControl.idle(),
   });
+  readonly settled: PluginTest['settled'] = () => readsLanded(this.runtime);
   readonly plugins: PluginTest['plugins'] = {
     setEnabled: (pluginId, enabled) =>
       this.service.setEnabled(pluginId, enabled),

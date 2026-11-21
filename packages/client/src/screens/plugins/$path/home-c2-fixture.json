@@ -1,0 +1,3527 @@
+{
+  "tiles": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "align": "stretch",
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
+        },
+        "children": [
+          {
+            "type": "ScrollView",
+            "key": "0",
+            "props": {},
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 6,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Stack",
+                    "key": "room-office",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Office",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Fader",
+                        "key": "1",
+                        "props": {
+                          "value": 60,
+                          "minimumValue": 1,
+                          "maximumValue": 100,
+                          "step": 1,
+                          "onValueChange": {
+                            "operation": "setBrightness",
+                            "args": {
+                              "kind": "grouped_light",
+                              "id": "group-office",
+                              "brightness": {
+                                "$payload": true
+                              }
+                            }
+                          },
+                          "accessibilityLabel": "All lights brightness",
+                          "valueLabel": "60%",
+                          "disabled": false,
+                          "orientation": "horizontal",
+                          "fill": ["#ffd078", "#f0b344"]
+                        },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "direction": "column"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "All lights",
+                                  "role": "row"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "1",
+                                "props": {
+                                  "children": "2 lights · 60%",
+                                  "role": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": {
+                              "gap": 1,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "IconButton",
+                                "key": "0",
+                                "props": {
+                                  "icon": "edit",
+                                  "accessibilityLabel": "Edit All lights",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "pageState": {
+                                      "editor": "room:room-office",
+                                      "sceneSearch": ""
+                                    }
+                                  },
+                                  "selected": false,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "IconButton",
+                                "key": "1",
+                                "props": {
+                                  "icon": "power",
+                                  "accessibilityLabel": "All lights power",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "grouped_light",
+                                      "id": "group-office",
+                                      "on": false
+                                    }
+                                  },
+                                  "selected": true,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "2",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-desk",
+                            "props": {
+                              "value": 80,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-desk",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Desk lamp brightness",
+                              "valueLabel": "80%",
+                              "disabled": false,
+                              "fill": ["#f0b344", "#ffd078"]
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Desk lamp",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Desk lamp",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-desk",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Desk lamp power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-desk",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "80%",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Fader",
+                            "key": "light-ceiling",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-ceiling",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Ceiling brightness",
+                              "valueLabel": "Off",
+                              "disabled": false
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Ceiling",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Ceiling",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-ceiling",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Ceiling power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-ceiling",
+                                              "on": true
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Off",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Was 40%",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "other-lights",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Other lights",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "1",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-porch",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-porch",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Porch brightness",
+                              "valueLabel": "Unreachable",
+                              "disabled": true
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Porch",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Porch",
+                                          "disabled": true,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-porch",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Porch power",
+                                          "disabled": true,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-porch",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Unreachable",
+                                      "role": "heading"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Check the Hue Bridge",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "light": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "align": "stretch",
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
+        },
+        "children": [
+          {
+            "type": "ScrollView",
+            "key": "0",
+            "props": {},
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 6,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Stack",
+                    "key": "room-office",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Office",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Fader",
+                        "key": "1",
+                        "props": {
+                          "value": 60,
+                          "minimumValue": 1,
+                          "maximumValue": 100,
+                          "step": 1,
+                          "onValueChange": {
+                            "operation": "setBrightness",
+                            "args": {
+                              "kind": "grouped_light",
+                              "id": "group-office",
+                              "brightness": {
+                                "$payload": true
+                              }
+                            }
+                          },
+                          "accessibilityLabel": "All lights brightness",
+                          "valueLabel": "60%",
+                          "disabled": false,
+                          "orientation": "horizontal",
+                          "fill": ["#ffd078", "#f0b344"]
+                        },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "direction": "column"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "All lights",
+                                  "role": "row"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "1",
+                                "props": {
+                                  "children": "2 lights · 60%",
+                                  "role": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": {
+                              "gap": 1,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "IconButton",
+                                "key": "0",
+                                "props": {
+                                  "icon": "edit",
+                                  "accessibilityLabel": "Edit All lights",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "pageState": {
+                                      "editor": "room:room-office",
+                                      "sceneSearch": ""
+                                    }
+                                  },
+                                  "selected": false,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "IconButton",
+                                "key": "1",
+                                "props": {
+                                  "icon": "power",
+                                  "accessibilityLabel": "All lights power",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "grouped_light",
+                                      "id": "group-office",
+                                      "on": false
+                                    }
+                                  },
+                                  "selected": true,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "2",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-desk",
+                            "props": {
+                              "value": 80,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-desk",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Desk lamp brightness",
+                              "valueLabel": "80%",
+                              "disabled": false,
+                              "fill": ["#f0b344", "#ffd078"]
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Desk lamp",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Desk lamp",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "primary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Desk lamp power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-desk",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "80%",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Fader",
+                            "key": "light-ceiling",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-ceiling",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Ceiling brightness",
+                              "valueLabel": "Off",
+                              "disabled": false
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Ceiling",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Ceiling",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-ceiling",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Ceiling power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-ceiling",
+                                              "on": true
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Off",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Was 40%",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "other-lights",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Other lights",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "1",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-porch",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-porch",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Porch brightness",
+                              "valueLabel": "Unreachable",
+                              "disabled": true
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Porch",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Porch",
+                                          "disabled": true,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-porch",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Porch power",
+                                          "disabled": true,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-porch",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Unreachable",
+                                      "role": "heading"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Check the Hue Bridge",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Inspector",
+            "key": "1",
+            "props": {
+              "title": "Desk lamp",
+              "closeLabel": "Done",
+              "open": true,
+              "onOpenChange": {
+                "pageState": {
+                  "editor": "",
+                  "sceneSearch": ""
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 4,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Stack",
+                    "key": "0",
+                    "props": {
+                      "gap": 2,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Colour",
+                          "role": "row"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "ColourWheel",
+                        "key": "light-desk",
+                        "props": {
+                          "accessibilityLabel": "Colour",
+                          "onValueChange": {
+                            "operation": "setColour",
+                            "args": {
+                              "id": "light-desk",
+                              "hue": {
+                                "$payload": "hue"
+                              },
+                              "saturation": {
+                                "$payload": "saturation"
+                              }
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "1",
+                    "props": {
+                      "align": "center",
+                      "direction": "row"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Brightness",
+                          "role": "row"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Spacer",
+                        "key": "1",
+                        "props": {},
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Text",
+                        "key": "2",
+                        "props": {
+                          "children": "80%",
+                          "role": "secondary"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Slider",
+                    "key": "2",
+                    "props": {
+                      "value": 80,
+                      "minimumValue": 1,
+                      "maximumValue": 100,
+                      "step": 1,
+                      "onValueChange": {
+                        "operation": "setBrightness",
+                        "args": {
+                          "kind": "light",
+                          "id": "light-desk",
+                          "brightness": {
+                            "$payload": true
+                          }
+                        }
+                      },
+                      "accessibilityLabel": "Brightness",
+                      "valueLabel": "80%"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "off": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "align": "stretch",
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
+        },
+        "children": [
+          {
+            "type": "ScrollView",
+            "key": "0",
+            "props": {},
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 6,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Stack",
+                    "key": "room-office",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Office",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Fader",
+                        "key": "1",
+                        "props": {
+                          "value": 60,
+                          "minimumValue": 1,
+                          "maximumValue": 100,
+                          "step": 1,
+                          "onValueChange": {
+                            "operation": "setBrightness",
+                            "args": {
+                              "kind": "grouped_light",
+                              "id": "group-office",
+                              "brightness": {
+                                "$payload": true
+                              }
+                            }
+                          },
+                          "accessibilityLabel": "All lights brightness",
+                          "valueLabel": "60%",
+                          "disabled": false,
+                          "orientation": "horizontal",
+                          "fill": ["#ffd078", "#f0b344"]
+                        },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "direction": "column"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "All lights",
+                                  "role": "row"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "1",
+                                "props": {
+                                  "children": "2 lights · 60%",
+                                  "role": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": {
+                              "gap": 1,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "IconButton",
+                                "key": "0",
+                                "props": {
+                                  "icon": "edit",
+                                  "accessibilityLabel": "Edit All lights",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "pageState": {
+                                      "editor": "room:room-office",
+                                      "sceneSearch": ""
+                                    }
+                                  },
+                                  "selected": false,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "IconButton",
+                                "key": "1",
+                                "props": {
+                                  "icon": "power",
+                                  "accessibilityLabel": "All lights power",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "grouped_light",
+                                      "id": "group-office",
+                                      "on": false
+                                    }
+                                  },
+                                  "selected": true,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "2",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-desk",
+                            "props": {
+                              "value": 80,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-desk",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Desk lamp brightness",
+                              "valueLabel": "80%",
+                              "disabled": false,
+                              "fill": ["#f0b344", "#ffd078"]
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Desk lamp",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Desk lamp",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-desk",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Desk lamp power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-desk",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "80%",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Fader",
+                            "key": "light-ceiling",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-ceiling",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Ceiling brightness",
+                              "valueLabel": "Off",
+                              "disabled": false
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Ceiling",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Ceiling",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "primary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Ceiling power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-ceiling",
+                                              "on": true
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Off",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Was 40%",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "other-lights",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Other lights",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "1",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-porch",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-porch",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Porch brightness",
+                              "valueLabel": "Unreachable",
+                              "disabled": true
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Porch",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Porch",
+                                          "disabled": true,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-porch",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Porch power",
+                                          "disabled": true,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-porch",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Unreachable",
+                                      "role": "heading"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Check the Hue Bridge",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Inspector",
+            "key": "1",
+            "props": {
+              "title": "Ceiling",
+              "closeLabel": "Done",
+              "open": true,
+              "onOpenChange": {
+                "pageState": {
+                  "editor": "",
+                  "sceneSearch": ""
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 4,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Stack",
+                    "key": "0",
+                    "props": {
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Off",
+                          "role": "row"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Text",
+                        "key": "1",
+                        "props": {
+                          "children": "Your changes apply when the light turns on.",
+                          "role": "secondary"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "1",
+                    "props": {
+                      "align": "center",
+                      "direction": "row"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Brightness",
+                          "role": "row"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Spacer",
+                        "key": "1",
+                        "props": {},
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Text",
+                        "key": "2",
+                        "props": {
+                          "children": "40%",
+                          "role": "secondary"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Slider",
+                    "key": "2",
+                    "props": {
+                      "value": 40,
+                      "minimumValue": 1,
+                      "maximumValue": 100,
+                      "step": 1,
+                      "onValueChange": {
+                        "operation": "setBrightness",
+                        "args": {
+                          "kind": "light",
+                          "id": "light-ceiling",
+                          "brightness": {
+                            "$payload": true
+                          }
+                        }
+                      },
+                      "accessibilityLabel": "Brightness",
+                      "valueLabel": "40%"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "many": {
+    "type": "Inspector",
+    "key": "1",
+    "props": {
+      "title": "Office scenes",
+      "closeLabel": "Done",
+      "open": true,
+      "onOpenChange": {
+        "pageState": {
+          "editor": "",
+          "sceneSearch": ""
+        }
+      },
+      "search": {
+        "label": "Search scenes"
+      },
+      "value": "",
+      "onChangeText": {
+        "bind": "sceneSearch"
+      }
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "gap": 3,
+          "direction": "column"
+        },
+        "children": [
+          {
+            "type": "Grid",
+            "key": "1",
+            "props": {
+              "columns": {
+                "compact": 2,
+                "medium": 3,
+                "wide": 2
+              },
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "GradientTile",
+                "key": "scene-relax",
+                "props": {
+                  "title": "Relax",
+                  "fill": ["#ffbb5a", "#ff773c"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-relax"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-focus",
+                "props": {
+                  "title": "Focus",
+                  "fill": ["#e9feff"],
+                  "selected": true,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-focus"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-0",
+                "props": {
+                  "title": "Savanna sunset",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-0"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-1",
+                "props": {
+                  "title": "Sunrise",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-1"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-2",
+                "props": {
+                  "title": "Nightlight",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-2"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-3",
+                "props": {
+                  "title": "Arctic aurora",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-3"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-4",
+                "props": {
+                  "title": "Tropical twilight",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-4"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-5",
+                "props": {
+                  "title": "Hue scene 1",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-5"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-6",
+                "props": {
+                  "title": "Hue scene 2",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-6"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-7",
+                "props": {
+                  "title": "Hue scene 3",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-7"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-8",
+                "props": {
+                  "title": "Hue scene 4",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-8"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-9",
+                "props": {
+                  "title": "Hue scene 5",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-9"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-10",
+                "props": {
+                  "title": "Hue scene 6",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-10"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-11",
+                "props": {
+                  "title": "Hue scene 7",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-11"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-12",
+                "props": {
+                  "title": "Hue scene 8",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-12"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-13",
+                "props": {
+                  "title": "Hue scene 9",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-13"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-14",
+                "props": {
+                  "title": "Hue scene 10",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-14"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-15",
+                "props": {
+                  "title": "Hue scene 11",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-15"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-16",
+                "props": {
+                  "title": "Hue scene 12",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-16"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-17",
+                "props": {
+                  "title": "Hue scene 13",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-17"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-18",
+                "props": {
+                  "title": "Hue scene 14",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-18"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-19",
+                "props": {
+                  "title": "Hue scene 15",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-19"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-20",
+                "props": {
+                  "title": "Hue scene 16",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-20"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-21",
+                "props": {
+                  "title": "Hue scene 17",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-21"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-22",
+                "props": {
+                  "title": "Hue scene 18",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-22"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "searched": {
+    "type": "Inspector",
+    "key": "1",
+    "props": {
+      "title": "Office scenes",
+      "closeLabel": "Done",
+      "open": true,
+      "onOpenChange": {
+        "pageState": {
+          "editor": "",
+          "sceneSearch": ""
+        }
+      },
+      "search": {
+        "label": "Search scenes"
+      },
+      "value": "sun",
+      "onChangeText": {
+        "bind": "sceneSearch"
+      }
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "gap": 3,
+          "direction": "column"
+        },
+        "children": [
+          {
+            "type": "Grid",
+            "key": "1",
+            "props": {
+              "columns": {
+                "compact": 2,
+                "medium": 3,
+                "wide": 2
+              },
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-0",
+                "props": {
+                  "title": "Savanna sunset",
+                  "fill": ["#ff9cd8", "#877fff"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-0"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "GradientTile",
+                "key": "scene-fixture-1",
+                "props": {
+                  "title": "Sunrise",
+                  "fill": ["#d0ffc1", "#ff9efe"],
+                  "selected": false,
+                  "onPress": {
+                    "operation": "recallScene",
+                    "args": {
+                      "id": "scene-fixture-1"
+                    }
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "noMatch": {
+    "type": "Inspector",
+    "key": "1",
+    "props": {
+      "title": "Office scenes",
+      "closeLabel": "Done",
+      "open": true,
+      "onOpenChange": {
+        "pageState": {
+          "editor": "",
+          "sceneSearch": ""
+        }
+      },
+      "search": {
+        "label": "Search scenes"
+      },
+      "value": "zzz",
+      "onChangeText": {
+        "bind": "sceneSearch"
+      }
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "gap": 3,
+          "direction": "column"
+        },
+        "children": [
+          {
+            "type": "EmptyState",
+            "key": "1",
+            "props": {
+              "title": "No scenes match"
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "empty": {
+    "type": "Inspector",
+    "key": "1",
+    "props": {
+      "title": "Office scenes",
+      "closeLabel": "Done",
+      "open": true,
+      "onOpenChange": {
+        "pageState": {
+          "editor": "",
+          "sceneSearch": ""
+        }
+      }
+    },
+    "children": [
+      {
+        "type": "EmptyState",
+        "key": "0",
+        "props": {
+          "title": "No scenes in this room",
+          "description": "Create scenes in the Hue app."
+        },
+        "children": [],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "scenes": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "align": "stretch",
+          "direction": {
+            "compact": "column",
+            "medium": "column",
+            "wide": "row"
+          }
+        },
+        "children": [
+          {
+            "type": "ScrollView",
+            "key": "0",
+            "props": {},
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 6,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Stack",
+                    "key": "room-office",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Office",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Fader",
+                        "key": "1",
+                        "props": {
+                          "value": 60,
+                          "minimumValue": 1,
+                          "maximumValue": 100,
+                          "step": 1,
+                          "onValueChange": {
+                            "operation": "setBrightness",
+                            "args": {
+                              "kind": "grouped_light",
+                              "id": "group-office",
+                              "brightness": {
+                                "$payload": true
+                              }
+                            }
+                          },
+                          "accessibilityLabel": "All lights brightness",
+                          "valueLabel": "60%",
+                          "disabled": false,
+                          "orientation": "horizontal",
+                          "fill": ["#ffd078", "#f0b344"]
+                        },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "direction": "column"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "All lights",
+                                  "role": "row"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "1",
+                                "props": {
+                                  "children": "2 lights · 60%",
+                                  "role": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": {
+                              "gap": 1,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "IconButton",
+                                "key": "0",
+                                "props": {
+                                  "icon": "edit",
+                                  "accessibilityLabel": "Edit All lights",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "pageState": {
+                                      "editor": "",
+                                      "sceneSearch": ""
+                                    }
+                                  },
+                                  "selected": true,
+                                  "size": "sm",
+                                  "variant": "primary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "IconButton",
+                                "key": "1",
+                                "props": {
+                                  "icon": "power",
+                                  "accessibilityLabel": "All lights power",
+                                  "disabled": false,
+                                  "onPress": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "grouped_light",
+                                      "id": "group-office",
+                                      "on": false
+                                    }
+                                  },
+                                  "selected": true,
+                                  "size": "sm",
+                                  "variant": "secondary"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "2",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-desk",
+                            "props": {
+                              "value": 80,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-desk",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Desk lamp brightness",
+                              "valueLabel": "80%",
+                              "disabled": false,
+                              "fill": ["#f0b344", "#ffd078"]
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Desk lamp",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Desk lamp",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-desk",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Desk lamp power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-desk",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "80%",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Fader",
+                            "key": "light-ceiling",
+                            "props": {
+                              "value": 0,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-ceiling",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Ceiling brightness",
+                              "valueLabel": "Off",
+                              "disabled": false
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Ceiling",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Ceiling",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-ceiling",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Ceiling power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-ceiling",
+                                              "on": true
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Off",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Was 40%",
+                                      "role": "secondary"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "other-lights",
+                    "props": {
+                      "gap": 3,
+                      "direction": "column"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "Other lights",
+                          "role": "nav-title"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Grid",
+                        "key": "1",
+                        "props": {
+                          "columns": {
+                            "compact": 2,
+                            "medium": 3,
+                            "wide": 3
+                          },
+                          "gap": 3
+                        },
+                        "children": [
+                          {
+                            "type": "Fader",
+                            "key": "light-porch",
+                            "props": {
+                              "value": 100,
+                              "minimumValue": 1,
+                              "maximumValue": 100,
+                              "step": 1,
+                              "onValueChange": {
+                                "operation": "setBrightness",
+                                "args": {
+                                  "kind": "light",
+                                  "id": "light-porch",
+                                  "brightness": {
+                                    "$payload": true
+                                  }
+                                }
+                              },
+                              "accessibilityLabel": "Porch brightness",
+                              "valueLabel": "100%",
+                              "disabled": false,
+                              "fill": ["#f0b344", "#ffd078"]
+                            },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Porch",
+                                      "role": "row"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Spacer",
+                                    "key": "1",
+                                    "props": {},
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Stack",
+                                    "key": "2",
+                                    "props": {
+                                      "gap": 1,
+                                      "align": "center",
+                                      "direction": "row"
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "IconButton",
+                                        "key": "0",
+                                        "props": {
+                                          "icon": "edit",
+                                          "accessibilityLabel": "Edit Porch",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "pageState": {
+                                              "editor": "light:light-porch",
+                                              "sceneSearch": ""
+                                            }
+                                          },
+                                          "selected": false,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "IconButton",
+                                        "key": "1",
+                                        "props": {
+                                          "icon": "power",
+                                          "accessibilityLabel": "Porch power",
+                                          "disabled": false,
+                                          "onPress": {
+                                            "operation": "setPower",
+                                            "args": {
+                                              "kind": "light",
+                                              "id": "light-porch",
+                                              "on": false
+                                            }
+                                          },
+                                          "selected": true,
+                                          "size": "sm",
+                                          "variant": "secondary"
+                                        },
+                                        "children": [],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "direction": "column"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "100%",
+                                      "role": "title"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Inspector",
+            "key": "1",
+            "props": {
+              "title": "Office scenes",
+              "closeLabel": "Done",
+              "open": true,
+              "onOpenChange": {
+                "pageState": {
+                  "editor": "",
+                  "sceneSearch": ""
+                }
+              },
+              "search": {
+                "label": "Search scenes"
+              },
+              "value": "",
+              "onChangeText": {
+                "bind": "sceneSearch"
+              }
+            },
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "gap": 3,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Grid",
+                    "key": "1",
+                    "props": {
+                      "columns": {
+                        "compact": 2,
+                        "medium": 3,
+                        "wide": 2
+                      },
+                      "gap": 3
+                    },
+                    "children": [
+                      {
+                        "type": "GradientTile",
+                        "key": "scene-relax",
+                        "props": {
+                          "title": "Relax",
+                          "fill": ["#ffbb5a", "#ff773c"],
+                          "selected": false,
+                          "onPress": {
+                            "operation": "recallScene",
+                            "args": {
+                              "id": "scene-relax"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "GradientTile",
+                        "key": "scene-focus",
+                        "props": {
+                          "title": "Focus",
+                          "fill": ["#e9feff"],
+                          "selected": true,
+                          "onPress": {
+                            "operation": "recallScene",
+                            "args": {
+                              "id": "scene-focus"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "GradientTile",
+                        "key": "scene-sunset",
+                        "props": {
+                          "title": "Sunset",
+                          "fill": ["#ff9cd8", "#877fff"],
+                          "selected": false,
+                          "onPress": {
+                            "operation": "recallScene",
+                            "args": {
+                              "id": "scene-sunset"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  }
+}

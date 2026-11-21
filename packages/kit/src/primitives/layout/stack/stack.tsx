@@ -8,14 +8,19 @@ import {
   useStackColumn,
 } from '#kit/content-column/content-column';
 import { flattenedChildren } from '#kit/flattened-children';
+import { useSizeClassValue } from '#kit/use-size-class/use-size-class-value';
 import { gapClass } from '#primitives/layout/spacing';
 import { cn } from '../../../utils';
 import type { StackProps, stackAlignments } from './stack-props';
 
+type ResolvedStack = Omit<StackProps, 'direction'> & {
+  direction: 'row' | 'column';
+};
+
 const directionClass = {
   row: 'flex-row',
   column: 'flex-col',
-} as const satisfies Record<StackProps['direction'], string>;
+} as const satisfies Record<ResolvedStack['direction'], string>;
 
 const alignClass = {
   start: 'items-start',
@@ -28,10 +33,24 @@ const classesOf = ({
   direction,
   gap = stackDefaults.gap,
   align = stackDefaults.align,
-}: StackProps): string =>
+}: ResolvedStack): string =>
   cn(directionClass[direction], gapClass[gap], alignClass[align]);
 
 export function Stack(props: StackProps): ReactElement {
+  return typeof props.direction === 'string' ? (
+    <StackLayout {...props} direction={props.direction} />
+  ) : (
+    <ResponsiveStack {...props} />
+  );
+}
+
+function ResponsiveStack(props: StackProps): ReactElement {
+  return (
+    <StackLayout {...props} direction={useSizeClassValue(props.direction)} />
+  );
+}
+
+function StackLayout(props: ResolvedStack): ReactElement {
   const layout = useStackColumn();
 
   return layout && props.direction === 'column' ? (
@@ -41,7 +60,7 @@ export function Stack(props: StackProps): ReactElement {
   );
 }
 
-type ColumnStackProps = StackProps & { layout: StackColumn };
+type ColumnStackProps = ResolvedStack & { layout: StackColumn };
 
 function ColumnStack(props: ColumnStackProps): ReactElement {
   return (

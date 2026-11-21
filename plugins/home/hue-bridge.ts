@@ -36,7 +36,9 @@ async function keepKey(
 }
 
 // Presses the link button, asks for a key while it is pressed, and keeps the key.
-export async function connectBridge(argo: HueCalls): Promise<void> {
+export async function connectBridge(
+  argo: HueCalls & Pick<Argo, 'changed'>,
+): Promise<void> {
   const send = accountFetch(argo, hueHost);
 
   await send(bridgeConfigUrl, jsonRequest('PUT', { linkbutton: true }));
