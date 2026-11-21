@@ -96,7 +96,7 @@ export const homePage = (
   household: NamedQuery<HomeData>,
 ): GatedPage<HomeState, HomeData> => ({
   every: pollMs,
-  state: { editor: '', sceneSearch: '' },
+  state: { editor: '', editorOpen: false, sceneSearch: '' },
   load: async ({ read }) => {
     if (!(await argo.accounts.get(hueHost))) throw new SignInRequired();
 

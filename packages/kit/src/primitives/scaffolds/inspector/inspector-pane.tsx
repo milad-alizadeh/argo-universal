@@ -132,7 +132,8 @@ export type InspectorBodyProps = InspectorProps & {
 export function InspectorBody(props: InspectorBodyProps): ReactElement {
   const { toolbar, children, scrollState } = props;
 
-  if (props.contentScrolls) return <OwnedScrollBody {...props} />;
+  if (props.scrollable === false || props.contentScrolls)
+    return <OwnedScrollBody {...props} />;
 
   return (
     <>

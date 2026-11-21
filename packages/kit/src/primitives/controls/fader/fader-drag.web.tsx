@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import type { PointerEvent, ViewProps } from 'react-native';
-import { DragTracker, type DragSource, type Point } from './fader-drag-tracker';
+import { useEffect, useState, type ReactElement } from 'react';
+import { View, type PointerEvent, type ViewProps } from 'react-native';
+import type { DragFrameProps } from './fader-drag';
+import { DragTracker, type Point } from './fader-drag-tracker';
 
 const pointOf = ({ nativeEvent }: PointerEvent): Point => ({
   x: nativeEvent.clientX,
@@ -28,11 +29,11 @@ const handlersFor = (tracker: DragTracker): ViewProps => ({
  * The web: pointer events, so a mouse and a finger share one path. The pointer is captured only once it has moved along
  * the surface, so a click on the content over it is still a click.
  */
-export function useFaderDrag(source: DragSource): ViewProps {
+export function DragFrame({ source, ...frame }: DragFrameProps): ReactElement {
   const [tracker] = useState(() => new DragTracker(source));
   const [handlers] = useState(() => handlersFor(tracker));
 
   useEffect(() => tracker.update(source));
 
-  return handlers;
+  return <View {...frame} {...handlers} />;
 }

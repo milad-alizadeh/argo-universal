@@ -1,5 +1,12 @@
-import type { ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { View, type ViewStyle } from 'react-native';
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { cn } from '#kit/utils';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { Adjustable } from './fader-adjustable';
@@ -15,17 +22,21 @@ const unfilledOpacity = 0.18;
 
 const fullPercent = 100;
 
-const percent = (share: number): `${number}%` => `${share * fullPercent}%`;
-
 const tint = (fill: readonly string[]): ViewStyle => ({
   backgroundColor: fill[0],
   opacity: unfilledOpacity,
 });
 
-const fillBox = (orientation: Orientation, share: number): ViewStyle =>
-  orientation === 'vertical'
-    ? { left: 0, right: 0, bottom: 0, height: percent(share) }
-    : { top: 0, bottom: 0, start: 0, width: percent(share) };
+const fillEdges = {
+  vertical: { left: 0, right: 0, bottom: 0 },
+  horizontal: { top: 0, bottom: 0, start: 0 },
+} as const satisfies Record<Orientation, ViewStyle>;
+
+const fillTiming = {
+  duration: 220,
+  easing: Easing.out(Easing.cubic),
+  reduceMotion: ReduceMotion.System,
+};
 
 // Without colours the unfilled part is the muted surface.
 function Unfilled(props: Pick<FaderProps, 'fill'>): ReactElement {
@@ -40,20 +51,44 @@ function Unfilled(props: Pick<FaderProps, 'fill'>): ReactElement {
 interface FillProps extends Pick<FaderProps, 'fill'> {
   orientation: Orientation;
   share: number;
+  hasPendingValue: boolean;
 }
 
 // Without colours the fill is the accent tone.
-function Fill(props: FillProps): ReactElement {
+function Fill({
+  fill,
+  orientation,
+  share,
+  hasPendingValue,
+}: FillProps): ReactElement {
+  const progress = useSharedValue(share);
+  const [previousFill, setPreviousFill] = useState(fill);
+
+  // Retain the gradient while it drains when a light switches off.
+  if (share > 0 && previousFill !== fill) setPreviousFill(fill);
+
+  const colours = share === 0 ? previousFill : fill;
+
+  useEffect(() => {
+    progress.set(hasPendingValue ? share : withTiming(share, fillTiming));
+  }, [hasPendingValue, progress, share]);
+
+  const size = useAnimatedStyle(() => {
+    const percent: `${number}%` = `${progress.get() * fullPercent}%`;
+
+    return orientation === 'vertical'
+      ? { height: percent }
+      : { width: percent };
+  });
+
   return (
-    <View
+    <Animated.View
       pointerEvents="none"
-      className={cn('absolute', !props.fill && 'bg-accent')}
-      style={fillBox(props.orientation, props.share)}
+      className={cn('absolute', !colours && 'bg-accent')}
+      style={[fillEdges[orientation], size]}
     >
-      {props.fill ? (
-        <Gradient fill={props.fill} orientation={props.orientation} />
-      ) : null}
-    </View>
+      {colours ? <Gradient fill={colours} orientation={orientation} /> : null}
+    </Animated.View>
   );
 }
 
@@ -73,7 +108,12 @@ export function Surface(props: SurfaceProps): ReactElement {
   return (
     <View className="absolute inset-0">
       <Unfilled fill={props.fill} />
-      <Fill fill={props.fill} orientation={props.orientation} share={share} />
+      <Fill
+        fill={props.fill}
+        orientation={props.orientation}
+        share={share}
+        hasPendingValue={props.control.hasPendingValue}
+      />
       <Adjustable {...props} />
     </View>
   );

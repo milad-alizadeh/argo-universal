@@ -9,11 +9,13 @@ import { cn } from '#kit/utils';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
 import { useScrollFade } from './scroll-fade-props';
+import { ScrollGesture } from './scroll-gesture';
 
 export type ScrollFadeViewProps = ScrollViewProps &
   ScrollFadeOptions & {
     // Grows with its content up to the max height in `className`, then scrolls; otherwise it fills its parent. A horizontal one always fits its content's height.
     fitContent?: boolean;
+    coordinateChildGestures?: boolean;
     ref?: RefObject<ScrollViewInstance | null>;
   };
 
@@ -62,6 +64,7 @@ function useSizing(props: SizingProps): Sizing {
 export function ScrollFadeView({
   className,
   fitContent,
+  coordinateChildGestures,
   ref,
   ...props
 }: ScrollFadeViewProps): JSX.Element {
@@ -70,9 +73,11 @@ export function ScrollFadeView({
 
   const attach = useScrollRef(attachScrollView, ref);
 
+  const view = <ScrollView {...scroll} {...classNames.scroll} ref={attach} />;
+
   return (
     <ScrollFadeFrame {...frame} className={classNames.frame}>
-      <ScrollView {...scroll} {...classNames.scroll} ref={attach} />
+      {coordinateChildGestures ? <ScrollGesture>{view}</ScrollGesture> : view}
     </ScrollFadeFrame>
   );
 }

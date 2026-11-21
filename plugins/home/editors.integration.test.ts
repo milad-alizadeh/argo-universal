@@ -25,7 +25,11 @@ it(
     const page = await connected(home);
 
     await page.press(deskEdit);
-    expect(page.find(inspector).props.title).toBe('Desk lamp');
+    expect(page.find(inspector).props).toMatchObject({
+      title: 'Desk lamp',
+      open: true,
+      scrollable: false,
+    });
     expect(page.find(wheel).props.value).toBeUndefined();
 
     await page.act(wheel, 'onValueChange', { hue: 0, saturation: 50 });
@@ -43,10 +47,26 @@ it(
     expect(
       page.findText('Your changes apply when the light turns on.'),
     ).toBeDefined();
+  },
+  timeoutMs,
+);
+
+it(
+  'keeps the light editor open on presentation and reopens it after Done',
+  async () => {
+    const home = await startHome();
+    const page = await connected(home);
+
+    await page.press(ceilingEdit);
+    await page.act(inspector, 'onOpenChange', true);
+    expect(page.find(inspector).props.open).toBe(true);
 
     expect(page.find(inspector).props.closeLabel).toBe('Done');
     await page.act(inspector, 'onOpenChange', false);
-    expect(() => page.find(inspector)).toThrow(/No node matches/);
+    expect(page.find(inspector).props.open).toBe(false);
+
+    await page.press(ceilingEdit);
+    expect(page.find(inspector).props.open).toBe(true);
   },
   timeoutMs,
 );
@@ -58,7 +78,11 @@ it(
     const page = await connected(home);
 
     await page.press(roomEdit);
-    expect(page.find(inspector).props.title).toBe('Office scenes');
+    expect(page.find(inspector).props).toMatchObject({
+      title: 'Office scenes',
+      open: true,
+      scrollable: true,
+    });
     expect(page.find('Focus').props.selected).toBe(true);
 
     expect(page.find(inspector).props.search).toEqual({

@@ -136,8 +136,6 @@ export function homeEditor(
 
   if (!target) return null;
 
-  const close = to.set({ editor: '', sceneSearch: '' });
-
   const title =
     target.kind === 'light' ? target.light.name : `${target.room.name} scenes`;
 
@@ -145,9 +143,10 @@ export function homeEditor(
 
   return (
     <Inspector
-      open
+      open={state.editorOpen}
       title={title}
-      onOpenChange={close}
+      scrollable={target.kind === 'room'}
+      onOpenChange={to.set({ editorOpen: to.payload() })}
       closeLabel="Done"
       search={search ? { label: 'Search scenes' } : undefined}
       value={search ? state.sceneSearch : undefined}

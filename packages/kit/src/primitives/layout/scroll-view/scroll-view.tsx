@@ -35,6 +35,7 @@ export function ScrollView({
     <ScrollFadeView
       {...directionProps(direction)}
       accessibilityLabel={accessibilityLabel}
+      coordinateChildGestures
     >
       {children}
     </ScrollFadeView>

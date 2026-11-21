@@ -2,7 +2,6 @@ import {
   Fader,
   Grid,
   IconButton,
-  Spacer,
   Stack,
   Text,
   type PageTo,
@@ -14,7 +13,11 @@ import { brightnessRange } from './hue';
 import { hueSaturationToRgb, maxTileColourStops, toHex } from './hue-colour';
 import type { Household, LightColour, Room, Switch } from './hue-model';
 
-export type HomeState = { editor: string; sceneSearch: string };
+export type HomeState = {
+  editor: string;
+  editorOpen: boolean;
+  sceneSearch: string;
+};
 
 const columns = { compact: 2, medium: 3, wide: 3 };
 
@@ -33,22 +36,22 @@ function TileButtons(
   state: HomeState,
   to: PageTo<HomeState>,
 ): JSX.Element {
-  const selected = state.editor === editor;
+  const selected = state.editorOpen && state.editor === editor;
 
   return (
-    <Stack direction="row" align="center" gap={1}>
+    <Stack direction="row" align="center" gap={2}>
       <IconButton
         icon="edit"
-        size="sm"
+        size="lg"
         variant={selected ? 'primary' : 'secondary'}
         accessibilityLabel={`Edit ${title}`}
         selected={selected}
         disabled={!light.reachable}
-        onPress={to.set({ editor: selected ? '' : editor, sceneSearch: '' })}
+        onPress={to.set({ editor, editorOpen: !selected, sceneSearch: '' })}
       />
       <IconButton
         icon="power"
-        size="sm"
+        size="lg"
         variant="secondary"
         accessibilityLabel={`${title} power`}
         selected={light.on}
@@ -144,10 +147,15 @@ function lightTile(
 
   return (
     <Fader key={light.id} {...levelControl({ light, title }, to)}>
-      <Stack direction="row" align="center" gap={1}>
+      <Stack direction="column" gap={2}>
+        <Stack direction="column" align="end">
+          {TileButtons(
+            { light, title, editor: `light:${light.id}` },
+            state,
+            to,
+          )}
+        </Stack>
         <Text role="row">{title}</Text>
-        <Spacer />
-        {TileButtons({ light, title, editor: `light:${light.id}` }, state, to)}
       </Stack>
       <Stack direction="column">
         <Text role={light.reachable ? 'title' : 'heading'}>
