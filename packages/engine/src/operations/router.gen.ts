@@ -904,6 +904,39 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      scheduleEdit: authenticatedAppProcedure
+        .input(operations['project.scheduleEdit'].params)
+        .output(operations['project.scheduleEdit'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleEdit',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleManage: authenticatedAppProcedure
+        .input(operations['project.scheduleManage'].params)
+        .output(operations['project.scheduleManage'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleManage',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleHistory: publicProcedure
+        .input(operations['project.scheduleHistory'].params)
+        .output(operations['project.scheduleHistory'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleHistory',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       scheduleRunNow: authenticatedAppProcedure
         .input(operations['project.scheduleRunNow'].params)
         .output(operations['project.scheduleRunNow'].result)

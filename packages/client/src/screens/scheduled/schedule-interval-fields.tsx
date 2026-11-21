@@ -9,9 +9,12 @@ const units = [
 
 export type IntervalFields = { intervalSeconds: number; section: ReactElement };
 
-export function useIntervalFields(): IntervalFields {
-  const [count, setCount] = useState('1');
-  const [unit, setUnit] = useState('hours');
+export function useIntervalFields(initial = secondsPerHour): IntervalFields {
+  const asHours = initial % secondsPerHour === 0;
+  const [count, setCount] = useState(
+    String(initial / (asHours ? secondsPerHour : secondsPerMinute)),
+  );
+  const [unit, setUnit] = useState(asHours ? 'hours' : 'minutes');
 
   return {
     intervalSeconds:

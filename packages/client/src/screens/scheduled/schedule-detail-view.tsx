@@ -30,7 +30,7 @@ export function ScheduleDetailView({
           />
           <FieldGroup.Value
             title="Next occurrence"
-            value={occurrenceTime(schedule.nextAt)}
+            value={schedule.paused ? 'Paused' : occurrenceTime(schedule.nextAt)}
           />
         </FieldGroup.Section>
       </FieldGroup>

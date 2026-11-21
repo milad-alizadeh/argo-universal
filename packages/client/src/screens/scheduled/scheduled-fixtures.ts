@@ -1,4 +1,7 @@
-import type { ProjectSchedule } from '@repo/contracts/operations';
+import type {
+  ProjectSchedule,
+  ProjectScheduleHistoryEntry,
+} from '@repo/contracts/operations';
 import type { ScheduleFormViewProps } from './schedule-form-view';
 
 export const scheduleFormFixture = {
@@ -29,6 +32,7 @@ export const firstSchedule = {
   checkout: { type: 'worktree', baseBranch: 'main' },
   intervalSeconds: 3600,
   nextAt: Date.UTC(2026, 10, 21, 14),
+  paused: false,
   latestSessionId: null,
 } satisfies ProjectSchedule;
 
@@ -41,7 +45,41 @@ export const latestSchedule = {
   latestSessionId: 'latest-session',
 } satisfies ProjectSchedule;
 
+export const pausedSchedule: ProjectSchedule = {
+  ...latestSchedule,
+  id: 'schedule-paused',
+  name: 'Audit flaky tests',
+  paused: true,
+};
+
 export const scheduledListFixture = {
-  schedules: [firstSchedule, latestSchedule],
+  schedules: [firstSchedule, latestSchedule, pausedSchedule],
   selectedId: firstSchedule.id,
 };
+
+export const scheduleHistoryFixture: readonly ProjectScheduleHistoryEntry[] = [
+  {
+    id: 'occurrence-new',
+    occurrence: {
+      at: Date.UTC(2026, 10, 21, 14),
+      outcome: 'started',
+      sessionId: 'latest-session',
+    },
+  },
+  {
+    id: 'occurrence-skipped',
+    occurrence: {
+      at: Date.UTC(2026, 10, 21, 13),
+      outcome: 'skipped',
+      reason: 'The Server was offline when this Schedule was due.',
+    },
+  },
+  {
+    id: 'occurrence-older',
+    occurrence: {
+      at: Date.UTC(2026, 10, 21, 12),
+      outcome: 'started',
+      sessionId: 'earlier-session',
+    },
+  },
+];

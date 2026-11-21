@@ -52,6 +52,8 @@ export { sessionOperations } from './sessions';
 
 export {
   ProjectSchedule,
+  type ProjectScheduleHistoryEntry,
+  type ProjectScheduleHistoryPage,
   ProjectScheduleInput,
   ProjectScheduleOccurrence,
   projectScheduleOperations,

@@ -46,6 +46,7 @@ export const ProjectSchedule = ProjectScheduleInput.extend({
   checkout: SessionCheckoutChoice,
   nextAt: z.number(),
   latestSessionId: z.string().nullable(),
+  paused: z.boolean(),
 });
 
 const occurrenceFields = { at: z.number() };
@@ -60,6 +61,7 @@ export const ProjectScheduleOccurrence = z.discriminatedUnion('outcome', [
     ...occurrenceFields,
     outcome: z.literal('skipped'),
     reason: z.string(),
+    through: z.number().optional(),
   }),
   z.strictObject({
     ...occurrenceFields,
@@ -77,6 +79,26 @@ export type ProjectScheduleOccurrence = z.infer<
 >;
 
 const target = z.strictObject({ projectId, id: z.string().min(1) });
+
+const historyCursor = z.strictObject({ at: z.number(), id: z.string() });
+
+const ProjectScheduleHistoryEntry = z.strictObject({
+  id: z.string(),
+  occurrence: ProjectScheduleOccurrence,
+});
+
+export type ProjectScheduleHistoryEntry = z.infer<
+  typeof ProjectScheduleHistoryEntry
+>;
+
+export const ProjectScheduleHistoryPage = z.strictObject({
+  entries: z.array(ProjectScheduleHistoryEntry),
+  next: historyCursor.nullable(),
+});
+
+export type ProjectScheduleHistoryPage = z.infer<
+  typeof ProjectScheduleHistoryPage
+>;
 
 const scopePolicy = 'ask-outside-project';
 
@@ -106,6 +128,42 @@ export const projectScheduleOperations = {
     tier: 'read',
     policy: scopePolicy,
     keywords: ['scheduled', 'recurring', 'interval'],
+  },
+  'project.scheduleEdit': {
+    id: 'project.scheduleEdit',
+    label: 'Edit Project Schedule',
+    icon: scheduleIcon,
+    description:
+      'Update the saved instructions, cadence, Agent or Checkout for future Project Schedule occurrences.',
+    params: ProjectScheduleInput.extend({ id: target.shape.id }),
+    result: ProjectSchedule,
+    tier: 'act',
+    policy: scopePolicy,
+    keywords: ['schedule', 'edit', 'update'],
+  },
+  'project.scheduleManage': {
+    id: 'project.scheduleManage',
+    label: 'Manage Project Schedule',
+    icon: scheduleIcon,
+    description:
+      'Pause, resume or delete a Project Schedule. Sessions already started remain available.',
+    params: target.extend({ action: z.enum(['pause', 'resume', 'delete']) }),
+    result: z.strictObject({}),
+    tier: 'act',
+    policy: scopePolicy,
+    keywords: ['schedule', 'pause', 'resume', 'delete'],
+  },
+  'project.scheduleHistory': {
+    id: 'project.scheduleHistory',
+    label: 'Read Project Schedule history',
+    icon: scheduleIcon,
+    description:
+      'Read recent occurrences, Session links, and reasons an occurrence was skipped or failed.',
+    params: target.extend({ cursor: historyCursor.optional() }),
+    result: ProjectScheduleHistoryPage,
+    tier: 'read',
+    policy: scopePolicy,
+    keywords: ['schedule', 'history', 'occurrence'],
   },
   'project.scheduleRunNow': {
     id: 'project.scheduleRunNow',

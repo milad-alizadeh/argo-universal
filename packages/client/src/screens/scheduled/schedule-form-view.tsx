@@ -1,4 +1,7 @@
-import { ProjectScheduleInput } from '@repo/contracts/operations';
+import {
+  ProjectScheduleInput,
+  type ProjectSchedule,
+} from '@repo/contracts/operations';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
@@ -26,6 +29,7 @@ export interface ScheduleFormViewProps {
   initialProjectId: string;
   initialAgent?: string;
   initiallyAdvanced?: boolean;
+  editing?: ProjectSchedule;
   saving?: boolean;
   error?: string;
   onProjectChange?: (project: string) => void;
@@ -48,21 +52,33 @@ function useTaskFields(
   clearBranch: () => void,
 ): TaskFields {
   const [projectId, setProjectId] = useState(props.initialProjectId);
-  const [instructions, setInstructions] = useState('');
+  const [instructions, setInstructions] = useState(
+    props.editing?.instructions ?? '',
+  );
 
   const section = (
     <FieldGroup.Section title="Task">
-      <FieldGroup.Picker
-        title="Project"
-        presentation="page"
-        value={projectId}
-        options={props.projects}
-        onValueChange={(value) => {
-          setProjectId(value);
-          clearBranch();
-          props.onProjectChange?.(value);
-        }}
-      />
+      {props.editing ? (
+        <FieldGroup.Value
+          title="Project"
+          value={
+            props.projects.find(({ value }) => value === projectId)?.label ??
+            projectId
+          }
+        />
+      ) : (
+        <FieldGroup.Picker
+          title="Project"
+          presentation="page"
+          value={projectId}
+          options={props.projects}
+          onValueChange={(value) => {
+            setProjectId(value);
+            clearBranch();
+            props.onProjectChange?.(value);
+          }}
+        />
+      )}
       <FieldGroup.TextField
         title="Instructions"
         placeholder="What should each Session do?"
@@ -91,12 +107,24 @@ type AdvancedChoices = Pick<AdvancedFields, 'checkout' | 'agent' | 'branch'>;
 
 function useAdvancedFields(props: ScheduleFormViewProps): AdvancedFields {
   const [advanced, show] = useState(props.initiallyAdvanced ?? false);
-  const [checkout, setCheckout] = useState<CheckoutType>('worktree');
-  const [pickedBranch, setBranch] = useState<string>();
+  const [checkout, setCheckout] = useState<CheckoutType>(
+    props.editing?.checkout.type ?? 'worktree',
+  );
+
+  const [pickedBranch, setBranch] = useState(
+    props.editing?.checkout.type === 'worktree'
+      ? props.editing.checkout.baseBranch
+      : undefined,
+  );
+
   const [pickedAgent, setAgent] = useState<string>();
 
   const agent =
-    pickedAgent ?? props.initialAgent ?? props.agents[0]?.value ?? '';
+    pickedAgent ??
+    props.editing?.agent ??
+    props.initialAgent ??
+    props.agents[0]?.value ??
+    '';
 
   const branch = pickedBranch ?? props.currentBranch ?? '';
   const choices = { checkout, agent, branch };
@@ -186,13 +214,13 @@ function advancedSection(
 export function ScheduleFormView(props: ScheduleFormViewProps): ReactElement {
   const advanced = useAdvancedFields(props);
   const task = useTaskFields(props, advanced.clearBranch);
-  const interval = useIntervalFields();
+  const interval = useIntervalFields(props.editing?.intervalSeconds);
   const form = useScheduleSubmit(props, { task, advanced, interval });
   const sheet = !useCentresOverlays();
 
   return (
     <DialogForm
-      title={advanced.advanced ? 'Advanced' : 'New Schedule'}
+      title={advanced.advanced ? 'Advanced' : formTitle(props.editing)}
       dismissible={!props.saving}
       showClose={!props.saving}
       footer={
@@ -209,6 +237,7 @@ export function ScheduleFormView(props: ScheduleFormViewProps): ReactElement {
             saving={props.saving}
             fullWidth={sheet}
             error={form.error}
+            editing={props.editing}
             onSubmit={form.submit}
           />
         )
@@ -248,6 +277,7 @@ function useScheduleSubmit(
       projectId: task.projectId,
       agent: advanced.agent,
       instructions: task.instructions,
+      configOptions: props.editing?.configOptions,
       intervalSeconds: interval.intervalSeconds,
       checkout:
         advanced.checkout === 'main'
@@ -272,8 +302,9 @@ function ScheduleFooter({
   saving,
   error,
   fullWidth,
+  editing,
   onSubmit,
-}: Pick<ScheduleFormViewProps, 'saving' | 'error'> & {
+}: Pick<ScheduleFormViewProps, 'saving' | 'error' | 'editing'> & {
   onSubmit: () => void;
   fullWidth: boolean;
 }): ReactElement {
@@ -287,7 +318,7 @@ function ScheduleFooter({
       <DialogFooter>
         <DialogCancel label="Cancel" disabled={saving} />
         <Button
-          label="Create Schedule"
+          label={editing ? 'Save Schedule' : 'Create Schedule'}
           fullWidth={fullWidth}
           loading={saving}
           disabled={saving}
@@ -308,3 +339,6 @@ function validationMessage(field: PropertyKey | undefined): string {
 
   return 'Enter instructions for the Session.';
 }
+
+const formTitle = (editing: ProjectSchedule | undefined): string =>
+  editing ? 'Edit Schedule' : 'New Schedule';

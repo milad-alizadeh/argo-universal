@@ -1,0 +1,94 @@
+import {
+  ProjectScheduleOccurrence,
+  type ProjectScheduleHistoryPage,
+  type ProjectScheduleHistoryEntry,
+} from '@repo/contracts/operations';
+import type { Database } from '@repo/db';
+import {
+  projectSchedule,
+  projectScheduleOccurrence as table,
+} from '@repo/db/schema';
+import { and, desc, eq, inArray, lt, or } from 'drizzle-orm';
+
+type History = ProjectScheduleHistoryPage;
+
+const pageSize = 50;
+
+export function readScheduleHistory(
+  database: Database,
+  scheduleId: string,
+  cursor?: NonNullable<History['next']>,
+): History {
+  const older = cursor
+    ? or(
+        lt(table.at, cursor.at),
+        and(eq(table.at, cursor.at), lt(table.id, cursor.id)),
+      )
+    : undefined;
+
+  const rows = database
+    .select()
+    .from(table)
+    .where(and(eq(table.scheduleId, scheduleId), older))
+    .orderBy(desc(table.at), desc(table.id))
+    .limit(pageSize + 1)
+    .all();
+
+  const page = rows.slice(0, pageSize);
+  const edge = rows.length > pageSize ? page.at(-1) : undefined;
+
+  return {
+    entries: page.map(({ id, result }) => ({
+      id,
+      occurrence: ProjectScheduleOccurrence.parse(JSON.parse(result)),
+    })),
+    next: edge ? { at: edge.at, id: edge.id } : null,
+  };
+}
+
+export function hasRunningScheduleSession(
+  database: Database,
+  scheduleId: string,
+  running: string[],
+): boolean {
+  return (
+    running.length > 0 &&
+    database
+      .select({ id: table.id })
+      .from(table)
+      .where(
+        and(
+          eq(table.scheduleId, scheduleId),
+          inArray(table.sessionId, running),
+        ),
+      )
+      .get() !== undefined
+  );
+}
+
+export function writeScheduleOccurrence(
+  database: Pick<Database, 'insert' | 'update'>,
+  scheduleId: string,
+  { id, occurrence }: ProjectScheduleHistoryEntry,
+): void {
+  const sessionId =
+    occurrence.outcome === 'started' ? occurrence.sessionId : null;
+
+  database
+    .insert(table)
+    .values({
+      id,
+      scheduleId,
+      sessionId,
+      at: occurrence.at,
+      result: JSON.stringify(occurrence),
+    })
+    .run();
+
+  if (sessionId !== null)
+    database
+      .update(projectSchedule)
+      .set({ latestSessionId: sessionId })
+      .where(eq(projectSchedule.id, scheduleId))
+      .run();
+}

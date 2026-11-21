@@ -22,10 +22,14 @@ import { ScheduleDetailView } from './schedule-detail-view';
 import { ScheduleFormView } from './schedule-form-view';
 import { scheduleHref } from './schedule-href';
 import { ScheduledListView } from './scheduled-list-view';
+import {
+  ConfirmScheduleDelete,
+  ConnectedScheduleHistory,
+  schedulesInput,
+  useScheduleManagement,
+} from './scheduled-management';
 
 type ScheduleContext = { projectId: string; agent: string };
-
-const schedulesInput = {};
 
 const scheduleRefreshMs = 5000;
 
@@ -91,7 +95,7 @@ export function ScheduledListScreen({
 
   const navigate = useNavigate();
   const selected = schedules.data?.find(({ id }) => id === selectedId);
-  const [creating, setCreating] = useState(false);
+  const management = useScheduleManagement();
 
   return (
     <>
@@ -99,20 +103,79 @@ export function ScheduledListScreen({
         schedules={schedules.data ?? []}
         selectedId={selectedId}
         status={listStatus(schedules)}
-
-        onCreate={() => setCreating(true)}
+        onCreate={management.onCreate}
+        onAction={management.onAction}
         onOpen={(schedule) => navigate(scheduleHref(schedule))}
       />
-      <Dialog open={creating} onOpenChange={setCreating}>
-        {creating && (
-          <ScheduleFormScreen
-            context={selected ?? context}
-            onClose={() => setCreating(false)}
-          />
-        )}
-      </Dialog>
+      <ScheduleDialog context={selected ?? context} management={management} />
     </>
   );
+}
+
+type ScheduleDialogProps = {
+  context?: ScheduleContext;
+  management: ReturnType<typeof useScheduleManagement>;
+};
+
+function ScheduleDialog(props: ScheduleDialogProps): ReactElement {
+  const { overlay, onClose, saving } = props.management;
+
+  return (
+    <Dialog
+      open={overlay !== undefined}
+      onOpenChange={(open) => {
+        if (!open && !saving) onClose();
+      }}
+    >
+      <ScheduleDialogContent {...props} />
+    </Dialog>
+  );
+}
+
+function ScheduleDialogContent({
+  context,
+  management,
+}: ScheduleDialogProps): ReactElement | null {
+  const navigate = useNavigate();
+  const { overlay, onClose, saving, onDelete } = management;
+
+  if (!overlay) return null;
+
+  switch (overlay.type) {
+    case 'create':
+      return <ScheduleFormScreen context={context} onClose={onClose} />;
+    case 'edit':
+      return (
+        <ScheduleFormScreen
+          context={overlay.schedule}
+          editing={overlay.schedule}
+          onClose={onClose}
+        />
+      );
+    case 'delete':
+      return (
+        <ConfirmScheduleDelete
+          schedule={overlay.schedule}
+          saving={saving}
+          onDelete={() => onDelete(overlay.schedule)}
+        />
+      );
+    case 'history':
+      return (
+        <ConnectedScheduleHistory
+          schedule={overlay.schedule}
+          onOpenSession={(sessionId) => {
+            onClose();
+            navigate(
+              scheduleHref({
+                id: overlay.schedule.id,
+                latestSessionId: sessionId,
+              }),
+            );
+          }}
+        />
+      );
+  }
 }
 
 function listStatus(
@@ -128,9 +191,11 @@ function listStatus(
 function ScheduleFormScreen({
   context,
   onClose,
+  editing,
 }: {
   context?: ScheduleContext;
   onClose: () => void;
+  editing?: ProjectSchedule;
 }): ReactElement {
   const trpc = useTRPC();
   const projects = useQuery(trpc.project.list.queryOptions());
@@ -140,6 +205,7 @@ function ScheduleFormScreen({
     projects.data?.filter((project) => project.folderExists) ?? [];
 
   const initialProjectId =
+    editing?.projectId ??
     available.find((project) => project.id === context?.projectId)?.id ??
     (available.length === 1 ? (available[0]?.id ?? '') : '');
 
@@ -155,6 +221,7 @@ function ScheduleFormScreen({
     <ConnectedScheduleForm
       initialProjectId={initialProjectId}
       initialAgent={context?.agent}
+      editing={editing}
       onClose={onClose}
       projects={available.map(({ id, name }) => ({ value: id, label: name }))}
       agents={loadedAgents(agents).map(({ id, name }) => ({
@@ -183,7 +250,7 @@ function FormStatus({ description }: { description: string }): ReactElement {
 
 type ScheduleChoices = Pick<
   Parameters<typeof ScheduleFormView>[0],
-  'initialProjectId' | 'initialAgent' | 'projects' | 'agents'
+  'initialProjectId' | 'initialAgent' | 'projects' | 'agents' | 'editing'
 > & { onClose: () => void };
 
 function ConnectedScheduleForm({
@@ -191,6 +258,7 @@ function ConnectedScheduleForm({
   initialAgent,
   projects,
   agents,
+  editing,
   onClose,
 }: ScheduleChoices): ReactElement {
   const trpc = useTRPC();
@@ -203,7 +271,7 @@ function ConnectedScheduleForm({
     ),
   );
 
-  const save = useSaveSchedule(onClose);
+  const save = useSaveSchedule(onClose, editing);
 
   return (
     <ScheduleFormView
@@ -223,6 +291,7 @@ function ConnectedScheduleForm({
           : undefined
       }
       onProjectChange={setProjectId}
+      editing={editing}
       {...save}
     />
   );
@@ -230,6 +299,7 @@ function ConnectedScheduleForm({
 
 function useSaveSchedule(
   onClose: () => void,
+  editing?: ProjectSchedule,
 ): Pick<
   Parameters<typeof ScheduleFormView>[0],
   'onSubmit' | 'saving' | 'error'
@@ -238,29 +308,45 @@ function useSaveSchedule(
   const cache = useQueryClient();
   const navigate = useNavigate();
 
-  const saved = useMutation(
+  const remember = (schedule: ProjectSchedule): void => {
+    cache.setQueryData(
+      trpc.project.scheduleList.queryKey(schedulesInput),
+      (current) => [
+        ...(current ?? []).filter((row) => row.id !== schedule.id),
+        schedule,
+      ],
+    );
+    void cache.invalidateQueries({
+      queryKey: trpc.project.scheduleList.pathKey(),
+    });
+    onClose();
+  };
+
+  const create = useMutation(
     trpc.project.scheduleCreate.mutationOptions({
       onSuccess: (schedule) => {
-        cache.setQueryData(
-          trpc.project.scheduleList.queryKey(schedulesInput),
-          (current) => [
-            ...(current ?? []).filter((row) => row.id !== schedule.id),
-            schedule,
-          ],
-        );
-        void cache.invalidateQueries({
-          queryKey: trpc.project.scheduleList.pathKey(),
-        });
-        onClose();
+        remember(schedule);
         navigate(scheduleHref(schedule));
       },
     }),
   );
 
+  const edit = useMutation(
+    trpc.project.scheduleEdit.mutationOptions({ onSuccess: remember }),
+  );
+
+  if (editing) {
+    return {
+      onSubmit: (input) => edit.mutate({ ...input, id: editing.id }),
+      saving: edit.isPending,
+      error: edit.error?.message,
+    };
+  }
+
   return {
-    onSubmit: (input) => saved.mutate(input),
-    saving: saved.isPending,
-    error: saved.error?.message,
+    onSubmit: (input) => create.mutate(input),
+    saving: create.isPending,
+    error: create.error?.message,
   };
 }
 
