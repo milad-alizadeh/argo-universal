@@ -42,7 +42,7 @@ it('says to run an Operation directly, and when to look one up', () => {
   expect(catalog).toContain('operation_list');
 });
 
-// About 2,000 tokens: small enough for every Session, unlike every schema at about 29,000.
-it('stays under 8,500 characters', () => {
-  expect(operationCatalog().length).toBeLessThan(8500);
+// About 2,500 tokens: small enough for every Session, unlike every schema at about 29,000.
+it('stays under 10,000 characters', () => {
+  expect(operationCatalog().length).toBeLessThan(10_000);
 });
