@@ -40,7 +40,7 @@ it('names itself in its usage line', async () => {
   expect(await argoPlugin([])).toMatchObject({
     code: 1,
     output:
-      'Usage: argo-plugin <validate|types|test> <dir> (types takes --check)\n',
+      'Usage: argo-plugin <validate|types|test> <dir> (types takes --check, validate takes --ship)\n',
   });
 }, 30_000);
 

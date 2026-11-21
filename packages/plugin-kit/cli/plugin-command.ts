@@ -97,7 +97,9 @@ function writeReport(
   if (!ship) writeShipBlockers(report.shipBlockers, write);
 }
 
-function writeShipBlockers(blockers: PluginDiagnostic[], write: Write): void {
+type ShipBlockers = Awaited<ReturnType<typeof validatePlugin>>['shipBlockers'];
+
+function writeShipBlockers(blockers: ShipBlockers, write: Write): void {
   for (const { file, line, column, message } of blockers)
     write(`Ship blocked: ${file}:${line}:${column}: ${message}`);
 }
