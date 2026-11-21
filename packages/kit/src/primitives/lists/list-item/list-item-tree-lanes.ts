@@ -24,7 +24,7 @@ interface LaneSet {
   stub: string;
   // That stub carried on across the own lane of a child with no chevron.
   ownStub: string;
-  // The chevron's column in the own lane, as wide as the leading mark.
+  // The chevron's column in the own lane, sized and positioned for the row.
   column: string;
   chevron: string;
   // The space between the chevron and the rail under it.
@@ -59,7 +59,7 @@ const laneSets = {
     lastRail: 'top-0 bottom-1/2 -mb-px',
     stub: 'absolute top-1/2 right-0 left-2 h-px bg-border',
     ownStub: 'absolute inset-x-0 top-1/2 h-px bg-border',
-    column: 'w-4',
+    column: 'absolute inset-y-0 left-0 w-4',
     chevron: 'absolute inset-0',
     railGap: 'mt-4',
     underMark: compactOwn,
@@ -71,7 +71,7 @@ const laneSets = {
     lastRail: 'top-0 h-7 wide-type:h-6.5',
     stub: 'absolute top-7 right-1.5 left-3 -mt-px h-px bg-border wide-type:top-6.5',
     ownStub: 'hidden',
-    column: 'w-6',
+    column: 'grow w-6',
     chevron: 'size-4',
     railGap: 'mt-0.5',
     underMark: {
@@ -87,7 +87,7 @@ const laneSets = {
     lastRail: 'top-0 h-5',
     stub: 'absolute top-5 right-1 left-2 -mt-px h-px bg-border',
     ownStub: 'hidden',
-    column: 'w-4',
+    column: 'grow w-4',
     chevron: 'size-4',
     railGap: 'mt-0.5',
     underMark: { lanes: '-my-2.5 -mr-2.5', box: 'w-0', above: 'h-7.5' },

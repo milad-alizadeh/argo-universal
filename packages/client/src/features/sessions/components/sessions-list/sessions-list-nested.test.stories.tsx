@@ -1,3 +1,4 @@
+import { canPointAt } from '@repo/kit/mocks/point-hit';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor } from 'storybook/test';
 import {
@@ -27,6 +28,17 @@ export const FoldDelegatedWork: Story = {
     await waitFor(() =>
       expect(canvas.getByText('Check the edge cases')).toBeVisible(),
     );
+    const childFold = canvas.getByRole('button', { name: childTitle });
+
+    await waitFor(async () => {
+      for (const button of [fold, childFold]) {
+        const { left, width, bottom } = button.getBoundingClientRect();
+
+        await expect(
+          canPointAt(button, { x: left + width / 2, y: bottom - 1 }),
+        ).toBe(true);
+      }
+    });
     await userEvent.click(fold);
     await expect(canvas.queryByText(childTitle)).not.toBeInTheDocument();
     await expect(
