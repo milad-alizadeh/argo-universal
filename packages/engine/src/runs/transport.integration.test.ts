@@ -90,6 +90,14 @@ async function readFrame(events: AsyncIterator<RunOutput>): Promise<RunOutput> {
   return frame.value;
 }
 
+async function readBytes(events: AsyncIterator<RunOutput>): Promise<RunOutput> {
+  let frame = await readFrame(events);
+
+  while (!frame.data) frame = await readFrame(events);
+
+  return frame;
+}
+
 const decoded = ({ data }: RunOutput): string =>
   Buffer.from(data, 'base64').toString('utf8');
 
@@ -114,7 +122,7 @@ it('replays recorded Terminal bytes, streams new bytes and resumes at a saved cu
 
   const output = watchOutput(await caller.run.output(target));
 
-  const replay = await readFrame(output);
+  const replay = await readBytes(output);
   expect(decoded(replay)).toBe(terminalText);
   expect(replay.cursor.offset).toBe(21);
 
@@ -141,7 +149,7 @@ it('starts the replacement Terminal at offset zero when a Run restarts', async (
   const target = { sessionId, name };
   await finishStart(terminals, caller.run.start(target), 'Local: first');
   const output = watchOutput(await caller.run.output(target));
-  const first = await readFrame(output);
+  const first = await readBytes(output);
 
   const restarting = caller.run.restart(target);
   const replacement = await terminals.next();
@@ -181,6 +189,28 @@ it('replays only Terminal output belonging to the selected Session’s Checkout'
 
   const output = watchOutput(await caller.run.output({ ...other, name }));
 
-  const frame = await readFrame(output);
+  const frame = await readBytes(output);
   expect(decoded(frame)).toBe('Local: worktree');
+});
+
+it('keeps UTF-8 bytes intact when a character crosses the replay frame boundary', async () => {
+  const { caller, terminals, sessionId } = await startProject();
+  const target = { sessionId, name };
+  const prefix = `Local:${'x'.repeat(32_761)}`;
+  const content = `${prefix}🚀`;
+  await finishStart(terminals, caller.run.start(target), content);
+  const output = watchOutput(await caller.run.output(target));
+  const first = await readBytes(output);
+  const chunks = [Buffer.from(first.data, 'base64')];
+  const length = Buffer.byteLength(content);
+  let offset = first.cursor.offset;
+
+  while (offset < length) {
+    const next = await readBytes(output);
+    chunks.push(Buffer.from(next.data, 'base64'));
+    offset = next.cursor.offset;
+  }
+
+  expect(first.cursor.offset).toBeLessThan(length);
+  expect(Buffer.concat(chunks).toString('utf8')).toBe(content);
 });
