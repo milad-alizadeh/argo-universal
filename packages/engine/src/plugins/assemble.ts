@@ -114,8 +114,13 @@ function foundations(options: PluginsOptions): Foundations {
   };
 }
 
-function serviceFor(parts: Foundations, runtime: PluginRuntime): PluginService {
+function serviceFor(
+  options: PluginsOptions,
+  parts: Foundations,
+  runtime: PluginRuntime,
+): PluginService {
   return new PluginService({
+    ...(options.watchPlugins === true && { dev: true }),
     ...parts.discovery,
     pluginAccounts: parts.accounts,
     pluginRuntime: runtime,
@@ -127,7 +132,7 @@ function serviceFor(parts: Foundations, runtime: PluginRuntime): PluginService {
 export function assemble(options: PluginsOptions): Assembled {
   const parts = foundations(options);
   const runtime = runtimeFor(options, parts);
-  const service = serviceFor(parts, runtime);
+  const service = serviceFor(options, parts, runtime);
 
   return {
     service,

@@ -1,0 +1,28 @@
+{
+  "id": "drafts",
+  "name": "Drafts",
+  "version": "1.0.0",
+  "engines": {
+    "argo": ">=0.0.0 <2"
+  },
+  "main": "index.js",
+  "icon": {
+    "sf": "puzzlepiece",
+    "material": "extension"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "drafts",
+        "title": "Drafts",
+        "path": "/"
+      }
+    ],
+    "drafts": [
+      {
+        "page": "/",
+        "states": ["loading", "empty", "populated"]
+      }
+    ]
+  }
+}

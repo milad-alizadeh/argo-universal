@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { validateAccountCapabilities } from './account-manifest';
 import { AccountHost, PluginCapability } from './capabilities';
 import { DeclaredContributions } from './declared-slots';
+import { PluginDrafts } from './drafts';
 import { HookEventName } from './hooks';
 import {
   InstructionsFile,
@@ -111,6 +112,8 @@ export const PluginManifest = z
         operations: PluginOperationContributions.optional(),
         // The Plugin instructions file beside `plugin.json`, which every Session's Agent gets once (ADR-0044).
         instructions: InstructionsFile.optional(),
+        // The Loader pages that are Drafts, with the states and Variants each draws; dev only, never shipped (ADR-0057).
+        drafts: PluginDrafts.optional(),
         // Where the Plugin sits among a Slot's contributors and in a Replaceable Slot's `ui.render` chain: lower comes first, 0 when left out (ADR-0035).
         order: z.int().optional(),
       })
@@ -136,6 +139,8 @@ export const PluginList = z.object({
       manifest: PluginManifest,
       iconMarkup: z.string().optional(),
       firstParty: z.boolean(),
+      // True while the Server runs with Plugin watching, so the App draws Draft tooling for its Drafts.
+      dev: z.boolean().optional(),
       enabled: z.boolean(),
       ...PluginStatus.shape,
     }),
