@@ -127,9 +127,13 @@ export const EmptyFeed: Story = {
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
 
-      await expect(
-        canvas.queryAllByRole('heading', { name: firstPromptHeading }),
-      ).toHaveLength(wide ? 1 : 0);
+      const heading = { name: firstPromptHeading };
+
+      const matches = wide
+        ? await canvas.findAllByRole('heading', heading)
+        : canvas.queryAllByRole('heading', heading);
+
+      await expect(matches).toHaveLength(wide ? 1 : 0);
       await expect(canvas.queryByTestId(feedScrollTestId)).toBeNull();
     }),
 };
