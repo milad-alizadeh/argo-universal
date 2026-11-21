@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
+import { kitArgTypes } from '#kit/kit-arg-types';
 import { GradientTile } from './gradient-tile';
 
 const meta = {
   title: 'Design System/Primitives/Layout/Gradient Tile',
   component: GradientTile,
+  argTypes: kitArgTypes('GradientTile'),
   args: {
     title: 'Sunset',
-    fill: ['var(--color-warning)', 'var(--color-info)'],
+    fill: ['#FFA34F', '#AC74EE'],
     onPress: fn(),
   },
 } satisfies Meta<typeof GradientTile>;

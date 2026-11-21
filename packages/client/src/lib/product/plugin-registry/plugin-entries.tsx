@@ -16,7 +16,6 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
 import { ColourWheel } from '@repo/kit/primitives/controls/colour-wheel';
 import { Fader } from '@repo/kit/primitives/controls/fader';
-import { SearchFieldInput } from '@repo/kit/primitives/controls/search-field';
 import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Slider } from '@repo/kit/primitives/controls/slider';
 import { Switch } from '@repo/kit/primitives/controls/switch';
@@ -96,7 +95,6 @@ export const pluginEntries = {
   Slider,
   Fader,
   ColourWheel,
-  SearchField: SearchFieldInput,
   Inspector: PluginInspector,
   Switch,
   SegmentedControl,

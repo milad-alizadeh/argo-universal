@@ -111,7 +111,7 @@ function roomEditor(
             <GradientTile
               key={scene.id}
               title={scene.name}
-              fill={[...scene.colours]}
+              fill={scene.colours.length ? [...scene.colours] : undefined}
               selected={scene.active}
               onPress={to.run('recallScene', { id: scene.id })}
             />

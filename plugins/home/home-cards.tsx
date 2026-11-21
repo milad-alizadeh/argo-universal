@@ -144,6 +144,7 @@ function roomFader(
     reachable: room.lights.some((member) => member.reachable),
   };
 
+  const maxFaderStops = 4;
   const colours = [
     ...new Set(
       room.lights.flatMap((member) =>
@@ -152,7 +153,7 @@ function roomFader(
           : [],
       ),
     ),
-  ];
+  ].slice(0, maxFaderStops);
 
   return (
     <Fader

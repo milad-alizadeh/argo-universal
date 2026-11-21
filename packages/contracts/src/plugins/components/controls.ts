@@ -115,10 +115,11 @@ export const controlsComponents = {
     },
   ),
   SearchField: defineKitComponent(
-    'A search input for filtering the content of a page.',
+    'Search input for Screen headers and Lists.',
     searchFieldProps,
     {
       group: 'controls',
+      wire: false,
       label:
         'The required label names the search and supplies its placeholder.',
       accessibility: {

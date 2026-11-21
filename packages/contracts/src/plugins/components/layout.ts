@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { colourStops } from '../colour-data';
 import { stackProps } from '../core-kit-props';
 import { actionSlot, defineKitComponent } from '../define-kit-component';
 import { handler } from '../kit-component-props';
@@ -54,7 +55,7 @@ export const layoutComponents = {
     'A pressable tile with a gradient fill and an optional selected marker.',
     z.object({
       title: z.string(),
-      fill: z.array(z.string()).optional(),
+      fill: colourStops.optional(),
       selected: z.boolean().optional(),
       onPress: handler('onPress'),
     }),
