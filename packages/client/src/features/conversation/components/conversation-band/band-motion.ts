@@ -50,7 +50,11 @@ const poses: Record<BandState, Pose> = {
   blocked: { ...off, mute: 1 },
 };
 
-export const poseTargetOf = (state: BandState): Pose => poses[state];
+export const poseTargetOf = (state: BandState): Pose => {
+  'worklet';
+
+  return poses[state];
+};
 
 // Seconds for a pose to cover about two thirds of the way to its target; a state change settles in about three times this.
 export const poseTau = 0.12;

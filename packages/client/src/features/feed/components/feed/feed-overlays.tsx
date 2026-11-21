@@ -7,13 +7,13 @@ import {
 import type * as React from 'react';
 import type { RefObject } from 'react';
 import type { ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { overlayLayer, useFeedEndClearance } from '#lib/product/composer-cover';
 import { SessionColumn } from '#lib/product/session-column';
 
+// Remove the old arrow immediately. Its position can change before the next one mounts.
 const jumpToLatestMotion = {
   entering: FadeIn.duration(motionDuration.tooltipEnter),
-  exiting: FadeOut.duration(motionDuration.exit),
   className: 'pointer-events-box-none absolute inset-x-0',
 } as const;
 
