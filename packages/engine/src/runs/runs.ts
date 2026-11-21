@@ -4,11 +4,7 @@ import type {
   RunStopResult,
   ShellTerminal,
 } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import {
-  writeDatabaseJobAndWaitForCommit,
-  type WriterActorRef,
-} from '../storage';
+import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { LiveRun } from './live-run';
 import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
@@ -23,36 +19,16 @@ import { configurationFingerprint, RunSettingsStore } from './run-settings';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
 import { RunTerminals } from './run-terminals';
 import { RunView, statusOf } from './run-view';
+import type { RunCheckout, RunRequest, RunsInput } from './runs-input';
 import { ShellTerminals } from './shell-terminals';
-import type { TerminalProcess, TerminalSpawner } from './terminal';
+import type { TerminalProcess } from './terminal';
 
-// The Checkout a Run belongs to: Sessions on the same one see the same Runs.
-export type RunCheckout = { projectId: string; checkoutPath: string };
-
-// The Session that asks, named in a refusal when its Run holds a port someone else wants.
-export type RunStarter = { id: string; title: string };
-
-// A Run Configuration's Checkout, and the Session that asks for its Run.
-export type RunRequest = RunCheckout & {
-  starter?: RunStarter;
-  manual?: boolean;
-  automatic?: boolean;
-};
-
-export type RunsInput = {
-  database: Database;
-  writer: WriterActorRef;
-  home: string;
-  spawn: TerminalSpawner;
-  recordShellOwner: (
-    pid: number,
-    token: string,
-  ) => Promise<() => Promise<void>>;
-  now: () => number;
-  createId: () => string;
-  // Whether nothing listens on a port; tests do not replace it.
-  portFree?: (port: number) => Promise<boolean>;
-};
+export type {
+  RunCheckout,
+  RunRequest,
+  RunStarter,
+  RunsInput,
+} from './runs-input';
 
 const defaultStartMs = 60_000;
 
@@ -142,6 +118,7 @@ export class Runs {
       checkout.checkoutPath,
       name,
     );
+
     await this.lifecycle.stop(keyOf(checkout, name));
 
     return this.startConfiguration(checkout, configuration, timeoutMs);
