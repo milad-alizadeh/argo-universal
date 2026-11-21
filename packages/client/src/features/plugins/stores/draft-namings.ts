@@ -1,4 +1,5 @@
 import type { StaleMark } from '@repo/contracts/plugins/page-address';
+import { listenerSet } from '@repo/kit/listener-set';
 import { useSyncExternalStore } from 'react';
 import type { DraftNaming } from '../../../lib/product/plugin-registry';
 
@@ -8,14 +9,14 @@ import type { DraftNaming } from '../../../lib/product/plugin-registry';
  */
 export class DraftNamings {
   private readonly named = new Map<string, DraftNaming>();
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = listenerSet();
   private serial = 0;
 
   public name(pluginId: string, region: string): void {
     this.serial += 1;
     this.named.set(pluginId, { region, serial: this.serial });
 
-    for (const listener of this.listeners) listener();
+    this.listeners.notify();
   }
 
   // A stale mark that names a region says the Agent is writing it; any other mark leaves the naming as it was.
@@ -27,12 +28,7 @@ export class DraftNamings {
     return this.named.get(pluginId);
   }
 
-  // The answer unsubscribes.
-  public subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => this.listeners.delete(listener);
-  };
+  public subscribe = this.listeners.subscribe;
 }
 
 export const draftNamings = new DraftNamings();
