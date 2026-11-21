@@ -1,5 +1,5 @@
 import type { ConversationPartial } from '@repo/contracts';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   drawnPartials,
   type HeldPartials,
@@ -38,5 +38,5 @@ export function useHeldPartials(
     return (): void => clearTimeout(timer);
   }, [held]);
 
-  return drawnPartials(current);
+  return useMemo(() => drawnPartials(current), [current]);
 }

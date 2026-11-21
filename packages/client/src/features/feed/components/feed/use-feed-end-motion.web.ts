@@ -54,6 +54,7 @@ function useWatchFeed(list: ListRef, animated: boolean): FeedEndMotion {
 export function useFeedEndMotion(
   list: ListRef,
   enabled: boolean,
+  _followsLiveRows: boolean,
 ): FeedEndMotion {
   const reduced = useReducedMotion();
 

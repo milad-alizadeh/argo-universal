@@ -24,6 +24,7 @@ export interface FeedListProps extends EntryDrawing {
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
   newestKey: string;
   turnRunning: boolean;
+  conversationActive?: boolean;
   loadingOlder: boolean;
   hasOlder?: boolean;
   historyCursor?: number | null;

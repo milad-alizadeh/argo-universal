@@ -32,10 +32,14 @@ export type SessionDetailViewSources = Omit<
   inspectorPanels: SessionPanels;
   // The Connection dropped the Feed's open: the page keeps opening, and a toast says why.
   feedDropped: boolean;
+  onStartReached: () => void;
 };
 
 type OpenSessionSources = OpenSession &
-  Pick<SessionDetailViewSources, 'callouts' | 'shells' | 'inspectorPanels'>;
+  Pick<
+    SessionDetailViewSources,
+    'callouts' | 'shells' | 'inspectorPanels' | 'onStartReached'
+  >;
 
 type FeedFailure = Pick<SessionDetailViewSources, 'feed' | 'feedDropped'>;
 
@@ -75,25 +79,25 @@ const openFeed = (feed: SessionFeed): OpenFeed | undefined =>
 
 const pagingProps = (
   feed: SessionFeed,
-): Pick<
-  FeedProps,
-  'loadingOlder' | 'hasOlder' | 'historyCursor' | 'onStartReached'
-> => ({
+): Pick<FeedProps, 'loadingOlder' | 'hasOlder' | 'historyCursor'> => ({
   loadingOlder: feed.loadingOlder,
   hasOlder: feed.hasOlder,
   historyCursor: feed.historyCursor,
-  onStartReached: (): void => void feed.loadOlder(),
 });
 
 const sessionFeedProps = (
-  open: OpenSession,
+  open: OpenSessionSources,
   stoppedEnding: StoppedTurn['ending'] | undefined,
 ): FeedProps => ({
   sessionId: open.sessionId,
   items: feedItems(open, stoppedEnding),
+  partials: open.partials,
+  conversationActive:
+    open.conversation?.kind === 'connected' || !!open.partials?.length,
   liveHeader: open.snapshot.liveHeader,
   liveToolCall: open.feed.liveToolCall,
   ...pagingProps(open.feed),
+  onStartReached: open.onStartReached,
   imageUrl: open.imageUrl,
   checkoutBranch: open.snapshot.checkout.branch ?? undefined,
   onAtEndChange: open.onAtEndChange,
