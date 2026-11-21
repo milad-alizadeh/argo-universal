@@ -78,14 +78,34 @@ export function createOperationMcpServer(
 }
 
 const discoveryTool = {
-  description: `Find ${productName} Operations by id, label or keyword. Returns matching argument schemas, tiers and availability.`,
-  inputSchema: z.strictObject({ filter: z.string().optional() }),
+  description: `Use id to read one exact ${productName} Operation's input schema and availability. Use filter to search by id, label or keyword.`,
+  inputSchema: z
+    .strictObject({
+      id: z.string().min(1).optional(),
+      filter: z.string().optional(),
+    })
+    .refine(
+      ({ id, filter }) => id === undefined || filter === undefined,
+      'Supply either an exact id or a search filter.',
+    ),
   annotations: { readOnlyHint: true, openWorldHint: false },
 };
 
 function registerDiscovery(server: McpServer, client: ControlClient): void {
-  server.registerTool('operation_list', discoveryTool, async ({ filter }) =>
-    result(await client.list(filter)),
+  server.registerTool(
+    'operation_list',
+    discoveryTool,
+    async ({ id, filter }) => {
+      if (id === undefined) return result(await client.list(filter));
+
+      const rows = await client.list(id);
+
+      return result(
+        rows
+          .filter((row) => row.id === id)
+          .map(({ result: _result, ...row }) => row),
+      );
+    },
   );
 }
 
@@ -109,7 +129,9 @@ function registerCreatePlugin(server: McpServer): void {
 
 const executionTool = {
   description:
-    'Run a discovered Operation with id and params. Set wait=true when you need its completed result. ' +
+    'Run an Operation with id and params. Call simple Operations directly from the catalog. ' +
+    'Before sending unfamiliar nested params, call operation_list with the exact id to read the input schema. ' +
+    'Set wait=true when you need its completed result. ' +
     'Treat kind=result or status=settled as completion. ' +
     'For still_running or waiting_for_user, poll with only waitId set to the latest returned id. ' +
     'Report the result or cancellation. On refusal, report it and stop that Operation.',

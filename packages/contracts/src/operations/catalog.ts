@@ -44,13 +44,20 @@ const firstSentence = (description: string): string =>
 const catalogLine = (operation: OperationDefinition): string =>
   `- ${operation.id}(${signature(operation)}) ${firstSentence(operation.description)}`;
 
+const sessionConfigExample = {
+  configOptions: [{ configId: '<configId>', value: '<value>' }],
+} satisfies Pick<
+  z.input<(typeof operations)['session.new']['params']>,
+  'configOptions'
+>;
+
 const catalogIntroduction =
-  'Every Argo Operation, with its params; `?` marks one you may leave out. ' +
-  'Run one directly with operation_run, its id and params; do not search for it first. ' +
+  'Argo Operations (`?` marks optional params). Call simple Operations directly with operation_run. ' +
   'Leave out sessionId and projectId to act on your own Session and Project. ' +
-  'session.new starts with your Agent on the main Checkout; give its prompt as [{"type":"text","text":"…"}]. ' +
-  'A refusal gives the schema. ' +
-  'Call operation_list only for a Plugin’s Operations or a whole schema.';
+  'session.new starts with your Agent on the main Checkout. Prompt: [{"type":"text","text":"…"}]. ' +
+  `Configuration override: ${JSON.stringify(sessionConfigExample)}. Use IDs and values offered by the target Agent. ` +
+  'Before passing unfamiliar nested params, call operation_list with {"id":"operation.id"} for its input schema. ' +
+  'Use filter to find Operations by intent, including Plugin Operations.';
 
 // Operations the catalog leaves out besides the App-only ones, such as the checklist's while the person has it off.
 export type CatalogChoices = { hidden?: ReadonlySet<string> };

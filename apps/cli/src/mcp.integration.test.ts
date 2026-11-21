@@ -62,6 +62,90 @@ it('runs the same read as the App', async () => {
   ]);
 }, 30_000);
 
+it('returns only the exact input schema and availability for a known id', async () => {
+  const host = await startCliHost();
+  const client = await connectMcp(host.home);
+  const id = 'session.new';
+  const schema = await client.callTool({
+    name: 'operation_list',
+    arguments: { id },
+  });
+
+  expect(schema.isError).not.toBe(true);
+  const search = await client.callTool({
+    name: 'operation_list',
+    arguments: { filter: id },
+  });
+  expect(mcpValue(search)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ id, result: expect.any(Object) }),
+    ]),
+  );
+  expect(mcpValue(schema)).toEqual([
+    expect.objectContaining({
+      id,
+      enabled: true,
+      params: expect.objectContaining({
+        properties: expect.objectContaining({
+          configOptions: expect.objectContaining({
+            type: 'array',
+            items: expect.objectContaining({
+              required: ['configId', 'value'],
+              additionalProperties: false,
+            }),
+          }),
+        }),
+      }),
+    }),
+  ]);
+  expect(schema.content).not.toEqual(search.content);
+  expect(mcpValue(schema)).not.toEqual([
+    expect.objectContaining({ result: expect.anything() }),
+  ]);
+}, 30_000);
+
+it('does not return fuzzy matches for an unknown exact id', async () => {
+  const host = await startCliHost();
+  const client = await connectMcp(host.home);
+  const discovery = await client.callTool({
+    name: 'operation_list',
+    arguments: { id: 'session.ne' },
+  });
+
+  expect(discovery.isError).not.toBe(true);
+  expect(mcpValue(discovery)).toEqual([]);
+}, 30_000);
+
+it.each([
+  [{ reasoning_effort: 'medium' }, 'configOptions', 'expected array'],
+  [
+    [{ configId: 'reasoning_effort', type: 'select', value: 'medium' }],
+    'configOptions[0]',
+    'Unrecognized key: "type"',
+  ],
+] as const)(
+  'reports the failing field for an invalid creation override (%j)',
+  async (configOptions, path, message) => {
+    const host = await startCliHost();
+    const client = await connectMcp(host.home);
+    const response = await callMcp(client, {
+      id: 'session.new',
+      params: { configOptions },
+    });
+
+    expect(response.isError).toBe(true);
+    expect(response.content).toContainEqual({
+      type: 'text',
+      text: expect.stringContaining(path),
+    });
+    expect(response.content).toContainEqual({
+      type: 'text',
+      text: expect.stringContaining(message),
+    });
+  },
+  30_000,
+);
+
 it('keeps a supplied Session token authoritative instead of falling back to the user token', async () => {
   const host = await startCliHost();
   const client = await connectMcp(host.home, 'revoked-session-token');
