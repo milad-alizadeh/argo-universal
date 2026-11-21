@@ -71,6 +71,11 @@ it('answers the Draft step, naming each Operation and the ship gate, before the 
     'argo plugin validate --ship',
     'draftVariant.<regionId>',
     'one region per edit',
+    'only where the design has a real choice',
+    'differ in structure',
+    'act on each comment',
+    'targeted edit',
+    'never by starting the draft over',
   ])
     expect(text.toLowerCase()).toContain(phrase.toLowerCase());
 
