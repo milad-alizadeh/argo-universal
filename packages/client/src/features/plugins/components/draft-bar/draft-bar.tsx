@@ -22,7 +22,7 @@ export interface DraftBarProps {
 
 const stateLabel = 'State';
 
-// The menu has no place for a note beside a row, so a state the Draft does not draw says so in its label.
+// The menu has no place for a note beside a row, so a state the Draft does not draw says so in its label. Choosing it draws the frame that says why.
 const missingNote = 'missing';
 
 // The bar over a dev Plugin's Draft page: the Draft badge, the states, then a slot each for the comment toggle and Choose. App chrome, drawn apart from the page's own tree so it never reads as the Plugin's design.
@@ -98,7 +98,6 @@ function StateMenu({
       options={states.map(({ id, label: name, missing }) => ({
         value: id,
         label: missing ? `${name} · ${missingNote}` : name,
-        ...(missing && { disabled: true }),
       }))}
       onValueChange={(value) => onStateChange(stateOf(value))}
       trigger={<MenuTrigger label={label} />}

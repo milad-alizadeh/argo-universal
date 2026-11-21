@@ -1,15 +1,11 @@
 import { useDeferredValue } from 'react';
 import type * as React from 'react';
 import {
-  DraftCommentsLayer,
-  DraftRegionsProvider,
+  DraftPage,
   type PageOpening,
-  PluginDraftBar,
   PluginSessionRowProvider,
   useOpenPluginPage,
-  useDraftBar,
-  useDraftNaming,
-  useDraftRegions,
+  usePluginDraft,
   usePluginLookup,
   usePluginPage,
 } from '#features/plugins';
@@ -30,39 +26,27 @@ type PageViewProps = PageOpening & {
  */
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
-  const { root, onPageCall, loadingTree } = usePluginPage(opening);
-  const bar = useDraftBar(opening);
-  const naming = useDraftNaming(opening.pluginId);
-  const regions = useDraftRegions(opening);
+  const { root, onPageCall, loadingTree, error } = usePluginPage(opening);
+  const draft = usePluginDraft(opening, error);
 
   // Let the destination paint its loading state even when its first tree is already cached.
   const deferredRoot = useDeferredValue(root, null);
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
-      <DraftRegionsProvider regions={regions} commenting={bar?.commenting}>
-        <DraftCommentsLayer
-          opening={opening}
-          draft={bar !== null}
-          commenting={bar?.commenting ?? false}
-        >
-          <PluginDetailView
-            title={title}
-            root={deferredRoot}
-            callbacks={{
-              onOpenPage,
-              onPageCall,
-              pluginId: opening.pluginId,
-              // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
-              draft: bar
-                ? { naming: naming ?? null, regions: bar.regions }
-                : undefined,
-            }}
-            {...{ onBack, loadingTree }}
-          />
-        </DraftCommentsLayer>
-      </DraftRegionsProvider>
-      <PluginDraftBar bar={bar} />
+      <DraftPage opening={opening} draft={draft}>
+        <PluginDetailView
+          title={title}
+          root={draft.frame ?? deferredRoot}
+          callbacks={{
+            onOpenPage,
+            onPageCall,
+            pluginId: opening.pluginId,
+            draft: draft.tree,
+          }}
+          {...{ onBack, loadingTree }}
+        />
+      </DraftPage>
     </PluginSymbol>
   );
 }

@@ -62,8 +62,15 @@ it('rests on the first declared state when populated is not declared', () => {
   expect(draftBarOf(entry, '/', {})?.current).toBe('loading');
 });
 
-it('ignores a chosen state the Draft does not declare', () => {
-  expect(draftBarOf(issues(true), '/', { draftState: 'empty' })?.current).toBe(
+it('keeps a chosen state the Draft does not declare, marked missing, so the page can say why it draws nothing', () => {
+  const bar = draftBarOf(issues(true), '/', { draftState: 'empty' });
+
+  expect(bar?.current).toBe('empty');
+  expect(bar?.states.find(({ id }) => id === bar.current)?.missing).toBe(true);
+});
+
+it('ignores a chosen state that is not a minimum state', () => {
+  expect(draftBarOf(issues(true), '/', { draftState: 'sleepy' })?.current).toBe(
     'populated',
   );
 });

@@ -59,11 +59,12 @@ function draftAt(
   );
 }
 
+// A chosen state the Draft does not declare stays chosen, so the page can say why it draws nothing.
 function currentState(
   declared: readonly DraftStateId[],
   pageState: PageState,
 ): DraftStateId {
-  const chosen = declared.find((id) => id === pageState[draftStateKey]);
+  const chosen = draftStateIds.find((id) => id === pageState[draftStateKey]);
 
   if (chosen) return chosen;
 

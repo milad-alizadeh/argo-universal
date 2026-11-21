@@ -76,8 +76,22 @@ export const PhoneStateMenuMarksMissingStates: Story = {
       name: /Signed out/,
     });
 
-    await expect(missing).toHaveAttribute('aria-disabled', 'true');
+    await expect(missing).not.toHaveAttribute('aria-disabled', 'true');
     await expect(missing).toHaveTextContent('missing');
+  },
+};
+
+export const PhoneStateMenuChoosesAMissingState: Story = {
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout('phone');
+
+    await userEvent.click(await canvas.findByRole('button', { name: 'State' }));
+    await settleOverlays();
+    await userEvent.click(
+      await menu().findByRole('menuitemradio', { name: /Signed out/ }),
+    );
+
+    await expect(args.onStateChange).toHaveBeenCalledWith('signed-out');
   },
 };
 

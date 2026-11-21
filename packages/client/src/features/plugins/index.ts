@@ -91,6 +91,10 @@ export { DraftBar } from './components/draft-bar/draft-bar';
 
 export { useDraftBar } from './hooks/use-draft-bar';
 
+export { usePluginDraft } from './hooks/use-plugin-draft';
+
+export { DraftPage } from './components/draft-page/draft-page';
+
 export { useDraftNaming } from './stores/draft-namings';
 
 export { DraftCommentsLayer } from './components/draft-comment/draft-comments-layer';
