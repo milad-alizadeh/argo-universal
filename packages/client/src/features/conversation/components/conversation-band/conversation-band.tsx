@@ -10,6 +10,7 @@ import {
   type BarLayout,
   barLayoutOf,
   barLeft,
+  barPitch,
   barWidth,
   stripHeight,
 } from './band-layout';
@@ -27,6 +28,7 @@ export interface ConversationBandProps {
 interface BarProps {
   index: number;
   left: number;
+  scale: number;
   frame: SharedValue<BandFrame>;
 }
 
@@ -34,29 +36,36 @@ interface BarProps {
 function useBarStyle({
   index,
   frame,
-}: Pick<BarProps, 'index' | 'frame'>): ReturnType<typeof useAnimatedStyle> {
+  scale,
+}: Pick<BarProps, 'index' | 'frame' | 'scale'>): ReturnType<
+  typeof useAnimatedStyle
+> {
   return useAnimatedStyle(() => {
     const height = frame.get().heights[index] ?? barWidth;
 
     return {
-      height,
-      top: (stripHeight - height) / 2,
+      height: height * scale,
+      top: ((stripHeight - height) * scale) / 2,
       backgroundColor: frame.get().fills[index],
     };
-  }, [frame, index]);
+  }, [frame, index, scale]);
 }
 
-const barBox = {
-  position: 'absolute',
-  width: barWidth,
-  borderRadius: barWidth / 2,
-} as const;
-
 function Bar(props: BarProps): React.JSX.Element {
+  const width = barWidth * props.scale;
+
   return (
     <Animated.View
       testID="conversation-band-bar"
-      style={[barBox, { left: props.left }, useBarStyle(props)]}
+      style={[
+        {
+          position: 'absolute',
+          left: props.left,
+          width,
+          borderRadius: width / 2,
+        },
+        useBarStyle(props),
+      ]}
     />
   );
 }
@@ -71,25 +80,35 @@ const measured = (event: LayoutChangeEvent): number =>
 
 interface BarsProps extends StripProps {
   width: number;
+  scale?: number;
 }
 
 const barsOf = (
   layout: BarLayout,
   frame: SharedValue<BandFrame>,
+  scale: number,
 ): React.JSX.Element[] =>
   Array.from({ length: layout.count }, (_, index) => (
     <Bar
       key={index}
       index={index}
-      left={barLeft(index, layout)}
+      left={barLeft(index, layout) * scale}
+      scale={scale}
       frame={frame}
     />
   ));
 
-function Bars({ width, state, spectrum }: BarsProps): React.JSX.Element {
+function Bars({
+  width,
+  state,
+  spectrum,
+  scale = 1,
+}: BarsProps): React.JSX.Element {
   const layout = barLayoutOf(width);
 
-  return <>{barsOf(layout, useBandFrame(state, layout.count, spectrum))}</>;
+  return (
+    <>{barsOf(layout, useBandFrame(state, layout.count, spectrum), scale)}</>
+  );
 }
 
 // The bars fill the room the label leaves; their count follows its width.
@@ -157,6 +176,37 @@ export function ConversationBand(
     <View testID="conversation-band" className={rowClass}>
       <BarStrip state={look.state} spectrum={props.spectrum} />
       <BandLabel look={look} elapsed={props.elapsed} />
+    </View>
+  );
+}
+
+const miniScale = 0.5;
+
+const miniBarCount = 5;
+
+const miniWidth = (miniBarCount - 1) * barPitch + barWidth;
+
+export type MiniConversationBandProps = Pick<
+  ConversationBandProps,
+  'call' | 'spectrum'
+>;
+
+// The Session row gives the same band five bars in a fixed space beside the timer.
+export function MiniConversationBand({
+  call,
+  spectrum,
+}: MiniConversationBandProps): React.JSX.Element {
+  return (
+    <View
+      aria-hidden
+      style={{ width: miniWidth * miniScale, height: stripHeight * miniScale }}
+    >
+      <Bars
+        width={miniWidth}
+        scale={miniScale}
+        state={bandLookOf(call).state}
+        spectrum={spectrum}
+      />
     </View>
   );
 }

@@ -25,6 +25,7 @@ export type { ConversationDeviceChoice } from './stores/conversation-device-choi
 
 export {
   ConversationBand,
+  MiniConversationBand,
   type ConversationBandProps,
 } from './components/conversation-band/conversation-band';
 
