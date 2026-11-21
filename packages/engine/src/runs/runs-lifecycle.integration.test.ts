@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
-import { createFakeTerminals } from '#mocks/fake-terminals';
+import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 
 const web = { name: 'web', command: 'pnpm dev', ready: { pattern: 'Local:' } };
@@ -21,7 +21,18 @@ const configure = async (directory: string): Promise<void> => {
   );
 };
 
-async function startEngine() {
+type Engine = {
+  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  terminals: ReturnType<typeof createFakeTerminals>;
+  call: (
+    id: 'run.start' | 'run.stop' | 'run.status',
+    sessionId: string,
+  ) => ReturnType<typeof runOperation>;
+};
+
+const runStatus = 'run.status';
+
+async function startEngine(): Promise<Engine> {
   const terminals = createFakeTerminals();
 
   const host = await startAcpEngine({
@@ -33,19 +44,19 @@ async function startEngine() {
   onTestFinished(terminals.end);
   const { operations } = await operationCaller(host);
 
-  const call = (id: 'run.start' | 'run.stop' | 'run.status', sessionId: string) =>
+  const call: Engine['call'] = (id, sessionId) =>
     runOperation(operations, {
       id,
-      params: id === 'run.status' ? { sessionId } : { sessionId, name: 'web' },
+      params: id === runStatus ? { sessionId } : { sessionId, name: 'web' },
     });
 
   return { host, terminals, call };
 }
 
 const startReady = async (
-  engine: Awaited<ReturnType<typeof startEngine>>,
+  engine: Engine,
   sessionId: string,
-) => {
+): Promise<FakeTerminal> => {
   const started = engine.call('run.start', sessionId);
   const terminal = await engine.terminals.next();
   terminal.print('Local:');
@@ -107,7 +118,7 @@ it('leaves the Runs of the main checkout running when a Session on it is archive
   await new Promise((resolve) => setTimeout(resolve, archiveUndoMs * 4));
 
   expect(terminal.stopped).toBe(false);
-  expect(await engine.call('run.status', second.sessionId)).toMatchObject({
+  expect(await engine.call(runStatus, second.sessionId)).toMatchObject({
     configurations: [{ name: 'web', status: 'ready' }],
   });
 }, 40_000);
@@ -120,14 +131,14 @@ it('lets either of two Sessions on the main checkout see and stop the one Run', 
   await configure(project?.path ?? '');
   const terminal = await startReady(engine, first.sessionId);
 
-  expect(await engine.call('run.status', second.sessionId)).toMatchObject({
+  expect(await engine.call(runStatus, second.sessionId)).toMatchObject({
     configurations: [{ name: 'web', status: 'ready' }],
   });
 
   await engine.call('run.stop', second.sessionId);
 
   expect(terminal.stopped).toBe(true);
-  expect(await engine.call('run.status', first.sessionId)).toMatchObject({
+  expect(await engine.call(runStatus, first.sessionId)).toMatchObject({
     configurations: [{ name: 'web', status: 'stopped' }],
   });
   expect(engine.terminals.started).toHaveLength(1);

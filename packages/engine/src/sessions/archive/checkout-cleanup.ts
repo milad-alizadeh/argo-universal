@@ -87,6 +87,12 @@ const keepReason = (risk: CheckoutCleanupRisk): string =>
     ? risk.reason
     : 'Argo could not verify that the Checkout’s work is recoverable.';
 
+const endRunsOf = (database: Database, data: Target): Promise<void> =>
+  endCheckoutRuns(database, {
+    projectId: data.projectId,
+    checkoutPath: data.checkout.path,
+  });
+
 async function attemptCleanup(
   database: Database,
   data: Target,
@@ -96,18 +102,13 @@ async function attemptCleanup(
   const projectPath = readProjectPath(database, data.projectId);
   const risk = await checkoutCleanupRisk(projectPath, data.checkout.path);
 
-  const runs = {
-    projectId: data.projectId,
-    checkoutPath: data.checkout.path,
-  };
-
   // Runs end once the Checkout is going away, never while Archive keeps it.
-  if (risk.kind === 'absent') return endCheckoutRuns(database, runs);
+  if (risk.kind === 'absent') return endRunsOf(database, data);
 
   const removal = { signal: options.signal, force: risk.kind === 'loss' };
 
   if (canRemove(risk, approval)) {
-    await endCheckoutRuns(database, runs);
+    await endRunsOf(database, data);
 
     return removeArchivedCheckout(projectPath, data.checkout, removal);
   }

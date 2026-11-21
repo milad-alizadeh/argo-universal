@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import type {
@@ -142,21 +141,15 @@ export class Runs {
     projectId,
     checkoutPath,
   }: RunCheckout): Promise<void> {
-    const belongs = (key: string): boolean => {
-      const [project, path] = JSON.parse(key) as string[];
+    await Promise.allSettled(this.launching.values());
 
-      return project === projectId && path === checkoutPath;
-    };
+    const ending = this.live
+      .values()
+      .filter(({ record }) => record.projectId === projectId)
+      .filter(({ record }) => record.checkoutPath === checkoutPath)
+      .map((run) => this.end(run));
 
-    await Promise.allSettled(
-      [...this.launching].filter(([key]) => belongs(key)).map(([, run]) => run),
-    );
-
-    await Promise.all(
-      [...this.live]
-        .filter(([key]) => belongs(key))
-        .map(([, run]) => this.end(run)),
-    );
+    await Promise.all(ending);
   }
 
   // Ends every Run: the Server never leaves one behind.
@@ -360,21 +353,3 @@ export class Runs {
     await run.ended.promise;
   }
 }
-
-// The Runs of each Engine, found by its database, so a Session archive reaches them without carrying them through every Session.
-const enginesRuns = new WeakMap<Database, Runs>();
-
-export const createRuns = (
-  input: Omit<RunsInput, 'createId'> & Partial<Pick<RunsInput, 'createId'>>,
-): Runs => {
-  const runs = new Runs({ createId: randomUUID, ...input });
-  enginesRuns.set(input.database, runs);
-
-  return runs;
-};
-
-// Ends the Runs of a Checkout the Engine is removing; a Checkout with none, or an Engine without Runs, is left alone.
-export const endCheckoutRuns = (
-  database: Database,
-  checkout: RunCheckout,
-): Promise<void> => enginesRuns.get(database)?.endCheckout(checkout) ?? Promise.resolve();

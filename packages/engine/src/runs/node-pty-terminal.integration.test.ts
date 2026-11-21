@@ -116,5 +116,5 @@ it('leaves nothing listening after Stop, even a child that ignores SIGTERM', asy
   await terminal.stop();
 
   expect(await listening(port)).toBe(false);
-  expect(() => process.kill(grandchild, 0)).toThrow();
+  expect(() => process.kill(grandchild, 0)).toThrow('ESRCH');
 }, 30_000);
