@@ -22,6 +22,7 @@ import { ScheduleDetailView } from './schedule-detail-view';
 import { ScheduleFormView } from './schedule-form-view';
 import { scheduleHref } from './schedule-href';
 import { ScheduledListView } from './scheduled-list-view';
+import { useScheduleTiming } from './use-schedule-timing';
 
 type ScheduleContext = { projectId: string; agent: string };
 
@@ -204,6 +205,7 @@ function ConnectedScheduleForm({
   );
 
   const save = useSaveSchedule(onClose);
+  const timing = useScheduleTiming(projectId);
 
   return (
     <ScheduleFormView
@@ -222,6 +224,7 @@ function ConnectedScheduleForm({
           ? initialAgent
           : undefined
       }
+      timing={timing}
       onProjectChange={setProjectId}
       {...save}
     />

@@ -7,7 +7,11 @@ import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import type { ReactElement } from 'react';
 import { sessionsListLook } from '#features/sessions';
-import { intervalLabel, upcomingOccurrence } from './schedule-time';
+import {
+  cadenceLabel,
+  upcomingOccurrence,
+  scheduleTimeZone,
+} from './schedule-time';
 
 export interface ScheduledListViewProps {
   schedules: readonly ProjectSchedule[];
@@ -61,7 +65,7 @@ function ScheduleRows({
         <ListItem
           key={schedule.id}
           title={schedule.name}
-          subtitle={`${upcomingOccurrence(schedule.nextAt)} · ${intervalLabel(schedule.intervalSeconds)}`}
+          subtitle={`${upcomingOccurrence(schedule.nextAt, scheduleTimeZone(schedule.cadence))} · ${cadenceLabel(schedule.cadence)}`}
           selected={selectedId === schedule.id}
           sidebar={gutterHeld}
           onPress={() => onOpen(schedule)}

@@ -9,10 +9,11 @@ import {
   DialogForm,
 } from '@repo/kit/primitives/overlays/dialog';
 import { useState, type ReactElement } from 'react';
+import { cadenceOf } from './schedule-cadence-draft';
 import {
-  type IntervalFields,
-  useIntervalFields,
-} from './schedule-interval-fields';
+  scheduleSection,
+  type ScheduleCadenceFields,
+} from './schedule-cadence-fields';
 
 type Choice = { value: string; label: string };
 
@@ -28,6 +29,7 @@ export interface ScheduleFormViewProps {
   initiallyAdvanced?: boolean;
   saving?: boolean;
   error?: string;
+  timing: ScheduleCadenceFields;
   onProjectChange?: (project: string) => void;
   onSubmit: (input: ProjectScheduleInput) => void;
 }
@@ -186,13 +188,13 @@ function advancedSection(
 export function ScheduleFormView(props: ScheduleFormViewProps): ReactElement {
   const advanced = useAdvancedFields(props);
   const task = useTaskFields(props, advanced.clearBranch);
-  const interval = useIntervalFields();
-  const form = useScheduleSubmit(props, { task, advanced, interval });
+  const form = useScheduleSubmit(props, { task, advanced });
   const sheet = !useCentresOverlays();
 
   return (
     <DialogForm
       title={advanced.advanced ? 'Advanced' : 'New Schedule'}
+      scrolls
       dismissible={!props.saving}
       showClose={!props.saving}
       footer={
@@ -219,7 +221,7 @@ export function ScheduleFormView(props: ScheduleFormViewProps): ReactElement {
       ) : (
         <>
           {task.section}
-          {interval.section}
+          {scheduleSection(props.timing)}
           {advanced.link}
         </>
       )}
@@ -234,11 +236,9 @@ function useScheduleSubmit(
   {
     task,
     advanced,
-    interval,
   }: {
     task: TaskFields;
     advanced: AdvancedFields;
-    interval: IntervalFields;
   },
 ): ScheduleSubmission {
   const [validation, setValidation] = useState<string>();
@@ -248,7 +248,7 @@ function useScheduleSubmit(
       projectId: task.projectId,
       agent: advanced.agent,
       instructions: task.instructions,
-      intervalSeconds: interval.intervalSeconds,
+      cadence: cadenceOf(props.timing.draft),
       checkout:
         advanced.checkout === 'main'
           ? { type: 'main' }
@@ -256,7 +256,7 @@ function useScheduleSubmit(
     });
 
     if (!result.success) {
-      setValidation(validationMessage(result.error.issues[0]?.path[0]));
+      setValidation(validationMessage(result.error.issues[0]?.path));
 
       return;
     }
@@ -298,13 +298,27 @@ function ScheduleFooter({
   );
 }
 
-function validationMessage(field: PropertyKey | undefined): string {
+function validationMessage(path: readonly PropertyKey[] = []): string {
+  const [field, part] = path;
+
   if (field === 'projectId') return 'Choose a Project.';
 
   if (field === 'agent') return 'Choose an installed Agent.';
 
-  if (field === 'intervalSeconds')
-    return 'Enter an interval between one second and one year.';
+  if (field === 'cadence') return cadenceError(part);
 
   return 'Enter instructions for the Session.';
+}
+
+function cadenceError(part: PropertyKey | undefined): string {
+  if (part === 'intervalSeconds')
+    return 'Enter an interval between one second and one year.';
+
+  if (part === 'weekdays') return 'Choose at least one day.';
+
+  if (part === 'localTime') return 'Enter a valid start time.';
+
+  if (part === 'timeZone') return 'Choose a valid time zone.';
+
+  return 'Enter a valid repeat interval.';
 }

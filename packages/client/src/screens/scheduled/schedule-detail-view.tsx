@@ -4,7 +4,11 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type { ReactElement } from 'react';
-import { intervalLabel, occurrenceTime } from './schedule-time';
+import {
+  cadenceLabel,
+  occurrenceTime,
+  scheduleTimeZone,
+} from './schedule-time';
 
 export interface ScheduleDetailViewProps {
   schedule: ProjectSchedule;
@@ -26,11 +30,14 @@ export function ScheduleDetailView({
         <FieldGroup.Section>
           <FieldGroup.Value
             title="Cadence"
-            value={intervalLabel(schedule.intervalSeconds)}
+            value={cadenceLabel(schedule.cadence)}
           />
           <FieldGroup.Value
             title="Next occurrence"
-            value={occurrenceTime(schedule.nextAt)}
+            value={occurrenceTime(
+              schedule.nextAt,
+              scheduleTimeZone(schedule.cadence),
+            )}
           />
         </FieldGroup.Section>
       </FieldGroup>

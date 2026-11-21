@@ -1,47 +1,106 @@
+import {
+  type ProjectScheduleCadence,
+  ScheduleWeekday,
+} from '@repo/contracts/operations';
+
 export const secondsPerMinute = 60;
 
 export const secondsPerHour = 60 * secondsPerMinute;
 
-export const occurrenceTime = (time: number): string =>
+export const occurrenceTime = (time: number, timeZone?: string): string =>
   new Date(time).toLocaleString([], {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone,
   });
 
-const longUnit = (unit: string): Intl.NumberFormat =>
-  new Intl.NumberFormat(undefined, {
-    style: 'unit',
-    unit,
-    unitDisplay: 'long',
-  });
+export const scheduleTimeZone = (
+  cadence: ProjectScheduleCadence,
+): string | undefined =>
+  cadence.type === 'interval' ? undefined : cadence.timeZone;
 
-const hours = longUnit('hour');
-
-const minutes = longUnit('minute');
-
-const seconds = longUnit('second');
-
-export function intervalLabel(value: number): string {
-  if (value % secondsPerHour === 0)
-    return `Every ${hours.format(value / secondsPerHour)}`;
-
-  if (value % secondsPerMinute === 0)
-    return `Every ${minutes.format(value / secondsPerMinute)}`;
-
-  return `Every ${seconds.format(value)}`;
+function units(count: number, unit: string): string {
+  return `${count} ${unit}${count === 1 ? '' : 's'}`;
 }
 
-const day = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric',
-});
+function intervalLabel(value: number): string {
+  if (value % secondsPerHour === 0)
+    return `Every ${units(value / secondsPerHour, 'hour')}`;
 
-const clock = new Intl.DateTimeFormat(undefined, { timeStyle: 'short' });
+  if (value % secondsPerMinute === 0)
+    return `Every ${units(value / secondsPerMinute, 'minute')}`;
 
-export function upcomingOccurrence(at: number, now = new Date()): string {
-  const next = new Date(at);
+  return `Every ${units(value, 'second')}`;
+}
 
-  return next.toDateString() === now.toDateString()
-    ? `Today ${clock.format(next)}`
-    : day.format(next);
+type Choice<T extends string> = { value: T; label: string };
+
+type WeekdayChoice = Choice<ScheduleWeekday>;
+
+export const weekdayChoices: WeekdayChoice[] = ScheduleWeekday.options.map(
+  (value) => ({
+    value,
+    label: value.charAt(0).toUpperCase() + value.slice(1),
+  }),
+);
+
+function pluralWeekdays(selected: readonly ScheduleWeekday[]): string {
+  return weekdayChoices
+    .flatMap(({ value, label }) =>
+      selected.includes(value) ? [`${label}s`] : [],
+    )
+    .join(', ');
+}
+
+function customRepeat(
+  cadence: Extract<ProjectScheduleCadence, { type: 'custom' }>,
+): string {
+  const interval = units(cadence.every, cadence.unit);
+
+  const selected = cadence.weekdays?.length
+    ? ` on ${pluralWeekdays(cadence.weekdays)}`
+    : '';
+
+  return `Every ${interval}${selected}`;
+}
+
+export function cadenceLabel(cadence: ProjectScheduleCadence): string {
+  switch (cadence.type) {
+    case 'interval':
+      return intervalLabel(cadence.intervalSeconds);
+    case 'daily':
+      return `Daily at ${cadence.localTime}`;
+    case 'weekdays':
+      return `Weekdays at ${cadence.localTime}`;
+    case 'weekly':
+      return `${pluralWeekdays(cadence.weekdays)} at ${cadence.localTime}`;
+    case 'custom':
+      return `${customRepeat(cadence)} at ${cadence.localTime}`;
+  }
+}
+
+export function upcomingOccurrence(
+  at: number,
+  timeZone?: string,
+  now = Date.now(),
+): string {
+  const day = new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    timeZone,
+  });
+
+  const calendar = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'short',
+    timeZone,
+  });
+
+  if (calendar.format(at) !== calendar.format(now)) return day.format(at);
+
+  const clock = new Intl.DateTimeFormat(undefined, {
+    timeStyle: 'short',
+    timeZone,
+  });
+
+  return `Today ${clock.format(at)}`;
 }
