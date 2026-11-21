@@ -99,6 +99,7 @@ export const scheduleHistoryFixture: readonly ProjectScheduleHistoryEntry[] = [
     occurrence: {
       at: Date.UTC(2026, 10, 21, 13),
       outcome: 'skipped',
+      through: Date.UTC(2026, 10, 21, 13, 30),
       reason: 'The Server was offline when this Schedule was due.',
     },
   },

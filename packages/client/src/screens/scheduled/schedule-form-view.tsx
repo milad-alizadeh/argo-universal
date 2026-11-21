@@ -156,7 +156,10 @@ function useScheduleSubmit(
       projectId: task.projectId,
       agent: advanced.agent,
       instructions: task.instructions,
-      configOptions: props.editing?.configOptions,
+      configOptions:
+        props.editing?.agent === advanced.agent
+          ? props.editing.configOptions
+          : undefined,
       cadence: cadenceOf(props.timing.draft),
       checkout:
         advanced.checkout === 'main'

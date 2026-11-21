@@ -85,7 +85,7 @@ export const scheduleOperations = {
     label: 'Manage Schedule',
     icon: 'checklist',
     description:
-      'Pause, resume or delete a Session follow-up, or change the end time of an Interval follow-up.',
+      'Manage a Session follow-up. Pause, resume, delete or change its end time.',
     params: scheduleTarget
       .extend({
         id: z.string(),

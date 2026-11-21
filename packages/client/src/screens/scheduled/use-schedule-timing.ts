@@ -9,6 +9,7 @@ import { occurrenceTime, scheduleTimeZone } from './schedule-time';
 export function useScheduleTiming(
   projectId: string,
   initial?: ProjectScheduleCadence,
+  id?: string,
 ): ScheduleCadenceFields {
   const trpc = useTRPC();
   const [draft, onChange] = useState(() => scheduleCadenceDraft(initial));
@@ -16,7 +17,7 @@ export function useScheduleTiming(
 
   const input =
     projectId && cadence.success
-      ? { projectId, cadence: cadence.data }
+      ? { id, projectId, cadence: cadence.data }
       : skipToken;
 
   const preview = useQuery(trpc.project.schedulePreview.queryOptions(input));

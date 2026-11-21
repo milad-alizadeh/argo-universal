@@ -264,3 +264,55 @@ it('dispatches the previewed Custom Schedule and resumes its two-week rule after
     });
   await expect.poll(() => received.length).toBe(2);
 }, 30_000);
+
+it('previews an unchanged Custom repeat with its saved anchor and rejects an invalid edit before writing', async () => {
+  const {
+    caller: { project },
+  } = await startAcpEngine();
+
+  const clock = calendarClock();
+  clock.advanceTo('2026-03-11T10:00:00Z');
+
+  const cadence = {
+    type: 'custom',
+    every: 2,
+    unit: 'week',
+    weekdays: ['wednesday'],
+    ...startOfRun,
+  } satisfies ProjectScheduleCadence;
+
+  const input = { projectId, agent: 'mock', instructions, cadence };
+  const saved = await project.scheduleCreate(input);
+  const target = { projectId, id: saved.id };
+  clock.advanceTo('2026-03-18T08:00:00Z');
+
+  const expected = Date.parse('2026-03-25T09:00:00Z');
+  expect(saved.nextAt).toBe(expected);
+  expect(await project.schedulePreview({ ...target, cadence })).toEqual({
+    nextAt: expected,
+  });
+
+  await expect(
+    project.scheduleEdit({
+      ...input,
+      ...target,
+      cadence: {
+        type: 'custom',
+        every: Number.MAX_SAFE_INTEGER,
+        unit: 'day',
+        ...startOfRun,
+      },
+    }),
+  ).rejects.toMatchObject({
+    code: 'BAD_REQUEST',
+    message: expect.stringContaining('within the supported date range'),
+  });
+
+  expect(
+    await project.scheduleEdit({
+      ...input,
+      ...target,
+      instructions: 'Review next build',
+    }),
+  ).toMatchObject({ nextAt: expected, instructions: 'Review next build' });
+}, 30_000);

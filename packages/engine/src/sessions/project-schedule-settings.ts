@@ -3,8 +3,9 @@ import {
   type ProjectScheduleInput,
   type ProjectScheduleCadence,
 } from '@repo/contracts/operations';
-import type { projectSchedule as table } from '@repo/db/schema';
+import { projectSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireInstalledAgent } from '../agents';
 import { titleFromPrompt } from '../feed';
@@ -80,23 +81,45 @@ export function firstOccurrence(
   }
 }
 
-export function editedSchedule(
+interface EditTiming {
+  anchorAt: number;
+  nextAt: number;
+  changed: boolean;
+}
+
+export function scheduleEditTiming(
   row: ScheduleRow,
-  settings: SavedSettings,
-): Pick<ScheduleRow, 'settings' | 'nextAt'> {
+  cadence: ProjectScheduleCadence,
+): EditTiming {
   const existing = decode(row);
 
   const changed =
-    JSON.stringify(settings.cadence) !==
-    JSON.stringify(existing.schedule.cadence);
+    JSON.stringify(cadence) !== JSON.stringify(existing.schedule.cadence);
 
   const anchorAt = changed ? Date.now() : existing.anchorAt;
+  const nextAt = changed ? firstOccurrence(cadence, anchorAt) : row.nextAt;
 
-  const nextAt = changed
-    ? firstOccurrence(settings.cadence, anchorAt)
-    : row.nextAt;
+  return { anchorAt, nextAt, changed };
+}
 
-  return { settings: JSON.stringify({ ...settings, anchorAt }), nextAt };
+interface ScheduleEditUpdate {
+  settings: string;
+  nextAt?: number;
+}
+
+function editedSchedule(
+  row: ScheduleRow,
+  settings: SavedSettings,
+): ScheduleEditUpdate {
+  const { anchorAt, nextAt, changed } = scheduleEditTiming(
+    row,
+    settings.cadence,
+  );
+
+  return {
+    settings: JSON.stringify({ ...settings, anchorAt }),
+    nextAt: changed ? nextAt : undefined,
+  };
 }
 
 export function managedSchedule(
@@ -156,4 +179,28 @@ async function resolveCheckout(
   }
 
   return { type: 'worktree', baseBranch };
+}
+
+export async function writeScheduleEdit(
+  sources: SessionHandlerSources,
+  prior: ScheduleRow,
+  settings: SavedSettings,
+): Promise<boolean> {
+  const update = editedSchedule(prior, settings);
+  let saved = false;
+
+  await sources.open.write({
+    describe: () => 'Edit Project Schedule',
+    commit: (tx) => {
+      const change = tx
+        .update(table)
+        .set(update)
+        .where(and(eq(table.id, prior.id), eq(table.settings, prior.settings)))
+        .run();
+
+      saved = Number(change.changes) > 0;
+    },
+  });
+
+  return saved;
 }

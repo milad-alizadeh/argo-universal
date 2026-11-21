@@ -3,15 +3,17 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type { ReactElement } from 'react';
 import {
   cadenceLabel,
   occurrenceTime,
   scheduleTimeZone,
-} from './schedule-time';
+} from '../schedule-time';
 
 export interface ScheduleDetailViewProps {
-  schedule: ProjectSchedule;
+  schedule?: ProjectSchedule;
+  status?: 'loading' | 'failed';
   running?: boolean;
   error?: string;
   onRunNow: () => void;
@@ -19,10 +21,13 @@ export interface ScheduleDetailViewProps {
 
 export function ScheduleDetailView({
   schedule,
+  status,
   running,
   error,
   onRunNow,
 }: ScheduleDetailViewProps): ReactElement {
+  if (!schedule) return <ScheduleUnavailable status={status} />;
+
   return (
     <Screen title={schedule.name}>
       <Text>{schedule.instructions}</Text>
@@ -59,4 +64,22 @@ export function ScheduleDetailView({
       />
     </Screen>
   );
+}
+
+function ScheduleUnavailable({
+  status,
+}: Pick<ScheduleDetailViewProps, 'status'>): ReactElement {
+  return (
+    <Screen title="Schedule">
+      <EmptyState title={unavailableTitle(status)} />
+    </Screen>
+  );
+}
+
+function unavailableTitle(status: ScheduleDetailViewProps['status']): string {
+  if (status === 'loading') return 'Loading Schedule';
+
+  if (status === 'failed') return 'Could not load Schedule';
+
+  return 'Schedule not found';
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
+import { firstSchedule } from '../scheduled-fixtures';
 import { ScheduleDetailView } from './schedule-detail-view';
-import { firstSchedule } from './scheduled-fixtures';
 
 const meta = {
   title: 'Screens/Scheduled/Schedule',
@@ -16,3 +16,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const BeforeFirstRun: Story = {};
+
+export const Missing: Story = { args: { schedule: undefined } };
+
+export const Loading: Story = {
+  args: { schedule: undefined, status: 'loading' },
+};
+
+export const LoadFailed: Story = {
+  args: { schedule: undefined, status: 'failed' },
+};

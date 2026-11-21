@@ -175,7 +175,7 @@ export const projectScheduleOperations = {
     label: 'Create Project Schedule',
     icon: scheduleIcon,
     description:
-      'Clarify an ambiguous destination before scheduling fresh Sessions, then confirm the saved instructions, Project and next occurrence.',
+      'Schedule fresh Sessions. Clarify an ambiguous destination and confirm the saved instructions, Project and next occurrence.',
     params: ProjectScheduleInput,
     result: ProjectSchedule,
     tier: 'act',
@@ -186,9 +186,12 @@ export const projectScheduleOperations = {
     id: 'project.schedulePreview',
     label: 'Preview Project Schedule',
     icon: scheduleIcon,
-    description:
-      'Show the next occurrence in Unix milliseconds for a recurrence without saving it.',
-    params: z.strictObject({ projectId, cadence: ProjectScheduleCadence }),
+    description: 'Preview the next occurrence in Unix milliseconds.',
+    params: z.strictObject({
+      projectId,
+      cadence: ProjectScheduleCadence,
+      id: target.shape.id.optional(),
+    }),
     result: z.strictObject({ nextAt: z.number() }),
     tier: 'read',
     policy: scopePolicy,
@@ -199,7 +202,7 @@ export const projectScheduleOperations = {
     label: 'List Project Schedules',
     icon: scheduleIcon,
     description:
-      'List Project Schedules and their next occurrence. A Session caller defaults to its own Project.',
+      'List Project Schedules. A Session caller defaults to its own Project.',
     params: z.strictObject({ projectId: projectId.optional() }),
     result: z.array(ProjectSchedule),
     tier: 'read',
@@ -210,8 +213,7 @@ export const projectScheduleOperations = {
     id: 'project.scheduleEdit',
     label: 'Edit Project Schedule',
     icon: scheduleIcon,
-    description:
-      'Update the saved instructions, cadence, Agent or Checkout for future Project Schedule occurrences.',
+    description: 'Edit a Project Schedule.',
     params: ProjectScheduleInput.extend({ id: target.shape.id }),
     result: ProjectSchedule,
     tier: 'act',
@@ -234,8 +236,7 @@ export const projectScheduleOperations = {
     id: 'project.scheduleHistory',
     label: 'Read Project Schedule history',
     icon: scheduleIcon,
-    description:
-      'Read recent occurrences, Session links, and reasons an occurrence was skipped or failed.',
+    description: 'Read occurrence outcomes and Session links.',
     params: target.extend({ cursor: historyCursor.optional() }),
     result: ProjectScheduleHistoryPage,
     tier: 'read',
@@ -246,8 +247,7 @@ export const projectScheduleOperations = {
     id: 'project.scheduleRunNow',
     label: 'Run Project Schedule now',
     icon: scheduleIcon,
-    description:
-      'Start a fresh Session for a Project Schedule and keep its next scheduled occurrence.',
+    description: 'Start a scheduled Session now without moving its deadline.',
     params: target,
     result: ProjectScheduleOccurrence,
     tier: 'act',

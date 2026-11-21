@@ -100,7 +100,7 @@ function ConnectedScheduleForm({
   );
 
   const save = useSaveSchedule(onClose, editing);
-  const timing = useScheduleTiming(projectId, editing?.cadence);
+  const timing = useScheduleTiming(projectId, editing?.cadence, editing?.id);
 
   return (
     <ScheduleFormView

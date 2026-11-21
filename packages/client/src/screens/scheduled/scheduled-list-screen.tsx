@@ -1,18 +1,11 @@
 import type { ProjectSchedule } from '@repo/contracts/operations';
 import { Dialog } from '@repo/kit/primitives/overlays/dialog';
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { usePathname } from 'expo-router';
-import { useState, type ReactElement, type ReactNode } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { useServerScope } from '#lib/product/server-scope';
-import { SessionDetailScreen } from '../sessions/$id/session-detail-screen';
-import { ScheduleDetailView } from './schedule-detail-view';
 import {
   ScheduleFormScreen,
   type ScheduleContext,
@@ -33,7 +26,7 @@ type ScheduleQuery = Pick<
   'data' | 'isError' | 'isPending'
 >;
 
-function useSchedules(enabled = true): ScheduleQuery {
+export function useSchedules(enabled = true): ScheduleQuery {
   return useQuery(
     useTRPC().project.scheduleList.queryOptions(schedulesInput, {
       enabled,
@@ -181,54 +174,4 @@ function listStatus(
   if (schedules.isPending) return 'loading';
 
   return undefined;
-}
-
-export function ScheduledDetailScreen({
-  id,
-  sessionId,
-}: {
-  id: string;
-  sessionId?: string;
-}): ReactNode {
-  if (sessionId) return <SessionDetailScreen id={sessionId} />;
-
-  return <ConnectedScheduleDetail id={id} />;
-}
-
-function ConnectedScheduleDetail({ id }: { id: string }): ReactNode {
-  const trpc = useTRPC();
-  const cache = useQueryClient();
-  const navigate = useNavigate();
-  const schedules = useSchedules();
-  const schedule = schedules.data?.find((row) => row.id === id);
-
-  const run = useMutation(
-    trpc.project.scheduleRunNow.mutationOptions({
-      onSuccess: (result) => {
-        void cache.invalidateQueries({
-          queryKey: trpc.project.scheduleList.pathKey(),
-        });
-
-        if (result.outcome === 'started') {
-          navigate(scheduleHref({ id, latestSessionId: result.sessionId }), {
-            replace: true,
-          });
-        }
-      },
-    }),
-  );
-
-  if (!schedule) return null;
-
-  return (
-    <ScheduleDetailView
-      schedule={schedule}
-      running={run.isPending}
-      error={
-        run.error?.message ??
-        (run.data?.outcome === 'started' ? undefined : run.data?.reason)
-      }
-      onRunNow={() => run.mutate({ id, projectId: schedule.projectId })}
-    />
-  );
 }

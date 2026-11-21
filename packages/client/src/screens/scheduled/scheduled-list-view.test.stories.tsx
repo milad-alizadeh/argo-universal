@@ -5,7 +5,7 @@ import { expect, fn } from 'storybook/test';
 import { SessionDetailView } from '../sessions/$id/session-detail-view';
 import { idleSession } from '../sessions/$id/session-detail-view.mocks';
 import { SessionPageHeader } from '../sessions/$id/session-page-header';
-import { ScheduleDetailView } from './schedule-detail-view';
+import { ScheduleDetailView } from './$id/schedule-detail-view';
 import { scheduleHref } from './schedule-href';
 import { scheduledListFixture } from './scheduled-fixtures';
 import {

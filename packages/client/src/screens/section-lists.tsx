@@ -15,7 +15,7 @@ import { newSessionId } from '../lib/product/navigation/new-session';
 import {
   ScheduledListScreen,
   useScheduleContext,
-} from './scheduled/scheduled-screens';
+} from './scheduled/scheduled-list-screen';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootScreen } from './sessions/sessions-root-screen';
 import {

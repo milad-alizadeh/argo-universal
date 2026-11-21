@@ -84,11 +84,16 @@ function OccurrenceRow({
     );
   }
 
+  const through =
+    occurrence.outcome === 'skipped' ? occurrence.through : undefined;
+
+  const when =
+    through === undefined ? time : `${time} – ${occurrenceTime(through)}`;
+
   return (
     <ListItem
       title={occurrence.outcome === 'failed' ? 'Failed' : 'Skipped'}
-      subtitle={`${time} · ${occurrence.reason}`}
-      subtitleLines={2}
+      subtitle={`${when} · ${occurrence.reason}`}
       multiline
     />
   );

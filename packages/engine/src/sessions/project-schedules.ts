@@ -19,10 +19,11 @@ import {
 import { launchScheduledSession } from './project-schedule-launch';
 import {
   decode,
-  editedSchedule,
   firstOccurrence,
   managedSchedule,
   resolveScheduleSettings,
+  scheduleEditTiming,
+  writeScheduleEdit,
 } from './project-schedule-settings';
 import { nextProjectScheduleAt } from './project-schedule-timing';
 import { startSchedule, type ScheduleActor } from './schedule-machine';
@@ -97,7 +98,14 @@ export class ProjectSchedules {
   public preview(
     projectId: string,
     cadence: ProjectScheduleCadence,
+    id?: string,
   ): OccurrencePreview {
+    if (id) {
+      const row = this.requireRow({ projectId, id });
+
+      return { nextAt: scheduleEditTiming(row, cadence).nextAt };
+    }
+
     readProjectPath(this.sources.database, projectId);
 
     return { nextAt: firstOccurrence(cadence, Date.now()) };
@@ -130,21 +138,17 @@ export class ProjectSchedules {
 
   public async edit({ id, ...input }: ScheduleEdit): Promise<ProjectSchedule> {
     const target = { id, projectId: input.projectId };
-    this.requireRow(target);
     const settings = await resolveScheduleSettings(this.sources, input);
-    await this.sources.open.write({
-      describe: () => 'Edit Project Schedule',
-      commit: (tx) => {
-        const row = this.row(id);
+    const prior = this.requireRow(target);
+    const saved = await writeScheduleEdit(this.sources, prior, settings);
 
-        if (row?.projectId !== target.projectId) return;
-
-        tx.update(table)
-          .set(editedSchedule(row, settings))
-          .where(eq(table.id, id))
-          .run();
-      },
-    });
+    if (!saved) {
+      this.requireRow(target);
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'The Schedule changed. Try again.',
+      });
+    }
 
     this.rearm(id);
 

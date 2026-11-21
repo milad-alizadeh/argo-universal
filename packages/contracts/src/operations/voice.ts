@@ -24,7 +24,7 @@ export const voiceOperations = {
     icon: 'voice',
     label: 'List voices',
     description:
-      "List the voices a Conversation can speak with: the Conversation provider's built-in voices, then the person's custom voices, each with its description.",
+      'List the built-in and custom Conversation voices. Built-in voices come from the selected provider.',
     params: z.strictObject({}).default({}),
     result: VoiceList,
     tier: 'read',
