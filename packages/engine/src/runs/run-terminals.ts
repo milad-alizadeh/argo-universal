@@ -1,26 +1,14 @@
-import type {
-  RunConfigurationStatus,
-  TerminalReadResult,
-  TerminalSendResult,
-} from '@repo/contracts';
+import type { TerminalReadResult, TerminalSendResult } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { LiveRun } from './live-run';
 import { drawRecording } from './run-screen';
-import type { RunRecord } from './run-store';
-import type { RunCheckout, Runs } from './runs';
-
-// The Run of a Run Configuration as it stands now: its terminal while it lives, its latest record and where that recorded its output.
-export type Standing = {
-  live: LiveRun | undefined;
-  record: RunRecord | undefined;
-  output: string | undefined;
-};
+import { statusOf, type RunView } from './run-view';
+import type { RunCheckout } from './runs';
 
 const defaultScrollbackLines = 100;
 
 // How Agents and people read and type into the Terminals of a Checkout: a Run today, shell Terminals once they exist (ADR-0063).
 export class RunTerminals {
-  public constructor(private readonly runs: Runs) {}
+  public constructor(private readonly runs: RunView) {}
   // What the Terminal shows now; an ended Run's screen is drawn again from its recording.
   public async read(
     checkout: RunCheckout,
@@ -37,7 +25,7 @@ export class RunTerminals {
 
     return {
       name,
-      status: statusOf(record?.status),
+      status: statusOf(record),
       exitCode: record?.exitCode ?? null,
       ...shown,
     };
@@ -58,14 +46,10 @@ export class RunTerminals {
 
     live.terminal.write(input);
 
-    return { name, status: statusOf(record?.status) };
+    return { name, status: statusOf(record) };
   }
   // Whether the person opened this Terminal. Every Terminal is a Run until shell Terminals arrive.
   public openedByPerson(_checkout: RunCheckout, _name: string): boolean {
     return false;
   }
 }
-
-const statusOf = (
-  status: RunConfigurationStatus | undefined,
-): RunConfigurationStatus => status ?? 'stopped';

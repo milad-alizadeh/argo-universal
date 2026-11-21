@@ -79,8 +79,8 @@ export function createRunOperations(deps: {
       );
     },
     'run.status': async ({ sessionId }) =>
-      runs.status(runCheckoutOf(database, sessionId)),
+      runs.view.status(runCheckoutOf(database, sessionId)),
     'run.logs': async ({ sessionId, name, tail }) =>
-      runs.logs(runCheckoutOf(database, sessionId), name, tail),
+      runs.view.logs(runCheckoutOf(database, sessionId), name, tail),
   };
 }
