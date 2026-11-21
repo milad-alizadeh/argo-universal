@@ -7,16 +7,14 @@ const prompt = (text: string): ContentBlock[] => [
   { type: 'text' as const, text },
 ];
 
+const request = 'Check the live list';
+
 it('keeps a short first line whole', () => {
-  expect(titleFromPrompt(prompt('Check the live list'))).toBe(
-    'Check the live list',
-  );
+  expect(titleFromPrompt(prompt(request))).toBe(request);
 });
 
 it('titles a Conversation from the spoken request', () => {
-  expect(
-    titleFromPrompt(prompt(withVoiceInstruction('Check the live list'))),
-  ).toBe('Check the live list');
+  expect(titleFromPrompt(prompt(withVoiceInstruction(request)))).toBe(request);
 });
 
 it('leaves the title available for a later Prompt when there is no spoken request', () => {
