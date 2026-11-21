@@ -21,7 +21,39 @@
     "drafts": [
       {
         "page": "/",
-        "states": ["loading", "empty", "populated"]
+        "states": ["loading", "empty", "populated"],
+        "regions": [
+          {
+            "id": "header",
+            "variants": [
+              {
+                "id": "compact",
+                "name": "Compact"
+              },
+              {
+                "id": "tabs",
+                "name": "Tabs"
+              },
+              {
+                "id": "search",
+                "name": "Search"
+              }
+            ]
+          },
+          {
+            "id": "list",
+            "variants": [
+              {
+                "id": "rows",
+                "name": "Rows"
+              },
+              {
+                "id": "cards",
+                "name": "Cards"
+              }
+            ]
+          }
+        ]
       }
     ]
   }

@@ -18,3 +18,16 @@ Feature: Plugin Drafts
     When I open the Drafts Plugin
     Then the Plugin page text reads "Draft issues"
     And no Draft bar is shown
+
+  @dev-plugins
+  Scenario: Each region steps its own Variant and the picks mix
+    Given a wide Frame
+    When I open the Drafts Plugin
+    Then the Plugin page text reads "Header compact"
+    And the Plugin page text reads "List rows"
+    When I step the "Header" region to the next Variant
+    Then the Plugin page text reads "Header tabs"
+    And the Plugin page text reads "List rows"
+    When I step the "List" region to the next Variant
+    Then the Plugin page text reads "Header tabs"
+    And the Plugin page text reads "List cards"

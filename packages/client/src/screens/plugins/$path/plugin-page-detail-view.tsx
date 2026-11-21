@@ -3,10 +3,12 @@ import type * as React from 'react';
 import {
   DraftBar,
   DraftBarDock,
+  DraftRegionsProvider,
   type PageOpening,
   PluginSessionRowProvider,
   useOpenPluginPage,
   useDraftBar,
+  useDraftRegions,
   usePluginLookup,
   usePluginPage,
 } from '#features/plugins';
@@ -28,18 +30,21 @@ type PageViewProps = PageOpening & {
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const { root, onPageCall, loadingTree } = usePluginPage(opening);
+  const regions = useDraftRegions(opening);
 
   // Let the destination paint its loading state even when its first tree is already cached.
   const deferredRoot = useDeferredValue(root, null);
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
-      <PluginDetailView
-        title={title}
-        root={deferredRoot}
-        callbacks={{ onOpenPage, onPageCall, pluginId: opening.pluginId }}
-        {...{ onBack, loadingTree }}
-      />
+      <DraftRegionsProvider regions={regions}>
+        <PluginDetailView
+          title={title}
+          root={deferredRoot}
+          callbacks={{ onOpenPage, onPageCall, pluginId: opening.pluginId }}
+          {...{ onBack, loadingTree }}
+        />
+      </DraftRegionsProvider>
       <PageDraftBar {...opening} />
     </PluginSymbol>
   );

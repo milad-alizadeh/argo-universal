@@ -4,6 +4,7 @@ import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
+import type { DraftSeam } from './draft-seam';
 import type { DrawnNodes } from './drawn-nodes';
 
 /*
@@ -22,6 +23,8 @@ export interface RenderContext {
   controls: PluginControls;
   pageCall?: OnPageCall;
   drawn: DrawnNodes;
+  // Set only while a Draft is open.
+  seam?: DraftSeam | null;
 }
 
 export type Callback = (value?: WireJson) => void | Promise<void>;

@@ -3,6 +3,7 @@ import {
   draftStateIds,
   draftStateKey,
   draftStateLabels,
+  draftVariantKey,
   missingDraftStates,
 } from './drafts';
 import { PluginList, PluginManifest } from './plugins';
@@ -143,4 +144,10 @@ it('lists a Plugin as dev only when the Server says so', () => {
     PluginList.safeParse({ plugins: [{ ...entry, dev: true }], errors: [] })
       .data?.plugins[0]?.dev,
   ).toBe(true);
+});
+
+it('names the Page state key a region pick travels under, one for each region', () => {
+  expect(draftVariantKey('header')).toBe('draftVariant.header');
+  expect(draftVariantKey('list')).not.toBe(draftVariantKey('header'));
+  expect(draftVariantKey('header')).not.toBe(draftStateKey);
 });

@@ -7,7 +7,12 @@ import {
   childNodeKey,
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
-import { Fragment, createElement, type ElementType } from 'react';
+import {
+  Fragment,
+  createElement,
+  type ElementType,
+  type ReactElement,
+} from 'react';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 
@@ -29,10 +34,21 @@ export function RenderNode({
 
   if (drawn !== undefined) return drawn;
 
-  const element = drawNode({ node, context });
+  const element = framed(drawNode({ node, context }), node, context);
   context.drawn.set(context.key, node, element);
 
   return element;
+}
+
+// While a Draft is open the App may frame a node; the frame takes the element's key, so its place among siblings holds.
+function framed(
+  element: ReactElement | null,
+  node: WireNode,
+  { seam }: Rendering.RenderContext,
+): ReactElement | null {
+  if (!element || !seam?.frames(node)) return element;
+
+  return createElement(seam.Frame, { key: element.key, node }, element);
 }
 
 function drawNode({
