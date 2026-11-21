@@ -178,4 +178,6 @@ const environment: ConversationEnvironment<PhoneStream> = {
 };
 
 export const phoneConversationEnvironment: ConversationEnvironment<PhoneStream> | null =
-  Platform.OS === 'ios' || Platform.OS === 'android' ? environment : null;
+  Platform.OS === 'ios' || (__DEV__ && Platform.OS === 'android')
+    ? environment
+    : null;

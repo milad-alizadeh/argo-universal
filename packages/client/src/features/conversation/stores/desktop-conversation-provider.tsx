@@ -86,7 +86,7 @@ function Hosted(props: {
         <FollowsDeviceChoice connection={props.connection} />
       ) : null}
       {props.children}
-      <LatencyPanel />
+      {__DEV__ ? <LatencyPanel /> : null}
     </ServerConversationHost>
   );
 }
