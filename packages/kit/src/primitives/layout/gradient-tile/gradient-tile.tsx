@@ -1,9 +1,9 @@
 import type { ReactElement } from 'react';
 import { Platform, Pressable, View, type ViewStyle } from 'react-native';
-import { useSizeClass } from '#kit/use-size-class/use-size-class';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
+import { useSizeClass } from '../../../use-size-class/use-size-class';
 import { isRightToLeft } from '../../controls/fader/fader-direction';
 import { Gradient } from '../../controls/fader/fader-gradient';
 import { inkOver } from '../../controls/fader/fader-ink';
