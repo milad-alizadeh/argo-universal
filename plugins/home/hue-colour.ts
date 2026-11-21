@@ -2,6 +2,9 @@
  * Colour as the wheel and Hue each speak it: the wheel gives hue (0-359) and saturation (0-100); Hue takes a CIE xy
  * point inside the gamut the light reports. The matrices are Philips Hue's published wide-gamut RGB conversion.
  */
+// Kit gradients take at most four colour data stops (ADR-0026).
+export const maxTileColourStops = 4;
+
 export type Point = Readonly<{ x: number; y: number }>;
 
 export type Gamut = Readonly<{ red: Point; green: Point; blue: Point }>;

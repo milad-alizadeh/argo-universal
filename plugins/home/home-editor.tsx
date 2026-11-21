@@ -13,6 +13,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { HomeState } from './home-cards';
 import { brightnessRange } from './hue';
+import { maxTileColourStops } from './hue-colour';
 import type { Household, Room, Switch } from './hue-model';
 
 type Target = { kind: 'light'; light: Switch } | { kind: 'room'; room: Room };
@@ -111,7 +112,11 @@ function roomEditor(
             <GradientTile
               key={scene.id}
               title={scene.name}
-              fill={scene.colours.length ? [...scene.colours] : undefined}
+              fill={
+                scene.colours.length
+                  ? scene.colours.slice(0, maxTileColourStops)
+                  : undefined
+              }
               selected={scene.active}
               onPress={to.run('recallScene', { id: scene.id })}
             />

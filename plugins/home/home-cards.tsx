@@ -11,7 +11,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { homeWords, roomSubtitle } from './home-words';
 import { brightnessRange } from './hue';
-import { hueSaturationToRgb, toHex } from './hue-colour';
+import { hueSaturationToRgb, maxTileColourStops, toHex } from './hue-colour';
 import type { Household, LightColour, Room, Switch } from './hue-model';
 
 export type HomeState = { editor: string; sceneSearch: string };
@@ -144,7 +144,6 @@ function roomFader(
     reachable: room.lights.some((member) => member.reachable),
   };
 
-  const maxFaderStops = 4;
   const colours = [
     ...new Set(
       room.lights.flatMap((member) =>
@@ -153,7 +152,7 @@ function roomFader(
           : [],
       ),
     ),
-  ].slice(0, maxFaderStops);
+  ].slice(0, maxTileColourStops);
 
   return (
     <Fader
