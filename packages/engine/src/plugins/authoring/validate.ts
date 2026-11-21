@@ -8,7 +8,8 @@ import { readIconMarkup } from '../discovery/manifest-icon';
 import { runtimeError } from '../protocol/runtime';
 import { BuildError, buildDiagnostics } from './build-diagnostics';
 import type { PluginDiagnostic } from './diagnostics';
-import { draftManifestDiagnostics, inspectDraftLoaders } from './drafts';
+import { inspectDraftLoaders } from './draft-loaders';
+import { draftManifestDiagnostics } from './drafts';
 import { inspectGlobals } from './globals';
 import { manifestDiagnostics } from './manifest-diagnostics';
 import {
