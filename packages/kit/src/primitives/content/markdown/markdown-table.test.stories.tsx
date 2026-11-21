@@ -144,3 +144,38 @@ export const GrowingCellKeepsItsRow: Story = {
     await expect(canvas.getByRole('link', { name: 'Details' })).toBe(link);
   },
 };
+
+const longName =
+  'mcp__claude_ai_Datadog__manage_datadog_error_tracking_issue_comments';
+
+export const LongCellsStayInTheirColumn: Story = {
+  args: {
+    text: `| Tool | Server | Tokens |\n| --- | --- | --- |\n| ${longName} | claude.ai Datadog | 412 |`,
+    selectable: true,
+  },
+  play: async ({ canvas }) => {
+    for (const layout of ['wide', 'phone'] as const) {
+      await settleLayout(layout);
+      const name = canvas.getByText(longName);
+      const server = canvas.getByText('claude.ai Datadog');
+
+      await waitFor(() =>
+        expect(name.getBoundingClientRect().right).toBeLessThanOrEqual(
+          server.getBoundingClientRect().left,
+        ),
+      );
+    }
+  },
+};
+
+export const TableTextIsSelectable: Story = {
+  args: {
+    text: '| Name | Value |\n| --- | --- |\n| Size | Small |',
+    selectable: true,
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const cell = canvas.getByText('Small');
+    await expect(getComputedStyle(cell).userSelect).not.toBe('none');
+  },
+};

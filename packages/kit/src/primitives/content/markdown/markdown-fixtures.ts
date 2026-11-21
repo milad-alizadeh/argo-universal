@@ -24,6 +24,11 @@ export const tableMarkdown = {
   text: '| Name | Value |\n| --- | --- |\n| Size | Small |',
 } satisfies MarkdownProps;
 
+export const longCellTableMarkdown = {
+  text: '| Tool | Server | Tokens |\n| --- | --- | --- |\n| `mcp__claude_ai_Datadog__manage_datadog_error_tracking_issue_comments` | claude.ai Datadog | 412 |\n| mcp__claude_ai_Slack__slack_search_public_and_private | claude.ai Slack | 388 |',
+  selectable: true,
+} satisfies MarkdownProps;
+
 export const streamingMarkdown = {
   text: 'Text arriving',
   streaming: true,
