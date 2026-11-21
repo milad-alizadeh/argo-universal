@@ -1,6 +1,8 @@
 export { BoundedPluginTree } from './bounded-plugin-tree';
 
-export { type OnPageCall } from './plugin-registry';
+export { type OnPageCall, type PluginTreeProps } from './plugin-registry';
+
+export { type DraftNaming } from './draft-drawing';
 
 export * from './replaceable-state';
 

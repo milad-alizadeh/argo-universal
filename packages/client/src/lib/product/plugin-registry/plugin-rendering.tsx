@@ -4,6 +4,7 @@ import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
+import type { DraftDrawing } from './draft-drawing';
 import type { DrawnNodes } from './drawn-nodes';
 
 /*
@@ -22,6 +23,8 @@ export interface RenderContext {
   controls: PluginControls;
   pageCall?: OnPageCall;
   drawn: DrawnNodes;
+  // The Agent drawing a dev Plugin's Draft page (ADR-0057); none for any other tree.
+  draft?: DraftDrawing;
 }
 
 export type Callback = (value?: WireJson) => void | Promise<void>;

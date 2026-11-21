@@ -90,3 +90,5 @@ export { DraftBar } from './components/draft-bar/draft-bar';
 export { DraftBarDock } from './components/draft-bar/draft-bar-dock';
 
 export { useDraftBar } from './hooks/use-draft-bar';
+
+export { useDraftNaming } from './stores/draft-namings';

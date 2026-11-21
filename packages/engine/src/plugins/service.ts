@@ -89,17 +89,25 @@ export class PluginService {
   }
 
   // Rebuilds a dev Plugin at once; a build that fails keeps the worker and is the refusal (ADR-0057).
-  async showDraft(pluginId: string): Promise<void> {
+  async showDraft(pluginId: string, region?: string): Promise<void> {
     await this.activate(pluginId);
-    const error = await this.deps.pluginRuntime.showDraft(pluginId);
 
-    if (error) throw new Error(error);
+    // The mark of the worker this swaps in names the region, so Apps frame it (ADR-0057).
+    const done = this.deps.pluginRuntime.changes.drawing(pluginId, region);
 
-    // Answered once the new worker reports, so the Agent's next step sees the Draft drawn.
-    const status = await this.activate(pluginId);
+    try {
+      const error = await this.deps.pluginRuntime.showDraft(pluginId);
 
-    if (status.state !== 'running')
-      throw new Error(status.error ?? 'Plugin did not start');
+      if (error) throw new Error(error);
+
+      // Answered once the new worker reports, so the Agent's next step sees the Draft drawn.
+      const status = await this.activate(pluginId);
+
+      if (status.state !== 'running')
+        throw new Error(status.error ?? 'Plugin did not start');
+    } finally {
+      done();
+    }
   }
 
   // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.

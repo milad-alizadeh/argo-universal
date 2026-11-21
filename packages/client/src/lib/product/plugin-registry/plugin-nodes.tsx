@@ -8,6 +8,7 @@ import {
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
 import { Fragment, createElement, type ElementType } from 'react';
+import { faded, framed } from './draft-drawing-nodes';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 
@@ -25,11 +26,23 @@ export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
+  return framed(drawnElement({ node, context }), node.key, context.draft);
+}
+
+function drawnElement({
+  node,
+  context,
+}: RenderNodeProps): React.JSX.Element | null {
   const drawn = context.drawn.get(context.key, node);
 
   if (drawn !== undefined) return drawn;
 
-  const element = drawNode({ node, context });
+  const element = faded(
+    drawNode({ node, context }),
+    context.key,
+    context.draft,
+  );
+
   context.drawn.set(context.key, node, element);
 
   return element;

@@ -6,6 +6,12 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
 import { pageCallRefused } from './component-event-props';
+import {
+  drawn as drawnDraft,
+  startDrawing,
+  type DraftDrawing,
+  type DraftNaming,
+} from './draft-drawing';
 import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
 import type { OnPageCall } from './plugin-rendering';
@@ -20,6 +26,8 @@ export interface PluginTreeProps {
   onOpenPage?: OpenPluginPage;
   // A Loader page's Page state changes and Operation calls.
   onPageCall?: OnPageCall;
+  // Set for a dev Plugin's Draft page: its new nodes fade in and the region being written wears a frame (ADR-0057).
+  draft?: { naming: DraftNaming | null };
 }
 
 /*
@@ -50,6 +58,7 @@ function treeIdentity({ root, pluginId }: PluginTreeProps): TreeIdentity {
 // One tree: overlays are ordinary nodes in it.
 export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
   const [drawn] = useState(() => new DrawnNodes());
+  const draft = useDraftDrawing(props);
 
   const context = {
     ...treeIdentity(props),
@@ -57,6 +66,7 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
     controls: useComponentEvents(props.root, drawn),
     pageCall: useLatest(props.onPageCall, pageCallRefused),
     drawn,
+    draft,
   };
 
   return (
@@ -64,4 +74,20 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
       <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
     </PluginTreeContext>
   );
+}
+
+// The Agent's drawing of the Draft page, as of this tree; none for a tree that is not a Draft.
+function useDraftDrawing({
+  root,
+  draft,
+}: PluginTreeProps): DraftDrawing | undefined {
+  const [state, setState] = useState(() => startDrawing(draft?.naming ?? null));
+
+  if (!draft) return undefined;
+
+  const next = drawnDraft(state, root, draft.naming);
+
+  if (next !== state) setState(next);
+
+  return next;
 }

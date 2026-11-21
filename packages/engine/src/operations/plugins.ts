@@ -32,8 +32,8 @@ export function createPluginOperations(
     'plugin.setSetting': (change): Promise<PluginCompletion> =>
       complete(plugins.setSetting(change)),
     ...readOperations(plugins),
-    'plugin.draft.show': ({ pluginId }): Promise<PluginCompletion> =>
-      complete(plugins.showDraft(pluginId)),
+    'plugin.draft.show': ({ pluginId, region }): Promise<PluginCompletion> =>
+      complete(plugins.showDraft(pluginId, region)),
     'plugin.activate': ({ pluginId }): Promise<PluginStatus> =>
       plugins.activate(pluginId),
   };
