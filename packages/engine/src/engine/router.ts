@@ -11,6 +11,7 @@ import { createOperationProcedures } from '../operations';
 import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
+import { createRunRouter } from '../runs/router';
 import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
@@ -63,6 +64,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   return router({
     ...operations,
     session: mergeRouters(sessions.router, operations.session),
+    run: mergeRouters(createRunRouter(deps), operations.run),
     shell: mergeRouters(createShellRouter(deps), operations.shell),
     conversation: mergeRouters(
       createConversationRouter(deps),
