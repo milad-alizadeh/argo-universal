@@ -258,3 +258,23 @@ it('does not recover an overdue Interval after its end time', async () => {
     clock.mockRestore();
   }
 }, 30000);
+
+it('pauses a due follow-up on an archived Session without queuing its Prompt', async () => {
+  const {
+    host,
+    caller: { sessionId },
+  } = await delegationJourney();
+
+  const { session } = host.caller;
+
+  const followUp = await session.schedulePrompt({
+    sessionId,
+    onceAt: Date.now() + 1500,
+    prompt: [{ type: 'text', text: 'Check this later' }],
+  });
+
+  await session.archive({ sessionId });
+  await expect
+    .poll(() => session.listSchedules({ sessionId }), { timeout: 8000 })
+    .toMatchObject([{ id: followUp.id, paused: true, lastQueuedAt: null }]);
+}, 30_000);

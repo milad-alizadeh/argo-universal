@@ -71,6 +71,12 @@ export class Schedules {
       return;
     }
 
+    if (this.sources.readSession(sessionId).archivedAt !== null) {
+      await this.manage({ sessionId, id, action: 'pause' });
+
+      return;
+    }
+
     const session = await this.sources.open.ready(
       sessionId,
       'session.queue',

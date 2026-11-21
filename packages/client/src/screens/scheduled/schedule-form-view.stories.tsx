@@ -2,6 +2,7 @@ import { Dialog } from '@repo/kit/primitives/overlays/dialog';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
+import { scheduleCadenceDraft } from './schedule-cadence-draft';
 import { ScheduleFormPreview } from './schedule-form-preview.mocks';
 import { ScheduleFormView } from './schedule-form-view';
 import {
@@ -58,4 +59,14 @@ export const Advanced: Story = { args: { initiallyAdvanced: true } };
 
 export const CustomRepeat: Story = {
   args: { timing: { ...customWeeksTiming, onChange: changeCadence } },
+};
+
+export const Edit: Story = {
+  args: {
+    editing: latestSchedule,
+    timing: {
+      draft: scheduleCadenceDraft(latestSchedule.cadence),
+      onChange: changeCadence,
+    },
+  },
 };

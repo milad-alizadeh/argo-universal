@@ -6,6 +6,7 @@ import { useState, type ReactElement } from 'react';
 import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { useServerScope } from '#lib/product/server-scope';
+import { ScheduleDeleteView } from './schedule-delete-view';
 import {
   ScheduleFormScreen,
   type ScheduleContext,
@@ -13,7 +14,6 @@ import {
 import { scheduleHref } from './schedule-href';
 import { ScheduledListView } from './scheduled-list-view';
 import {
-  ConfirmScheduleDelete,
   ConnectedScheduleHistory,
   schedulesInput,
   useScheduleManagement,
@@ -142,7 +142,7 @@ function ScheduleDialogContent({
       );
     case 'delete':
       return (
-        <ConfirmScheduleDelete
+        <ScheduleDeleteView
           schedule={overlay.schedule}
           saving={saving}
           onDelete={() => onDelete(overlay.schedule)}
