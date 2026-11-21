@@ -91,6 +91,39 @@ describe('GPT-Live call losing its link', () => {
     call.tell('Back again', 'speak');
     await expect.poll(() => endpoint.received.length).toBe(1);
   });
+
+  it('delivers the work that arrived while rejoining, once and in order', async () => {
+    const { endpoint, call } = await startConversation();
+    const events = heard(call);
+    const originalTopic = 'Original topic';
+
+    call.tell(originalTopic, 'background');
+    await expect
+      .poll(() => endpoint.received.map(textOf))
+      .toEqual([originalTopic]);
+
+    endpoint.refuseLinks = true;
+    endpoint.dropLink();
+    await expect
+      .poll(() => events)
+      .toContainEqual({
+        type: 'status',
+        status: 'disconnected',
+      });
+    call.reply(delegationItem, 'The Agent is working', 'background');
+    call.tell('Allow once or reject?', 'speak', 'live');
+    call.reply(delegationItem, 'Nothing was allowed or rejected', 'speak');
+    call.tell('The design is ready for review', 'speak');
+    endpoint.refuseLinks = false;
+
+    await expect
+      .poll(() => endpoint.received.map(textOf))
+      .toEqual([
+        originalTopic,
+        'The Agent is working',
+        'The design is ready for review',
+      ]);
+  });
 });
 
 const notesOf = (events: ConversationProviderEvent[]): string[] =>

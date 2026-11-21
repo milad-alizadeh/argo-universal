@@ -1,4 +1,4 @@
-import type { Database } from '@repo/db';
+import type { ConversationHistorySources } from '../feed';
 import { createSessionReader } from '../sessions';
 import { briefingOf } from './briefing';
 import { FakeConversationProvider } from './fake-provider';
@@ -18,17 +18,13 @@ export function defaultConversationProvider(
 
 // What the voice is told about a Session before it speaks: its title, working folder and recent Feed.
 export function sessionBriefing(
-  database: Database,
+  sources: ConversationHistorySources,
 ): (sessionId: string) => string {
-  const read = createSessionReader(database);
+  const read = createSessionReader(sources.database);
 
   return (sessionId) => {
     const { title, checkout } = read(sessionId);
 
-    return briefingOf(database, {
-      id: sessionId,
-      title,
-      folder: checkout.path,
-    });
+    return briefingOf(sources, { id: sessionId, title, folder: checkout.path });
   };
 }

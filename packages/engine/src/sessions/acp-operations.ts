@@ -78,6 +78,7 @@ const promptDestination = ({
   submission,
   lease,
   feed,
+  writer: input.writer,
   storage: promptStorage(input),
 });
 

@@ -3,6 +3,7 @@ import type {
   VoiceDelivery,
   ConversationProviderCall,
   ConversationProviderEvent,
+  VoiceReplay,
 } from '../provider';
 import { ControlLink, type ControlLinkOptions } from './control-link';
 import { LinkReader } from './link-events';
@@ -98,22 +99,35 @@ export class GptLiveCall implements ConversationProviderCall {
   }
 
   public reply(requestId: string, text: string, delivery: VoiceDelivery): void {
+    // Spoken delegation replies can include a live permission question.
+    const replay = delivery === 'speak' ? 'live' : 'rejoin';
+
     for (const content of piecesOf(text))
-      this.sendOut({
-        type: 'delegation.context.append',
-        delegation_item_id: requestId,
-        channel: channelOf(delivery),
-        content,
-      });
+      this.sendOut(
+        {
+          type: 'delegation.context.append',
+          delegation_item_id: requestId,
+          channel: channelOf(delivery),
+          content,
+        },
+        replay,
+      );
   }
 
-  public tell(text: string, delivery: VoiceDelivery): void {
+  public tell(
+    text: string,
+    delivery: VoiceDelivery,
+    replay: VoiceReplay = 'rejoin',
+  ): void {
     for (const content of piecesOf(text))
-      this.sendOut({
-        type: 'session.context.append',
-        channel: channelOf(delivery),
-        content,
-      });
+      this.sendOut(
+        {
+          type: 'session.context.append',
+          channel: channelOf(delivery),
+          content,
+        },
+        replay,
+      );
   }
 
   // Hanging up keeps what was said so far: the turns still open are settled before the call ends.
@@ -121,7 +135,7 @@ export class GptLiveCall implements ConversationProviderCall {
     if (this.ended) return;
 
     for (const event of this.reader.closing()) this.emit(event);
-    this.sendOut({ type: 'session.close' });
+    this.sendOut({ type: 'session.close' }, 'live');
     this.finish();
   }
 
@@ -150,8 +164,8 @@ export class GptLiveCall implements ConversationProviderCall {
     this.link.close();
   }
 
-  private sendOut(message: LinkMessage): void {
-    this.link.send(JSON.stringify(message));
+  private sendOut(message: LinkMessage, replay: VoiceReplay): void {
+    this.link.send(JSON.stringify(message), replay);
   }
 
   private onFrame(frame: string): void {

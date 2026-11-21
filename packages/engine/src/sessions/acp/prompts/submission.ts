@@ -4,7 +4,8 @@ import type { Subscription } from 'xstate';
 import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
 import { promptMessageChange, type FeedActorRef } from '../../../feed';
-import type { WriterCommit } from '../../../storage';
+import type { WriterActorRef, WriterCommit } from '../../../storage';
+import { withConversationContext } from '../../conversation-prompt-context';
 import {
   requireCommittedPromptDispatch,
   requireNativeCommandAuthority,
@@ -24,6 +25,7 @@ export type PromptCommitInput = {
   lease: AcpSessionLease;
   feed: FeedActorRef;
   storage: AttachmentStorage;
+  writer: WriterActorRef;
 };
 
 const requirePromptAdmission = (
@@ -119,14 +121,25 @@ export const commitLocalPrompt = async (
     input.submission.content,
     input.submission.sender,
   );
-  const prompt = await readSupportedPromptBlocks(input);
+  const blocks = await readSupportedPromptBlocks(input);
   requirePromptAdmission(input.feed, signal);
+  const { sessionId } = input.feed.getSnapshot().context;
+
+  const prompt = withConversationContext(
+    {
+      database: input.storage.database,
+      findFeed: () => input.feed,
+      findWriter: () => input.writer,
+    },
+    { sessionId, sender: input.submission.sender, prompt: blocks },
+  );
+
   await enqueuePromptAndWaitForCommit(input, signal);
   signal.throwIfAborted();
   requireCommittedPromptDispatch(
     {
       database: input.storage.database,
-      sessionId: input.feed.getSnapshot().context.sessionId,
+      sessionId,
     },
     input.submission.sender,
   );
