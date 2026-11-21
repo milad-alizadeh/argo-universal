@@ -266,3 +266,30 @@ it('refuses a comment in a region or Variant the Draft does not declare', async 
     choice: null,
   });
 }, 60_000);
+
+it('hands the Agent a comment in a declared region and Variant, and one naming only its region', async () => {
+  const { host, agent } = await drawing();
+  const inRegion = [
+    { nodeKey: 'row-409', region: 'list', variant: 'cards', note: 'Chip' },
+    { nodeKey: 'list', region: 'list', note: 'Wider' },
+  ];
+
+  await agent(show, { pluginId: dev });
+  await host.caller.plugin.draft.choose({
+    pluginId: dev,
+    picks,
+    comments: inRegion,
+  });
+
+  expect(await agent('plugin.draft.pick', { pluginId: dev })).toMatchObject({
+    kind: 'result',
+    result: { choice: { comments: inRegion } },
+  });
+  await expect(
+    host.caller.plugin.draft.choose({
+      pluginId: dev,
+      picks,
+      comments: [{ nodeKey: 'x', region: 'footer', note: 'No such region' }],
+    }),
+  ).rejects.toThrow(/no region footer/);
+}, 60_000);
