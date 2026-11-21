@@ -5,8 +5,8 @@ import { Text } from '#primitives/content/text';
 import { Table, type TableProps } from '#primitives/lists/table';
 import { ClampedBlock } from './clamped-block';
 import { InlineTokens } from './inline-tokens';
-import { MarkdownSelectable } from './markdown-tone';
 import type { BlockTokenProps } from './markdown-tokens';
+import { MarkdownSelectable } from './markdown-tone';
 import { columnWidths } from './table-widths';
 
 // A cell's text breaks inside its column rather than over the next one, and selects like the rest of the Feed.
