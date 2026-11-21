@@ -21,6 +21,7 @@ import type { RunCheckout } from './runs';
 type ReadRuns = {
   home: string;
   shells: (checkout: RunCheckout) => ShellTerminal[];
+  active: (checkout: RunCheckout) => RunRecord[];
   live: (checkout: RunCheckout, name: string) => LiveRun | undefined;
   record: (checkout: RunCheckout, name: string) => RunRecord | undefined;
 };
@@ -74,36 +75,77 @@ function defaultGroupOf(
   };
 }
 
+type Configurations = { file: RunConfigurations; error?: string };
+
+async function configurationsOf(
+  checkout: RunCheckout,
+  recover: boolean,
+): Promise<Configurations> {
+  try {
+    return { file: await readRunFile(checkout.checkoutPath) };
+  } catch (error) {
+    if (!recover) throw error;
+
+    return {
+      file: { configurations: [], groups: {} },
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export class RunView {
   private readonly updates = new RunUpdates();
 
   public constructor(private readonly runs: ReadRuns) {}
 
-  public async status(checkout: RunCheckout): Promise<RunStatusResult> {
-    const file = await readRunFile(checkout.checkoutPath);
-
-    const configurations = file.configurations.map(({ name, command }) => ({
-      name,
-      command,
-      ...rowOf(this.runs.record(checkout, name)),
-    }));
-
+  public async status(
+    checkout: RunCheckout,
+    watching = false,
+  ): Promise<RunStatusResult> {
+    const active = this.runs.active(checkout);
+    const { file, error: configurationError } = await configurationsOf(
+      checkout,
+      watching || active.length > 0,
+    );
+    const configurations = this.configurationRows(checkout, file, active);
     const defaultGroup = defaultGroupOf(file, configurations);
-
     const shells = this.runs.shells(checkout);
 
     return {
       configurations,
+      ...(configurationError && { configurationError }),
       ...(defaultGroup && { defaultGroup }),
       ...(shells.length > 0 && { shells }),
     };
+  }
+
+  private configurationRows(
+    checkout: RunCheckout,
+    file: RunConfigurations,
+    active: readonly RunRecord[],
+  ): RunConfigurationRow[] {
+    const rows = new Map(
+      file.configurations.map(({ name, command }) => [
+        name,
+        { name, command, ...rowOf(this.runs.record(checkout, name)) },
+      ]),
+    );
+
+    for (const { name, command, ...record } of active)
+      rows.set(name, { name, command, ...rowOf({ name, command, ...record }) });
+
+    return [...rows.values()];
   }
 
   public watchStatus(
     checkout: RunCheckout,
     signal: AbortSignal,
   ): AsyncIterable<RunStatusResult> {
-    return this.updates.watch(checkout, () => this.status(checkout), signal);
+    return this.updates.watch(
+      checkout,
+      () => this.status(checkout, true),
+      signal,
+    );
   }
 
   public async *watchOutput(
@@ -113,7 +155,7 @@ export class RunView {
   ): AsyncGenerator<RunOutput> {
     if (signal.aborted) return;
 
-    await requireRunConfiguration(checkout.checkoutPath, name);
+    await this.requireKnownRun(checkout, name);
 
     yield* watchRunOutput(
       {
@@ -131,7 +173,7 @@ export class RunView {
     name: string,
     tail = defaultTailCharacters,
   ): Promise<RunLogsResult> {
-    await requireRunConfiguration(checkout.checkoutPath, name);
+    await this.requireKnownRun(checkout, name);
     await this.runs.live(checkout, name)?.flushed();
     const record = this.runs.record(checkout, name);
 
@@ -153,7 +195,7 @@ export class RunView {
     checkout: RunCheckout,
     name: string,
   ): Promise<Standing> {
-    await requireRunConfiguration(checkout.checkoutPath, name);
+    await this.requireKnownRun(checkout, name);
     const current = this.runs.live(checkout, name);
 
     if (current?.whenReleased()) await current.flushed();
@@ -178,6 +220,14 @@ export class RunView {
 
   public outputChanged(record: RunRecord): void {
     this.updates.outputChanged(record, record.name);
+  }
+
+  private async requireKnownRun(
+    checkout: RunCheckout,
+    name: string,
+  ): Promise<void> {
+    if (!this.runs.record(checkout, name))
+      await requireRunConfiguration(checkout.checkoutPath, name);
   }
 
   private recording(

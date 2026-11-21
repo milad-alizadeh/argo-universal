@@ -58,7 +58,8 @@ export function useSessionRuns(
     start.error?.message ??
     stop.error?.message ??
     restart.error?.message ??
-    shells.failure;
+    shells.failure ??
+    status.configurationError;
 
   useErrorToast(message ? { title: 'Runs', message } : undefined);
   const defaultGroup = useRunGroupControls(sessionId, status.defaultGroup);

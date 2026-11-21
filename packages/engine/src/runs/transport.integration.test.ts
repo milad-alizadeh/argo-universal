@@ -72,6 +72,45 @@ it('updates both Sessions on a Checkout as its Run starts, becomes ready, and st
   });
 });
 
+it('watches Run Configuration creation and recovers after an invalid edit', async () => {
+  const { caller } = await startAcpEngine({ steps: [] });
+  const session = await caller.session.new(emptySessionInput);
+  const { checkout } = await caller.session.get(session);
+  const events = await caller.run.watchStatus(session);
+  const statuses = events[Symbol.asyncIterator]();
+
+  await expect(statuses.next()).resolves.toMatchObject({
+    value: { configurations: [] },
+  });
+  await configure(checkout.path);
+  await expect(statuses.next()).resolves.toMatchObject({
+    value: { configurations: [{ name, status: 'stopped' }] },
+  });
+
+  await writeFile(join(checkout.path, '.argo', 'run.json'), '{');
+  await expect(statuses.next()).resolves.toMatchObject({
+    value: { configurationError: expect.any(String) },
+  });
+  await configure(checkout.path);
+  await expect(statuses.next()).resolves.toEqual({
+    done: false,
+    value: {
+      configurations: [
+        {
+          name,
+          command: web.command,
+          status: 'stopped',
+          port: null,
+          url: null,
+          exitCode: null,
+          startedAt: null,
+        },
+      ],
+    },
+  });
+  await statuses.return?.();
+});
+
 function watchOutput(
   events: AsyncIterable<RunOutput>,
 ): AsyncIterator<RunOutput> {

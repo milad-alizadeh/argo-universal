@@ -95,9 +95,18 @@ export class RunGroups {
   public async stopMember(
     checkout: RunCheckout,
     name: string,
+    active: boolean,
   ): Promise<RunStopResult> {
-    const file = await readRunFile(checkout.checkoutPath);
-    requireConfiguration(file, name);
+    const file = await readRunFile(checkout.checkoutPath).catch(
+      (error: Error) => {
+        if (!active) throw error;
+
+        return undefined;
+      },
+    );
+
+    if (!file) return this.ports.stop(checkout, name);
+    if (!active) requireConfiguration(file, name);
 
     const [selected] = await Promise.all([
       this.ports.stop(checkout, name),

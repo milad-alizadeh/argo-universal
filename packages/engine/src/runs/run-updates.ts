@@ -1,6 +1,12 @@
 import { EventEmitter, on } from 'node:events';
+import { unwatchFile, watchFile } from 'node:fs';
+import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import type { RunStatusResult } from '@repo/contracts';
+import { runConfigurationsFile } from './run-configurations';
 import type { RunCheckout } from './runs';
+
+const configurationPollMs = 250;
 
 const checkoutKey = ({ projectId, checkoutPath }: RunCheckout): string =>
   JSON.stringify([projectId, checkoutPath]);
@@ -40,14 +46,30 @@ export class RunUpdates {
   ): AsyncGenerator<RunStatusResult> {
     if (signal.aborted) return;
     const changes = on(this.events, checkoutKey(checkout), { signal });
+    const path = join(checkout.checkoutPath, runConfigurationsFile);
+    const changed = (): void => this.changed(checkout);
+
+    watchFile(
+      path,
+      { persistent: false, interval: configurationPollMs },
+      changed,
+    );
 
     try {
-      yield await read();
+      let previous = await read();
+      yield previous;
 
-      for await (const _ of changes) yield await read();
+      for await (const _ of changes) {
+        const status = await read();
+
+        if (isDeepStrictEqual(previous, status)) continue;
+        previous = status;
+        yield status;
+      }
     } catch (error) {
       if (!signal.aborted) throw error;
     } finally {
+      unwatchFile(path, changed);
       await changes.return?.();
     }
   }

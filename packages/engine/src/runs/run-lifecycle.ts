@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type { LiveRun } from './live-run';
 import { serially } from './run-blocks';
+import type { RunRecord } from './run-store';
 import type { RunCheckout } from './runs';
 
 const checkoutKeyOf = ({ projectId, checkoutPath }: RunCheckout): string =>
@@ -18,6 +19,20 @@ export class RunLifecycle {
   private closing = false;
 
   public constructor(private readonly live: Map<string, LiveRun>) {}
+
+  public activeRecords(checkout: RunCheckout): RunRecord[] {
+    const key = checkoutKeyOf(checkout);
+
+    return this.live
+      .values()
+      .map(({ record }) => record)
+      .filter(
+        (record) =>
+          checkoutKeyOf(record) === key &&
+          (record.status === 'starting' || record.status === 'ready'),
+      )
+      .toArray();
+  }
 
   public start(
     key: string,

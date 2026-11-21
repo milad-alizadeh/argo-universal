@@ -56,6 +56,7 @@ export class Runs {
     this.view = new RunView({
       home: input.home,
       shells: (checkout): ShellTerminal[] => this.shells.rows(checkout),
+      active: (checkout): RunRecord[] => this.lifecycle.activeRecords(checkout),
       live: (checkout, name): LiveRun | undefined =>
         this.live.get(keyOf(checkout, name)),
       record: (checkout, name): RunRecord | undefined =>
@@ -97,7 +98,11 @@ export class Runs {
   }
 
   public stop(checkout: RunCheckout, name: string): Promise<RunStopResult> {
-    return this.groups.stopMember(checkout, name);
+    return this.groups.stopMember(
+      checkout,
+      name,
+      this.live.has(keyOf(checkout, name)),
+    );
   }
 
   private async stopOne(

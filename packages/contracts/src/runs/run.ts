@@ -141,6 +141,7 @@ export type RunDefaultGroup = z.infer<typeof RunDefaultGroup>;
 
 export const RunStatusResult = z.strictObject({
   configurations: z.array(RunConfigurationRow),
+  configurationError: z.string().optional(),
   shells: z.array(ShellTerminal).optional(),
   defaultGroup: RunDefaultGroup.optional(),
 });

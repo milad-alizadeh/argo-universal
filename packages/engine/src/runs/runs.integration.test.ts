@@ -81,6 +81,29 @@ it('refuses Run Configurations linked outside the Session Checkout', async () =>
   );
 });
 
+it('keeps a removed Run visible and stoppable when its Checked-in file changes', async () => {
+  const { call, project, terminals } = await startRuns({
+    configurations: [web],
+  });
+
+  const starting = call(startRun, { name: 'web' });
+  const terminal = await terminals.next();
+  terminal.print('Local:');
+  await starting;
+  await configure(project.path, { configurations: [] });
+
+  await expect(call(statusRun)).resolves.toMatchObject({
+    configurations: [{ name: 'web', status: 'ready' }],
+  });
+
+  await configure(project.path, '{');
+  await expect(call('run.stop', { name: 'web' })).resolves.toMatchObject({
+    name: 'web',
+    status: 'stopped',
+  });
+  expect(terminal.stopped).toBe(true);
+});
+
 it('starts a Run and returns its URL and port once its output says it is ready', async () => {
   const { terminals, call } = await startRuns({ configurations: [web] });
 
