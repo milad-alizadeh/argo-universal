@@ -21,7 +21,18 @@ export type HomeState = {
 
 const columns = { compact: 2, medium: 3, wide: 3 };
 
-type FaderTarget = { light: Switch; title: string; editor: string };
+type FaderTarget = {
+  light: Switch;
+  title: string;
+  editor: string;
+  statusPrefix?: string;
+};
+
+const tileKey = ({ kind, id }: Switch): string => `${kind}:${id}`;
+
+const statusKey = (light: Switch): string => `status:${tileKey(light)}`;
+
+const detailKey = (light: Switch): string => `detail:${tileKey(light)}`;
 
 const percent = (brightness: number): string => `${Math.round(brightness)}%`;
 
@@ -32,11 +43,26 @@ const labelOf = ({ on, reachable, brightness }: Switch): string => {
 };
 
 function TileButtons(
-  { light, title, editor }: FaderTarget,
+  { light, title, editor, statusPrefix = '' }: FaderTarget,
   state: HomeState,
   to: PageTo<HomeState>,
 ): JSX.Element {
   const selected = state.editorOpen && state.editor === editor;
+  const powerKey = `power:${tileKey(light)}`;
+  const nextOn = !light.on;
+  const nextLabel = labelOf({ ...light, on: nextOn });
+
+  const optimistic: NonNullable<
+    ReturnType<PageTo<HomeState>['run']>['optimistic']
+  > = [
+    { key: powerKey, props: { selected: nextOn, variant: 'primary' } },
+    {
+      key: tileKey(light),
+      props: { value: nextOn ? light.brightness : 0, valueLabel: nextLabel },
+    },
+    { key: statusKey(light), props: { children: statusPrefix + nextLabel } },
+    { key: detailKey(light), props: { children: '' } },
+  ];
 
   return (
     <Stack direction="row" align="center" gap={2}>
@@ -50,17 +76,18 @@ function TileButtons(
         onPress={to.set({ editor, editorOpen: !selected, sceneSearch: '' })}
       />
       <IconButton
+        key={powerKey}
         icon="power"
         size="lg"
         variant="secondary"
         accessibilityLabel={`${title} power`}
         selected={light.on}
         disabled={!light.reachable}
-        onPress={to.run('setPower', {
-          kind: light.kind,
-          id: light.id,
-          on: !light.on,
-        })}
+        onPress={to.run(
+          'setPower',
+          { kind: light.kind, id: light.id, on: nextOn },
+          { optimistic },
+        )}
       />
     </Stack>
   );
@@ -146,7 +173,7 @@ function lightTile(
   const detail = detailOf(light);
 
   return (
-    <Fader key={light.id} {...levelControl({ light, title }, to)}>
+    <Fader key={tileKey(light)} {...levelControl({ light, title }, to)}>
       <Stack direction="column" gap={2}>
         <Stack direction="column" align="end">
           {TileButtons(
@@ -158,10 +185,17 @@ function lightTile(
         <Text role="row">{title}</Text>
       </Stack>
       <Stack direction="column">
-        <Text role={light.reachable ? 'title' : 'heading'}>
+        <Text
+          key={statusKey(light)}
+          role={light.reachable ? 'title' : 'heading'}
+        >
           {labelOf(light)}
         </Text>
-        {detail && <Text role="secondary">{detail}</Text>}
+        {detail && (
+          <Text key={detailKey(light)} role="secondary">
+            {detail}
+          </Text>
+        )}
       </Stack>
     </Fader>
   );
@@ -181,16 +215,25 @@ function roomFader(
     reachable: room.lights.some((member) => member.reachable),
   };
 
+  const statusPrefix = `${roomSubtitle(room.lights.length)} · `;
+
   return (
     <Fader
+      key={tileKey(light)}
       {...levelControl({ light, title, fill: roomFillOf(room.lights) }, to)}
       orientation="horizontal"
     >
       <Stack direction="column">
         <Text role="row">{title}</Text>
-        <Text role="secondary">{`${roomSubtitle(room.lights.length)} · ${labelOf(light)}`}</Text>
+        <Text key={statusKey(light)} role="secondary">
+          {statusPrefix + labelOf(light)}
+        </Text>
       </Stack>
-      {TileButtons({ light, title, editor: `room:${room.id}` }, state, to)}
+      {TileButtons(
+        { light, title, editor: `room:${room.id}`, statusPrefix },
+        state,
+        to,
+      )}
     </Fader>
   );
 }
