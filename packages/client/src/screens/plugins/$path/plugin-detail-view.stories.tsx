@@ -128,10 +128,39 @@ export const HomeUnreachable: StoryObj<typeof meta> = { args: homeUnreachable };
 
 export const HomeSignedOut: StoryObj<typeof meta> = { args: homeSignedOut };
 
-export const HomeFaders: StoryObj<typeof meta> = { args: homeFaders };
+const homeEditors = new Map([
+  ['light:light-desk', homeLightEditor.root],
+  ['light:light-ceiling', homeOffLight.root],
+  ['room:room-office', homeScenesEditor.root],
+]);
 
-// A recorded open editor can dismiss by applying the same Page state patch as the App.
-function DismissibleHomeEditor(props: PluginDetailViewProps): ReactElement {
+// Keep the closed Inspector mounted while its native sheet dismisses, as the Home page does.
+function closedHome(
+  root: PluginDetailViewProps['root'],
+): typeof homeFaders.root {
+  const layout = homeFaders.root.children[0];
+
+  const inspector = root?.children[0]?.children.find(
+    (node) => node.type === 'Inspector',
+  );
+
+  if (!layout || !inspector) return homeFaders.root;
+
+  return {
+    ...homeFaders.root,
+    children: [
+      {
+        ...layout,
+        children: [
+          ...layout.children,
+          { ...inspector, props: { ...inspector.props, open: false } },
+        ],
+      },
+    ],
+  };
+}
+
+function InteractiveHome(props: PluginDetailViewProps): ReactElement {
   const [root, setRoot] = useState(props.root);
 
   return (
@@ -141,8 +170,13 @@ function DismissibleHomeEditor(props: PluginDetailViewProps): ReactElement {
       callbacks={{
         ...props.callbacks,
         onPageCall: async (call, event) => {
-          if ('pageState' in call && call.pageState.editor === '')
-            setRoot(homeFaders.root);
+          if ('pageState' in call) {
+            const { editor, editorOpen } = call.pageState;
+
+            if (editorOpen === false) setRoot(closedHome);
+            else if (editorOpen === true && typeof editor === 'string')
+              setRoot(homeEditors.get(editor) ?? homeFaders.root);
+          }
 
           await props.callbacks.onPageCall?.(call, event);
         },
@@ -151,13 +185,19 @@ function DismissibleHomeEditor(props: PluginDetailViewProps): ReactElement {
   );
 }
 
+export const HomeFaders: StoryObj<typeof meta> = {
+  args: homeFaders,
+  render: (args) => <InteractiveHome {...args} />,
+};
+
 export const HomeLightEditor: StoryObj<typeof meta> = {
   args: homeLightEditor,
-  render: (args) => <DismissibleHomeEditor {...args} />,
+  render: (args) => <InteractiveHome {...args} />,
 };
 
 export const HomeScenesEditor: StoryObj<typeof meta> = {
   args: homeScenesEditor,
+  render: (args) => <InteractiveHome {...args} />,
 };
 
 export const HomeManyScenes: StoryObj<typeof meta> = { args: homeManyScenes };
