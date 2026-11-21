@@ -65,7 +65,7 @@ export default function RunTerminalDOM({
   );
 
   const viewportHeight = useViewportHeight();
-  const height = Math.min(containerHeight, viewportHeight ?? containerHeight);
+  const height = terminalHeight(containerHeight, viewportHeight);
 
   return (
     <div
@@ -81,6 +81,14 @@ export default function RunTerminalDOM({
       <RunTerminalSurface {...props} listen={listen} />
     </div>
   );
+}
+
+function terminalHeight(container: number, viewport?: number): string | number {
+  if (!Number.isFinite(container)) return '100dvh';
+
+  return viewport && Number.isFinite(viewport)
+    ? Math.min(container, viewport)
+    : container;
 }
 
 function useViewportHeight(): number | undefined {

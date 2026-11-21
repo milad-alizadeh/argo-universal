@@ -53,7 +53,11 @@ export function workbenchRunGroup(
           key: workbenchRunsKey,
           label: 'Runs',
           value: String(runs.runs.filter(active).length),
-          page: { title: 'Runs', children: <WorkbenchRunList runs={runs} /> },
+          page: {
+            title: 'Runs',
+            keepsHeaderInset: true,
+            children: <WorkbenchRunList runs={runs} />,
+          },
         },
       ],
     },

@@ -32,7 +32,7 @@ function PhoneShells({ terminal }: { terminal: boolean }): ReactElement {
         open
         onOpenChange={noChange}
       >
-        <Sheet.Screen name="runs" title="Runs">
+        <Sheet.Screen name="runs" title="Runs" keepsHeaderInset>
           <WorkbenchRunList runs={shellTerminalActions} />
         </Sheet.Screen>
       </Sheet>

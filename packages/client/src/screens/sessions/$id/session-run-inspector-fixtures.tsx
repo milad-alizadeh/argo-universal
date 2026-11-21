@@ -39,8 +39,13 @@ const echo: RunOutput = {
   data: 'VGVybWluYWwgcmVjZWl2ZWQgRXNjDQo=',
 };
 
+interface PhoneRunLog {
+  listen: RunOutputSource;
+  onInput: (text: string) => void;
+}
+
 // The phone preview exercises both directions of Expo's DOM bridge with a deterministic recording.
-export function createPhoneRunLog() {
+export function createPhoneRunLog(): PhoneRunLog {
   let receiver: Parameters<RunOutputSource>[1] | undefined;
   let sent = false;
 
@@ -57,13 +62,13 @@ export function createPhoneRunLog() {
         if (receiver === receive) receiver = undefined;
       };
     },
-    onInput(text) {
+    onInput(text): void {
       if (text !== '\u001b' || sent) return;
 
       sent = true;
       receiver?.(echo);
     },
-  } satisfies { listen: RunOutputSource; onInput: (text: string) => void };
+  };
 }
 
 export const runActions = {
