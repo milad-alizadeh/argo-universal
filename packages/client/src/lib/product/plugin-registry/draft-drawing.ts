@@ -28,8 +28,10 @@ export type DraftDrawing = {
   seen: number;
 };
 
-// What the registry draws from: the drawing, with the regions to wrap and whether motion is reduced.
-// Reduced motion is read where the tree lives, so a node that arrives later does not start a fade it then drops.
+/*
+ * What the registry draws from: the drawing, with the regions to wrap and whether motion is reduced. Reduced motion
+ * is read where the tree lives, so a node that arrives later does not start a fade it then drops.
+ */
 export type DraftView = DraftDrawing & { reduced: boolean };
 
 const none: ReadonlySet<string> = new Set();

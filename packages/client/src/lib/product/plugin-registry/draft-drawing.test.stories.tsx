@@ -126,9 +126,11 @@ export const DrawsNoWrapperWithoutADraft: Story = {
 // The width of each of the row's own Text, by what it says.
 const widthsOf = (container: HTMLElement): Record<string, number> =>
   Object.fromEntries(
-    [...container.querySelectorAll('[dir="auto"]')]
-      .filter((text) => /^(Label|Fills)/.test(text.textContent))
-      .map((text) => [text.textContent, text.getBoundingClientRect().width]),
+    [...container.querySelectorAll('[dir="auto"]')].flatMap((text) =>
+      /^(Label|Fills)/.test(text.textContent)
+        ? [[text.textContent, text.getBoundingClientRect().width]]
+        : [],
+    ),
   );
 
 // A row's children keep the widths they have in a tree that is not a Draft, framed or not.
@@ -148,11 +150,11 @@ export const KeepsTheLayoutOfARow: Story = {
     const drafted = await canvas.findByTestId('draft-row');
 
     await waitFor(() => expect(Object.keys(widthsOf(drafted))).toHaveLength(2));
-    expect(widthsOf(drafted)).toEqual(widthsOf(plain));
+    await expect(widthsOf(drafted)).toEqual(widthsOf(plain));
     await userEvent.click(canvas.getByRole('button', { name: 'Next step' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Next step' }));
     await canvas.findByTestId(frameOf('header'));
-    expect(widthsOf(drafted)).toEqual(widthsOf(plain));
+    await expect(widthsOf(drafted)).toEqual(widthsOf(plain));
   },
 };
 
