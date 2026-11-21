@@ -8,6 +8,7 @@ import {
   PluginSessionRowProvider,
   useOpenPluginPage,
   useDraftBar,
+  useDraftNaming,
   useDraftRegions,
   usePluginLookup,
   usePluginPage,
@@ -30,6 +31,8 @@ type PageViewProps = PageOpening & {
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const { root, onPageCall, loadingTree } = usePluginPage(opening);
+  const bar = useDraftBar(opening);
+  const naming = useDraftNaming(opening.pluginId);
   const regions = useDraftRegions(opening);
 
   // Let the destination paint its loading state even when its first tree is already cached.
@@ -41,19 +44,29 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
         <PluginDetailView
           title={title}
           root={deferredRoot}
-          callbacks={{ onOpenPage, onPageCall, pluginId: opening.pluginId }}
+          callbacks={{
+            onOpenPage,
+            onPageCall,
+            pluginId: opening.pluginId,
+            // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
+            draft: bar
+              ? { naming: naming ?? null, regions: bar.regions }
+              : undefined,
+          }}
           {...{ onBack, loadingTree }}
         />
       </DraftRegionsProvider>
-      <PageDraftBar {...opening} />
+      <PageDraftBar bar={bar} />
     </PluginSymbol>
   );
 }
 
 // A dev Plugin's Draft page gets the Draft bar over it; any other page draws none (ADR-0057).
-function PageDraftBar(opening: PageOpening): React.ReactNode {
-  const bar = useDraftBar(opening);
-
+function PageDraftBar({
+  bar,
+}: {
+  bar: ReturnType<typeof useDraftBar>;
+}): React.ReactNode {
   if (!bar) return null;
 
   return (

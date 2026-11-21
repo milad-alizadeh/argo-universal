@@ -91,6 +91,8 @@ export { DraftBarDock } from './components/draft-bar/draft-bar-dock';
 
 export { useDraftBar } from './hooks/use-draft-bar';
 
+export { useDraftNaming } from './stores/draft-namings';
+
 export { DraftRegionsProvider } from './components/draft-region/draft-regions';
 
 export { useDraftRegions } from './hooks/use-draft-regions';

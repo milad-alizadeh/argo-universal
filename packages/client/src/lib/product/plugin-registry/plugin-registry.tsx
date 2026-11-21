@@ -2,6 +2,7 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import { PluginTreeContext } from '@repo/kit/plugin-tree-context';
 import { SvgBudget } from '@repo/kit/primitives/visual';
+import { useReducedMotionNow } from '@repo/kit/use-reduced-motion-now';
 import {
   useCallback,
   useContext,
@@ -12,6 +13,12 @@ import {
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
 import { pageCallRefused } from './component-event-props';
+import {
+  drawn as drawnDraft,
+  startDrawing,
+  type DraftView,
+  type DraftNaming,
+} from './draft-drawing';
 import { DraftSeamContext } from './draft-seam';
 import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
@@ -27,6 +34,8 @@ export interface PluginTreeProps {
   onOpenPage?: OpenPluginPage;
   // A Loader page's Page state changes and Operation calls.
   onPageCall?: OnPageCall;
+  // Set for a dev Plugin's Draft page: its new nodes fade in and the region being written wears a frame (ADR-0057).
+  draft?: { naming: DraftNaming | null; regions?: readonly string[] };
 }
 
 /*
@@ -59,6 +68,7 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
   const seam = useContext(DraftSeamContext);
   const [kept, keep] = useState(() => new DrawnNodes(seam));
   const drawn = kept.seam === seam ? kept : new DrawnNodes(seam);
+  const draft = useDraftDrawing(props);
 
   if (drawn !== kept) keep(drawn);
 
@@ -68,6 +78,7 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
     controls: useComponentEvents(props.root, drawn),
     pageCall: useLatest(props.onPageCall, pageCallRefused),
     drawn,
+    draft,
     seam,
   };
 
@@ -76,4 +87,26 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
       <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
     </PluginTreeContext>
   );
+}
+
+// The Agent's drawing of the Draft page, as of this tree; none for a tree that is not a Draft.
+function useDraftDrawing({
+  root,
+  draft,
+}: PluginTreeProps): DraftView | undefined {
+  const [state, setState] = useState(() => startDrawing(draft?.naming ?? null));
+  const reduced = useReducedMotionNow();
+
+  if (!draft) return undefined;
+
+  const next = drawnDraft(state, root, draft.naming);
+
+  if (next !== state) setState(next);
+
+  // A declared region is wrapped from its first draw, so framing it later does not draw its subtree again.
+  return {
+    reduced,
+    ...next,
+    regions: new Set([...next.regions, ...(draft.regions ?? [])]),
+  };
 }

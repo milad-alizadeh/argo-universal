@@ -54,10 +54,10 @@ export const pluginOperations = {
     label: 'Show Draft',
     icon: 'plug',
     description:
-      'Rebuild the Draft now, mid-Turn. Call it after finishing a Draft region; the worker swaps only when the build passes. A broken build keeps the current worker, so the Draft on screen never blanks, and the build error is returned as the refusal. Every other source change still waits for the Turn to end. Needs a Server running with --watch.',
+      'Rebuild the Draft now, mid-Turn. Call it after finishing a Draft region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only when the build passes. A broken build keeps the current worker, so the Draft on screen never blanks, and the build error is returned as the refusal. Every other source change still waits for the Turn to end. Needs a Server running with --watch.',
     params: z.strictObject({
       pluginId: PluginIdentifier,
-      // The region just drawn, for Apps to learn where to look; optional.
+      // The region the Agent is writing next, which Apps frame until it lands; optional.
       region: z.string().min(1).optional(),
     }),
     result: z.strictObject({ ok: z.literal(true) }),

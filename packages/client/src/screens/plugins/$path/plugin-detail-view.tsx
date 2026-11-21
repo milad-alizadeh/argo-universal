@@ -15,6 +15,7 @@ import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   BoundedPluginTree,
   type OnPageCall,
+  type PluginTreeProps,
 } from '../../../lib/product/plugin-registry';
 
 // What a page's tree reports back: the page a `navigate` Action opens, and its Page calls.
@@ -23,6 +24,8 @@ interface PluginPageCallbacks {
   pluginId?: string;
   // A Loader page's Page state changes and Operation calls (ADR-0050).
   onPageCall?: OnPageCall;
+  // A dev Plugin's Draft page: its new nodes fade in and the region being written wears a frame (ADR-0057).
+  draft?: PluginTreeProps['draft'];
 }
 
 export interface PluginDetailViewProps {

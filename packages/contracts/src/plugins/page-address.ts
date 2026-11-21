@@ -63,11 +63,14 @@ export type PageRunAnswer = z.infer<typeof PageRunAnswer>;
  * run from a Component event, an Agent or the CLI, or the Plugin's `argo.changed()`, marks every address
  * of the Plugin and names none. A Query whose kept answer changed with no write, as when a background pass
  * reads it again, names the addresses whose last draw read it. The App draws again the marked addresses
- * it has on screen.
+ * it has on screen. The mark of a new worker that `plugin.draft.show` swapped in also names the `region` of a
+ * Draft page the Agent is writing, so the App frames it (ADR-0057); an optional field, so the wire version holds
+ * (ADR-0034).
  */
 export const StaleMark = z.strictObject({
   pluginId: z.string().min(1),
   addresses: z.array(PageAddress).optional(),
+  region: z.string().min(1).optional(),
 });
 
 export type StaleMark = z.infer<typeof StaleMark>;

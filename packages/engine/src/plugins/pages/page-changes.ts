@@ -8,6 +8,7 @@ import type { Caller, WorkerCalls } from '../runtime/worker-calls';
 export type ChangeListener = (
   pluginId: string,
   addresses?: PageAddress[],
+  region?: string,
 ) => void;
 
 // What a new worker makes due before anyone hears of it, so a page drawn again reads past it.
@@ -24,6 +25,8 @@ export type Scoped = (pluginId: string) => void;
 export class PageChanges {
   private readonly listeners = new Set<ChangeListener>();
   private readonly restarts = new Set<(pluginId: string) => void>();
+  // The Draft region the Agent is writing, until the worker that follows has told the Apps (ADR-0057).
+  private readonly regions = new Map<string, string>();
 
   public constructor(
     private readonly workers: WorkerCalls,
@@ -41,9 +44,16 @@ export class PageChanges {
     if (this.workers.generation(pluginId) !== undefined) this.scoped(pluginId);
   }
 
-  // Every page of the Plugin may have changed: it names no addresses.
-  public allChanged(pluginId: string): void {
-    for (const listener of this.listeners) listener(pluginId);
+  // Every page of the Plugin may have changed: it names no addresses, and the Draft region being written when there is one.
+  public allChanged(pluginId: string, region?: string): void {
+    for (const listener of this.listeners) tell(listener, pluginId, { region });
+  }
+
+  // The worker a Draft swaps in next tells the Apps which region the Agent is writing; the answer ends that, as a Draft that swapped no worker does.
+  public drawing(pluginId: string, region: string | undefined): () => void {
+    if (region !== undefined) this.regions.set(pluginId, region);
+
+    return (): void => void this.regions.delete(pluginId);
   }
 
   /*
@@ -58,7 +68,8 @@ export class PageChanges {
   // A new worker of the Plugin runs: what it kept in the App from the one before is stale.
   public restarted(pluginId: string): void {
     this.written(pluginId);
-    this.allChanged(pluginId);
+    this.allChanged(pluginId, this.regions.get(pluginId));
+    this.regions.delete(pluginId);
 
     for (const listener of this.restarts) listener(pluginId);
   }
@@ -81,4 +92,13 @@ export class PageChanges {
 
     return () => this.listeners.delete(listener);
   }
+}
+
+// What a listener is told of a Plugin's change: the addresses it names, and the Draft region being written.
+function tell(
+  listener: ChangeListener,
+  pluginId: string,
+  { addresses, region }: { addresses?: PageAddress[]; region?: string },
+): void {
+  listener(pluginId, addresses, region);
 }
