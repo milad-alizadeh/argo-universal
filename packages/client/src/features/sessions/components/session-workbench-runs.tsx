@@ -82,7 +82,7 @@ export function WorkbenchRuns({
   );
 
   return (
-    <View>
+    <View className={actions.compact ? 'px-2' : undefined}>
       {runs.map((run) => (
         <RunRow key={run.name} run={run} now={clock} {...actions} />
       ))}

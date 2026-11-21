@@ -32,6 +32,7 @@ export function RunTerminal({
 
   const measure = ({ nativeEvent: { layout } }: LayoutChangeEvent): void =>
     setSize({ width: layout.width, height: layout.height });
+
   const enabled = connected && runIsActive(run);
 
   useEffect(() => {

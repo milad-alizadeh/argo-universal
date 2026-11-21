@@ -1,7 +1,6 @@
 import type { RunConfigurationRow } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import {
   RunInspector,
   type SessionRuns,
