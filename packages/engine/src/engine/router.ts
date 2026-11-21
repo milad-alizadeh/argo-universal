@@ -58,7 +58,10 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
 
 function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
   const start = async (): Promise<void> => {
-    const { projectId, checkout, title } = deps.readSession(sessionId);
+    const { projectId, checkout, title, archivedAt } =
+      deps.readSession(sessionId);
+
+    if (archivedAt !== null) return;
 
     await deps.runs.autoStart({
       projectId,

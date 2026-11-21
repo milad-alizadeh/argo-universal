@@ -5,6 +5,8 @@ import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 
@@ -175,6 +177,36 @@ it('auto-starts an opted-in Run after a new Session opens in the Project', async
     .poll(() => caller.run.status({ sessionId }))
     .toMatchObject({
       configurations: [{ name, status: 'ready', port: terminal.launch.port }],
+    });
+});
+
+it('starts an opted-in Run on explicit reopen, after passive reads leave it stopped', async () => {
+  const { host, terminals, target } = await setUp();
+  const { caller } = host;
+
+  await caller.session.prompt({
+    sessionId: target.sessionId,
+    prompt: [{ type: 'text', text: 'Keep this Session' }],
+  });
+  await waitForAcpSessionIdle(host, target.sessionId);
+  await ready(terminals, caller.run.start(target));
+  await caller.run.stop(target);
+  await caller.run.updateSettings({ ...target, autoStart: true });
+  await closeTestSession(host, target);
+
+  await expect(caller.run.status(target)).resolves.toMatchObject({
+    configurations: [{ name, status: 'stopped' }],
+  });
+
+  await caller.session.open({ sessionId: target.sessionId });
+
+  const terminal = await terminals.next();
+  terminal.print('Ready');
+
+  await expect
+    .poll(() => caller.run.status(target))
+    .toMatchObject({
+      configurations: [{ name, status: 'ready' }],
     });
 });
 

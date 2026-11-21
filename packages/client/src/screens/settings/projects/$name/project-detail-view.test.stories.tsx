@@ -406,7 +406,7 @@ export const SavesPersonalRunSettings: Story = {
       env: { API_URL: 'http://localhost:3201' },
     });
 
-    const autoStart = { name: 'Auto-start in new Sessions' };
+    const autoStart = { name: 'Auto-start when a Session opens' };
     await userEvent.click(canvas.getByRole('switch', autoStart));
     await expect(runSettings.onSave).toHaveBeenCalledWith('web', {
       autoStart: true,

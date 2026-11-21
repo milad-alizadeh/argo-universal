@@ -123,7 +123,7 @@ function useRunOptions({
         }
       />
       <FieldGroup.Toggle
-        title="Auto-start in new Sessions"
+        title="Auto-start when a Session opens"
         disabled={pending || !entry.canAutoStart}
         value={entry.autoStart}
         onValueChange={(autoStart) => onSave({ autoStart })}
