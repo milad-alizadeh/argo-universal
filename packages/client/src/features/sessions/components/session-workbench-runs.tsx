@@ -20,11 +20,16 @@ export interface WorkbenchRunsProps {
   onStop: (name: string) => void;
   defaultGroup?: RunGroupControls;
   now?: number;
+  compact?: boolean;
 }
 
 export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen'> & {
   onRestart: (name: string) => void;
-  renderTerminal: (run: RunConfigurationRow, visible: boolean) => ReactNode;
+  renderTerminal: (
+    run: RunConfigurationRow,
+    visible: boolean,
+    compact?: boolean,
+  ) => ReactNode;
 };
 
 type RowProps = Omit<WorkbenchRunsProps, 'runs' | 'now' | 'defaultGroup'> & {
@@ -33,7 +38,14 @@ type RowProps = Omit<WorkbenchRunsProps, 'runs' | 'now' | 'defaultGroup'> & {
 };
 
 // The action and the Terminal link are separate controls on the same row.
-function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
+function RunRow({
+  run,
+  now,
+  compact,
+  onOpen,
+  onStart,
+  onStop,
+}: RowProps): ReactElement {
   const { name, port, status } = run;
   const active = runIsActive(run);
   const label = runStatusLabel(run, now, status === 'starting');
@@ -58,6 +70,7 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
       <RunAction
         name={name}
         active={active}
+        compact={compact}
         onStart={() => onStart(name)}
         onStop={() => onStop(name)}
       />
@@ -68,11 +81,13 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
 function RunAction({
   name,
   active,
+  compact,
   onStart,
   onStop,
 }: {
   name: string;
   active: boolean;
+  compact?: boolean;
   onStart: () => void;
   onStop: () => void;
 }): ReactElement {
@@ -81,7 +96,7 @@ function RunAction({
       accessibilityLabel={active ? `Stop ${name}` : `Start ${name}`}
       icon={active ? 'stop' : 'play'}
       variant={active ? 'ghost' : 'primary'}
-      size="sm"
+      size={compact ? 'lg' : 'sm'}
       onPress={active ? onStop : onStart}
     />
   );
@@ -90,9 +105,13 @@ function RunAction({
 function GroupRow({
   status: { name, members, readyCount, url },
   runs,
+  compact,
   onStart,
   onStop,
-}: RunGroupControls & { runs: readonly RunConfigurationRow[] }): ReactElement {
+}: RunGroupControls & {
+  runs: readonly RunConfigurationRow[];
+  compact?: boolean;
+}): ReactElement {
   const active = runs.some(
     (run) => members.includes(run.name) && runIsActive(run),
   );
@@ -118,7 +137,10 @@ function GroupRow({
           </Text>
         )}
       </View>
-      <RunAction name={`${name} group`} {...{ active, onStart, onStop }} />
+      <RunAction
+        name={`${name} group`}
+        {...{ active, compact, onStart, onStop }}
+      />
     </View>
   );
 }
@@ -135,9 +157,9 @@ export function WorkbenchRuns({
   );
 
   return (
-    <View>
+    <View className={actions.compact ? 'px-2' : undefined}>
       {defaultGroup && defaultGroup.status.members.length > 0 && (
-        <GroupRow {...defaultGroup} runs={runs} />
+        <GroupRow {...defaultGroup} runs={runs} compact={actions.compact} />
       )}
       {runs.map((run) => (
         <RunRow key={run.name} run={run} now={clock} {...actions} />
