@@ -25,6 +25,7 @@ export type Schedule = z.output<
 >;
 
 export type ScheduleOccurrence = {
+  sessionId: string;
   prompt: Schedule['prompt'];
   deliveryWrite: WriterJob;
   coalescedWrite: WriterJob;
@@ -108,7 +109,10 @@ export class ScheduleStore {
       .where(and(eq(table.id, id), active()))
       .get();
 
-    return row ? Math.min(row.nextAt, row.endsAt ?? Infinity) : undefined;
+    if (!row || (row.endsAt !== null && row.endsAt <= Date.now()))
+      return undefined;
+
+    return Math.min(row.nextAt, row.endsAt ?? Infinity);
   }
   public occurrence(id: string): ScheduleOccurrence | undefined {
     const now = Date.now();
@@ -122,6 +126,7 @@ export class ScheduleStore {
     if (!row || expired(row, now)) return undefined;
 
     return {
+      sessionId: row.sessionId,
       prompt: decodeSchedule(row).prompt,
       deliveryWrite: occurrenceWrite(row, now, true),
       coalescedWrite: occurrenceWrite(row, now, false),

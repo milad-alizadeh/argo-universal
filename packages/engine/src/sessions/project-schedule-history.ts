@@ -4,10 +4,7 @@ import {
   type ProjectScheduleHistoryEntry,
 } from '@repo/contracts/operations';
 import type { Database } from '@repo/db';
-import {
-  projectSchedule,
-  projectScheduleOccurrence as table,
-} from '@repo/db/schema';
+import { projectScheduleOccurrence as table } from '@repo/db/schema';
 import { and, desc, eq, inArray, lt, or } from 'drizzle-orm';
 
 type History = ProjectScheduleHistoryPage;
@@ -67,7 +64,7 @@ export function hasRunningScheduleSession(
 }
 
 export function writeScheduleOccurrence(
-  database: Pick<Database, 'insert' | 'update'>,
+  database: Pick<Database, 'insert'>,
   scheduleId: string,
   { id, occurrence }: ProjectScheduleHistoryEntry,
 ): void {
@@ -84,11 +81,4 @@ export function writeScheduleOccurrence(
       result: JSON.stringify(occurrence),
     })
     .run();
-
-  if (sessionId !== null)
-    database
-      .update(projectSchedule)
-      .set({ latestSessionId: sessionId })
-      .where(eq(projectSchedule.id, scheduleId))
-      .run();
 }

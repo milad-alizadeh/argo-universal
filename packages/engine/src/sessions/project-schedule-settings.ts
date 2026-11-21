@@ -3,9 +3,8 @@ import {
   type ProjectScheduleInput,
   type ProjectScheduleCadence,
 } from '@repo/contracts/operations';
-import { projectSchedule as table } from '@repo/db/schema';
+import type { projectSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
-import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireInstalledAgent } from '../agents';
 import { titleFromPrompt } from '../feed';
@@ -107,7 +106,7 @@ interface ScheduleEditUpdate {
   nextAt?: number;
 }
 
-function editedSchedule(
+export function editedSchedule(
   row: ScheduleRow,
   settings: SavedSettings,
 ): ScheduleEditUpdate {
@@ -179,28 +178,4 @@ async function resolveCheckout(
   }
 
   return { type: 'worktree', baseBranch };
-}
-
-export async function writeScheduleEdit(
-  sources: SessionHandlerSources,
-  prior: ScheduleRow,
-  settings: SavedSettings,
-): Promise<boolean> {
-  const update = editedSchedule(prior, settings);
-  let saved = false;
-
-  await sources.open.write({
-    describe: () => 'Edit Project Schedule',
-    commit: (tx) => {
-      const change = tx
-        .update(table)
-        .set(update)
-        .where(and(eq(table.id, prior.id), eq(table.settings, prior.settings)))
-        .run();
-
-      saved = Number(change.changes) > 0;
-    },
-  });
-
-  return saved;
 }

@@ -1,7 +1,6 @@
 import { ProjectScheduleCadence } from '@repo/contracts/operations';
-import { skipToken, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useTRPC } from '#features/connection';
+import { useProjectSchedulePreview } from '#features/project-schedules';
 import { cadenceOf, scheduleCadenceDraft } from './schedule-cadence-draft';
 import type { ScheduleCadenceFields } from './schedule-cadence-fields';
 import { occurrenceTime, scheduleTimeZone } from './schedule-time';
@@ -11,16 +10,15 @@ export function useScheduleTiming(
   initial?: ProjectScheduleCadence,
   id?: string,
 ): ScheduleCadenceFields {
-  const trpc = useTRPC();
   const [draft, onChange] = useState(() => scheduleCadenceDraft(initial));
   const cadence = ProjectScheduleCadence.safeParse(cadenceOf(draft));
 
   const input =
     projectId && cadence.success
       ? { id, projectId, cadence: cadence.data }
-      : skipToken;
+      : undefined;
 
-  const preview = useQuery(trpc.project.schedulePreview.queryOptions(input));
+  const preview = useProjectSchedulePreview(input);
 
   const nextRun =
     cadence.success && preview.data

@@ -1,12 +1,10 @@
 import type { ProjectSchedule } from '@repo/contracts/operations';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
-import { useTRPC } from '#features/connection';
+import {
+  useManageProjectSchedule,
+  useProjectScheduleHistory,
+} from '#features/project-schedules';
 import { ScheduleHistoryView } from './schedule-history-view';
 import type { ScheduleRowAction } from './scheduled-list-view';
 
@@ -23,23 +21,9 @@ type ScheduleManagement = {
   saving: boolean;
 };
 
-const scheduleRefreshMs = 5000;
-
-export const schedulesInput = {};
-
 export function useScheduleManagement(): ScheduleManagement {
-  const trpc = useTRPC();
-  const cache = useQueryClient();
   const [overlay, setOverlay] = useState<ScheduleOverlay>();
-
-  const mutation = useMutation(
-    trpc.project.scheduleManage.mutationOptions({
-      onSuccess: (_result, input) => {
-        if (input.action === 'delete') setOverlay(undefined);
-        updateScheduleList(cache, trpc, input);
-      },
-    }),
-  );
+  const mutation = useManageProjectSchedule(() => setOverlay(undefined));
 
   useErrorToast(
     (mutation.error && {
@@ -74,33 +58,6 @@ export function useScheduleManagement(): ScheduleManagement {
   };
 }
 
-type ScheduleChange = {
-  id: string;
-  action: 'pause' | 'resume' | 'delete';
-};
-
-function updateScheduleList(
-  cache: ReturnType<typeof useQueryClient>,
-  trpc: ReturnType<typeof useTRPC>,
-  { id, action }: ScheduleChange,
-): void {
-  cache.setQueryData(
-    trpc.project.scheduleList.queryKey(schedulesInput),
-    (current) => {
-      if (!current) return current;
-
-      if (action === 'delete') return current.filter((row) => row.id !== id);
-
-      return current.map((row) =>
-        row.id === id ? { ...row, paused: action === 'pause' } : row,
-      );
-    },
-  );
-  void cache.invalidateQueries({
-    queryKey: trpc.project.scheduleList.pathKey(),
-  });
-}
-
 export function ConnectedScheduleHistory({
   schedule,
   onOpenSession,
@@ -108,17 +65,10 @@ export function ConnectedScheduleHistory({
   schedule: ProjectSchedule;
   onOpenSession: (sessionId: string) => void;
 }): ReactElement {
-  const trpc = useTRPC();
-
-  const history = useInfiniteQuery(
-    trpc.project.scheduleHistory.infiniteQueryOptions(
-      { id: schedule.id, projectId: schedule.projectId },
-      {
-        getNextPageParam: (page) => page.next ?? undefined,
-        refetchInterval: scheduleRefreshMs,
-      },
-    ),
-  );
+  const history = useProjectScheduleHistory({
+    id: schedule.id,
+    projectId: schedule.projectId,
+  });
 
   return (
     <ScheduleHistoryView

@@ -4,14 +4,17 @@ import {
   DialogFooter,
   DialogForm,
 } from '@repo/kit/primitives/overlays/dialog';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { loadedAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
+import {
+  useCreateProjectSchedule,
+  useEditProjectSchedule,
+} from '#features/project-schedules';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScheduleFormView } from './schedule-form-view';
 import { scheduleHref } from './schedule-href';
-import { schedulesInput } from './scheduled-management';
 import { useScheduleTiming } from './use-schedule-timing';
 
 export type ScheduleContext = { projectId: string; agent: string };
@@ -134,36 +137,14 @@ function useSaveSchedule(
   Parameters<typeof ScheduleFormView>[0],
   'onSubmit' | 'saving' | 'error'
 > {
-  const trpc = useTRPC();
-  const cache = useQueryClient();
   const navigate = useNavigate();
 
-  const remember = (schedule: ProjectSchedule): void => {
-    cache.setQueryData(
-      trpc.project.scheduleList.queryKey(schedulesInput),
-      (current) => [
-        ...(current ?? []).filter((row) => row.id !== schedule.id),
-        schedule,
-      ],
-    );
-    void cache.invalidateQueries({
-      queryKey: trpc.project.scheduleList.pathKey(),
-    });
+  const create = useCreateProjectSchedule((schedule) => {
     onClose();
-  };
+    navigate(scheduleHref(schedule));
+  });
 
-  const create = useMutation(
-    trpc.project.scheduleCreate.mutationOptions({
-      onSuccess: (schedule) => {
-        remember(schedule);
-        navigate(scheduleHref(schedule));
-      },
-    }),
-  );
-
-  const edit = useMutation(
-    trpc.project.scheduleEdit.mutationOptions({ onSuccess: remember }),
-  );
+  const edit = useEditProjectSchedule(onClose);
 
   if (editing) {
     return {

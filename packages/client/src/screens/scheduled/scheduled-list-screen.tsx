@@ -1,9 +1,9 @@
-import type { ProjectSchedule } from '@repo/contracts/operations';
 import { Dialog } from '@repo/kit/primitives/overlays/dialog';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { usePathname } from 'expo-router';
 import { useState, type ReactElement } from 'react';
 import { useTRPC } from '#features/connection';
+import { useProjectSchedules } from '#features/project-schedules';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { useServerScope } from '#lib/product/server-scope';
 import { ScheduleDeleteView } from './schedule-delete-view';
@@ -15,25 +15,8 @@ import { scheduleHref } from './schedule-href';
 import { ScheduledListView } from './scheduled-list-view';
 import {
   ConnectedScheduleHistory,
-  schedulesInput,
   useScheduleManagement,
 } from './scheduled-management';
-
-const scheduleRefreshMs = 5000;
-
-type ScheduleQuery = Pick<
-  UseQueryResult<ProjectSchedule[]>,
-  'data' | 'isError' | 'isPending'
->;
-
-export function useSchedules(enabled = true): ScheduleQuery {
-  return useQuery(
-    useTRPC().project.scheduleList.queryOptions(schedulesInput, {
-      enabled,
-      refetchInterval: enabled ? scheduleRefreshMs : false,
-    }),
-  );
-}
 
 export function useScheduleContext(
   sessionId?: string,
@@ -77,7 +60,7 @@ export function ScheduledListScreen({
 }): ReactElement {
   const path = usePathname();
 
-  const schedules = useSchedules(
+  const schedules = useProjectSchedules(
     path === '/scheduled' || path.startsWith('/scheduled/'),
   );
 
@@ -167,7 +150,7 @@ function ScheduleDialogContent({
 }
 
 function listStatus(
-  schedules: ScheduleQuery,
+  schedules: ReturnType<typeof useProjectSchedules>,
 ): Parameters<typeof ScheduledListView>[0]['status'] {
   if (schedules.isError) return 'failed';
 
