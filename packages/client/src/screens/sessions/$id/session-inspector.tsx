@@ -6,6 +6,7 @@ import {
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { createElement, type JSX } from 'react';
 import type { SessionPanels } from '#features/sessions';
+import { shellTabKey } from './sections/runs-section';
 import {
   itemsOf,
   type SectionPhonePage,
@@ -32,10 +33,21 @@ type SessionInspectorProps = SessionInspectorContent & {
   phoneVisible?: boolean;
 };
 
+function closeTab({ panels, runs }: SessionInspectorProps, key: string): void {
+  const shell = runs?.shells?.find(({ id }) => shellTabKey(id) === key);
+
+  if (shell) runs?.closeShell?.(shell.id);
+  panels.close(key);
+}
+
 const tabOf = (
   props: SessionInspectorProps,
   section: SessionSection,
-): SectionTab => section.tab(props, sectionTab(props.panels, section.key));
+): SectionTab =>
+  section.tab(
+    props,
+    sectionTab(props.panels, section.key, () => closeTab(props, section.key)),
+  );
 
 function tabItem(props: SessionInspectorProps, key: string): InspectorTab[] {
   const section = sectionOf(props, key);
@@ -54,7 +66,7 @@ function inspectorTabs(props: SessionInspectorProps): InspectorProps['tabs'] {
     items: panels.state.tabs.flatMap((key) => tabItem(props, key)),
     selected: panels.state.shown ?? '',
     onSelect: panels.select,
-    onClose: panels.close,
+    onClose: (key) => closeTab(props, key),
   };
 }
 

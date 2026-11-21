@@ -1,15 +1,31 @@
+import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { startEngineTestHost } from '#mocks/engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
+import { processIsRunning } from '#mocks/shell-process';
+import { recordCheckoutTerminalOwner } from '../sessions';
+import { launchTerminal } from './node-pty-terminal';
+import { shellTerminalOutputFolder } from './shell-terminals';
 
-async function projectWithTerminalSpawner() {
+type TestShells = {
+  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  terminals: ReturnType<typeof createFakeTerminals>;
+  sessionId: string;
+};
+
+async function projectWithTerminalSpawner(): Promise<TestShells> {
   const terminals = createFakeTerminals();
+
   const host = await startAcpEngine({
     steps: [],
     terminalSpawner: terminals.spawn,
   });
+
   onTestFinished(terminals.end);
   const { sessionId } = await host.caller.session.new(emptySessionInput);
 
@@ -54,9 +70,11 @@ it('lets the person type and the Agent read a shell while refusing Agent input',
   terminal.print('opened checkout\r\n');
 
   const { projectId } = await caller.session.get({ sessionId });
+
   const access = host.engine
     .getSnapshot()
     .context.sessionTokens.issue(sessionId, projectId);
+
   onTestFinished(() => access.release());
   const agent = await operationCaller(host, access.token);
 
@@ -123,4 +141,46 @@ it('runs commands in a real interactive shell in the Checkout', async () => {
   } finally {
     await caller.terminal.close(target);
   }
+}, 30_000);
+
+it('recovery marks an interrupted shell Terminal lost and clears its process and output', async () => {
+  const host = await startAcpEngine({ steps: [] });
+  const { sessionId } = await host.caller.session.new(emptySessionInput);
+  const { checkout } = await host.caller.session.get({ sessionId });
+  await host.stop();
+
+  const id = randomUUID();
+  const terminal = await launchTerminal({
+    id,
+    cwd: checkout.path,
+    command: '',
+    env: {},
+    port: 3000,
+    shell: true,
+  });
+
+  onTestFinished(() => terminal.stop());
+  const { pid } = terminal;
+  if (pid === undefined) throw new Error('Missing Terminal process ID');
+
+  await recordCheckoutTerminalOwner(host.home, pid, id);
+  const output = shellTerminalOutputFolder(host.home);
+  await mkdir(output, { recursive: true });
+  await writeFile(join(output, `${id}.log`), 'interrupted output');
+  expect(processIsRunning(pid)).toBe(true);
+
+  const restarted = await startEngineTestHost({
+    home: host.home,
+    acp: host.agent,
+  });
+
+  expect(processIsRunning(pid)).toBe(false);
+  expect(await readdir(join(host.home, 'shell-processes'))).toEqual([]);
+  await expect(readdir(output)).rejects.toMatchObject({ code: 'ENOENT' });
+  await expect(
+    readFile(join(host.home, 'logs', 'engine.log'), 'utf8'),
+  ).resolves.toContain(`Shell Terminal ${id} marked lost after Engine exit`);
+  await expect(restarted.caller.run.status({ sessionId })).resolves.toEqual({
+    configurations: [],
+  });
 }, 30_000);

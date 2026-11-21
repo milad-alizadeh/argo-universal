@@ -286,3 +286,5 @@ export {
   WorkbenchRuns,
   type SessionRuns,
 } from './components/session-workbench-runs';
+
+export { ShellTerminalInspector } from './components/shell-terminal-inspector';

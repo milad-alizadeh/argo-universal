@@ -10,6 +10,7 @@ import { PairingRegistrations } from '../pairing/registrations';
 import { PairingTickets } from '../pairing/tickets';
 import { Plugins } from '../plugins';
 import { createRuns, launchTerminal } from '../runs';
+import { recordCheckoutTerminalOwner } from '../sessions';
 import { readServerId } from '../system';
 import { discoveryNameOf } from './announce-server';
 import { httpRouterInput } from './http-router-input';
@@ -140,6 +141,8 @@ async function prepareHttpSetup(
       writer: options.databaseWriter,
       home: options.home,
       spawn: options.terminalSpawner ?? launchTerminal,
+      recordShellOwner: (pid, token): Promise<() => Promise<void>> =>
+        recordCheckoutTerminalOwner(options.home, pid, token),
       now: options.now ?? Date.now,
       createId: options.createId,
     }),

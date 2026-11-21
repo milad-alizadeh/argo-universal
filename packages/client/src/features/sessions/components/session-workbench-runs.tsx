@@ -1,5 +1,6 @@
-import type { RunConfigurationRow } from '@repo/contracts';
+import type { RunConfigurationRow, ShellTerminal } from '@repo/contracts';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { useClock } from '@repo/kit/use-clock';
@@ -13,14 +14,25 @@ export interface WorkbenchRunsProps {
   onStart: (name: string) => void;
   onStop: (name: string) => void;
   now?: number;
+  shells?: WorkbenchShells;
 }
 
-export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen'> & {
+type WorkbenchShells = {
+  rows: readonly ShellTerminal[];
+  onOpen: (id: string) => void;
+  onNew?: () => void;
+};
+
+export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen' | 'shells'> & {
+  shells?: readonly ShellTerminal[];
+  openShell?: (opened: (shell: ShellTerminal) => void) => void;
+  closeShell?: (id: string) => void;
+  renderShell?: (shell: ShellTerminal, visible: boolean) => ReactNode;
   onRestart: (name: string) => void;
   renderTerminal: (run: RunConfigurationRow, visible: boolean) => ReactNode;
 };
 
-type RowProps = Omit<WorkbenchRunsProps, 'runs' | 'now'> & {
+type RowProps = Pick<WorkbenchRunsProps, 'onOpen' | 'onStart' | 'onStop'> & {
   run: RunConfigurationRow;
   now: number;
 };
@@ -59,9 +71,45 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
   );
 }
 
+function ShellRows({ rows, onOpen, onNew }: WorkbenchShells): ReactElement {
+  return (
+    <>
+      {rows.map(({ id, name, cwd }) => (
+        <Pressable
+          key={id}
+          role="button"
+          accessibilityLabel={`Open ${name} shell`}
+          onPress={() => onOpen(id)}
+          className="min-w-0 flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover"
+        >
+          <Icon name="terminal" tone="muted" />
+          <Text numberOfLines={1}>{name}</Text>
+          <View className="min-w-0 flex-1">
+            <Text role="secondary" tone="muted" numberOfLines={1}>
+              {cwd}
+            </Text>
+          </View>
+        </Pressable>
+      ))}
+      {onNew && (
+        <Pressable
+          role="button"
+          onPress={onNew}
+          className="rounded-control px-1 py-2 web:hover:bg-hover"
+        >
+          <Text role="secondary" tone="muted">
+            New Terminal
+          </Text>
+        </Pressable>
+      )}
+    </>
+  );
+}
+
 export function WorkbenchRuns({
   runs,
   now,
+  shells,
   ...actions
 }: WorkbenchRunsProps): ReactElement {
   const clock = useClock(
@@ -74,6 +122,7 @@ export function WorkbenchRuns({
       {runs.map((run) => (
         <RunRow key={run.name} run={run} now={clock} {...actions} />
       ))}
+      {shells && <ShellRows {...shells} />}
     </View>
   );
 }

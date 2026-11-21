@@ -62,6 +62,7 @@ export async function saveSessionArchive(
 
   const { database } = context.input;
   const sessionIds = archivedSessionIds(context, archivedAt);
+
   const keep =
     archivedAt !== null && projectKeepsCheckout(database, context.projectId);
 
@@ -72,7 +73,7 @@ export async function saveSessionArchive(
   );
 
   if (archivedAt !== null)
-    await closeArchivedShells(database, sessionIds).catch((error: unknown) => {
+    await closeArchivedShells(database, sessionIds).catch((error: Error) => {
       console.error(
         `Session ${context.sessionId}: could not close shell Terminals`,
         error,

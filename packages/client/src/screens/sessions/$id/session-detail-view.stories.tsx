@@ -38,6 +38,7 @@ import {
   phonePluginActions,
   pluginActionsSession,
 } from './session-header-actions.mocks';
+import { shellTerminalActions } from './session-shell-terminal-fixtures';
 import { skillOfferElicitation } from './skill-offer-elicitation';
 
 const meta = {
@@ -85,6 +86,11 @@ export const LongFeed: Story = { args: { state: 'open', ...longSession } };
 // A long Feed in the Frame: the rail's toggle collapses and expands the sidebar while the Feed keeps its layout and only slides.
 export const LongFeedInFrame: Story = {
   args: { state: 'open', ...longSession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+export const ShellTerminalActions: Story = {
+  args: { state: 'open', ...longSession, runs: shellTerminalActions },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 

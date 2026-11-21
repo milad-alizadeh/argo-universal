@@ -8,7 +8,11 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 // What decides which Sections a Session offers, read from its snapshot or from the page's props alike.
 export type SessionItems = Partial<
   Pick<SessionSnapshot, 'subagents' | 'shells'>
-> & { followUpsAvailable?: boolean; runNames?: readonly string[] };
+> & {
+  followUpsAvailable?: boolean;
+  runNames?: readonly string[];
+  terminalIds?: readonly string[];
+};
 
 // What a Section is, before anything draws it: its name, and what the Session has in it.
 export interface SectionFacts {
@@ -27,6 +31,7 @@ export interface SectionFacts {
 export interface SectionTabHandle {
   active?: boolean;
   open: () => void;
+  close?: () => void;
   // Shows the tab and asks it to start over at its first page.
   request: () => void;
   // How often it was asked; the tab starts over at each.
@@ -78,6 +83,7 @@ export const itemsOf = (content: SessionInspectorContent): SessionItems => ({
   followUpsAvailable: content.schedules !== undefined,
   shells: content.shells?.shells,
   runNames: content.runs?.runs.map(({ name }) => name),
+  terminalIds: content.runs?.shells?.map(({ id }) => id),
 });
 
 // A Section draws a Workbench card only while it is offered and has something to count.

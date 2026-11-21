@@ -161,10 +161,14 @@ function usePageProps(
   );
 
   const runNames = runs.runs.map(({ name }) => name);
+  const terminalIds = runs.shells?.map(({ id }) => id);
 
   const surroundings = useSessionSurroundings(
     page,
-    offeredWith(cards, hasFollowUps(sources.schedules), runNames),
+    offeredWith(cards, hasFollowUps(sources.schedules), {
+      runNames,
+      terminalIds,
+    }),
     sources,
   );
 

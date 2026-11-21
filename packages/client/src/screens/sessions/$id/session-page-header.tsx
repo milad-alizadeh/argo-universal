@@ -8,6 +8,7 @@ import {
   type SessionPluginActions,
 } from '#features/sessions';
 import { summaryOf } from './sections/changes-facts';
+import { openNewShell } from './sections/runs-section';
 import {
   type OpenSessionViewProps,
   type SessionDetailViewProps,
@@ -23,7 +24,11 @@ import { type WorkbenchCards, toggleCardSheet } from './use-workbench-cards';
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
   if (props.state !== 'open' || !props.header.menu) return undefined;
 
-  return { ...props.header.menu, changes: menuChanges(props) };
+  return {
+    ...props.header.menu,
+    changes: menuChanges(props),
+    onNewTerminal: openNewShell(props.runs, props.inspectorPanels),
+  };
 }
 
 type MenuContent = Pick<OpenSessionViewProps, 'header' | 'changes'>;

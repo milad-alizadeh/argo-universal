@@ -24,8 +24,12 @@ import { attachedIssuesBar } from '../session-detail-view-bar.mocks';
 import { offeredSessionPanels, SessionInspector } from '../session-inspector';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { runActions } from '../session-run-inspector-fixtures';
+import {
+  shellTerminal,
+  shellTerminalActions,
+} from '../session-shell-terminal-fixtures';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
-import { runTabKey } from './runs-section';
+import { runTabKey, shellTabKey } from './runs-section';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
 import {
@@ -253,5 +257,24 @@ export const RunInspector: Story = {
   args: Runs.args,
   render: ({ content }) => (
     <OpenInspector content={content} tabs={['changes', runTabKey('web')]} />
+  ),
+};
+
+export const ShellTerminals: Story = {
+  args: {
+    content: {
+      ...everySection,
+      runs: { ...shellTerminalActions, runs: [] },
+    },
+  },
+};
+
+export const ShellTerminalInspector: Story = {
+  args: { content: { ...everySection, runs: shellTerminalActions } },
+  render: ({ content }) => (
+    <OpenInspector
+      content={content}
+      tabs={['changes', shellTabKey(shellTerminal.id)]}
+    />
   ),
 };

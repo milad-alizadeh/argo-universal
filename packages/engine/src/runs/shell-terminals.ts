@@ -7,8 +7,7 @@ import type {
   TerminalSendResult,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { recordShellGroup, removeShellRecord } from '../sessions';
-import type { RunBlocks } from './run-blocks';
+import type { RunBlocks, RunPorts } from './run-blocks';
 import type { RunLifecycle } from './run-lifecycle';
 import { createRunOutput, removeRunOutput } from './run-output';
 import { watchRunOutput } from './run-replay';
@@ -26,7 +25,7 @@ type OpenShell = {
   terminal: TerminalProcess;
   recording: TerminalRecording;
   closed: AbortController;
-  ownerRecord: Promise<string | undefined>;
+  ownerRecord: Promise<(() => Promise<void>) | null>;
   stopping?: Promise<void>;
 };
 
@@ -35,6 +34,18 @@ const sameCheckout = (left: RunCheckout, right: RunCheckout): boolean =>
   left.checkoutPath === right.checkoutPath;
 
 const defaultScrollbackLines = 100;
+
+type ShellServices = {
+  lifecycle: RunLifecycle;
+  blocks: RunBlocks;
+  changed: (checkout: RunCheckout) => void;
+};
+
+type ShellRequest = {
+  checkout: RunCheckout;
+  ownerId: string;
+  shell: ShellTerminal;
+};
 
 export const shellTerminalOutputFolder = (home: string): string =>
   join(home, 'shell-terminal-output');
@@ -48,10 +59,11 @@ export class ShellTerminals {
   >();
 
   public constructor(
-    private readonly input: Pick<RunsInput, 'createId' | 'home' | 'spawn'>,
-    private readonly lifecycle: RunLifecycle,
-    private readonly blocks: RunBlocks,
-    private readonly changed: (checkout: RunCheckout) => void,
+    private readonly input: Pick<
+      RunsInput,
+      'createId' | 'home' | 'spawn' | 'recordShellOwner'
+    >,
+    private readonly services: ShellServices,
   ) {}
 
   public holdings(): Iterable<OpenShell> {
@@ -68,9 +80,11 @@ export class ShellTerminals {
 
   public open(checkout: RunCheckout, ownerId: string): Promise<ShellTerminal> {
     const id = this.input.createId();
-    const opening = this.lifecycle
+
+    const opening = this.services.lifecycle
       .launchShell(checkout, () => this.launch(checkout, ownerId, id))
       .finally(() => this.pending.delete(id));
+
     this.pending.set(id, { checkout, ownerId, opening });
 
     return opening;
@@ -188,61 +202,74 @@ export class ShellTerminals {
   ): Promise<ShellTerminal> {
     const name = this.nextName(checkout);
     const shell = { id, name, cwd: checkout.checkoutPath };
-    const { block, port, env } = await this.blocks.reserve(
-      checkout,
-      { name },
-      undefined,
-    );
+    const ports = await this.services.blocks.reserve(checkout, { name });
+    const entry = await this.spawn({ checkout, ownerId, shell }, ports);
+    this.observe(entry);
+    await this.confirmOwner(entry);
+    this.services.changed(checkout);
+
+    return shell;
+  }
+
+  private async spawn(
+    { checkout, ownerId, shell }: ShellRequest,
+    { port, block, env }: RunPorts,
+  ): Promise<OpenShell> {
+    const { id, name, cwd } = shell;
     const path = join(shellTerminalOutputFolder(this.input.home), `${id}.log`);
     await createRunOutput(path);
-    let terminal: TerminalProcess;
 
     try {
-      terminal = await this.input.spawn({
+      const terminal = await this.input.spawn({
         id,
-        cwd: shell.cwd,
+        cwd,
         command: '',
         env,
         port,
         shell: true,
       });
+
+      return {
+        shell,
+        record: { ...checkout, name, port },
+        ownerId,
+        block,
+        starter: name,
+        terminal,
+        recording: new TerminalRecording(path),
+        closed: new AbortController(),
+        ownerRecord:
+          terminal.pid === undefined
+            ? Promise.resolve(null)
+            : this.input.recordShellOwner(terminal.pid, id),
+      };
     } catch (error) {
       await removeRunOutput(path);
       throw error;
     }
-    const entry: OpenShell = {
-      shell,
-      record: { ...checkout, name, port },
-      ownerId,
-      block,
-      starter: name,
-      terminal,
-      recording: new TerminalRecording(path),
-      closed: new AbortController(),
-      ownerRecord:
-        terminal.pid === undefined
-          ? Promise.resolve(undefined)
-          : recordShellGroup(this.input.home, { pid: terminal.pid, token: id }),
-    };
-    this.live.set(id, entry);
+  }
+
+  private observe(entry: OpenShell): void {
+    const { record, recording, shell, terminal } = entry;
+    this.live.set(shell.id, entry);
     terminal.onData((data) => {
-      entry.recording.append(data);
-      void entry.recording
+      recording.append(data);
+      void recording
         .flushed()
-        .then(() => this.updates.outputChanged(checkout, id));
+        .then(() => this.updates.outputChanged(record, shell.id));
     });
     terminal.onExit(() => {
-      if (!entry.stopping) this.stop(entry).catch(() => {});
+      if (!entry.stopping) void this.stop(entry).catch(() => {});
     });
+  }
+
+  private async confirmOwner(entry: OpenShell): Promise<void> {
     try {
       await entry.ownerRecord;
     } catch (error) {
       await this.stop(entry);
       throw error;
     }
-    this.changed(checkout);
-
-    return shell;
   }
 
   private nextName(checkout: RunCheckout): string {
@@ -273,11 +300,10 @@ export class ShellTerminals {
   }: OpenShell): Promise<void> {
     this.live.delete(shell.id);
     closed.abort();
-    this.changed(record);
+    this.services.changed(record);
     await recording.dispose();
     await removeRunOutput(recording.path);
-    const path = await ownerRecord.catch(() => undefined);
-
-    if (path) await removeShellRecord(path);
+    const removeOwner = await ownerRecord.catch(() => null);
+    await removeOwner?.();
   }
 }

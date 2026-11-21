@@ -21,7 +21,9 @@ export const runStatusTone: Record<RunConfigurationStatus, Tone> = {
   lost: 'muted',
 };
 
-export const runIsActive = ({ status }: RunConfigurationRow): boolean =>
+export const runIsActive = ({
+  status,
+}: Pick<RunConfigurationRow, 'status'>): boolean =>
   status === 'starting' || status === 'ready';
 
 export function runStatusLabel(

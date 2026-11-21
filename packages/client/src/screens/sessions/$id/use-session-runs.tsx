@@ -20,7 +20,7 @@ import { LatestTerminalSize } from './latest-terminal-size';
 function useRunStatus(
   sessionId: string,
   active: boolean,
-): RunConfigurationRow[] {
+): RunStatusResult | undefined {
   const trpc = useTRPC();
 
   const [snapshot, setSnapshot] = useState<{
@@ -44,9 +44,7 @@ function useRunStatus(
     stream.error ? { title: 'Runs', message: stream.error.message } : undefined,
   );
 
-  return snapshot?.sessionId === sessionId
-    ? snapshot.status.configurations
-    : [];
+  return snapshot?.sessionId === sessionId ? snapshot.status : undefined;
 }
 
 export function useSessionRuns(
@@ -54,16 +52,35 @@ export function useSessionRuns(
   active: boolean,
 ): SessionRuns {
   const trpc = useTRPC();
-  const runs = useRunStatus(sessionId, active);
+  const status = useRunStatus(sessionId, active);
   const start = useMutation(trpc.run.start.mutationOptions());
   const stop = useMutation(trpc.run.stop.mutationOptions());
   const restart = useMutation(trpc.run.restart.mutationOptions());
-  const error = start.error ?? stop.error ?? restart.error;
+  const open = useMutation(trpc.terminal.open.mutationOptions());
+  const close = useMutation(trpc.terminal.close.mutationOptions());
+
+  const error =
+    start.error ?? stop.error ?? restart.error ?? open.error ?? close.error;
 
   useErrorToast(error ? { title: 'Runs', message: error.message } : undefined);
 
   return {
-    runs,
+    runs: status?.configurations ?? [],
+    shells: status?.shells,
+    openShell:
+      Platform.OS === 'web'
+        ? (opened) => open.mutate({ sessionId }, { onSuccess: opened })
+        : undefined,
+    closeShell: (shellId) => close.mutate({ sessionId, shellId }),
+    renderShell: (shell, visible) => (
+      <ConnectedRunTerminal
+        key={shell.id}
+        sessionId={sessionId}
+        shellId={shell.id}
+        run={{ name: shell.name, status: 'ready' }}
+        active={active && visible}
+      />
+    ),
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
@@ -77,13 +94,22 @@ export function useSessionRuns(
   };
 }
 
+type TerminalRun = Pick<RunConfigurationRow, 'name' | 'status'>;
+
+type TerminalRef = { name: string } | { shellId: string };
+
+const terminalRef = (name: string, shellId?: string): TerminalRef =>
+  shellId ? { shellId } : { name };
+
 function ConnectedRunTerminal({
   sessionId,
   run,
+  shellId,
   active,
 }: {
   sessionId: string;
-  run: RunConfigurationRow;
+  run: TerminalRun;
+  shellId?: string;
   active: boolean;
 }): ReactElement {
   const client = useTRPCClient();
@@ -94,7 +120,7 @@ function ConnectedRunTerminal({
   const listen = useCallback<RunOutputSource>(
     (cursor, receive) => {
       const subscription = client.run.output.subscribe(
-        { sessionId, name, cursor },
+        { sessionId, ...terminalRef(name, shellId), cursor },
         {
           onData: receive,
           onError: (error) => setFailure(error.message),
@@ -103,19 +129,25 @@ function ConnectedRunTerminal({
 
       return (): void => subscription.unsubscribe();
     },
-    [client, sessionId, name],
+    [client, sessionId, name, shellId],
   );
 
   const onInput = useCallback(
     async (input: string): Promise<void> => {
       await client.terminal.send
-        .mutate({ sessionId, name, input })
+        .mutate({ sessionId, ...terminalRef(name, shellId), input })
         .catch((error: Error) => setFailure(error.message));
     },
-    [client, sessionId, name],
+    [client, sessionId, name, shellId],
   );
 
-  const onResize = useRunResize({ sessionId, run, connected, setFailure });
+  const onResize = useRunResize({
+    sessionId,
+    run,
+    shellId,
+    connected,
+    setFailure,
+  });
 
   useErrorToast(failure ? { title: 'Terminal', message: failure } : undefined);
 
@@ -124,7 +156,8 @@ function ConnectedRunTerminal({
 
 type Resize = {
   sessionId: string;
-  run: RunConfigurationRow;
+  run: TerminalRun;
+  shellId?: string;
   connected: boolean;
   setFailure: (message: string) => void;
 };
@@ -132,6 +165,7 @@ type Resize = {
 function useRunResize({
   sessionId,
   run,
+  shellId,
   connected,
   setFailure,
 }: Resize): (columns: number, rows: number) => void {
@@ -146,10 +180,10 @@ function useRunResize({
 
       pending.request({ columns, rows }, async (size) => {
         await client.terminal.resize
-          .mutate({ sessionId, name, ...size })
+          .mutate({ sessionId, ...terminalRef(name, shellId), ...size })
           .catch((error: Error) => setFailure(error.message));
       });
     },
-    [client, enabled, name, pending, sessionId, setFailure],
+    [client, enabled, name, shellId, pending, sessionId, setFailure],
   );
 }

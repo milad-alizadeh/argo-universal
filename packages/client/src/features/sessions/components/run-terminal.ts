@@ -10,7 +10,7 @@ export type RunOutputSource = (
 ) => () => void;
 
 export interface RunTerminalProps {
-  run: RunConfigurationRow;
+  run: Pick<RunConfigurationRow, 'name' | 'status'>;
   connected: boolean;
   listen: RunOutputSource;
   onInput: (text: string) => Promise<void> | void;

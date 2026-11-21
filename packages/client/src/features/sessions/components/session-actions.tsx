@@ -9,6 +9,7 @@ export interface SessionMenu {
   status: SessionStatus;
   changes?: { files: number; onPress: () => void };
   handoff?: { pending: boolean; onPress: () => void };
+  onNewTerminal?: () => void;
   onRename?: () => void;
   onArchive?: () => void;
 }
@@ -52,6 +53,18 @@ const renameAction = (
       icon="rename"
       onPress={onRename}
       shortcut={shortcuts ? renameShortcut : undefined}
+    />
+  );
+
+const newTerminalAction = ({
+  onNewTerminal,
+}: SessionMenu): ReactElement | undefined =>
+  onNewTerminal && (
+    <Action
+      key="terminal"
+      label="New Terminal"
+      icon="terminal"
+      onPress={onNewTerminal}
     />
   );
 
@@ -101,6 +114,7 @@ export function sessionActions(
     : [
         changesAction(menu, options),
         handoffAction(menu),
+        newTerminalAction(menu),
         renameAction(menu, options),
         archiveAction(menu, options),
       ];

@@ -13,6 +13,8 @@ import {
 } from '../runs/terminal';
 import type { OperationDefinition } from './index';
 
+const personOnly = 'person-only';
+
 export const terminalOperations = {
   'terminal.close': {
     id: 'terminal.close',
@@ -22,7 +24,7 @@ export const terminalOperations = {
     params: ShellTerminalCloseParams,
     result: TerminalResizeResult,
     tier: 'act',
-    policy: 'person-only',
+    policy: personOnly,
     keywords: ['shell', 'exit'],
   },
   'terminal.open': {
@@ -33,15 +35,14 @@ export const terminalOperations = {
     params: ShellTerminalOpenParams,
     result: ShellTerminal,
     tier: 'act',
-    policy: 'person-only',
+    policy: personOnly,
     keywords: ['shell', 'create'],
   },
   'terminal.read': {
     id: 'terminal.read',
     label: 'Read Terminal',
     icon: 'terminal',
-    description:
-      'Read the screen a Run shows now, with the lines scrolled above it.',
+    description: 'Read a Terminal’s screen and the lines scrolled above it.',
     params: TerminalReadParams,
     result: TerminalReadResult,
     tier: 'read',
@@ -52,11 +53,11 @@ export const terminalOperations = {
     id: 'terminal.resize',
     label: 'Resize Terminal',
     icon: 'terminal',
-    description: 'Resize a Run Terminal to match its viewport.',
+    description: 'Resize a Terminal to match its viewport.',
     params: TerminalResizeParams,
     result: TerminalResizeResult,
     tier: 'act',
-    policy: 'person-only',
+    policy: personOnly,
     keywords: ['columns', 'rows', 'viewport'],
   },
   'terminal.send': {

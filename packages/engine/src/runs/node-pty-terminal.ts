@@ -52,6 +52,7 @@ class PtyTerminal implements TerminalProcess {
     }
 
     await releaseProcessGroup(this.pid);
+
     if (this.port !== undefined) await killPortListeners(this.port);
     await this.exited.promise;
   }

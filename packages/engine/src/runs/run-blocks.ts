@@ -9,7 +9,7 @@ import type { RunStarter } from './runs';
 
 type Checkout = { projectId: string; checkoutPath: string };
 
-type Holding = {
+export type RunPortHolding = {
   record: Checkout & { name: string; port: number };
   block: number;
   starter: string;
@@ -55,7 +55,7 @@ export class RunBlocks {
   // The block each Checkout last had, so it gets the same ports back once its Runs end and start again.
   private readonly last = new Map<string, number>();
   public constructor(
-    private readonly live: () => Iterable<Holding>,
+    private readonly live: () => Iterable<RunPortHolding>,
     private readonly free: (port: number) => Promise<boolean>,
   ) {}
 
@@ -63,7 +63,7 @@ export class RunBlocks {
   public async reserve(
     checkout: Checkout,
     configuration: Pick<RunConfiguration, 'name' | 'port'>,
-    previous: { port: number } | undefined,
+    previous?: { port: number },
   ): Promise<RunPorts> {
     const key = checkoutKeyOf(checkout);
 

@@ -73,9 +73,8 @@ export { recoverArchivedCheckouts } from './archive/archive-operations';
 export { recoverShells } from './shells/recovery';
 
 export {
-  recordShellGroup,
+  recordCheckoutTerminalOwner,
   releaseShellGroups,
-  removeShellRecord,
 } from './shells/shell-record';
 
 export {

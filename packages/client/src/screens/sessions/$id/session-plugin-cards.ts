@@ -38,7 +38,7 @@ export const offeredWith =
   (
     cards: readonly SessionPluginCard[],
     followUpsAvailable = false,
-    runNames?: readonly string[],
+    terminals?: Pick<SessionItems, 'runNames' | 'terminalIds'>,
   ) =>
   (work: SessionItems): string[] =>
-    offeredSections({ ...work, followUpsAvailable, runNames }, cards);
+    offeredSections({ ...work, followUpsAvailable, ...terminals }, cards);

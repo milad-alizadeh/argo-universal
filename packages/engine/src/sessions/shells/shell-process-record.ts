@@ -8,6 +8,7 @@ const ownerOnlyMode = 0o600;
 export const ShellProcessRecord = z.strictObject({
   pid: z.number().int().positive(),
   token: z.string().uuid(),
+  checkoutTerminal: z.literal(true).optional(),
 });
 
 export type ShellProcessRecord = z.infer<typeof ShellProcessRecord>;

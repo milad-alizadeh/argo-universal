@@ -13,7 +13,13 @@ import {
   pluginCardSection,
   type SessionPluginCard,
 } from './plugin-card-section';
-import { runsCard, runSection, runTabKey } from './runs-section';
+import {
+  runsCard,
+  runSection,
+  runTabKey,
+  shellTerminalSection,
+  shellTabKey,
+} from './runs-section';
 import { schedulesSection } from './schedules-section';
 import {
   drawsCard,
@@ -57,6 +63,7 @@ export const offeredSections = (
 ): string[] => [
   ...offeredKeys(builtInSections, items),
   ...(items.runNames ?? []).map(runTabKey),
+  ...(items.terminalIds ?? []).map(shellTabKey),
   ...cards.map((card) => pluginCardKey(card.pluginId, card.card.id)),
 ];
 
@@ -65,14 +72,17 @@ export const sectionOf = (
   key: string,
 ): SessionSection | undefined =>
   sessionSections(content).find((section) => section.key === key) ??
-  runSection(content.runs, key);
+  runSection(content.runs, key) ??
+  shellTerminalSection(content.runs, key);
 
 export const sectionTab = (
   panels: SessionPanels,
   key: string,
+  close = (): void => panels.close(key),
 ): SectionTabHandle => ({
   active: panels.state.shown === key,
   open: () => panels.select(key),
+  close,
   request: () => panels.request(key),
   requested: panels.state.requests?.[key],
 });

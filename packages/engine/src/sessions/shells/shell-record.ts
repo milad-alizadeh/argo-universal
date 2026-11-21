@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { writeLog } from '@repo/machine-log';
 import { z } from 'zod';
 import { jsonCodec } from '../../lib/json-codec';
 import { hasGroupOwner, hasLiveGroupMembers } from './shell-group-members';
@@ -27,6 +28,20 @@ export const recordShellGroup = async (
 export const removeShellRecord = (path: string): Promise<void> =>
   rm(path, { force: true });
 
+export const recordCheckoutTerminalOwner = async (
+  home: string,
+  pid: number,
+  token: string,
+): Promise<() => Promise<void>> => {
+  const path = await recordShellGroup(home, {
+    pid,
+    token,
+    checkoutTerminal: true,
+  });
+
+  return () => removeShellRecord(path);
+};
+
 const Missing = z.object({ code: z.literal('ENOENT') });
 
 const recordNames = async (home: string): Promise<string[]> => {
@@ -41,7 +56,10 @@ const recordNames = async (home: string): Promise<string[]> => {
 const isRecord = (name: string): boolean =>
   name.endsWith('.json') || name.endsWith('.json.pending');
 
-const releaseRecordedGroup = async (path: string): Promise<void> => {
+const releaseRecordedGroup = async (
+  home: string,
+  path: string,
+): Promise<void> => {
   const record = StoredRecord.parse(await readFile(path, 'utf8'));
 
   if (hasLiveGroupMembers(record.pid)) {
@@ -50,10 +68,16 @@ const releaseRecordedGroup = async (path: string): Promise<void> => {
     await releaseShellGroup(record.pid);
   }
 
+  if (record.checkoutTerminal)
+    writeLog({
+      home,
+      label: 'engine',
+      line: `Shell Terminal ${record.token} marked lost after Engine exit`,
+    });
   await removeShellRecord(path);
 };
 
 export const releaseShellGroups = async (home: string): Promise<void> => {
   for (const name of (await recordNames(home)).filter(isRecord))
-    await releaseRecordedGroup(join(folderIn(home), name));
+    await releaseRecordedGroup(home, join(folderIn(home), name));
 };

@@ -1,13 +1,17 @@
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import type { RunStartResult, RunStopResult } from '@repo/contracts';
+import type {
+  RunStartResult,
+  RunStopResult,
+  ShellTerminal,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../storage';
 import { LiveRun } from './live-run';
-import { RunBlocks, starterName } from './run-blocks';
+import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
 import { requireRunConfiguration } from './run-file';
 import { RunLifecycle } from './run-lifecycle';
@@ -34,6 +38,10 @@ export type RunsInput = {
   writer: WriterActorRef;
   home: string;
   spawn: TerminalSpawner;
+  recordShellOwner: (
+    pid: number,
+    token: string,
+  ) => Promise<() => Promise<void>>;
   now: () => number;
   createId: () => string;
   // Whether nothing listens on a port; tests do not replace it.
@@ -69,7 +77,7 @@ export class Runs {
   public constructor(private readonly input: RunsInput) {
     this.view = new RunView({
       home: input.home,
-      shells: (checkout) => this.shells.rows(checkout),
+      shells: (checkout): ShellTerminal[] => this.shells.rows(checkout),
       live: (checkout, name): LiveRun | undefined =>
         this.live.get(keyOf(checkout, name)),
       record: (checkout, name): RunRecord | undefined =>
@@ -77,15 +85,17 @@ export class Runs {
     });
     this.terminals = new RunTerminals(this.view);
     this.blocks = new RunBlocks(
-      () => [...this.live.values(), ...this.shells.holdings()],
+      (): RunPortHolding[] => [
+        ...this.live.values(),
+        ...this.shells.holdings(),
+      ],
       input.portFree ?? bindable,
     );
-    this.shells = new ShellTerminals(
-      input,
-      this.lifecycle,
-      this.blocks,
-      (checkout) => this.view.checkoutChanged(checkout),
-    );
+    this.shells = new ShellTerminals(input, {
+      lifecycle: this.lifecycle,
+      blocks: this.blocks,
+      changed: (checkout): void => this.view.checkoutChanged(checkout),
+    });
   }
 
   public async start(
