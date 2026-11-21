@@ -3,11 +3,8 @@ import type {
   ComposerProps,
   ComposerConfigurationProps,
 } from '#features/composer';
-import {
-  SessionCallout,
-  ConfigurationStatus,
-  newSessionQuestion,
-} from '#features/sessions';
+import { ConfigurationStatus, SessionCallout } from '#features/sessions';
+import { newSessionQuestion } from '#lib/product/new-session-question';
 import { composerDraftProps } from './new-session-draft';
 import type { ReadySessionNewViewProps } from './session-new-view';
 

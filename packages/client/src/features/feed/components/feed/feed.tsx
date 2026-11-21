@@ -7,9 +7,9 @@ import type {
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
-import { View } from 'react-native';
 import { ComposerCover } from '#lib/product/composer-cover';
 import { useContentWide } from '#lib/product/content-layout';
+import { NewSessionQuestion } from '#lib/product/new-session-question';
 import type { FeedViewItem } from '../../view/feed-view';
 import { usePartialTranscripts } from '../../view/use-partial-transcripts';
 import { drawnFeedItems } from '../drawn-feed-item';
@@ -49,33 +49,17 @@ export interface FeedProps {
   opensAtStart?: boolean;
 }
 
-function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
-  return (
-    <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text
-        role="heading"
-        accessibilityRole="heading"
-        aria-level={2}
-        className="wide-type:text-base wide-type:leading-6"
-      >
-        What should we build?
-      </Text>
-      {!!branch && <Text role="secondary">{branch}</Text>}
-    </View>
-  );
-}
-
-// An empty Feed's end is always on screen.
+// An empty Feed's end is always on screen, even when its rows are hidden.
 function EmptyFeedAtEnd({
+  children,
   onAtEndChange,
-  ...props
 }: {
-  branch?: string;
+  children: React.ReactNode;
   onAtEndChange?: FeedProps['onAtEndChange'];
-}): React.JSX.Element {
+}): React.ReactNode {
   useReportsAtEnd(true, onAtEndChange);
 
-  return <EmptyFeed {...props} />;
+  return children;
 }
 
 function useDrawnItems(items: FeedProps['items']): FeedViewItem[] {
@@ -124,10 +108,13 @@ const DrawFeed = memo(function DrawFeed({
 
   if (!feed.entries.length)
     return (
-      <EmptyFeedAtEnd
-        branch={checkoutBranch}
-        onAtEndChange={props.onAtEndChange}
-      />
+      <EmptyFeedAtEnd onAtEndChange={props.onAtEndChange}>
+        {!props.items.length && !props.hasOlder && (
+          <NewSessionQuestion>
+            {!!checkoutBranch && <Text role="secondary">{checkoutBranch}</Text>}
+          </NewSessionQuestion>
+        )}
+      </EmptyFeedAtEnd>
     );
 
   return <FeedWithImages {...props} {...feed} />;

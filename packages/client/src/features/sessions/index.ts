@@ -254,11 +254,6 @@ export {
 } from './components/session-row/session-row-props';
 
 export {
-  NewSessionQuestion,
-  newSessionQuestion,
-} from './components/new-session-question/new-session-question';
-
-export {
   SessionBar,
   type SessionBarEntry,
   type SessionBarProps,
