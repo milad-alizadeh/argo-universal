@@ -10,7 +10,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Status/SignIn',
   component: SignIn,
   parameters: { screenPreview: true },
-  // React Native consoleErrors a string inside a View on the console as it draws, so the spy is set before the story.
+  // React Native reports a string inside a View on the console as it draws, so the spy is set before the story.
   beforeEach: (): (() => void) => {
     consoleErrors.length = 0;
 
