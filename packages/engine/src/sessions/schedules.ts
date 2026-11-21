@@ -65,17 +65,7 @@ export class Schedules {
     sessionId: string,
     signal: AbortSignal,
   ): Promise<void> {
-    if (!this.store.occurrence(id)) {
-      this.disarm(id);
-
-      return;
-    }
-
-    if (this.sources.readSession(sessionId).archivedAt !== null) {
-      await this.manage({ sessionId, id, action: 'pause' });
-
-      return;
-    }
+    if (!(await this.canDeliver(id, sessionId))) return;
 
     const session = await this.sources.open.ready(
       sessionId,
@@ -93,6 +83,21 @@ export class Schedules {
       (!occurrence || this.store.deadline(id) === undefined)
     )
       this.disarm(id);
+  }
+  private async canDeliver(id: string, sessionId: string): Promise<boolean> {
+    if (!this.store.occurrence(id)) {
+      this.disarm(id);
+
+      return false;
+    }
+
+    if (this.sources.readSession(sessionId).archivedAt !== null) {
+      await this.manage({ sessionId, id, action: 'pause' });
+
+      return false;
+    }
+
+    return true;
   }
   private disarm(id: string): void {
     this.actors.get(id)?.stop();
