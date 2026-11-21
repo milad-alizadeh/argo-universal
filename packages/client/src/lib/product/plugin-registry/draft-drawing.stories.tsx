@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
+  declaredRegions,
   draftSteps,
   drawingHeader,
   drawingList,
@@ -13,7 +14,7 @@ const meta = {
   component: DraftSteps,
   parameters: { screenPreview: true },
   argTypes: { steps: { control: false } },
-  args: { steps: draftSteps, shown: drawnSkeleton },
+  args: { steps: draftSteps, shown: drawnSkeleton, regions: declaredRegions },
 } satisfies Meta<typeof DraftSteps>;
 
 export default meta;

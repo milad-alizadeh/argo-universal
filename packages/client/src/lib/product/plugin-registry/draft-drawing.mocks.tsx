@@ -3,10 +3,19 @@ import { View } from 'react-native';
 import type { DraftStep } from './draft-drawing-fixtures';
 import { PluginTree } from './plugin-registry';
 
-type StepsProps = { steps: DraftStep[]; shown: number };
+type StepsProps = {
+  steps: DraftStep[];
+  shown: number;
+  // The regions the Plugin's manifest declares.
+  regions?: readonly string[];
+};
 
 // The page as a Draft shows it, given each step's tree and naming in turn up to `shown`, one render apart.
-export function DraftSteps({ steps, shown }: StepsProps): ReactElement {
+export function DraftSteps({
+  steps,
+  shown,
+  regions,
+}: StepsProps): ReactElement {
   const [index, setIndex] = useState(0);
 
   useEffect((): (() => void) | undefined => {
@@ -23,7 +32,10 @@ export function DraftSteps({ steps, shown }: StepsProps): ReactElement {
 
   return (
     <View className="p-8">
-      <PluginTree root={step.root} draft={{ naming: step.naming ?? null }} />
+      <PluginTree
+        root={step.root}
+        draft={{ naming: step.naming ?? null, regions }}
+      />
     </View>
   );
 }

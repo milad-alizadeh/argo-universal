@@ -45,7 +45,9 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
           onPageCall,
           pluginId: opening.pluginId,
           // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
-          draft: bar ? { naming: naming ?? null } : undefined,
+          draft: bar
+            ? { naming: naming ?? null, regions: bar.regions }
+            : undefined,
         }}
         {...{ onBack, loadingTree }}
       />

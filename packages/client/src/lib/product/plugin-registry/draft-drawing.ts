@@ -28,6 +28,10 @@ export type DraftDrawing = {
   seen: number;
 };
 
+// What the registry draws from: the drawing, with the regions to wrap and whether motion is reduced.
+// Reduced motion is read where the tree lives, so a node that arrives later does not start a fade it then drops.
+export type DraftView = DraftDrawing & { reduced: boolean };
+
 const none: ReadonlySet<string> = new Set();
 
 export function startDrawing(naming: DraftNaming | null): DraftDrawing {
@@ -46,7 +50,7 @@ export function startDrawing(naming: DraftNaming | null): DraftDrawing {
 /*
  * The drawing after `root` and the naming now. A tree it has already seen changes nothing. A naming waits for the
  * next tree, so the frame stands round a region the Agent has not finished; new keys inside a framed region mean it
- * landed, so its frame dissolves.
+ * landed, so its frame dissolves. A naming whose redraw is identical draws no new tree, so its frame never arms.
  */
 export function drawn(
   state: DraftDrawing,

@@ -64,7 +64,7 @@ export const headerLandedPage = (): WireNode =>
 export const listLandedPage = (): WireNode =>
   stack('page', [headerLanded(), list(loadedRows())]);
 
-export type DraftStep = { root: WireNode; naming: DraftNaming | null };
+export type DraftStep = { root: WireNode; naming?: DraftNaming };
 
 const header: DraftNaming = { region: 'header', serial: 1 };
 
@@ -72,7 +72,7 @@ const listing: DraftNaming = { region: 'list', serial: 2 };
 
 // What the App is given, in order, while the Agent draws the page: each root is a new answer, as a redraw is.
 export const draftSteps: DraftStep[] = [
-  { root: skeletonPage(), naming: null },
+  { root: skeletonPage() },
   { root: skeletonPage(), naming: header },
   { root: skeletonPage(), naming: header },
   { root: skeletonPage(), naming: listing },
@@ -88,3 +88,31 @@ export const drawingHeader = 2;
 export const drawingList = 4;
 
 export const landed = 5;
+
+// The regions the page's manifest declares, so the page wraps them from its first draw.
+export const declaredRegions = ['header', 'list'];
+
+// A row whose last child fills what its first leaves, drawn as the page's header region.
+export const rowPage = (): WireNode => ({
+  type: 'Stack',
+  key: 'page',
+  props: { direction: 'row', gap: 4 },
+  children: [
+    text('label', 'Label'),
+    {
+      type: 'Stack',
+      key: 'header',
+      props: { direction: 'column' },
+      children: [text('fills', 'Fills the rest of the row')],
+      slots: {},
+    },
+  ],
+  slots: {},
+});
+
+// The row page, then its header region named and framed.
+export const rowSteps: DraftStep[] = [
+  { root: rowPage() },
+  { root: rowPage(), naming: header },
+  { root: rowPage(), naming: header },
+];

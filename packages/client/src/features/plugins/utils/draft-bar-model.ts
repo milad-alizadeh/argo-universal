@@ -25,6 +25,8 @@ export type DraftBarModel = {
   // Every minimum state in minimum order; wide tabs show only the declared ones.
   states: DraftBarState[];
   current: DraftStateId;
+  // The ids of the regions the Draft page declares, which are the nodes the page may frame.
+  regions: string[];
 };
 
 // The state a Draft page rests on until one is chosen.
@@ -39,7 +41,8 @@ export function draftBarOf(
   path: string,
   pageState: PageState,
 ): DraftBarModel | null {
-  const declared = entry?.dev === true ? declaredStates(entry, path) : null;
+  const draft = entry?.dev === true ? draftAt(entry, path) : null;
+  const declared = draft?.states;
 
   if (!declared) return null;
 
@@ -50,18 +53,19 @@ export function draftBarOf(
       missing: !declared.includes(id),
     })),
     current: currentState(declared, pageState),
+    regions: draft.regions?.map(({ id }) => id) ?? [],
   };
 }
 
-function declaredStates(
+function draftAt(
   entry: DraftEntry,
   path: string,
-): readonly DraftStateId[] | null {
-  const draft = entry.manifest.contributes.drafts?.find(
-    ({ page }) => matchPagePath(page, path) !== null,
+): NonNullable<PluginManifest['contributes']['drafts']>[number] | null {
+  return (
+    entry.manifest.contributes.drafts?.find(
+      ({ page }) => matchPagePath(page, path) !== null,
+    ) ?? null
   );
-
-  return draft?.states ?? null;
 }
 
 function currentState(

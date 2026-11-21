@@ -67,3 +67,22 @@ it('ignores a chosen state the Draft does not declare', () => {
     'populated',
   );
 });
+
+it('lists the regions the Draft page declares, for the page to frame', () => {
+  const entry: DraftEntry = {
+    dev: true,
+    manifest: manifestWith([
+      {
+        page: '/',
+        states: ['populated'],
+        regions: [
+          { id: 'header', variants: [{ id: 'a', name: 'A' }] },
+          { id: 'list', variants: [{ id: 'a', name: 'A' }] },
+        ],
+      },
+    ]),
+  };
+
+  expect(draftBarOf(entry, '/', {})?.regions).toEqual(['header', 'list']);
+  expect(draftBarOf(issues(true), '/', {})?.regions).toEqual([]);
+});

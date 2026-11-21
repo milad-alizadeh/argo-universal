@@ -2,6 +2,7 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import { PluginTreeContext } from '@repo/kit/plugin-tree-context';
 import { SvgBudget } from '@repo/kit/primitives/visual';
+import { useReducedMotionNow } from '@repo/kit/use-reduced-motion-now';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
@@ -9,7 +10,7 @@ import { pageCallRefused } from './component-event-props';
 import {
   drawn as drawnDraft,
   startDrawing,
-  type DraftDrawing,
+  type DraftView,
   type DraftNaming,
 } from './draft-drawing';
 import { DrawnNodes } from './drawn-nodes';
@@ -27,7 +28,7 @@ export interface PluginTreeProps {
   // A Loader page's Page state changes and Operation calls.
   onPageCall?: OnPageCall;
   // Set for a dev Plugin's Draft page: its new nodes fade in and the region being written wears a frame (ADR-0057).
-  draft?: { naming: DraftNaming | null };
+  draft?: { naming: DraftNaming | null; regions?: readonly string[] };
 }
 
 /*
@@ -80,8 +81,9 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
 function useDraftDrawing({
   root,
   draft,
-}: PluginTreeProps): DraftDrawing | undefined {
+}: PluginTreeProps): DraftView | undefined {
   const [state, setState] = useState(() => startDrawing(draft?.naming ?? null));
+  const reduced = useReducedMotionNow();
 
   if (!draft) return undefined;
 
@@ -89,5 +91,10 @@ function useDraftDrawing({
 
   if (next !== state) setState(next);
 
-  return next;
+  // A declared region is wrapped from its first draw, so framing it later does not draw its subtree again.
+  return {
+    reduced,
+    ...next,
+    regions: new Set([...next.regions, ...(draft.regions ?? [])]),
+  };
 }

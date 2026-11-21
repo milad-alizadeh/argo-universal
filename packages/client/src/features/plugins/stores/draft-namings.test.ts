@@ -32,3 +32,13 @@ it('tells a listener of each naming until it unsubscribes', () => {
 
   expect(heard).toHaveBeenCalledTimes(1);
 });
+
+it('names the region a stale mark carries, and leaves the naming alone for a mark without one', () => {
+  const namings = new DraftNamings();
+
+  namings.heard({ pluginId: 'issues', region: 'list' });
+  namings.heard({ pluginId: 'issues' });
+  namings.heard({ pluginId: 'issues', addresses: [] });
+
+  expect(namings.of('issues')).toEqual({ region: 'list', serial: 1 });
+});

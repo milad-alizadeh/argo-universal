@@ -1,9 +1,9 @@
 import { motionDuration } from '@repo/kit/motion';
-import { useReducedMotionNow } from '@repo/kit/use-reduced-motion-now';
-import type { ReactElement, ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { Platform, Text, View, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import type { DraftDrawing } from './draft-drawing';
+import type { DraftView } from './draft-drawing';
+import { regionLabel } from './draft-region-label';
 
 /*
  * What the registry draws of the Agent drawing a Draft (ADR-0057): a node new since the tree the App kept fades in, and
@@ -14,35 +14,58 @@ const fadeIn = FadeIn.duration(motionDuration.enter);
 
 const fadeOut = FadeOut.duration(motionDuration.frame);
 
-// A node's own new drawing fades in; it stays wrapped afterwards, so a later draw of it does not draw its subtree again.
-export function DraftFade({ children }: { children: ReactNode }): ReactElement {
-  const reduced = useReducedMotionNow();
+/*
+ * A wrapper must not move what it holds. Web draws it with no box of its own, so a flex child of a row keeps its
+ * width; native has no such display, so the wrapper keeps its box there.
+ */
+const boxless: ViewStyle | undefined =
+  Platform.OS === 'web' ? { display: 'contents' } : undefined;
+
+// A node's own new drawing fades in, then its wrapper stays, so a later draw of the node does not draw its subtree again.
+export function DraftFade({
+  reduced,
+  children,
+}: {
+  reduced: boolean;
+  children: ReactNode;
+}): ReactElement {
+  const [faded, setFaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFaded(true), motionDuration.enter);
+
+    return (): void => clearTimeout(timer);
+  }, []);
 
   return (
-    <Animated.View entering={reduced ? undefined : fadeIn}>
+    <Animated.View
+      testID="draft-fade"
+      entering={reduced ? undefined : fadeIn}
+      style={reduced || faded ? boxless : undefined}
+    >
       {children}
     </Animated.View>
   );
 }
 
-// "list-header" is drawn as "Drawing · List header".
-export function regionLabel(region: string): string {
-  const words = region.replaceAll(/[-_]+/g, ' ').trim();
-
-  return `Drawing · ${words.charAt(0).toUpperCase()}${words.slice(1)}`;
-}
-
-type FrameProps = { region: string; active: boolean; children: ReactNode };
+type FrameProps = {
+  region: string;
+  active: boolean;
+  reduced: boolean;
+  children: ReactNode;
+};
 
 export function DraftFrame({
   region,
   active,
+  reduced,
   children,
 }: FrameProps): ReactElement {
-  const reduced = useReducedMotionNow();
-
   return (
-    <View testID={`draft-region-${region}`}>
+    <View
+      testID={`draft-region-${region}`}
+      style={active ? undefined : boxless}
+    >
       {children}
       {active ? (
         <Animated.View
@@ -67,18 +90,22 @@ export function DraftFrame({
 export function faded(
   element: ReactElement | null,
   key: string,
-  draft: DraftDrawing | undefined,
+  draft: DraftView | undefined,
 ): ReactElement | null {
   if (!element || !draft?.faded.has(key)) return element;
 
-  return <DraftFade key={element.key}>{element}</DraftFade>;
+  return (
+    <DraftFade key={element.key} reduced={draft.reduced}>
+      {element}
+    </DraftFade>
+  );
 }
 
-// The element of a node that is, or was, a region the Agent wrote: framed while it is being written.
+// The element of a node that is, or was, a region the Agent wrote: framed while it is being written. A region is matched by its bare key, so region ids must be unique across the page.
 export function framed(
   element: ReactElement | null,
   nodeKey: string,
-  draft: DraftDrawing | undefined,
+  draft: DraftView | undefined,
 ): ReactElement | null {
   if (!element || !draft?.regions.has(nodeKey)) return element;
 
@@ -87,6 +114,7 @@ export function framed(
       key={element.key}
       region={nodeKey}
       active={draft.framed.has(nodeKey)}
+      reduced={draft.reduced}
     >
       {element}
     </DraftFrame>

@@ -1,4 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import { expect, it } from 'vitest';
 import { startDrawing, drawn } from './draft-drawing';
 
@@ -7,6 +8,10 @@ const node = (
   children: WireNode[] = [],
   type = 'Stack',
 ): WireNode => ({ type, key, props: {}, children, slots: {} });
+
+// A node's address is its keys from the root, as the registry draws it.
+const address = (...keys: string[]): string =>
+  keys.reduce((parent, key) => childNodeKey(parent, key), '');
 
 const skeleton = (): WireNode =>
   node('page', [node('header', [node('header-bar')]), node('list')]);
@@ -38,7 +43,10 @@ it('fades in only the topmost nodes whose keys are new since the kept tree', () 
   const first = drawn(startDrawing(null), kept, null);
   const next = drawn(first, listLanded(kept), null);
 
-  expect([...next.fresh]).toEqual(['page/list/row-1', 'page/list/row-2']);
+  expect([...next.fresh]).toEqual([
+    address('page', 'list', 'row-1'),
+    address('page', 'list', 'row-2'),
+  ]);
 });
 
 it('leaves unchanged keys out of the fade, even after a redraw of the same tree', () => {
@@ -56,7 +64,10 @@ it('keeps wrapping a node that faded in, so its drawing keeps its identity', () 
   const next = drawn(first, listLanded(kept), null);
   const again = drawn(next, { ...listLanded(kept) }, null);
 
-  expect([...again.faded]).toEqual(['page/list/row-1', 'page/list/row-2']);
+  expect([...again.faded]).toEqual([
+    address('page', 'list', 'row-1'),
+    address('page', 'list', 'row-2'),
+  ]);
 });
 
 it('returns the same state for a tree it already saw', () => {
@@ -86,7 +97,7 @@ it('dissolves the frame once new keys land inside its region', () => {
   const landed = drawn(framed, headerLanded(kept), naming);
 
   expect([...landed.framed]).toEqual([]);
-  expect([...landed.fresh]).toEqual(['page/header/title']);
+  expect([...landed.fresh]).toEqual([address('page', 'header', 'title')]);
 });
 
 it('moves the frame to the next region as the last one lands', () => {

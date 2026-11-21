@@ -1,3 +1,4 @@
+import type { StaleMark } from '@repo/contracts/plugins/page-address';
 import { useSyncExternalStore } from 'react';
 import type { DraftNaming } from '../../../lib/product/plugin-registry';
 
@@ -15,6 +16,11 @@ export class DraftNamings {
     this.named.set(pluginId, { region, serial: this.serial });
 
     for (const listener of this.listeners) listener();
+  }
+
+  // A stale mark that names a region says the Agent is writing it; any other mark leaves the naming as it was.
+  public heard({ pluginId, region }: StaleMark): void {
+    if (region) this.name(pluginId, region);
   }
 
   public of(pluginId: string): DraftNaming | undefined {
