@@ -22,9 +22,10 @@ import {
   useSelectedSeparator,
 } from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
+import { leadingLaneOf } from './list-item-lane';
 import { RowMovePicker } from './list-item-move-picker';
 import { NestingItem } from './list-item-nesting';
-import { hasLeading, separatorClass } from './list-item-parts';
+import { hasLeading } from './list-item-parts';
 import { ItemPress, rowMenu, type DrawingProps } from './list-item-press';
 import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
@@ -60,12 +61,7 @@ function ItemSeparator({
 
   if ([highlighted, selected].some(Boolean)) return null;
 
-  return (
-    <View
-      className={separatorClass(separator, props.leadingSize)}
-      style={hairline}
-    />
-  );
+  return <View className={separator} style={hairline} />;
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
@@ -164,14 +160,21 @@ function RowDetails({ tile, props, drawing }: PressedProps): ReactNode {
     <>
       {rowSeparator(props, drawing)}
       {props.progress ? (
-        <ItemProgress progress={props.progress} sidebar={props.sidebar} />
+        <ItemProgress
+          progress={props.progress}
+          sidebar={props.sidebar}
+          inset={leadingLaneOf(props.leadingSize)}
+        />
       ) : null}
     </>
   );
 }
 
 function rowSeparator(props: DrawingProps, drawing: ItemDrawing): ReactNode {
-  const separator = itemSeparator(drawing, hasLeading(props));
+  const separator = itemSeparator(
+    drawing,
+    hasLeading(props) ? leadingLaneOf(props.leadingSize) : undefined,
+  );
 
   return separator === undefined ? null : (
     <ItemSeparator {...props} separator={separator} />

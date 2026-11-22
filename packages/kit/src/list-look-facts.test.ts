@@ -42,7 +42,7 @@ interface Drawn {
   footer: boolean;
   // A pressed ListItem's tint.
   tint: boolean;
-  // A pressed Table grid row's or VirtualListItem's tint.
+  // A pressed Table grid row's tint.
   drawnTint: boolean;
   push: boolean;
 }

@@ -56,7 +56,6 @@ export const exemptFolders = {
     'The desktop editor behind the Composer; not on the wire.',
   'layout/spacing': 'The spacing scale the layout components read.',
   'lists/drawer-item': 'The drawer shell draws it; a Plugin has no drawer.',
-  'lists/virtual-list-item': 'The virtualised row List draws for ListItem.',
   'overlays/centred-overlay': 'The frame Dialog and Alert share.',
   'overlays/drill': 'App navigation chrome; a Plugin sends a Sheet.',
   'overlays/link-preview': 'App-only preview of a Link target.',

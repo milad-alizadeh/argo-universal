@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { leadingMarkClass } from './leading-mark';
 import type { IconName } from './symbols/icon-names';
 import type { IconSizeValue } from './symbols/icon-size';
 
@@ -52,6 +53,17 @@ const palettes = {
 
 export type MarkTone = keyof typeof palettes;
 
+// A disc's fill and the ink on it, for a mark that draws its own disc (TintedAvatar) or a plain mark in a hue.
+export interface DiscTone {
+  fill: string;
+  ink: string;
+}
+
+export const toneDisc = (tone: MarkTone): DiscTone => ({
+  fill: palettes[tone].disc,
+  ink: palettes[tone].ink,
+});
+
 // The tone's text colour beside a bare mark, for a label that is not ToneCaption, such as a link's.
 export const toneTextClass = (tone: MarkTone): string => palettes[tone].bare;
 
@@ -66,7 +78,7 @@ interface ToneMarkProps {
 
 const discSizes = {
   inline: 'size-6 wide-type:size-5',
-  leading: 'size-9 wide-type:size-7',
+  leading: leadingMarkClass,
 } as const;
 
 function glyph(props: ToneMarkProps): ReactElement {

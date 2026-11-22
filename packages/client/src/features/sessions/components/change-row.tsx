@@ -26,10 +26,10 @@ export const checkoutChangesLabel = "Show the Checkout's Changes against main";
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
-// The mark sits on a disc, the size of the title's line, so it leads the row on the title's edge.
+// The mark sits on a disc of the leading mark's size, as every row's leading mark does, so it leads the row on the title's edge.
 const stageCell = (change: SessionPullRequest): ReactElement => (
   <View className="shrink-0">
-    <ChangeStageIcon {...change} form="disc" />
+    <ChangeStageIcon {...change} form="disc" disc="leading" />
   </View>
 );
 

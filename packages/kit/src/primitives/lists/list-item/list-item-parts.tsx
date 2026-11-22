@@ -5,6 +5,7 @@ import {
   IconSizeContext,
   type IconSizing,
 } from '#primitives/content/icon';
+import { leadingMarkClass } from '../../../leading-mark';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { hasBadge, ItemBadge, useLeadingBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
@@ -135,10 +136,5 @@ const leadingClass = (
 ): string =>
   cn(
     leadingClasses[lane],
-    size === 'avatar' && 'size-9 wide-type:size-7 self-center',
+    size === 'avatar' && cn(leadingMarkClass, 'self-center'),
   );
-
-export const separatorClass = (
-  separator: string,
-  size: ListItemProps['leadingSize'],
-): string => cn(separator, size === 'avatar' && 'left-16');

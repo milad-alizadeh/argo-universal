@@ -52,7 +52,7 @@ export interface PlatformFacts {
   valuePlacement: ValuePlacement;
   // The class a pressed ListItem takes: the web's and iOS's tint, none elsewhere.
   pressedTint: string;
-  // Android's Pressable draws its ripple, so a Table grid row or a VirtualListItem takes no pressed tint there.
+  // Android's Pressable draws its ripple, so a Table grid row takes no pressed tint there.
   ripple: boolean;
   rowHighlight?: RowHighlight;
   // The web's wide window can draw the tree: lanes, rails and folding.

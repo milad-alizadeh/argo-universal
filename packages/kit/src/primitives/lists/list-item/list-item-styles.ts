@@ -1,6 +1,7 @@
 import type { ListPosition } from '../../../list-context';
 import type { ListLook } from '../../../list-look';
 import { cn } from '../../../utils';
+import { laneInsets, type InsetLane } from './list-item-lane';
 import type { ListItemProps } from './list-item-props';
 
 /*
@@ -119,7 +120,6 @@ function hasSeparator(drawing: ItemDrawing): boolean {
 const separatorDrawing = {
   colour: 'bg-border',
   end: 'right-4',
-  pastLeading: 'left-14 wide:left-15',
 };
 
 // A selected row's tint fills the row edge to edge.
@@ -127,7 +127,7 @@ export const selectionTint = 'absolute inset-0 bg-selected';
 
 export function itemSeparator(
   drawing: ItemDrawing,
-  leading: boolean,
+  leading: InsetLane | undefined,
 ): string | undefined {
   if (!hasSeparator(drawing)) return undefined;
 
@@ -135,6 +135,6 @@ export function itemSeparator(
     'absolute bottom-px left-4',
     separatorDrawing.end,
     separatorDrawing.colour,
-    leading && separatorDrawing.pastLeading,
+    leading && laneInsets[leading],
   );
 }

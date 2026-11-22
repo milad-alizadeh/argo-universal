@@ -14,7 +14,7 @@ import type {
   OpenPluginItemPage,
   SessionRowPluginItem,
 } from './session-row-props';
-import { sidebarRows } from './session-row-sidebar';
+import { useSidebarRows } from './session-row-sidebar';
 
 export interface SessionRowItemProps {
   plugin: SessionRowPluginItem;
@@ -149,6 +149,8 @@ export const changeState = (change: RowChange): ChangeState =>
 function ItemLabel({
   plugin: { item },
 }: SessionRowItemProps): React.JSX.Element {
+  const sidebar = useSidebarRows();
+
   if (item.change)
     return <ChangeStage {...changeState(item.change)} text={item.text} />;
 
@@ -157,7 +159,7 @@ function ItemLabel({
       icon={item.icon && pluginSymbol(item.icon)}
       text={item.text}
       tone={item.tone}
-      sidebar={sidebarRows}
+      sidebar={sidebar}
       shrinks
     />
   );

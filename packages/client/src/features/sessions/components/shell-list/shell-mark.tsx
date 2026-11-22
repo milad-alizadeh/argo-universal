@@ -1,4 +1,5 @@
 import type { Shell } from '@repo/contracts';
+import { leadingMarkClass } from '@repo/kit/leading-mark';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import type { JSX } from 'react';
@@ -22,7 +23,9 @@ export function ShellMark({ shell }: { shell: Shell }): JSX.Element {
 
 function EndedShellMark({ outcome }: { outcome: ShellOutcome }): JSX.Element {
   return (
-    <View className="size-9 shrink-0 items-center justify-center wide-type:size-7">
+    <View
+      className={`${leadingMarkClass} shrink-0 items-center justify-center`}
+    >
       <Icon name={outcome.icon ?? 'terminal'} tone={outcome.tone} />
     </View>
   );
