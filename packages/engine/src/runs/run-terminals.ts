@@ -1,4 +1,9 @@
-import type { TerminalReadResult, TerminalSendResult } from '@repo/contracts';
+import type {
+  RunOutput,
+  RunOutputCursor,
+  TerminalReadResult,
+  TerminalSendResult,
+} from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { drawRecording } from './run-screen';
 import { statusOf, type RunView } from './run-view';
@@ -6,7 +11,7 @@ import type { RunCheckout } from './runs';
 
 const defaultScrollbackLines = 100;
 
-// How Agents and people read and type into the Terminals of a Checkout: a Run today, shell Terminals once they exist (ADR-0063).
+// A Run's Terminal can replay its recording after the process exits (ADR-0063).
 export class RunTerminals {
   public constructor(private readonly runs: RunView) {}
   // What the Terminal shows now; an ended Run's screen is drawn again from its recording.
@@ -59,5 +64,14 @@ export class RunTerminals {
 
     live.screen.resize(columns, rows);
     live.terminal.resize(columns, rows);
+  }
+
+  public watchOutput(
+    checkout: RunCheckout,
+    name: string,
+    cursor: RunOutputCursor | undefined,
+    signal: AbortSignal,
+  ): AsyncIterable<RunOutput> {
+    return this.runs.watchOutput(checkout, { name, cursor }, signal);
   }
 }

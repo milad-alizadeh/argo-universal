@@ -1,21 +1,16 @@
 import { stripVTControlCharacters } from 'node:util';
 import type { OutputBlobMetadata } from '../blob';
 import type { RunConfiguration } from './run-configurations';
-import {
-  logRecordingFailure,
-  retainRunOutput,
-  runOutputFor,
-  runOutputPath,
-} from './run-output';
+import { retainRunOutput, runOutputFor } from './run-output';
 import type { RunRecord } from './run-store';
 import type { TerminalProcess } from './terminal';
-import { TerminalRecording } from './terminal-recording';
+import type { TerminalRecording } from './terminal-recording';
 
 const memoryCharacters = 65_536;
 
 type LiveRunInput = {
   record: RunRecord;
-  terminal: TerminalProcess;
+  recording: TerminalRecording;
   home: string;
   configuration: RunConfiguration;
   fingerprint: string;
@@ -54,22 +49,14 @@ export class LiveRun {
   }
   private output = '';
   public constructor(input: LiveRunInput) {
-    this.currentRecord = { ...input.record, pid: input.terminal.pid ?? null };
-    this.terminal = input.terminal;
+    this.terminal = input.recording.process;
+    this.currentRecord = { ...input.record, pid: this.terminal.pid ?? null };
     this.home = input.home;
     this.configuration = input.configuration;
     this.fingerprint = input.fingerprint;
     this.block = input.block;
     this.starter = input.starter;
-    this.recording = new TerminalRecording(
-      runOutputPath(this.home, input.record.id),
-      (error) =>
-        logRecordingFailure(
-          this.home,
-          `Could not record Run ${input.record.id}`,
-          error,
-        ),
-    );
+    this.recording = input.recording;
     void this.ended.promise.then(() => this.recording.dispose());
   }
   public get outputPath(): string {
@@ -90,7 +77,7 @@ export class LiveRun {
 
   public stop(released: () => void): Promise<void> {
     this.shutdown ??= Promise.resolve().then(async () => {
-      await this.terminal.stop();
+      await this.recording.stop();
       await this.whenEnded();
       released();
     });
@@ -153,9 +140,10 @@ export class LiveRun {
     return save(this.currentRecord);
   }
 
-  public append(data: string): void {
-    this.recording.append(data);
-    this.output = (this.output + data).slice(-memoryCharacters);
+  public watchOutput(changed: () => void): void {
+    this.recording.watchOutput(changed, (data) => {
+      this.output = (this.output + data).slice(-memoryCharacters);
+    });
   }
   public flushed(): Promise<void> {
     return this.recording.flushed();

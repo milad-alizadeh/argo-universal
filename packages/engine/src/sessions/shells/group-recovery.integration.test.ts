@@ -9,9 +9,9 @@ import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { processIsRunning } from '#mocks/shell-process';
+import { ShellProcessRecord } from '../../lib/terminal-owner-record';
 import { createShellOutput, shellOutputPath } from './files';
 import { launchShellCommand } from './shell-launch';
-import { ShellProcessRecord } from './shell-process-record';
 
 type InterruptedShell = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;

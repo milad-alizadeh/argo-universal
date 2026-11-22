@@ -13,12 +13,18 @@ import {
   runOutputPath,
 } from './run-output';
 import { type RunRecord, RunWriteJob } from './run-store';
+import { recoverShellTerminals } from './shell-terminal-owners';
 
 const ownsRunGroup = (pid: number, id: string): boolean =>
   commandOfProcessGroupLeader(pid)?.includes(terminalOwnerToken(id)) === true;
 
 // Runs end with the Server, so one still recorded as running was left by a crash: its group is killed and it is lost. Nothing reattaches (ADR-0063).
 type RunRecovery = { database: Database; home: string; now: () => number };
+
+export async function recoverTerminals(input: RunRecovery): Promise<void> {
+  await recoverShellTerminals(input.home);
+  await recoverRuns(input);
+}
 
 export async function recoverRuns(input: RunRecovery): Promise<void> {
   const left = input.database

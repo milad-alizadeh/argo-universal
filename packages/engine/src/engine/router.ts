@@ -14,11 +14,7 @@ import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createRunRouter } from '../runs/router';
 import { createScreenSightRouter } from '../screen-sight';
-import {
-  type ArchiveTerminals,
-  createShellRouter,
-  Sessions,
-} from '../sessions';
+import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
 import { attachConversation } from './attach-conversation';
 import type { AppRouterDeps } from './router-deps';
@@ -59,24 +55,7 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
 }
 
 function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
-  const start = async (): Promise<void> => {
-    const { projectId, checkout, title, archivedAt } =
-      deps.readSession(sessionId);
-
-    if (archivedAt !== null) return;
-
-    await deps.runs.autoStart({
-      projectId,
-      checkoutPath: checkout.path,
-      starter: { id: sessionId, title: title ?? '' },
-      requireOpenSession: (): void => {
-        if (deps.readSession(sessionId).archivedAt !== null)
-          throw new Error('This Session is archived.');
-      },
-    });
-  };
-
-  void start().catch((error) => {
+  void deps.runs.autoStart(sessionId).catch((error) => {
     const message = error instanceof Error ? error.message : String(error);
 
     deps.logSessionResult?.(
@@ -85,24 +64,15 @@ function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
   });
 }
 
-function archiveTerminals(runs: AppRouterDeps['runs']): ArchiveTerminals {
-  return {
-    close: async ({ sessionIds, checkout }) => {
-      await Promise.all([
-        runs.shells.closeOwners(new Set(sessionIds)),
-        checkout &&
-          runs.removeCheckout(checkout, async (): Promise<void> => {}),
-      ]);
-    },
-    removeCheckout: (checkout, remove) => runs.removeCheckout(checkout, remove),
-  };
-}
-
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions({
     ...deps,
-    archiveTerminals: archiveTerminals(deps.runs),
+    archiveTerminals: {
+      close: (target) => deps.runs.archiveSessions(target),
+      removeCheckout: (checkout, remove) =>
+        deps.runs.removeCheckout(checkout, remove),
+    },
     autoStartRuns: (sessionId): void => autoStartRuns(deps, sessionId),
   });
 

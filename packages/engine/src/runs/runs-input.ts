@@ -21,10 +21,6 @@ export type RunsInput = {
   writer: WriterActorRef;
   home: string;
   spawn: TerminalSpawner;
-  recordShellOwner: (
-    pid: number,
-    token: string,
-  ) => Promise<() => Promise<void>>;
   now: () => number;
   createId: () => string;
   // Whether nothing listens on a port; tests do not replace it.

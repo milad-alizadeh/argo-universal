@@ -2,7 +2,7 @@ import { createImplementations } from './implementations';
 import { OperationArchive } from './operation-archive';
 import type { OperationsDeps } from './operations';
 import { OperationRunner } from './runner';
-import { createRunStarts, runCheckoutOf } from './runs';
+import { createRunStarts } from './runs';
 import { PromptChains, SessionScope } from './session-scope';
 
 // Every caller's one runner, reading Sessions through the Session directory.
@@ -24,8 +24,8 @@ export function createRunner(deps: OperationsDeps): OperationRunner {
       createId: deps.createId,
       chains,
       canReadShell: (callerId, targetId) => {
-        const caller = runCheckoutOf(deps.database, callerId);
-        const target = runCheckoutOf(deps.database, targetId);
+        const caller = deps.runs.sessions.checkout(callerId);
+        const target = deps.runs.sessions.checkout(targetId);
 
         return (
           caller.projectId === target.projectId &&

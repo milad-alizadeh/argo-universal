@@ -5,6 +5,7 @@ import type {
   ShellTerminal,
 } from '@repo/contracts';
 import type { OutputBlobMetadata } from '../blob';
+import { CheckoutTerminals } from './checkout-terminals';
 import { LiveRun } from './live-run';
 import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
@@ -12,7 +13,6 @@ import { requireRunConfiguration } from './run-file';
 import { RunGroups } from './run-groups';
 import { RunLifecycle } from './run-lifecycle';
 import {
-  createRunOutput,
   logRecordingFailure,
   removeRunOutput,
   runOutputPath,
@@ -26,7 +26,8 @@ import { RunTerminals } from './run-terminals';
 import { RunView, statusOf } from './run-view';
 import type { RunCheckout, RunRequest, RunsInput } from './runs-input';
 import { ShellTerminals } from './shell-terminals';
-import type { TerminalProcess } from './terminal';
+import { TerminalRecording } from './terminal-recording';
+import { TerminalSessions } from './terminal-sessions';
 
 export type {
   RunCheckout,
@@ -54,8 +55,9 @@ export class Runs {
   public readonly groups: RunGroups;
   public readonly settings: RunSettingsStore;
   public readonly view: RunView;
-  public readonly shells: ShellTerminals;
-  public readonly terminals: RunTerminals;
+  private readonly shells: ShellTerminals;
+  public readonly terminals: CheckoutTerminals;
+  public readonly sessions: TerminalSessions;
   private readonly blocks: RunBlocks;
   public constructor(private readonly input: RunsInput) {
     this.view = new RunView({
@@ -67,7 +69,7 @@ export class Runs {
       record: (checkout, name): RunRecord | undefined =>
         this.record(checkout, name),
     });
-    this.terminals = new RunTerminals(this.view);
+    this.sessions = new TerminalSessions(input.database);
     this.settings = new RunSettingsStore(input.database, input.writer);
     this.groups = new RunGroups({
       start: (checkout, configuration, timeoutMs): Promise<RunStartResult> =>
@@ -87,6 +89,10 @@ export class Runs {
       blocks: this.blocks,
       changed: (checkout): void => this.view.checkoutChanged(checkout),
     });
+    this.terminals = new CheckoutTerminals(
+      new RunTerminals(this.view),
+      this.shells,
+    );
   }
 
   public async start(
@@ -134,7 +140,11 @@ export class Runs {
     return this.startConfiguration(checkout, configuration, timeoutMs);
   }
 
-  public async autoStart(checkout: RunRequest): Promise<void> {
+  public async autoStart(sessionId: string): Promise<void> {
+    const checkout = this.sessions.forAutoStart(sessionId);
+
+    if (!checkout) return;
+
     const configurations = await this.settings.autoStarts(checkout);
 
     await Promise.all(
@@ -144,15 +154,47 @@ export class Runs {
     );
   }
 
-  // End this Checkout's Runs before Git removes it.
+  public openShell(sessionId: string): Promise<ShellTerminal> {
+    return this.shells.open(this.sessions.forStart(sessionId), sessionId);
+  }
+
+  public closeShell(
+    sessionId: string | undefined,
+    shellId: string,
+  ): Promise<void> {
+    return this.shells.close(this.sessions.checkout(sessionId), shellId);
+  }
+
+  // A Session's shells end with it. Checkout Runs end only when the archived Session owned that Checkout.
+  public async archiveSessions({
+    sessionIds,
+    checkout,
+  }: {
+    sessionIds: readonly string[];
+    checkout?: RunCheckout;
+  }): Promise<void> {
+    await Promise.all([
+      this.shells.closeOwners(new Set(sessionIds)),
+      checkout && this.closeCheckout(checkout),
+    ]);
+  }
+
   public removeCheckout(
     checkout: RunCheckout,
     remove: () => Promise<void>,
   ): Promise<void> {
-    return this.lifecycle.removeCheckout(checkout, async () => {
-      await this.shells.closeCheckout(checkout);
-      await remove();
-    });
+    return this.closeCheckout(checkout, remove);
+  }
+
+  private closeCheckout(
+    checkout: RunCheckout,
+    after?: () => Promise<void>,
+  ): Promise<void> {
+    return this.lifecycle.closeCheckout(
+      checkout,
+      () => this.shells.closeCheckout(checkout),
+      after,
+    );
   }
 
   public async close(): Promise<void> {
@@ -220,7 +262,7 @@ export class Runs {
 
     const fingerprint = configurationFingerprint(checkedIn);
 
-    const terminal = await this.spawn(checkout, configuration, {
+    const recording = await this.spawn(checkout, configuration, {
       record,
       env: ports.env,
       fingerprint,
@@ -228,7 +270,7 @@ export class Runs {
 
     const run = new LiveRun({
       record,
-      terminal,
+      recording,
       home: this.input.home,
       configuration,
       fingerprint,
@@ -247,29 +289,33 @@ export class Runs {
       env,
       fingerprint,
     }: { record: RunRecord; env: Record<string, string>; fingerprint: string },
-  ): Promise<TerminalProcess> {
+  ): Promise<TerminalRecording> {
     const outputPath = runOutputPath(this.input.home, record.id);
 
-    await createRunOutput(outputPath);
+    return TerminalRecording.start(
+      outputPath,
+      () => {
+        if (checkout.automatic)
+          this.settings.requireAutoStart(
+            { projectId: checkout.projectId, name: configuration.name },
+            fingerprint,
+          );
 
-    try {
-      if (checkout.automatic)
-        this.settings.requireAutoStart(
-          { projectId: checkout.projectId, name: configuration.name },
-          fingerprint,
-        );
-
-      return await this.input.spawn({
-        id: record.id,
-        command: configuration.command,
-        cwd: resolve(checkout.checkoutPath, configuration.cwd),
-        env: { ...configuration.env, ...env },
-        port: record.port,
-      });
-    } catch (error) {
-      await removeRunOutput(outputPath);
-      throw error;
-    }
+        return this.input.spawn({
+          id: record.id,
+          command: configuration.command,
+          cwd: resolve(checkout.checkoutPath, configuration.cwd),
+          env: { ...configuration.env, ...env },
+          port: record.port,
+        });
+      },
+      (error) =>
+        logRecordingFailure(
+          this.input.home,
+          `Could not record Run ${record.id}`,
+          error,
+        ),
+    );
   }
 
   // Listens to the terminal before anything awaits, so no output or exit is missed.
@@ -283,10 +329,7 @@ export class Runs {
     this.latest.set(key, run.record);
     const stored = this.store(run.record, previous ? [previous.id] : []);
 
-    run.terminal.onData((data) => {
-      run.append(data);
-      void run.flushed().then(() => this.view.outputChanged(run.record));
-    });
+    run.watchOutput(() => this.view.outputChanged(run.record));
     run.terminal.onExit(({ exitCode }) => void this.exited(key, run, exitCode));
     void watchReadiness(
       run,

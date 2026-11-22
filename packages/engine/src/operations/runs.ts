@@ -1,63 +1,18 @@
 import type { runOperations } from '@repo/contracts/operations';
 import type { Database } from '@repo/db';
-import { session } from '@repo/db/schema';
-import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
 import { readProjectPath } from '../projects';
 import {
   draftRunConfigurations,
   type RunCheckout,
   type RunRequest,
-  type RunStarter,
   type Runs,
 } from '../runs';
-import { namedParam } from '../sessions';
 import type { OperationImplementations } from './operations';
 
 type RunImplementations = Pick<
   OperationImplementations,
   keyof typeof runOperations
 >;
-
-// A Session that runs a `run.*` Operation and names no Session uses its own; its Checkout decides which Runs it means.
-const sessionOf = (
-  database: Database,
-  sessionId: string | undefined,
-): RunCheckout & RunStarter & { archivedAt: number | null } => {
-  const row = database
-    .select({
-      id: session.id,
-      title: session.title,
-      archivedAt: session.archivedAt,
-      projectId: session.projectId,
-      checkoutPath: session.checkoutPath,
-    })
-    .from(session)
-    .where(
-      eq(
-        session.id,
-        namedParam(
-          sessionId,
-          'Pass sessionId: the Session whose Checkout runs it. A Session that runs this uses its own.',
-        ),
-      ),
-    )
-    .get();
-
-  if (!row)
-    throw new TRPCError({ code: 'NOT_FOUND', message: 'No such Session' });
-
-  return row;
-};
-
-export const runCheckoutOf = (
-  database: Database,
-  sessionId: string | undefined,
-): RunCheckout => {
-  const { projectId, checkoutPath } = sessionOf(database, sessionId);
-
-  return { projectId, checkoutPath };
-};
 
 const projectCheckoutOf = (
   database: Database,
@@ -66,30 +21,6 @@ const projectCheckoutOf = (
   projectId,
   checkoutPath: readProjectPath(database, projectId),
 });
-
-const runRequestOf = (
-  database: Database,
-  sessionId: string | undefined,
-): RunRequest => {
-  const { id, title, archivedAt, ...checkout } = sessionOf(database, sessionId);
-
-  requireUnarchived(archivedAt);
-
-  return {
-    ...checkout,
-    starter: { id, title },
-    requireOpenSession: () =>
-      requireUnarchived(sessionOf(database, id).archivedAt),
-  };
-};
-
-function requireUnarchived(archivedAt: number | null): void {
-  if (archivedAt !== null)
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message: 'This Session is archived.',
-    });
-}
 
 type RunOperationSources = {
   database: Database;
@@ -103,11 +34,11 @@ type RunStarts = Pick<
 
 // The App runner sets manual at the authenticated caller boundary, never from input.
 export function createRunStarts(
-  { database, runs }: RunOperationSources,
+  { runs }: Pick<RunOperationSources, 'runs'>,
   manual = false,
 ): RunStarts {
   const target = (sessionId: string | undefined): RunRequest => ({
-    ...runRequestOf(database, sessionId),
+    ...runs.sessions.forStart(sessionId),
     manual,
   });
 
@@ -129,25 +60,25 @@ export function createRunOperations(
   return {
     ...createRunStarts(deps),
     'run.stop': async ({ sessionId, name }) =>
-      runs.stop(runCheckoutOf(database, sessionId), name),
+      runs.stop(runs.sessions.checkout(sessionId), name),
     'run.stopGroup': async ({ sessionId, name }) =>
-      runs.groups.stop(runCheckoutOf(database, sessionId), name),
+      runs.groups.stop(runs.sessions.checkout(sessionId), name),
     'run.getSettings': ({ sessionId, name }) =>
-      runs.settings.read(runCheckoutOf(database, sessionId), name),
+      runs.settings.read(runs.sessions.checkout(sessionId), name),
     'run.listSettings': ({ projectId }) =>
       runs.settings.list(projectCheckoutOf(database, projectId)),
     'run.updateSettings': ({ projectId, sessionId, ...input }) =>
       runs.settings.update(
         projectId === undefined
-          ? runCheckoutOf(database, sessionId)
+          ? runs.sessions.checkout(sessionId)
           : projectCheckoutOf(database, projectId),
         input,
       ),
     'run.status': async ({ sessionId }) =>
-      runs.view.status(runCheckoutOf(database, sessionId)),
+      runs.view.status(runs.sessions.checkout(sessionId)),
     'run.draft': async ({ sessionId, overwrite }) => {
       const drafted = await draftRunConfigurations(
-        runCheckoutOf(database, sessionId).checkoutPath,
+        runs.sessions.checkout(sessionId).checkoutPath,
         overwrite ?? false,
       );
 
@@ -165,6 +96,6 @@ export function createRunOperations(
       };
     },
     'run.logs': async ({ sessionId, name, tail }) =>
-      runs.view.logs(runCheckoutOf(database, sessionId), name, tail),
+      runs.view.logs(runs.sessions.checkout(sessionId), name, tail),
   };
 }

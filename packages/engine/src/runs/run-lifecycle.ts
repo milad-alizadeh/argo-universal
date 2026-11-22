@@ -7,6 +7,11 @@ import type { RunCheckout } from './runs';
 const checkoutKeyOf = ({ projectId, checkoutPath }: RunCheckout): string =>
   JSON.stringify([projectId, checkoutPath]);
 
+type CheckoutClosure = {
+  ended: Promise<void>;
+  removal?: Promise<void>;
+};
+
 // Owns starting and stopping terminals, including Checkout removal and Server shutdown.
 export class RunLifecycle {
   private readonly pending = new Map<
@@ -15,7 +20,7 @@ export class RunLifecycle {
   >();
   // Only one launch reserves ports before its Terminal appears in the live Runs.
   private readonly queued = serially();
-  private readonly removing = new Map<string, Promise<void>>();
+  private readonly closingCheckouts = new Map<string, CheckoutClosure>();
   private closing = false;
 
   public constructor(private readonly live: Map<string, LiveRun>) {}
@@ -67,23 +72,42 @@ export class RunLifecycle {
     if (run) await this.stopTerminal(key, run);
   }
 
-  public removeCheckout(
+  public closeCheckout(
     checkout: RunCheckout,
-    remove: () => Promise<void>,
+    closeShells: () => Promise<void>,
+    remove?: () => Promise<void>,
   ): Promise<void> {
     const key = checkoutKeyOf(checkout);
-    const pending = this.removing.get(key);
+    const closing =
+      this.closingCheckouts.get(key) ?? this.endCheckout(key, closeShells);
 
-    if (pending) return pending;
+    if (!remove) return closing.removal ?? closing.ended;
 
-    const removing = this.drainCheckout(key)
-      .then(() => this.stopCheckout(key))
+    closing.removal ??= closing.ended
       .then(remove)
-      .finally(() => this.removing.delete(key));
+      .finally(() => this.closingCheckouts.delete(key));
 
-    this.removing.set(key, removing);
+    return closing.removal;
+  }
 
-    return removing;
+  private endCheckout(
+    key: string,
+    closeShells: () => Promise<void>,
+  ): CheckoutClosure {
+    const ended = this.drainCheckout(key)
+      .then(() => this.stopCheckout(key))
+      .then(closeShells);
+    const closing: CheckoutClosure = { ended };
+
+    this.closingCheckouts.set(key, closing);
+
+    const release = (): void => {
+      if (!closing.removal) this.closingCheckouts.delete(key);
+    };
+
+    void ended.then(release, release);
+
+    return closing;
   }
 
   public async close(): Promise<void> {
@@ -96,7 +120,7 @@ export class RunLifecycle {
   }
 
   private requireOpen(checkout: RunCheckout): void {
-    if (this.closing || this.removing.has(checkoutKeyOf(checkout)))
+    if (this.closing || this.closingCheckouts.has(checkoutKeyOf(checkout)))
       throw new TRPCError({
         code: 'CONFLICT',
         message: 'Cannot start a Run while the Server or Checkout is closing.',

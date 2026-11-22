@@ -11,10 +11,9 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
-import type { SessionSources } from '../sessions';
-import type { RunCheckout, Runs } from './runs';
+import type { Runs } from './runs';
 
-type RunTransport = Pick<SessionSources, 'readSession'> & { runs: Runs };
+type RunTransport = { runs: Runs };
 
 const sessionInput = z.strictObject({ sessionId: z.string().min(1) });
 
@@ -24,15 +23,6 @@ const outputInput = z.union([
   sessionInput.extend({ name: z.string().min(1), cursor }),
   sessionInput.extend({ shellId, cursor }),
 ]);
-
-const checkoutFor = (
-  { readSession }: RunTransport,
-  sessionId: string,
-): RunCheckout => {
-  const { projectId, checkout } = readSession(sessionId);
-
-  return { projectId, checkoutPath: checkout.path };
-};
 
 const streamSignal = (
   connection: AbortSignal,
@@ -45,19 +35,17 @@ export const createRunRouter = routerFactory((deps: RunTransport) =>
       .input(outputInput)
       .output(zAsyncIterable({ yield: RunOutput }))
       .subscription(({ ctx, input, signal }) => {
-        const checkout = checkoutFor(deps, input.sessionId);
+        const checkout = deps.runs.sessions.checkout(input.sessionId);
         const abort = streamSignal(ctx.connection.signal, signal);
 
-        return 'shellId' in input
-          ? deps.runs.shells.watchOutput(checkout, input, abort)
-          : deps.runs.view.watchOutput(checkout, input, abort);
+        return deps.runs.terminals.watchOutput(checkout, input, abort);
       }),
     watchStatus: authenticatedAppProcedure
       .input(sessionInput)
       .output(zAsyncIterable({ yield: RunStatusResult }))
       .subscription(({ ctx, input, signal }) =>
         deps.runs.view.watchStatus(
-          checkoutFor(deps, input.sessionId),
+          deps.runs.sessions.checkout(input.sessionId),
           streamSignal(ctx.connection.signal, signal),
         ),
       ),

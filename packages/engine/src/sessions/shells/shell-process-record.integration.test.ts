@@ -6,7 +6,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import {
   ShellProcessRecord,
   writeShellProcessRecord,
-} from './shell-process-record';
+} from '../../lib/terminal-owner-record';
 
 const folder = (): string => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-shell-record-'));

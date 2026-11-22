@@ -68,16 +68,11 @@ export {
   createSessionConnections,
 } from './session-connection';
 
-export type { ArchiveTerminals } from './archive/archive-terminals';
-
 export { recoverArchivedCheckouts } from './archive/archive-operations';
 
 export { recoverShells } from './shells/recovery';
 
-export {
-  recordCheckoutTerminalOwner,
-  releaseShellGroups,
-} from './shells/shell-record';
+export { releaseShellGroups } from './shells/shell-record';
 
 export {
   type CalledOperation,

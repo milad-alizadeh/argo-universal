@@ -12,9 +12,9 @@ import {
   shellTerminalOutputFolder,
   shellTerminalOutputPath,
 } from '../lib/terminal-owner';
-import { recordCheckoutTerminalOwner } from '../sessions';
 import { launchTerminal } from './node-pty-terminal';
 import { createRunOutput } from './run-output';
+import { recordCheckoutTerminalOwner } from './shell-terminal-owners';
 
 type TestShells = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
