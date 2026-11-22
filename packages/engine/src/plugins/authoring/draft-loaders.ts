@@ -52,7 +52,9 @@ export function inspectDraftLoaders(
   input: SourceFile,
   manifest: PluginManifest,
 ): PluginDiagnostic[] {
-  const pages = new Set(draftPages(manifest.contributes.drafts).map(({ page }) => page));
+  const pages = new Set(
+    draftPages(manifest.contributes.drafts).map(({ page }) => page),
+  );
 
   if (!pages.size) return [];
 

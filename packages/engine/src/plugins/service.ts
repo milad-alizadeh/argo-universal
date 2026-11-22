@@ -10,6 +10,7 @@ import {
   type DeclaredItems,
   type DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
+import { draftChoiceRefusal } from '@repo/contracts/plugins/drafts';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import {
   hooksEvent,
@@ -25,7 +26,6 @@ import type {
   PluginBadge,
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
-import { draftChoiceRefusal } from '@repo/contracts/plugins/drafts';
 import {
   type SlotItems,
   type SlotItemsInput,

@@ -1,6 +1,10 @@
 import { join } from 'node:path';
 import type { PluginManifest } from '@repo/contracts/plugins';
-import { draftVariantKey } from '@repo/contracts/plugins/drafts';
+import {
+  draftDrawPath,
+  draftVariantDraws,
+  draftVariantKey,
+} from '@repo/contracts/plugins/drafts';
 import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import type { PluginValidation } from '@repo/engine/plugin-validation';
 import { startPluginTest } from '../testing';
@@ -8,16 +12,6 @@ import { startPluginTest } from '../testing';
 type Diagnostics = PluginValidation['diagnostics'];
 
 type Draw = { page: string; region: string; variant: string };
-
-// A page pattern's `:name` segments draw with a stand-in value, as a Draft's canned data does not read them.
-const pathOf = (page: string): string => page.replaceAll(/:[^/]+/g, 'draft');
-
-const drawsOf = (manifest: PluginManifest): Draw[] =>
-  (manifest.contributes.drafts ?? []).flatMap(({ page, regions }) =>
-    (regions ?? []).flatMap(({ id, variants }) =>
-      variants.map((variant) => ({ page, region: id, variant: variant.id })),
-    ),
-  );
 
 /*
  * `validate` refuses a Variant that does not render (ADR-0057): each Variant of each region is drawn on its own
@@ -28,7 +22,7 @@ export async function variantDiagnostics(
   directory: string,
   manifest: PluginManifest,
 ): Promise<Diagnostics> {
-  const draws = drawsOf(manifest);
+  const draws = draftVariantDraws(manifest.contributes.drafts);
 
   if (!draws.length) return [];
 
@@ -76,7 +70,7 @@ async function refusal(
 ): Promise<string | null> {
   try {
     const opened = await kit.pages.open({
-      path: pathOf(page),
+      path: draftDrawPath(page),
       pageState: { [draftVariantKey(pick.region)]: pick.variant },
     });
 

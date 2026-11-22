@@ -18,25 +18,27 @@ export function missingStateDiagnostics(
 ): PluginDiagnostic[] {
   const tree = parseTree(manifest.source, [], { disallowComments: true });
 
-  return draftPages(parsed.contributes.drafts).flatMap(({ page, states }, index) => {
-    const missing = missingDraftStates(states);
+  return draftPages(parsed.contributes.drafts).flatMap(
+    ({ page, states }, index) => {
+      const missing = missingDraftStates(states);
 
-    if (!missing.length) return [];
+      if (!missing.length) return [];
 
-    const node =
-      tree &&
-      findNodeAtLocation(tree, ['contributes', 'drafts', index, 'states']);
+      const node =
+        tree &&
+        findNodeAtLocation(tree, ['contributes', 'drafts', index, 'states']);
 
-    const names = missing.join(', ');
+      const names = missing.join(', ');
 
-    return [
-      sourceDiagnostic(
-        manifest,
-        node?.offset ?? 0,
-        `Draft page ${page} is missing states: ${names}`,
-      ),
-    ];
-  });
+      return [
+        sourceDiagnostic(
+          manifest,
+          node?.offset ?? 0,
+          `Draft page ${page} is missing states: ${names}`,
+        ),
+      ];
+    },
+  );
 }
 
 const plural = (count: number, word: string): string =>
@@ -53,27 +55,28 @@ export function shipBlockerDiagnostics(
 ): PluginDiagnostic[] {
   const tree = parseTree(manifest.source, [], { disallowComments: true });
 
-  return draftPages(parsed.contributes.drafts).flatMap(({ page, regions }, pageIndex) =>
-    (regions ?? []).map(({ id, variants }, regionIndex) => {
-      const node =
-        tree &&
-        findNodeAtLocation(tree, [
-          'contributes',
-          'drafts',
-          pageIndex,
-          'regions',
-          regionIndex,
-          'variants',
-        ]);
+  return draftPages(parsed.contributes.drafts).flatMap(
+    ({ page, regions }, pageIndex) =>
+      (regions ?? []).map(({ id, variants }, regionIndex) => {
+        const node =
+          tree &&
+          findNodeAtLocation(tree, [
+            'contributes',
+            'drafts',
+            pageIndex,
+            'regions',
+            regionIndex,
+            'variants',
+          ]);
 
-      const names = variants.map((variant) => variant.id).join(', ');
+        const names = variants.map((variant) => variant.id).join(', ');
 
-      return sourceDiagnostic(
-        manifest,
-        node?.offset ?? 0,
-        `Draft page ${page} region ${id} still declares ${plural(variants.length, 'Variant')}: ${names}; build the real page from the chosen ones, then delete the declarations`,
-      );
-    }),
+        return sourceDiagnostic(
+          manifest,
+          node?.offset ?? 0,
+          `Draft page ${page} region ${id} still declares ${plural(variants.length, 'Variant')}: ${names}; build the real page from the chosen ones, then delete the declarations`,
+        );
+      }),
   );
 }
 
@@ -84,7 +87,8 @@ export async function draftManifestDiagnostics(
   diagnostics: PluginDiagnostic[];
   shipBlockers: PluginDiagnostic[];
 }> {
-  if (!draftPages(manifest.contributes.drafts).length) return { diagnostics: [], shipBlockers: [] };
+  if (!draftPages(manifest.contributes.drafts).length)
+    return { diagnostics: [], shipBlockers: [] };
 
   const file = join(directory, 'plugin.json');
   const source = await readFile(file, 'utf8').catch(() => '');
