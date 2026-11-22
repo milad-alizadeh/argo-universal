@@ -176,7 +176,7 @@ enum SkeletonCollector {
     if size.width <= 0 || size.height <= 0 { return nil }
     if isParagraph(view) { return lines(of: view, root: root) }
     if isDecoration(view) { return nil }
-    if isAtomic(view) || isSmallControl(view) || isEmptyFill(view) {
+    if isAtomic(view) || isSmallControl(view) || isEmptyFill(view) || isEmptyCard(view) {
       return [SkeletonPlaceholder(rect: view.convert(view.bounds, to: root), radius: radius(of: view))]
     }
     return nil
@@ -228,6 +228,24 @@ enum SkeletonCollector {
   // A small filled box with nothing inside it: a dot, a bar of a chart. A big one is a card's background: it stays drawn.
   private static func isEmptyFill(_ view: UIView) -> Bool {
     hasFill(view) && view.subviews.isEmpty && fitsSmallControl(view.bounds.size) && min(view.bounds.width, view.bounds.height) > SkeletonRules.hairline
+  }
+
+  /*
+   * A rounded box, filled or outlined, of any size, that holds no text and no media: a card drawn as its shell, as a
+   * loading page keeps its cards. One placeholder covers it whole, so the shell itself is what loads.
+   */
+  private static func isEmptyCard(_ view: UIView) -> Bool {
+    (hasFill(view) || hasBorder(view)) && view.layer.cornerRadius > 0
+      && min(view.bounds.width, view.bounds.height) > SkeletonRules.hairline && !holdsDrawnContent(view)
+  }
+
+  // True when a visible view beneath this one draws text, media or a control, or is a SwiftUI Host, which draws its own.
+  private static func holdsDrawnContent(_ view: UIView) -> Bool {
+    view.subviews.contains { child in
+      if child.isHidden { return false }
+      if isParagraph(child) { return paragraphText(of: child).map { $0.length > 0 } ?? true }
+      return isAtomic(child) || isHosting(child) || holdsDrawnContent(child)
+    }
   }
 
   /*
