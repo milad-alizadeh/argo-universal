@@ -18,7 +18,8 @@ export function wrappingComponent<Wrapper extends Component>(
     if (mark.description?.startsWith(markPrefix))
       Object.defineProperty(wrapper, mark, { value: true, configurable: true });
 
-  wraps.set(wrapper, wrapped);
+  // A wrapper of a wrapper reads as the kit component at the end of the chain.
+  wraps.set(wrapper, wraps.get(wrapped) ?? wrapped);
 
   return wrapper;
 }

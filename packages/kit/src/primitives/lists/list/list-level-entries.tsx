@@ -1,7 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
 import { listPosition } from '../../../list-context';
+import { isKitElement } from '../../../typed-children';
 import type { ListChild } from './list-children';
 import { rowIdOf, type RowId } from './list-move-model';
 import { refilled, type HeldOrder } from './list-move-reading';
@@ -43,9 +43,7 @@ export interface Level {
 export function isSection(
   child: ReactNode,
 ): child is ReactElement<ListSectionProps> {
-  return (
-    isValidElement<ListSectionProps>(child) && kitTypeOf(child) === ListSection
-  );
+  return isKitElement<ListSectionProps>(child, ListSection);
 }
 
 // A row moves when it is a ListItem with an `id`, among the List's own rows or a Section's that has an id.

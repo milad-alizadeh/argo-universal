@@ -6,12 +6,12 @@ import {
   type ReactNode,
 } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
-import { kitTypeOf } from '#kit/wrapped-component';
 import { Text, type TextProps } from '#primitives/content/text';
 import { Slider } from '#primitives/controls/slider';
 import { Switch } from '#primitives/controls/switch';
 import { Stack, type StackProps } from '#primitives/layout/stack';
 import { Swatch } from '#primitives/visual/swatch';
+import { isKitElement, kitElementType } from '../../../typed-children';
 
 /*
  * What a composed row draws (ADR-0042, owner amendment 2026-11-20), read from the elements its children arrive as.
@@ -88,8 +88,8 @@ const elementNode = (element: ReactElement, key: string): RowNode => ({
   kind: 'element',
   key,
   element,
-  hosted: kitTypeOf(element) === Swatch,
-  slider: kitTypeOf(element) === Slider,
+  hosted: isKitElement(element, Swatch),
+  slider: isKitElement(element, Slider),
 });
 
 // The Contract allows nothing else in a row, so any other element is dropped.
@@ -107,7 +107,7 @@ const keyOf = (element: ReactElement, index: number): string =>
 function nodeOf(child: ReactNode, index: number): RowNode[] {
   if (!isValidElement<never>(child)) return [];
 
-  const read = readers.get(kitTypeOf(child));
+  const read = readers.get(kitElementType(child));
 
   return read ? [read(child, keyOf(child, index))] : [];
 }

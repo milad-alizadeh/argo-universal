@@ -9,8 +9,8 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
-import { kitTypeOf } from '#kit/wrapped-component';
 import { ListItem } from '#primitives/lists/list-item';
+import { isKitElement } from '../../../typed-children';
 import {
   pushDestination,
   registerDestination,
@@ -66,7 +66,7 @@ export function sheetScreens(children: ReactNode): SheetScreenEntry[] {
 }
 
 function isScreen(child: ReactNode): child is ReactElement<SheetScreenProps> {
-  return isValidElement(child) && kitTypeOf(child) === SheetScreen;
+  return isKitElement<SheetScreenProps>(child, SheetScreen);
 }
 
 const SheetContext = createContext<SheetNavigation | undefined>(undefined);
