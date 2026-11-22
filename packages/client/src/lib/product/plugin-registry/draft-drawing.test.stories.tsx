@@ -97,14 +97,13 @@ export const KeepsUnchangedNodesStill: Story = {
 export const FramingARegionKeepsItsContent: Story = {
   render: () => <Advances from={0} />,
   play: async ({ canvas, userEvent }) => {
-    await canvas.findAllByText('Loading');
-    const [placeholder] = canvas.getAllByText('Loading');
+    const placeholder = await canvas.findByText('Page title');
     const next = canvas.getByRole('button', { name: 'Next step' });
 
     await userEvent.click(next);
     await userEvent.click(next);
     await canvas.findByTestId(frameOf('header'));
-    await expect(canvas.getAllByText('Loading')[0]).toBe(placeholder);
+    await expect(canvas.getByText('Page title')).toBe(placeholder);
   },
 };
 
