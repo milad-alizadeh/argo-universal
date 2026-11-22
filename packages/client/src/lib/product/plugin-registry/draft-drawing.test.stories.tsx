@@ -149,14 +149,20 @@ export const KeepsTheLayoutOfARow: Story = {
 };
 
 export const ReducedMotionShowsEachStepAtOnce: Story = {
-  beforeEach: reduceMotion,
   render: () => <Advances from={drawingList} />,
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Next step' }));
+  play: async ({ mount, userEvent }) => {
+    const restoreMotion = await reduceMotion();
 
-    const row = await canvas.findByText(/Workbench card/);
+    try {
+      const canvas = await mount();
+      await userEvent.click(canvas.getByRole('button', { name: 'Next step' }));
 
-    await expect(row).toBeVisible();
-    await expect(canvas.queryByTestId(frameOf('list'))).toBeNull();
+      const row = await canvas.findByText(/Workbench card/);
+
+      await expect(row).toBeVisible();
+      await expect(canvas.queryByTestId(frameOf('list'))).toBeNull();
+    } finally {
+      await restoreMotion();
+    }
   },
 };

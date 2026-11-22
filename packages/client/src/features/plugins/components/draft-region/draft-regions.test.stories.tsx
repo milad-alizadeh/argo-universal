@@ -63,7 +63,7 @@ export const ReturnsTheTagWhenTheFrameDissolves: Story = {
     await waitFor(() =>
       expect(canvas.queryByTestId('draft-frame-list')).toBeNull(),
     );
-    await expect(await canvas.findByText(listSays)).toBeVisible();
+    await waitFor(() => expect(canvas.getByText(listSays)).toBeVisible());
     await expect(onStep).not.toHaveBeenCalled();
     await expect(canvas.getByText('Issues')).toBe(title);
   },
