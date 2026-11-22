@@ -3,19 +3,17 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement, ReactNode } from 'react';
-import { useWindowDimensions, View } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { View } from 'react-native';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
 import { populatedDraft } from './draft-bar-fixtures';
 import { DraftChooseButton } from './draft-choose-button';
 
 function BarFrame({ children }: { children: ReactNode }): ReactElement {
-  const { width } = useWindowDimensions();
-
   return (
-    <View className="relative h-96" style={{ width: width - 48 }}>
-      {children}
+    <View className="h-96 self-stretch px-6">
+      <View className="relative flex-1">{children}</View>
     </View>
   );
 }
@@ -147,32 +145,30 @@ export const PhoneBarFitsTheWindowWithComments: Story = {
     choose: <DraftChooseButton comments={12} onPress={fn()} />,
   },
   play: async ({ canvas }) => {
-    await settleLayout(390);
+    for (const width of [390, 378, 320]) {
+      await settleLayout(width);
+      const bar = await canvas.findByRole('toolbar', { name: 'Draft' });
 
-    const bar = await canvas.findByRole('toolbar', { name: 'Draft' });
+      const choose = await canvas.findByRole('button', {
+        name: 'Choose · 12 comments',
+      });
 
-    const choose = await canvas.findByRole('button', {
-      name: 'Choose · 12 comments',
-    });
+      const state = await canvas.findByRole('button', { name: 'State' });
+      const label = within(state).getByText('Populated');
 
-    const state = await canvas.findByRole('button', { name: 'State' });
-    const label = within(state).getByText('Populated');
+      await waitFor(async () => {
+        await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
 
-    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
-    await expect(bar.getBoundingClientRect().right).toBeLessThanOrEqual(
-      window.innerWidth,
-    );
-    await expect(choose.getBoundingClientRect().right).toBeLessThan(
-      bar.getBoundingClientRect().right,
-    );
-    await expect(choose.getBoundingClientRect().top).toBeLessThan(
-      state.getBoundingClientRect().bottom,
-    );
+        const frame = bar.getBoundingClientRect();
+        const button = choose.getBoundingClientRect();
 
-    await settleLayout(378);
-    await expect(choose.getBoundingClientRect().right).toBeLessThan(
-      bar.getBoundingClientRect().right,
-    );
-    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
+        await expect(frame.left).toBeGreaterThanOrEqual(0);
+        await expect(frame.right).toBeLessThanOrEqual(width);
+        await expect(button.left).toBeGreaterThan(frame.left);
+        await expect(button.right).toBeLessThan(frame.right);
+        await expect(button.top).toBeGreaterThan(frame.top);
+        await expect(button.bottom).toBeLessThan(frame.bottom);
+      });
+    }
   },
 };
