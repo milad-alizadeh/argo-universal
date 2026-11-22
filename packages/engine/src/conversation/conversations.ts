@@ -7,6 +7,7 @@ import type {
   ConversationStartInput,
   ConversationStartOutput,
   ConversationStatus,
+  ConversationUpdate,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
 import { Changes } from './changes';
@@ -59,6 +60,10 @@ export class Conversations implements ConversationsPort {
   }
 
   public async status(): Promise<ConversationStatus> {
+    return { ...this.current(), availability: await this.availability() };
+  }
+
+  private current(): ConversationUpdate {
     const snapshot = this.snapshot();
     const { ended, partials } = snapshot.context;
     const { volume, microphoneGain } = this.choices.options();
@@ -67,7 +72,6 @@ export class Conversations implements ConversationsPort {
       conversation: conversationOf(snapshot),
       ended,
       partials,
-      availability: await this.availability(),
       enabled: this.choices.enabled(),
       volume,
       microphoneGain,
@@ -130,12 +134,20 @@ export class Conversations implements ConversationsPort {
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<ConversationStatus> {
+    for await (const update of this.updates(signal)) {
+      yield { ...update, availability: await this.availability() };
+    }
+  }
+
+  public async *updates(
+    signal: AbortSignal,
+  ): AsyncGenerator<ConversationUpdate> {
     const changes = new Changes(this.actor, signal, this.choices);
 
     try {
-      yield await this.status();
+      yield this.current();
 
-      while (await changes.next()) yield await this.status();
+      while (await changes.next()) yield this.current();
     } finally {
       changes.stop();
     }

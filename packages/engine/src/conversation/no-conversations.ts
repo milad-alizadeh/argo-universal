@@ -1,4 +1,4 @@
-import type { ConversationStatus } from '@repo/contracts';
+import type { ConversationStatus, ConversationUpdate } from '@repo/contracts';
 import { ConversationDevices } from './conversation-devices';
 import { defaultConversationSettings } from './conversation-settings';
 import type { ConversationsPort } from './conversations';
@@ -7,14 +7,18 @@ import { settingsOf } from './voice-choices';
 
 const notAvailable = 'Conversations are not available';
 
-const noStatus: ConversationStatus = {
+const noUpdate: ConversationUpdate = {
   conversation: null,
   ended: null,
   partials: [],
-  availability: { usable: false, reason: notAvailable },
   enabled: defaultConversationSettings.enabled,
   volume: defaultConversationSettings.options.volume,
   microphoneGain: defaultConversationSettings.options.microphoneGain,
+};
+
+const noStatus: ConversationStatus = {
+  ...noUpdate,
+  availability: { usable: false, reason: notAvailable },
 };
 
 const refused = (): Promise<never> => Promise.reject(unavailable(notAvailable));
@@ -46,5 +50,9 @@ export const noConversations: ConversationsPort = {
   watch: async function* () {
     await Promise.resolve();
     yield noStatus;
+  },
+  updates: async function* () {
+    await Promise.resolve();
+    yield noUpdate;
   },
 };
