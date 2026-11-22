@@ -68,14 +68,13 @@ const contentMeasures = ({
   contentMaximum: maximum,
 });
 
-function useFrameMeasures(bandLeading: BandLeading): FrameMeasures {
+function useFrameMeasures(): FrameMeasures {
   return {
     listWidth: useCSSPixels('--spacing-frame-list'),
     inspectorWidth: useCSSPixels('--spacing-frame-inspector'),
     railWidth: useCSSPixels('--spacing-frame-rail'),
     inset: useCSSPixels('--spacing-frame-inset'),
     bandHeight: useCSSPixels('--spacing-frame-control'),
-    bandLeading: bandLeading.width,
     workbenchWidth: useCSSPixels('--spacing-frame-list'),
     paneGap: useCSSPixels('--spacing-4'),
     composerWidth: useCSSPixels('--container-composer'),
@@ -101,7 +100,7 @@ interface ScaffoldSizing
 
 function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
   const bandLeading = useBandLeading();
-  const measures = useFrameMeasures(bandLeading);
+  const measures = useFrameMeasures();
 
   return {
     bandLeading,

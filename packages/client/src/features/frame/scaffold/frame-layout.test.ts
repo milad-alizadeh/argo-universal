@@ -14,25 +14,6 @@ describe('frameLayout band', () => {
       expect(layout.panesTop).toBe(bandHeight);
     },
   );
-
-  it.each([
-    { width: 1440, sidebarShown: true, bandLeading: 124, leading: 388 },
-    { width: 1440, sidebarShown: false, bandLeading: 124, leading: 72 },
-    { width: 1100, sidebarShown: false, bandLeading: 44, leading: 142 },
-    { width: 1100, sidebarShown: false, bandLeading: 200, leading: 24 },
-  ])(
-    'starts the title on the content column at $width with sidebar $sidebarShown',
-    ({ width, sidebarShown, bandLeading, leading }) => {
-      const layout = frameLayout({
-        ...input,
-        width,
-        sidebarShown,
-        measures: { ...input.measures, bandLeading },
-      });
-
-      expect(layout.bandTitleLeading).toBe(leading);
-    },
-  );
 });
 
 const keyAt = (width: number): string =>

@@ -29,8 +29,13 @@ describe('a Screen with a body', () => {
 
 describe('a header-only Screen', () => {
   it.each<[string, Partial<HeaderFacts>, HeaderSite]>([
-    ['wide, with a navigator', { wide: true, navigator: true }, 'band'],
-    ['wide, without one', { wide: true }, 'band'],
+    [
+      'wide, with a navigator',
+      { wide: true, navigator: true, titled: true },
+      'heading',
+    ],
+    ['wide, without one', { wide: true, titled: true }, 'heading'],
+    ['wide, without a title', { wide: true }, 'none'],
     ['narrow, with a navigator', { navigator: true }, 'stack'],
     ['narrow, no navigator, web', { web: true }, 'none'],
     ['narrow, no navigator, native', { web: false }, 'none'],

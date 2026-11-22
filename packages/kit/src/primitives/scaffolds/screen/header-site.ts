@@ -1,16 +1,17 @@
 /*
  * Where a Screen's header draws, decided once from the facts around it (ADR-0043). Each site has one adapter that only
- * draws: the Screen's own heading, the navigator's stack header, a list column's top row, or the window's band.
+ * draws: the Screen's own heading, the navigator's stack header, or a list column's top row.
  */
-export type HeaderSite = 'heading' | 'stack' | 'list column' | 'band' | 'none';
+export type HeaderSite = 'heading' | 'stack' | 'list column' | 'none';
 
-// A header-only Screen has no body to draw a heading above, so its wide header goes to the band.
+// A header-only Screen can be empty while a page opens.
 export type HeaderKind = 'screen' | 'header only';
 
 export interface HeaderFacts {
   kind: HeaderKind;
   // The Screen is the content of a list column, which draws its heading in its top row.
   listColumn: boolean;
+  titled?: boolean;
   // A navigator draws this Screen's narrow header; a preview has none.
   navigator: boolean;
   wide: boolean;
@@ -54,7 +55,7 @@ function narrowScreenSite(facts: HeaderFacts): HeaderSite {
 }
 
 function headerOnlySite(facts: HeaderFacts): HeaderSite {
-  if (facts.wide) return 'band';
+  if (facts.wide) return facts.titled ? 'heading' : 'none';
 
   return facts.navigator ? 'stack' : 'none';
 }

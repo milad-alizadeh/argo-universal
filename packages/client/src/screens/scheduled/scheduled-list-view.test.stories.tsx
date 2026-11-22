@@ -81,7 +81,9 @@ export const OpensTheLatestSessionUnderScheduled: Story = {
 
     await userEvent.click(latest);
     await expect(latest).toHaveAttribute(selected, 'true');
-    await expect(await canvas.findByText(recordedPrompt)).toBeVisible();
+    await expect(
+      await canvas.findByRole('heading', { name: recordedPrompt }),
+    ).toBeVisible();
     await expect(open).toHaveReturnedWith({
       pathname: '/scheduled/[id]',
       params: { id: 'review-changes', sessionId: 'latest-session' },
@@ -94,7 +96,9 @@ export const OpensTheLatestSessionUnderScheduled: Story = {
     await userEvent.click(first);
     await expect(first).toHaveAttribute(selected, 'true');
     await expect(latest).toHaveAttribute(selected, 'false');
-    await expect(canvas.queryByText(recordedPrompt)).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('heading', { name: recordedPrompt }),
+    ).not.toBeInTheDocument();
     await expect(
       await canvas.findByText(
         'Review the build and summarize any failures with links to the logs.',

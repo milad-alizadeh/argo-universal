@@ -31,9 +31,9 @@ const sidebar = {
   title: muted,
   footer: muted,
   inset: 'px-3',
-  gap: 'pb-2',
+  gap: 'pb-sidebar-heading-gap',
   headingBelow: '',
-  below: 'h-4',
+  below: 'h-sidebar-section-gap',
 } satisfies SectionDrawing;
 
 const phoneMuted = 'text-tone-neutral-600';

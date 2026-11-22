@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { ActionShortcutScope } from '#primitives/actions/action';
-import { ScreenBandClaim } from './screen-band-claim';
+import { ScreenHeadingBody } from './screen-heading-row';
 import { ScreenNavigation } from './screen-navigation';
 import { PageOptionsSheet } from './screen-page-options';
 import type { ScreenProps } from './screen-props';
@@ -9,7 +9,7 @@ import { useHeaderDrawing } from './use-header-drawing';
 
 export type ScreenStackHeaderProps = Omit<ScreenProps, 'children'>;
 
-// Kit-only. A Screen's header without its heading or body, for a page whose body is not a Screen, such as a Session's; a wide window draws it in the band.
+// The shared Screen header for a page with its own body layout, such as the Session Feed.
 export function ScreenStackHeader(props: ScreenStackHeaderProps): ReactElement {
   // A header-only Screen has no List below it to select.
   const drawing = { ...props, ...useHeaderDrawing(props, 'header only', null) };
@@ -18,7 +18,9 @@ export function ScreenStackHeader(props: ScreenStackHeaderProps): ReactElement {
     <ActionShortcutScope>
       <ShortcutAnchors anchors={drawing.declaration.anchors} />
       <ScreenNavigation {...drawing} />
-      {drawing.plan.site === 'band' ? <ScreenBandClaim {...drawing} /> : null}
+      {drawing.plan.site === 'heading' ? (
+        <ScreenHeadingBody {...drawing} standalone />
+      ) : null}
       <PageOptionsSheet options={drawing.pageOptions} />
     </ActionShortcutScope>
   );

@@ -21,8 +21,6 @@ export interface FrameMeasures {
   railWidth: number;
   inset: number;
   bandHeight: number;
-  // The band's leading group: the window's own controls, then the sidebar toggle.
-  bandLeading: number;
   workbenchWidth: number;
   paneGap: number;
   composerWidth: number;
@@ -116,8 +114,6 @@ export interface FrameLayout {
   workbench: WorkbenchRegion;
   inspector: InspectorRegion;
   handles: { list: ResizeHandle | null; inspector: ResizeHandle };
-  // The band title's distance from the leading group, so it starts on the content column's leading edge.
-  bandTitleLeading: number;
   // Changes only when a pane opens, closes or folds, or the Workbench shows or hides, so a window resize or a drag moves the Frame at once.
   transitionKey: string;
 }
