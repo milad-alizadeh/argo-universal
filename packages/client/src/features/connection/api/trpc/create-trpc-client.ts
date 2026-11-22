@@ -1,9 +1,12 @@
+import { observedAppSocket } from '@repo/contracts/app-web-socket';
 import {
   currentPluginSurface,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import type { AppRouter } from '@repo/engine/router';
 import * as trpc from '@trpc/client';
+import { bytesHex } from '../channel/bytes';
+import { appChannelPlatform } from '../channel/channel-platform';
 import { pluginPlatform } from './plugin-platform';
 
 export interface ServerClient {
@@ -31,6 +34,8 @@ export const channelServerUrl = 'wss://argo.channel/';
 
 const appSurface = (): PluginSurface => currentPluginSurface(pluginPlatform());
 
+const appInstanceBytes = 16;
+
 interface ClientOptions {
   surface?: () => PluginSurface;
   channel?: ChannelTransport;
@@ -50,12 +55,18 @@ function createWebSocketClient(
   beforeConnect: () => Promise<void>,
   { surface = appSurface, channel }: ClientOptions,
 ): ServerClient['webSocketClient'] {
+  const appInstance = bytesHex(
+    appChannelPlatform.randomBytes(appInstanceBytes),
+  );
+
   return trpc.createWSClient({
-    ...(channel && { WebSocket: channel.WebSocket }),
+    WebSocket: observedAppSocket(channel?.WebSocket ?? WebSocket),
     url: urlAfter(serverUrl, beforeConnect),
-    connectionParams: () => ({ pluginSurface: JSON.stringify(surface()) }),
+    connectionParams: () => ({
+      appInstance,
+      pluginSurface: JSON.stringify(surface()),
+    }),
     retryDelayMs: () => 0,
-    keepAlive: { enabled: true, intervalMs: 5000, pongTimeoutMs: 1000 },
   });
 }
 

@@ -1,4 +1,5 @@
 import { fromCallback, type AnyActorRef } from 'xstate';
+import { appOfConnection } from '../rpc';
 import { sessionActorId } from '../sessions';
 import {
   sessionGone,
@@ -58,14 +59,50 @@ export const watchSession = fromCallback<ConversationEvent, SessionWatch>(
 
 export type ConnectionWatch = { signal: AbortSignal | undefined };
 
-// Ends the call when the App Connection that started it goes away: the App quit or lost its link.
+export const appReconnectGraceMs = 15_000;
+
+// The original audio peer stays alive while its App reconnects to the Server.
 export const watchConnection = fromCallback<ConversationEvent, ConnectionWatch>(
-  ({ input, sendBack }) => {
-    const { signal } = input;
-    const gone = (): void => sendBack({ type: 'call.appDisconnected' });
+  ({ input, sendBack, receive }) => {
+    let signal = input.signal;
+    const app = signal && appOfConnection(signal);
+    let deadline = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expired = (): void => sendBack({ type: 'call.appDisconnected' });
 
-    signal?.addEventListener('abort', gone, { once: true });
+    const gone = (): void => {
+      if (!app) return expired();
+      deadline = performance.now() + appReconnectGraceMs;
+      timer = setTimeout(expired, appReconnectGraceMs);
+    };
 
-    return (): void => signal?.removeEventListener('abort', gone);
+    receive((event) => {
+      if (event.type !== 'call.appReconnect') return;
+      const next = event.signal;
+
+      if (
+        !app ||
+        next === signal ||
+        (deadline !== 0 && performance.now() >= deadline) ||
+        next.aborted ||
+        appOfConnection(next) !== app
+      )
+        return;
+
+      clearTimeout(timer);
+      deadline = 0;
+      signal?.removeEventListener('abort', gone);
+      signal = next;
+      next.addEventListener('abort', gone, { once: true });
+      sendBack({ type: 'call.appReattached', signal: next });
+    });
+
+    if (signal?.aborted) gone();
+    else signal?.addEventListener('abort', gone, { once: true });
+
+    return (): void => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', gone);
+    };
   },
 );

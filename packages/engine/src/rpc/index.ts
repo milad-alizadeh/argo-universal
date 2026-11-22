@@ -10,6 +10,7 @@ export {
 } from './trpc';
 
 export {
+  appOfConnection,
   createRpcContext,
   liveConnection,
   type RpcConnection,

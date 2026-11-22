@@ -1,4 +1,5 @@
 import type { Database } from '@repo/db';
+import { writeLog } from '@repo/machine-log';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import type { AppNavigation } from '../app-navigation';
 import type { ConversationsPort } from '../conversation';
@@ -23,7 +24,10 @@ import { announceServer } from './announce-server';
 import { createDoors, type Doors } from './doors';
 import { createHttpCaller, type HttpCaller } from './http-callers';
 import { closeWith, type Listening } from './http-close';
-import { connectWebSockets } from './http-connections';
+import {
+  connectWebSockets,
+  type HttpConnectionsInput,
+} from './http-connections';
 import { listenWithPlugins } from './http-listen';
 import { prepareHttpServer } from './http-setup';
 import { createRequestGuard } from './request-guard';
@@ -111,7 +115,12 @@ export async function startHttpServer(
 
   const stopAnnouncing = announceServer({ ...options, ...bound }, setup);
 
-  return connectHttpServer(setup, doors, { guard, listener, stopAnnouncing });
+  return connectHttpServer(setup, doors, {
+    guard,
+    listener,
+    stopAnnouncing,
+    log: (line) => writeLog({ home: options.home, label: 'engine', line }),
+  });
 }
 
 /*
@@ -131,7 +140,7 @@ const recognisedTokens = (
 function connectHttpServer(
   setup: RoutedSetup,
   doors: Doors,
-  listening: Listening,
+  listening: Listening & Pick<HttpConnectionsInput, 'log'>,
 ): HttpServer {
   const connections = connectionsOf(setup, doors, listening);
 
@@ -146,8 +155,8 @@ function connectHttpServer(
 const connectionsOf = (
   setup: RoutedSetup,
   doors: Doors,
-  listening: Listening,
-): Parameters<typeof connectWebSockets>[0] => ({
+  listening: Listening & Pick<HttpConnectionsInput, 'log'>,
+): HttpConnectionsInput => ({
   ...listening,
   requests: doors.requests,
   router: setup.appRouter,
