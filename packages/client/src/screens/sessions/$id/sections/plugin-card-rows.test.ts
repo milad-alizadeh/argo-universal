@@ -7,8 +7,7 @@ const node = (
   type: string,
   props: WireNode['props'] = {},
   children: WireNode[] = [],
-  slots: WireNode['slots'] = {},
-): WireNode => ({ type, key: type, props, children, slots });
+): WireNode => ({ type, key: type, props, children, slots: {} });
 
 describe('pluginCardLines', () => {
   it('reads nothing before the page answers, or from a page that draws nothing', () => {
@@ -33,13 +32,16 @@ describe('pluginCardLines', () => {
   });
 
   it('reads rows inside slots and not the content of a row', () => {
-    const root = node('Card', {}, [], {
-      footer: [
-        node('ListItem', { title: 'Sprint 12' }, [
-          node('Text', { children: 'Inside the row' }),
-        ]),
-      ],
-    });
+    const root = {
+      ...node('Card'),
+      slots: {
+        footer: [
+          node('ListItem', { title: 'Sprint 12' }, [
+            node('Text', { children: 'Inside the row' }),
+          ]),
+        ],
+      },
+    };
 
     expect(pluginCardLines(root)).toEqual([{ title: 'Sprint 12' }]);
   });

@@ -69,9 +69,10 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions({
     ...deps,
     archiveTerminals: {
-      close: (target) => deps.runs.archiveSessions(target),
-      removeCheckout: (checkout, remove) =>
-        deps.runs.removeCheckout(checkout, remove),
+      close: (target): Promise<void> =>
+        deps.runs.terminalLifecycle.endArchived(target),
+      removeCheckout: (checkout, remove): Promise<void> =>
+        deps.runs.terminalLifecycle.removeCheckout(checkout, remove),
     },
     autoStartRuns: (sessionId): void => autoStartRuns(deps, sessionId),
   });

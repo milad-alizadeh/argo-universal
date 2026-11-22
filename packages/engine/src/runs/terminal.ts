@@ -1,4 +1,8 @@
+import type { RunOutputCursor } from '@repo/contracts';
+
 export { terminalColumns, terminalRows } from '@repo/contracts';
+
+export type TerminalReplay = { id: string; cursor?: RunOutputCursor };
 
 // What the Server asks of the operating system to run a Run: a command in a terminal, in a folder, with these variables added to the login shell's.
 export type TerminalLaunch = {

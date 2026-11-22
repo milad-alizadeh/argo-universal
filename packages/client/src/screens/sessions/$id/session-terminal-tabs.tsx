@@ -9,16 +9,21 @@ import {
 export type TerminalTarget = { name: string } | { shellId: string };
 
 const runPrefix = 'run:';
+
 const shellPrefix = 'terminal:';
 
 type RunKey = `run:${string}`;
+
 type ShellKey = `terminal:${string}`;
+
 export type TerminalKey = RunKey | ShellKey;
 
 export const runTabKey = (name: string): RunKey => `${runPrefix}${name}`;
+
 export const shellTabKey = (id: string): ShellKey => `${shellPrefix}${id}`;
 
 const isRunKey = (key: string): key is RunKey => key.startsWith(runPrefix);
+
 const isShellKey = (key: string): key is ShellKey =>
   key.startsWith(shellPrefix);
 

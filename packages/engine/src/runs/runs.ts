@@ -26,6 +26,7 @@ import { RunTerminals } from './run-terminals';
 import { RunView, statusOf } from './run-view';
 import type { RunCheckout, RunRequest, RunsInput } from './runs-input';
 import { ShellTerminals } from './shell-terminals';
+import { TerminalLifecycle } from './terminal-lifecycle';
 import { TerminalRecording } from './terminal-recording';
 import { TerminalSessions } from './terminal-sessions';
 
@@ -57,6 +58,7 @@ export class Runs {
   public readonly view: RunView;
   private readonly shells: ShellTerminals;
   public readonly terminals: CheckoutTerminals;
+  public readonly terminalLifecycle: TerminalLifecycle;
   public readonly sessions: TerminalSessions;
   private readonly blocks: RunBlocks;
   public constructor(private readonly input: RunsInput) {
@@ -72,10 +74,8 @@ export class Runs {
     this.sessions = new TerminalSessions(input.database);
     this.settings = new RunSettingsStore(input.database, input.writer);
     this.groups = new RunGroups({
-      start: (checkout, configuration, timeoutMs): Promise<RunStartResult> =>
-        this.startConfiguration(checkout, configuration, timeoutMs),
-      stop: (checkout, name): Promise<RunStopResult> =>
-        this.stopOne(checkout, name),
+      start: this.startConfiguration.bind(this),
+      stop: this.stopOne.bind(this),
     });
     this.blocks = new RunBlocks(
       (): RunPortHolding[] => [
@@ -93,6 +93,11 @@ export class Runs {
       new RunTerminals(this.view),
       this.shells,
     );
+    this.terminalLifecycle = new TerminalLifecycle(
+      this.lifecycle,
+      this.shells,
+      this.sessions,
+    );
   }
 
   public async start(
@@ -109,11 +114,9 @@ export class Runs {
   }
 
   public stop(checkout: RunCheckout, name: string): Promise<RunStopResult> {
-    return this.groups.stopMember(
-      checkout,
-      name,
-      this.live.has(keyOf(checkout, name)),
-    );
+    const active = this.live.has(keyOf(checkout, name));
+
+    return this.groups.stopMember(checkout, name, active);
   }
 
   private async stopOne(
@@ -152,53 +155,6 @@ export class Runs {
         this.running({ ...checkout, automatic: true }, configuration),
       ),
     );
-  }
-
-  public openShell(sessionId: string): Promise<ShellTerminal> {
-    return this.shells.open(this.sessions.forStart(sessionId), sessionId);
-  }
-
-  public closeShell(
-    sessionId: string | undefined,
-    shellId: string,
-  ): Promise<void> {
-    return this.shells.close(this.sessions.checkout(sessionId), shellId);
-  }
-
-  // A Session's shells end with it. Checkout Runs end only when the archived Session owned that Checkout.
-  public async archiveSessions({
-    sessionIds,
-    checkout,
-  }: {
-    sessionIds: readonly string[];
-    checkout?: RunCheckout;
-  }): Promise<void> {
-    await Promise.all([
-      this.shells.closeOwners(new Set(sessionIds)),
-      checkout && this.closeCheckout(checkout),
-    ]);
-  }
-
-  public removeCheckout(
-    checkout: RunCheckout,
-    remove: () => Promise<void>,
-  ): Promise<void> {
-    return this.closeCheckout(checkout, remove);
-  }
-
-  private closeCheckout(
-    checkout: RunCheckout,
-    after?: () => Promise<void>,
-  ): Promise<void> {
-    return this.lifecycle.closeCheckout(
-      checkout,
-      () => this.shells.closeCheckout(checkout),
-      after,
-    );
-  }
-
-  public async close(): Promise<void> {
-    await Promise.all([this.lifecycle.close(), this.shells.closeAll()]);
   }
 
   private record(checkout: RunCheckout, name: string): RunRecord | undefined {

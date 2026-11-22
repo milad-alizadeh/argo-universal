@@ -35,6 +35,7 @@ export function changeRows(
     ...changeRow(change, content.changes),
     hidden: index >= workbenchPreviewLimit,
   }));
+
   const more = rows.length - workbenchPreviewLimit;
 
   const action = content.createPullRequest;

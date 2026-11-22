@@ -126,6 +126,7 @@ export const WorkbenchTakesItsPlaceAtOnceOnASessionSwitch: Story = {
         left,
         motionFrames,
       );
+
       const end = positions.at(-1);
       const between = positions.filter((at) => at !== start && at !== end);
 

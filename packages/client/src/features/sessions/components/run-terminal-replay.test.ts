@@ -71,12 +71,15 @@ it('keeps only the new bytes after reconnecting to a partially replayed frame', 
 it('pulls from the accepted cursor when a delayed frame is behind it', async () => {
   const current = { ...frame.cursor, offset: 2 };
   const next = { ...frame.cursor, offset: 3 };
+
   const read = vi
     .fn<Parameters<typeof readTerminalFrames>[0]>()
     .mockResolvedValueOnce(frame)
     .mockResolvedValueOnce({ cursor: next, data: btoa('c') })
     .mockResolvedValue(null);
+
   let cursor = current;
+
   const stop = readTerminalFrames(read, current, (output) => {
     const accepted = terminalFrame(cursor, output);
 
@@ -95,7 +98,8 @@ it('pulls from the accepted cursor when a delayed frame is behind it', async () 
 
 it('resumes the recording after the native bridge drops a full buffer', async () => {
   const replay = new RunTerminalReplay();
-  const unsubscribe = vi.fn();
+  const unsubscribe = vi.fn<() => void>();
+
   const deliver = vi.fn<RunOutputSource>((cursor, receive) => {
     receive(frame);
 

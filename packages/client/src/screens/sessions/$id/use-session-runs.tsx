@@ -155,6 +155,15 @@ function useRunGroupControls(
   };
 }
 
+type ConnectedTerminalProps = {
+  sessionId: string;
+  tabKey: TerminalKey;
+  name: string;
+  interactive: boolean;
+  active: boolean;
+  compact?: boolean;
+};
+
 function ConnectedTerminal({
   sessionId,
   tabKey,
@@ -162,14 +171,7 @@ function ConnectedTerminal({
   interactive,
   active,
   compact,
-}: {
-  sessionId: string;
-  tabKey: TerminalKey;
-  name: string;
-  interactive: boolean;
-  active: boolean;
-  compact?: boolean;
-}): ReactElement {
+}: ConnectedTerminalProps): ReactElement {
   const client = useTRPCClient();
   const connected = useConnectionState() === 'open' && active;
   const target = useMemo(() => terminalTarget(tabKey), [tabKey]);

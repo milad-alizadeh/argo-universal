@@ -1,7 +1,6 @@
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
-import { namedParam } from '../sessions/named-param';
-import { createSessionReader } from '../sessions/session-record';
+import { createSessionReader, namedParam } from '../sessions';
 import type { RunCheckout, RunRequest } from './runs-input';
 
 type Session = ReturnType<ReturnType<typeof createSessionReader>>;

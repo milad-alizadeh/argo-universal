@@ -5,13 +5,13 @@ import { jsonCodec } from './json-codec';
 
 const ownerOnlyMode = 0o600;
 
-export const ShellProcessRecord = z.strictObject({
+const ShellProcessRecord = z.strictObject({
   pid: z.number().int().positive(),
   token: z.string().uuid(),
   checkoutTerminal: z.literal(true).optional(),
 });
 
-export type ShellProcessRecord = z.infer<typeof ShellProcessRecord>;
+type ShellProcessRecord = z.infer<typeof ShellProcessRecord>;
 
 const syncDirectory = async (directory: string): Promise<void> => {
   const file = await open(directory, 'r');
@@ -23,7 +23,7 @@ const syncDirectory = async (directory: string): Promise<void> => {
   }
 };
 
-export const writeShellProcessRecord = async (
+const writeShellProcessRecord = async (
   path: string,
   record: ShellProcessRecord,
 ): Promise<void> => {
@@ -42,7 +42,9 @@ export const writeShellProcessRecord = async (
 
 // Background Tasks and checkout Terminals share the stored format, including records from older Servers.
 const folderIn = (home: string): string => join(home, 'shell-processes');
+
 const StoredRecord = jsonCodec(ShellProcessRecord);
+
 const Missing = z.object({ code: z.literal('ENOENT') });
 
 export async function recordTerminalOwner(

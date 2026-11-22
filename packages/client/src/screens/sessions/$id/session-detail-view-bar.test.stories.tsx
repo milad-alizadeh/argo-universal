@@ -86,13 +86,13 @@ export const AttachedIssuesShareOneCard: Story = {
 
     const card = within(
       await workbench.findByRole('group', {
-        name: 'Issue tracker',
+        name: issue.pluginName,
         exact: true,
       }),
     );
 
     await expect(
-      workbench.getAllByRole('group', { name: 'Issue tracker', exact: true }),
+      workbench.getAllByRole('group', { name: issue.pluginName, exact: true }),
     ).toHaveLength(1);
 
     for (const line of [issue, secondIssueLine]) {
@@ -225,9 +225,10 @@ export const PhoneOpensAnAttachedIssueFromTheWorkbench: Story = {
     const first = await sheet.findByRole('link', { name: '#412, In review' });
     const second = sheet.getByRole('link', { name: '#413, Open' });
 
-    await expect(sheet.getByText('Issue tracker')).toBeVisible();
+    await expect(sheet.getByText(issue.pluginName)).toBeVisible();
     await expect(first).toBeVisible();
-    const label = within(second).getByText('#413').getBoundingClientRect();
+    const [number = ''] = secondIssueLine.text.split(' · ');
+    const label = within(second).getByText(number).getBoundingClientRect();
     const value = within(second).getByText('Open').getBoundingClientRect();
 
     await expect(label.right).toBeLessThanOrEqual(value.left);

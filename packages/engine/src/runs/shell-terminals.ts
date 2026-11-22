@@ -1,6 +1,5 @@
 import type {
   RunOutput,
-  RunOutputCursor,
   ShellTerminal,
   TerminalReadResult,
   TerminalSendResult,
@@ -14,6 +13,7 @@ import { watchRunOutput } from './run-replay';
 import { RunUpdates } from './run-updates';
 import type { RunCheckout, RunRequest, RunsInput } from './runs';
 import { recordCheckoutTerminalOwner } from './shell-terminal-owners';
+import type { TerminalReplay } from './terminal';
 import { TerminalRecording } from './terminal-recording';
 
 type OpenShell = {
@@ -121,8 +121,7 @@ export class ShellTerminals {
 
   public watchOutput(
     checkout: RunCheckout,
-    shellId: string,
-    cursor: RunOutputCursor | undefined,
+    { id: shellId, cursor }: TerminalReplay,
     signal: AbortSignal,
   ): AsyncIterable<RunOutput> {
     const { recording, closed } = this.require(checkout, shellId);
@@ -215,6 +214,7 @@ export class ShellTerminals {
   ): Promise<OpenShell> {
     const { id, name, cwd } = shell;
     const path = shellTerminalOutputPath(this.input.home, id);
+
     const recording = await TerminalRecording.start(
       path,
       () =>
@@ -233,6 +233,7 @@ export class ShellTerminals {
           error,
         ),
     );
+
     const { pid } = recording.process;
 
     return {

@@ -9,7 +9,9 @@ export interface PluginCardLine {
 // Rows the kit draws with a title and an optional value; the sheet reads them as they are.
 const rowTypes = new Set(['FieldGroup.Link', 'FieldGroup.Value', 'ListItem']);
 
-const text = (value: unknown): string | undefined =>
+const text = (
+  value: WireNode['props'][string] | undefined,
+): string | undefined =>
   typeof value === 'string' && value.trim() ? value.trim() : undefined;
 
 const nested = ({ children, slots }: WireNode): WireNode[] => [

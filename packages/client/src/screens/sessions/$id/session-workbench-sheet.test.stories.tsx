@@ -46,7 +46,9 @@ if (!shownFollowUp || !secondFollowUp || !laterFollowUp)
 const promptOf = ({ prompt }: typeof shownFollowUp): string =>
   prompt.find((block) => block.type === 'text')?.text ?? '';
 
-const titled = (title: string): { name: RegExp } => ({
+type RowName = { name: RegExp };
+
+const titled = (title: string): RowName => ({
   name: new RegExp(`^${title}(,|$)`),
 });
 

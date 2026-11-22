@@ -30,6 +30,6 @@ async function closeHttpServices(
   await Promise.all([
     closeConnections(),
     setup.plugins.close(),
-    setup.runs.close(),
+    setup.runs.terminalLifecycle.close(),
   ]);
 }

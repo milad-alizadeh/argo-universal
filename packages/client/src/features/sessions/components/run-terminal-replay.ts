@@ -21,6 +21,7 @@ export function terminalFrame(
   if (sameRun && cursor.offset <= previous.offset) return undefined;
 
   const bytes = Uint8Array.from(atob(data), (byte) => byte.charCodeAt(0));
+
   const overlap = sameRun
     ? previous.offset - (cursor.offset - bytes.length)
     : 0;

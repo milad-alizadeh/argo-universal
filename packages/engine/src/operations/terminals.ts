@@ -14,11 +14,12 @@ export function createTerminalOperations({
 }): TerminalImplementations {
   return {
     'terminal.close': async ({ sessionId, shellId }) => {
-      await runs.closeShell(sessionId, shellId);
+      await runs.terminalLifecycle.closeShell(sessionId, shellId);
 
       return {};
     },
-    'terminal.open': ({ sessionId }) => runs.openShell(sessionId),
+    'terminal.open': ({ sessionId }) =>
+      runs.terminalLifecycle.openShell(sessionId),
     'terminal.read': ({ sessionId, scrollback, ...target }) =>
       runs.terminals.read(
         runs.sessions.checkout(sessionId),

@@ -1,6 +1,5 @@
 import type {
   RunOutput,
-  RunOutputCursor,
   TerminalReadResult,
   TerminalSendResult,
 } from '@repo/contracts';
@@ -8,6 +7,7 @@ import { TRPCError } from '@trpc/server';
 import { drawRecording } from './run-screen';
 import { statusOf, type RunView } from './run-view';
 import type { RunCheckout } from './runs';
+import type { TerminalReplay } from './terminal';
 
 const defaultScrollbackLines = 100;
 
@@ -68,8 +68,7 @@ export class RunTerminals {
 
   public watchOutput(
     checkout: RunCheckout,
-    name: string,
-    cursor: RunOutputCursor | undefined,
+    { id: name, cursor }: TerminalReplay,
     signal: AbortSignal,
   ): AsyncIterable<RunOutput> {
     return this.runs.watchOutput(checkout, { name, cursor }, signal);

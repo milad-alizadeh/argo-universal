@@ -59,6 +59,7 @@ export function SessionWorkbenchSheet({
 }: WorkbenchSheetProps): ReactElement {
   const [visited, setVisited] = useState<WorkbenchRow>();
   const cardLines = usePluginCardLines(content.pluginCards ?? noCards);
+
   const groups = [
     ...workbenchGroups(content, { cardLines, onVisit: setVisited }),
     ...workbenchBarGroups(bar, setVisited),
@@ -154,7 +155,9 @@ function usePluginCardLines(cards: readonly SessionPluginCard[]): CardLines {
         card.tree ? [card.tree.subscribe(listener)] : [],
       );
 
-      return () => stops.forEach((stop) => stop());
+      return (): void => {
+        for (const stop of stops) stop();
+      };
     },
     [cards],
   );

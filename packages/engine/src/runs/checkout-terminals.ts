@@ -9,6 +9,7 @@ import type { RunCheckout } from './runs-input';
 import type { ShellTerminals } from './shell-terminals';
 
 type TerminalTarget = { name: string } | { shellId: string };
+
 type TerminalSize = { columns: number; rows: number };
 
 // Operations and the App's replay transport resolve the same Terminal on this Checkout.
@@ -55,7 +56,11 @@ export class CheckoutTerminals {
   ): AsyncIterable<RunOutput> {
     const { terminal, id } = this.resolve(target);
 
-    return terminal.watchOutput(checkout, id, target.cursor, signal);
+    return terminal.watchOutput(
+      checkout,
+      { id, cursor: target.cursor },
+      signal,
+    );
   }
 
   private resolve(target: TerminalTarget): {

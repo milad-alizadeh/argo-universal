@@ -53,16 +53,13 @@ export const issueFullView = 'Every comment on #412';
 
 const wire = (
   type: string,
-  key: string,
   props: WireNode['props'],
   children: WireNode[] = [],
-): WireNode => ({ type, key, props, children, slots: {} });
+): WireNode => ({ type, key: type, props, children, slots: {} });
 
 // The Issue tracker's card page as the Server sends it: one grouped row for the Session's Issue.
-const issueTree = wire('List', 'issues', { appearance: 'grouped' }, [
-  wire('List.Section', 'attached', {}, [
-    wire('FieldGroup.Link', '412', issueRow),
-  ]),
+const issueTree = wire('List', { appearance: 'grouped' }, [
+  wire('List.Section', {}, [wire('FieldGroup.Link', issueRow)]),
 ]);
 
 // The Issue tracker's card with the tree its page drew, which a phone's Workbench sheet reads as rows.

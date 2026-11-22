@@ -78,6 +78,7 @@ export class RunLifecycle {
     remove?: () => Promise<void>,
   ): Promise<void> {
     const key = checkoutKeyOf(checkout);
+
     const closing =
       this.closingCheckouts.get(key) ?? this.endCheckout(key, closeShells);
 
@@ -97,6 +98,7 @@ export class RunLifecycle {
     const ended = this.drainCheckout(key)
       .then(() => this.stopCheckout(key))
       .then(closeShells);
+
     const closing: CheckoutClosure = { ended };
 
     this.closingCheckouts.set(key, closing);

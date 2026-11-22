@@ -22,8 +22,8 @@ export async function recoverEngineAfterRestart(
   input: RecoveryInput,
 ): Promise<void> {
   await releaseShellGroups(input.home);
-  await recoverShells(input);
   await recoverTerminals({ ...input, now: Date.now });
+  await recoverShells(input);
   recoverAfterRestart(input.database);
   await recoverArchivedCheckouts(input.database);
   await removeUnusedBlobs(input);
