@@ -2,12 +2,13 @@ import {
   ConversationDeviceReport,
   ConversationDeviceRequest,
   ConversationStatus,
+  ConversationUpdate,
 } from '@repo/contracts';
 import { publicProcedure, router, routerFactory, zAsyncIterable } from '../rpc';
 import type { ConversationsPort } from './conversations';
 
 export interface ConversationRouterDeps {
-  conversation: Pick<ConversationsPort, 'watch' | 'devices'>;
+  conversation: Pick<ConversationsPort, 'watch' | 'updates' | 'devices'>;
 }
 
 // The App's stream of the Conversation's standing, which its Composer draws; the Operations start and end the call.
@@ -18,6 +19,11 @@ export const createConversationRouter = routerFactory(
         .output(zAsyncIterable({ yield: ConversationStatus }))
         .subscription(({ ctx, signal }) =>
           deps.conversation.watch(signal ?? ctx.connection.signal),
+        ),
+      updates: publicProcedure
+        .output(zAsyncIterable({ yield: ConversationUpdate }))
+        .subscription(({ ctx, signal }) =>
+          deps.conversation.updates(signal ?? ctx.connection.signal),
         ),
       // App plumbing: the App reports its microphones and speakers and hears which to use; it subscribes again when they change.
       devices: publicProcedure
