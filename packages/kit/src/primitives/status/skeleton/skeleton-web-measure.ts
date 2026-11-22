@@ -99,7 +99,14 @@ function observeChanges(root: Element, schedule: () => void): Observers {
     if (records.some(isOutsideOverlay)) schedule();
   });
 
-  const options = { childList: true, subtree: true, characterData: true };
+  // Layout that settles after the first measure (a Grid's columns, a row's width) lands as style and class changes.
+  const options = {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  };
 
   resize.observe(root);
   mutation.observe(root, options);

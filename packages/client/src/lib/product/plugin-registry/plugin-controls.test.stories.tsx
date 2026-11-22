@@ -142,3 +142,55 @@ export const UseSplitButton: Story = {
     );
   },
 };
+
+// Answers that wait until the test lets them, as a Plugin's run still in flight does.
+const heldCall = fn(() => new Promise<void>(() => {}));
+
+const iconButton = (key: string, label: string, toggle: boolean): WireNode =>
+  WireNode.parse({
+    type: 'IconButton',
+    key,
+    props: {
+      icon: 'power',
+      accessibilityLabel: label,
+      selected: false,
+      onPress: { operation: 'setPower', args: { on: true } },
+      ...(toggle && {
+        onPressSelected: { operation: 'setPower', args: { on: false } },
+      }),
+    },
+    slots: {},
+    children: [],
+  });
+
+const toggleButton = iconButton('power', 'Desk power', true);
+
+const plainButton = iconButton('add', 'Add light', false);
+
+/*
+ * A toggle's second press, made while the first one's run is still in flight, reaches the page: it is the person
+ * switching back, which the page runs after the first. A plain IconButton still holds a second press back.
+ */
+export const ToggleTakesASecondPressWhileTheFirstRuns: Story = {
+  render: () => (
+    <>
+      <PluginTree root={toggleButton} onPageCall={heldCall} />
+      <PluginTree root={plainButton} onPageCall={heldCall} />
+    </>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    heldCall.mockClear();
+    const toggle = canvas.getByRole('button', { name: 'Desk power' });
+
+    await userEvent.click(toggle);
+    await userEvent.click(toggle);
+    await waitFor(() => expect(heldCall).toHaveBeenCalledTimes(2));
+
+    const plain = canvas.getByRole('button', { name: 'Add light' });
+
+    await userEvent.click(plain);
+    await expect(heldCall).toHaveBeenCalledTimes(3);
+    await expect(plain).toBeDisabled();
+    await expect(toggle).toBeEnabled();
+  },
+};

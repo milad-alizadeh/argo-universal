@@ -9,6 +9,8 @@ const turns = (): Promise<void> =>
 // A typed field's throttle.
 const pauseMs = 150;
 
+const refusal = 'GitHub refused the write';
+
 it('draws a typed field once the typing pauses, not on every keystroke', async () => {
   const page = new DraftPage();
 
@@ -90,11 +92,41 @@ it('shows the optimistic props while the Operation runs, and puts them back and 
   await turns();
   expect(page.shown().children[1]?.props.label).toBe('Creating');
 
-  answer('GitHub refused the write');
+  answer(refusal);
   await pressed;
 
   expect(page.shown().children[1]?.props.label).toBe('Create');
-  expect(page.failures).toEqual(['GitHub refused the write']);
+  expect(page.failures).toEqual([refusal]);
+});
+
+it('starts a second press’s Operation only once the first one’s has ended, so they run in the order pressed', async () => {
+  const page = new DraftPage();
+  const answer = page.holdRun();
+  const first = page.press();
+  const second = page.press();
+
+  await turns();
+  expect(page.runs).toHaveLength(1);
+
+  answer();
+  await Promise.all([first, second]);
+
+  expect(page.runs).toHaveLength(2);
+});
+
+it('still runs a second press after the first one’s Operation fails', async () => {
+  const page = new DraftPage();
+  const answer = page.holdRun();
+  const first = page.press();
+  const second = page.press();
+
+  await turns();
+  answer(refusal);
+  await Promise.all([first, second]);
+
+  // The held answer ends both runs, so the second ran and failed after the first instead of never running.
+  expect(page.runs).toHaveLength(2);
+  expect(page.failures).toEqual([refusal, refusal]);
 });
 
 it('refuses a Page state change on a tree that has no Page state', async () => {

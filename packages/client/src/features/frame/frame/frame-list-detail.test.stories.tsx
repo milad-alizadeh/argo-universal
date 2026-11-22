@@ -173,3 +173,23 @@ export const SidebarStaysWhileAnotherSectionOpens: Story = {
     await expect(canvas.queryByText('Open list')).toBeNull();
   },
 };
+
+// The Inspector state the Frame lays out once a Plugin section's scaffold is spread over the page's own, as the Frame spreads it.
+function PluginSectionInspector(): React.JSX.Element {
+  const listDetail = useFrameListDetail(section);
+
+  const { inspectorState } = {
+    inspectorState: 'open',
+    ...sectionScaffold({ section, lists, sizeClass: 'wide' }, listDetail),
+  };
+
+  return <Text>{`Inspector ${inspectorState}`}</Text>;
+}
+
+// A Plugin page that holds its Inspector open keeps it open: the section's scaffold names no Inspector state of its own.
+export const PluginPageKeepsItsInspectorOpen: Story = {
+  render: () => <PluginSectionInspector />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Inspector open')).toBeVisible();
+  },
+};

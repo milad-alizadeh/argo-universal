@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 import { homeWords } from './home-words';
 import { shown, sliderOf, toggleOf } from './mocks/controls';
 import { applicationKey } from './mocks/hue-data';
+import type { HueService } from './mocks/hue-service';
 import { connected, homePage, startHome } from './mocks/journey';
 
 serialiseOnOAuthPort();
@@ -21,6 +22,16 @@ const office = 'group-office';
 const deskColour = '#ffd078';
 
 const lightSection = 'Fader';
+
+const secondPutWaitMs = 500;
+
+// Resolves once Hue has been sent a second PUT, or after a wait that would have seen one.
+async function secondPutOrWait(hue: HueService): Promise<void> {
+  const until = Date.now() + secondPutWaitMs;
+
+  while (hue.puts().length < 2 && Date.now() < until)
+    await new Promise((resolve) => setTimeout(resolve, 10));
+}
 
 it(
   'shows each room with its own card and its lights’ cards, then the lights in no room, each with power and brightness',
@@ -175,6 +186,8 @@ it.each([
     try {
       expect(page.find(power).props.selected).toBe(true);
       expect(page.findText(label)).toBeDefined();
+      // Long enough for a second PUT sent at once to reach Hue while the first is held.
+      await secondPutOrWait(home.hue);
     } finally {
       pending.release();
     }
@@ -183,12 +196,18 @@ it.each([
 
     const path = `/route/clip/v2/resource/${kind}/${target}`;
 
-    expect(home.hue.puts().map((put) => [put.path, put.body])).toEqual(
-      expect.arrayContaining([
-        [path, { on: { on: false } }],
-        [path, { on: { on: true } }],
-      ]),
+    expect(home.hue.puts().map((put) => [put.path, put.body])).toEqual([
+      [path, { on: { on: false } }],
+      [path, { on: { on: true } }],
+    ]);
+
+    // Hue applies the presses in the order they were made, so the second press's switch is the one left standing.
+    const switched = [...home.hue.home.lights, ...home.hue.home.groups].find(
+      ({ id }) => id === target,
     );
+
+    expect(switched?.on).toBe(true);
+    expect(page.find(power).props.selected).toBe(true);
   },
   timeoutMs,
 );
