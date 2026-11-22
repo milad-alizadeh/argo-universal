@@ -1,11 +1,9 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import type { WindowBandView } from '#lib/product/window-band';
-import { bandControlAppearance } from './band-control-appearance';
 import {
   controlledPlay,
   scaffoldMeta,
@@ -28,31 +26,17 @@ const paneStates = [false, true].flatMap((sidebarShown) =>
 
 // The trailing controls, in the order the band draws them.
 const trailingNames = [
-  'More',
   'Toggle Workbench',
   'Expand Inspector',
   'Show Inspector',
 ];
 
-// What a page that owns a Session claims: its header's menu, and the Session the band's pane controls act on.
-const sessionBand = (title: string): WindowBandView => ({
-  title: (
-    <Text accessibilityRole="heading" numberOfLines={1}>
-      {title}
-    </Text>
-  ),
-  menu: (
-    <IconButton
-      {...bandControlAppearance}
-      icon="more"
-      accessibilityLabel="More"
-    />
-  ),
+const sessionBand: WindowBandView = {
   session: {
     workbench: <Text>Changes</Text>,
     onInspectorToggle: fn(),
   },
-});
+};
 
 const meta = {
   title: 'Tests/Frame/Scaffold/Band',
@@ -72,11 +56,6 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     await expect(getComputedStyle(band).getPropertyValue(appRegion)).toBe(
       'drag',
     );
-    await expect(
-      getComputedStyle(canvas.getByTestId('band-title')).getPropertyValue(
-        appRegion,
-      ),
-    ).toBe('drag');
     await expect(getComputedStyle(toggle).getPropertyValue(appRegion)).toBe(
       'no-drag',
     );
@@ -124,7 +103,7 @@ export const PageTitleDrawsNoBack: ScaffoldStory = {
 
 function trailingControls(width: number): ScaffoldStory {
   return {
-    args: { band: sessionBand('Fix login') },
+    args: { band: sessionBand },
     play: controlledPlay(async ({ canvas }, controlled) => {
       await settleLayout(width);
       const group = canvas.getByTestId(trailingGroup);
@@ -157,25 +136,6 @@ function position(element: HTMLElement): Pick<DOMRect, 'x' | 'y'> {
   return { x, y };
 }
 
-const longTitle =
-  'An exceptionally long Session title that needs all available space in the band while every pane control stays reachable. '.repeat(
-    8,
-  );
-
-export const LongTitleStopsAtTheTrailingControls: ScaffoldStory = {
-  args: { band: sessionBand(longTitle) },
-  play: controlledPlay(async ({ canvas }) => {
-    await settleLayout('wide');
-    const title = canvas.getByTestId('band-title');
-    const group = canvas.getByTestId(trailingGroup);
-    const text = within(title).getByRole('heading');
-    await expect(title.getBoundingClientRect().right).toBeLessThanOrEqual(
-      group.getBoundingClientRect().left,
-    );
-    await expect(text.scrollWidth).toBeGreaterThan(text.clientWidth);
-  }),
-};
-
 // Compact drill-in belongs to the page; desktop navigation and pane controls do not survive on a phone.
 export const CompactShowsThePageWithoutDesktopChrome: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
@@ -195,29 +155,13 @@ export const CompactShowsThePageWithoutDesktopChrome: ScaffoldStory = {
  * drawn from no claim at all differ in the trailing group alone.
  */
 const sessionWithoutPanes: WindowBandView = {
-  ...sessionBand('Fix login'),
+  ...sessionBand,
   session: {},
-};
-
-// A Session whose own header declares nothing: the band still owes it the whole group.
-const sessionWithoutActions: WindowBandView = {
-  ...sessionBand('Fix login'),
-  menu: undefined,
-};
-
-// A page that owns no Session, drawn from its own Screen header alone.
-const pageActionsOnly: WindowBandView = {
-  ...sessionBand('Settings'),
-  session: null,
 };
 
 type ScaffoldCanvas = ScaffoldPlayContext['canvas'];
 
-/*
- * What the trailing group must not move: the band's own box, and the leading group beside it. The title's leading
- * edge belongs to the content column (frame-layout.ts reads it from there, never from the trailing group) and
- * animates with it, so the band's before and after on one page is screenshot evidence rather than a measurement.
- */
+// The window controls keep the same geometry when a page takes over.
 interface BandGeometry {
   band: DOMRect;
   sidebarToggle: Pick<DOMRect, 'x' | 'y'>;
@@ -248,33 +192,5 @@ export const PageWithoutASessionDropsTheTrailingControls: ScaffoldStory = {
     }
 
     await expect(bandGeometry(canvas)).toEqual(withSession);
-  }),
-};
-
-/*
- * The ⋯ belongs to the Session, so a Session that declares no Action of its own still holds the slot and its three
- * pane controls keep their places; only a page that owns no Session loses them.
- */
-export const SessionWithoutActionsKeepsEveryControl: ScaffoldStory = {
-  args: { band: sessionBand('Fix login') },
-  play: controlledPlay(async ({ canvas }, controlled) => {
-    await settleLayout('wide');
-    const group = canvas.getByTestId(trailingGroup);
-    const positions = within(group).getAllByRole('button').map(position);
-    await controlled.render({ band: sessionWithoutActions });
-    const after = within(canvas.getByTestId(trailingGroup));
-    await expect(after.getAllByRole('button').map(position)).toEqual(positions);
-    await expect(after.getByRole('button', { name: 'More' })).toBeDisabled();
-  }),
-};
-
-// A page that owns no Session but declares Actions of its own keeps those, and gains no control over panes it has none of.
-export const PageActionsDrawWithoutTheSessionControls: ScaffoldStory = {
-  args: { band: pageActionsOnly },
-  play: controlledPlay(async ({ canvas }) => {
-    await settleLayout('wide');
-    const group = within(canvas.getByTestId(trailingGroup));
-    await expect(group.getAllByRole('button')).toHaveLength(1);
-    await expect(group.getByRole('button', { name: 'More' })).toBeEnabled();
   }),
 };

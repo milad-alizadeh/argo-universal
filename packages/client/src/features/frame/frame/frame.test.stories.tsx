@@ -139,14 +139,14 @@ export const ChangesOpensInspector: Story = {
 const longTitle =
   'Build the Session layout from spec 0003, wire the Inspector to the changed files and keep the Composer pinned to the bottom of the window';
 
-// The band keeps a long title's accessible name while truncating before its controls, with the Inspector closed or open.
+// The heading keeps a long title accessible and on one line as the Inspector opens.
 export const LongSessionTitle: Story = {
   args: {
     content: <SessionPage title={longTitle} />,
   },
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('heading', { name: longTitle });
-    const controls = canvas.getByTestId('window-band-trailing');
+    const detail = canvas.getByTestId('desktop-detail');
     const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
 
     for (const open of [false, true]) {
@@ -163,7 +163,7 @@ export const LongSessionTitle: Story = {
         lineHeight * 1.5,
       );
       await expect(heading.getBoundingClientRect().right).toBeLessThanOrEqual(
-        controls.getBoundingClientRect().left,
+        detail.getBoundingClientRect().right,
       );
     }
   },

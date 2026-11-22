@@ -21,9 +21,13 @@ import { ScreenTitle } from './screen-title-menu';
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
  * `wide:mt-frame-inset` sets level with the rail's first tile, so its title sits on the sidebar title's line.
  */
-export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
+export function ScreenHeadingBody(
+  props: ScreenHeaderInput & { standalone?: boolean },
+): ReactElement {
   return (
-    <View className="py-6 wide:pt-0">
+    <View
+      className={props.standalone ? 'mt-frame-inset pb-6' : 'py-6 wide:pt-0'}
+    >
       <ScreenColumn width={insetWidth(props.width)}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />

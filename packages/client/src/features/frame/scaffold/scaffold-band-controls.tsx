@@ -2,16 +2,10 @@ import {
   IconButton,
   type IconButtonProps,
 } from '@repo/kit/primitives/actions/icon-button';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import type {
-  WindowBandSession,
-  WindowBandView,
-} from '#lib/product/window-band';
-import {
-  bandControlAppearance,
-  bandToggleAppearance,
-} from './band-control-appearance';
+import type { WindowBandSession } from '#lib/product/window-band';
+import { bandToggleAppearance } from './band-control-appearance';
 import { workbenchDrawn } from './frame-layout';
 import { inspectorOffered, moveInspector } from './inspector-column';
 import type { PartReads, ScaffoldPartProps } from './use-scaffold-layout';
@@ -81,23 +75,11 @@ function inspectorToggleProps(parts: InspectorToggleReads): IconButtonProps {
   };
 }
 
-// A Session that declares no Action still holds the slot, so the group never reflows as the Session's own state changes.
-const sessionMenu = (menu: ReactNode): ReactNode =>
-  menu ?? (
-    <IconButton
-      {...bandControlAppearance}
-      icon="more"
-      accessibilityLabel="More"
-      disabled
-    />
-  );
-
 function SessionControls(
-  parts: ScaffoldPartProps & SessionReads & { menu: ReactNode },
+  parts: ScaffoldPartProps & SessionReads,
 ): ReactElement {
   return (
     <>
-      {sessionMenu(parts.menu)}
       <IconButton {...workbenchProps(parts)} />
       <IconButton {...expandProps(parts)} />
       <IconButton {...inspectorToggleProps(parts)} />
@@ -105,43 +87,18 @@ function SessionControls(
   );
 }
 
-function trailingContent(
-  band: WindowBandView,
-  parts: ScaffoldPartProps,
-): ReactNode {
-  return band.session ? (
-    <SessionControls {...parts} session={band.session} menu={band.menu} />
-  ) : (
-    band.menu
-  );
-}
+// Window controls follow the Session that owns the Workbench and Inspector.
+export function BandTrailing(parts: ScaffoldPartProps): ReactElement | null {
+  const session = parts.scaffold.band?.session;
 
-function TrailingGroup({
-  band,
-  ...parts
-}: ScaffoldPartProps & { band: WindowBandView }): ReactElement {
+  if (!session) return null;
+
   return (
     <View
       testID="window-band-trailing"
       className="shrink-0 flex-row items-center gap-1"
     >
-      {trailingContent(band, parts)}
+      <SessionControls {...parts} session={session} />
     </View>
   );
-}
-
-const trailingDrawn = (band: WindowBandView): boolean =>
-  Boolean(band.menu || band.session);
-
-/*
- * The band's trailing group is what the focused page contributes, never a list of screens the band knows: a Session's
- * controls over its Workbench and its Inspector, or, from a page that owns no Session, that page's own Screen
- * Actions. A page that contributes neither has no group, and the band's leading group and title keep their places.
- */
-export function BandTrailing(parts: ScaffoldPartProps): ReactElement | null {
-  const band = parts.scaffold.band;
-
-  return band && trailingDrawn(band) ? (
-    <TrailingGroup {...parts} band={band} />
-  ) : null;
 }

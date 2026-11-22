@@ -22,7 +22,7 @@ export const archivedIsReadOnly: Story = {
     },
   },
   play: async ({ canvas }) =>
-    eachLayout(async (wide) => {
+    eachLayout(async () => {
       await expect(
         await canvas.findByRole('heading', {
           name: /^Without using any tools/,
@@ -35,9 +35,6 @@ export const archivedIsReadOnly: Story = {
       await expect(canvas.queryByRole('button', { name: 'Send' })).toBeNull();
       await expect(canvas.queryByRole('button', { name: 'Undo' })).toBeNull();
 
-      // The band's fixed control remains disabled; the phone omits the unavailable menu.
-      await (wide
-        ? expect(canvas.getByRole('button', { name: 'More' })).toBeDisabled()
-        : expect(canvas.queryByRole('button', { name: 'More' })).toBeNull());
+      await expect(canvas.queryByRole('button', { name: 'More' })).toBeNull();
     }),
 };

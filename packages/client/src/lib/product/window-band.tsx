@@ -6,10 +6,6 @@ import {
   useOfferedPlace,
   type Place,
 } from '@repo/kit/place';
-import {
-  ScreenBandPlaceOffer,
-  type ScreenBand,
-} from '@repo/kit/primitives/scaffolds/screen';
 import type { ReactNode } from 'react';
 
 /*
@@ -23,22 +19,20 @@ export interface WindowBandSession {
   onInspectorToggle?: () => void;
 }
 
-// What the band draws: the focused Screen's title and menu, and the Session the page owns, when it owns one.
-export interface WindowBandView extends Partial<ScreenBand> {
+// The Session whose Workbench and Inspector the band controls.
+export interface WindowBandView {
   session: WindowBandSession | null;
 }
 
 const WindowBandPlaceOffer = createPlaceOffer<WindowBandSession>();
 
-// Both claims into the band: the page's Session, and the kit's Screen header.
+// The page's claim over the band controls.
 export interface WindowBandPlaces {
   session: Place<WindowBandSession>;
-  screen: Place<ScreenBand>;
 }
 
 export const createWindowBandPlaces = (): WindowBandPlaces => ({
   session: createPlace(),
-  screen: createPlace(),
 });
 
 export function WindowBandProvider({
@@ -50,25 +44,17 @@ export function WindowBandProvider({
 }): ReactNode {
   return (
     <WindowBandPlaceOffer value={places.session}>
-      <ScreenBandPlaceOffer value={places.screen}>
-        {children}
-      </ScreenBandPlaceOffer>
+      {children}
     </WindowBandPlaceOffer>
   );
 }
-
-const bandOf = (
-  session: WindowBandSession | undefined,
-  screen: ScreenBand | undefined,
-): WindowBandView => ({ ...screen, session: session ?? null });
 
 export function useWindowBandView(
   places: WindowBandPlaces,
 ): WindowBandView | null {
   const session = useClaimed(places.session);
-  const screen = useClaimed(places.screen);
 
-  return session || screen ? bandOf(session, screen) : null;
+  return session ? { session } : null;
 }
 
 // The overview the Session the page owns contributes, which the Workbench column draws and the band's toggle shows.

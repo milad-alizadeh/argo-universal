@@ -18,7 +18,7 @@ const workbenchColumn = (
     <SessionWorkbenchColumn key={sessionId} sections={workbench.sections} />
   ) : undefined;
 
-// Draws nothing itself. On a wide window the Session's overview claims the band; its title and menu are its Screen's header, which the kit draws there.
+// On a wide window the Session claims the window controls for its Workbench and Inspector.
 export function SessionBandClaim({
   workbench,
   sessionId,

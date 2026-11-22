@@ -99,7 +99,7 @@ interface SessionsLegendListProps extends SessionsListProps {
   actions?: ReactNode;
 }
 
-const searchTopPadding = { compact: 0, wide: 2 } as const;
+const searchTopPadding = { ...standardTopPadding, compact: 0 } as const;
 
 function sessionListSection(
   props: SessionsListProps,

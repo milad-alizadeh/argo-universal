@@ -1,4 +1,3 @@
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Card } from '@repo/kit/primitives/layout/card';
 import { InspectorPane } from '@repo/kit/primitives/scaffolds/inspector';
@@ -134,8 +133,6 @@ function mockBand(
   overflowing: boolean,
 ): ScaffoldProps['band'] {
   return {
-    title: <Text>Session</Text>,
-    menu: <IconButton icon="more" accessibilityLabel="More" />,
     session: {
       workbench: workbenchCards(onInspectorStateChange, overflowing),
       onInspectorToggle: () => onInspectorStateChange('open'),
