@@ -1,5 +1,6 @@
 import { walkTokens } from 'marked';
 import { lexMarkdown } from '#kit/lex-markdown';
+import { lexWithUnfinishedInline } from './unfinished-inline';
 
 const marker = /^(?:[*_]{1,2}|[-+]|\d+[.)]|#{1,6})$/;
 
@@ -58,4 +59,21 @@ export function streamingText(text: string): string {
   if (preview === text) return text;
 
   return endsInCode(text) ? text : preview;
+}
+
+const inlineMarker = /[`[<~]/;
+
+export function lexStreamingMarkdown(
+  text: string,
+): ReturnType<typeof lexMarkdown> {
+  const normalized = text.replaceAll(/\r\n?/g, '\n');
+  const lastLine = normalized.slice(normalized.lastIndexOf('\n') + 1);
+
+  if (!inlineMarker.test(lastLine)) return lexMarkdown(streamingText(text));
+
+  const { tokens, heldFrom } = lexWithUnfinishedInline(normalized);
+  // Re-lex the visible prefix so a wholly held span cannot create an empty block.
+  const visible = streamingText(normalized.slice(0, heldFrom));
+
+  return visible === normalized ? tokens : lexMarkdown(visible);
 }
