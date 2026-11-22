@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import {
   captureMainScreen,
   type ScreenPort,
@@ -25,8 +25,25 @@ it('answers a picture of the main display', async () => {
   });
 });
 
+it('attempts capture on a Mac that has never asked for Screen Recording', async () => {
+  const sources = vi.fn<ScreenPort['sources']>(() =>
+    Promise.reject('Failed to get sources.'),
+  );
+
+  await captureMainScreen(port({ access: () => 'denied', sources }));
+
+  expect(sources).toHaveBeenCalled();
+});
+
 it('says what to grant when a Mac has not allowed Screen Recording', async () => {
-  expect(await captureMainScreen(port({ access: () => 'denied' }))).toEqual({
+  const answer = await captureMainScreen(
+    port({
+      access: () => 'denied',
+      sources: () => Promise.reject('Failed to get sources.'),
+    }),
+  );
+
+  expect(answer).toEqual({
     status: 'not_available',
     reason: expect.stringContaining('Screen Recording'),
   });
