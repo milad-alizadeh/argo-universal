@@ -66,6 +66,13 @@ function useLooked(opening: PageOpening): Looked {
   };
 }
 
+// A Draft with no regions has nothing to pick, so only a comment gives its author something to send.
+function picksOf<Pick>(shown: Pick[], noteCount: number): Pick[] | null {
+  if (shown.length > 0) return shown;
+
+  return noteCount > 0 ? [] : null;
+}
+
 function useDraftBar(
   opening: PageOpening,
   looked: Looked,
@@ -76,9 +83,8 @@ function useDraftBar(
   const bar = draftBarOf(entry, opening.path, pageState);
   const { notes, commenting } = useDraftComments(opening);
 
-  // A Draft with no regions has nothing to pick, so only a comment gives its author something to send.
   const shown = shownPicks(draftPageOf(entry, opening.path), pageState);
-  const picks = shown.length > 0 ? shown : notes.length > 0 ? [] : null;
+  const picks = picksOf(shown, notes.length);
 
   const choose = useMutation({
     ...useTRPC().plugin.draft.choose.mutationOptions(),
