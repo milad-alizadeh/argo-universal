@@ -4,9 +4,7 @@ import { Icon } from '#primitives/content/icon';
 import { leadingMarkClass } from '../../../leading-mark';
 import { TintedAvatar } from '../../../tinted-avatar';
 import { toneDisc } from '../../../tone-mark';
-import type { FieldGroupKitProps } from '../../kit-props';
-
-type Mark = NonNullable<FieldGroupKitProps<'FieldGroup.Link'>['leadingMark']>;
+import type { FieldLinkMarkData as Mark } from './field-link-props';
 
 // Icon's tones name meanings only, so a plain mark in a hue takes the avatar's ink for it (ADR-0026, #2122).
 const plainColour = (

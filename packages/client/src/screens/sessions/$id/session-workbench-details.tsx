@@ -6,14 +6,17 @@ import { ScrollView } from 'react-native';
 import { ChangesFiles } from '#features/changes';
 import {
   ChangeRows,
+  resolveChangeStage,
   ShellOutput,
   type SessionPullRequest,
   shellTitle,
   shellStopAction,
   shellSupporting,
+  shellRowMark,
   subagentStateLabel,
   workbenchPreviewLimit,
 } from '#features/sessions';
+import { subagentMarkDescriptor } from '../../../lib/product/subagents/subagent-role';
 import { pullRequestsOf, summaryOf } from './sections/changes-facts';
 import { withCheckoutFiles } from './sections/checkout-files';
 import { openPullRequest } from './sections/open-pull-request';
@@ -26,6 +29,8 @@ import {
 } from './session-workbench-sheet-rows';
 
 const filesPage = 'checkout-files';
+
+const filesTitle = 'Changed files';
 
 export function changeRows(
   content: SessionInspectorContent,
@@ -65,10 +70,16 @@ const moreChanges = (
 
 const filesRow = (content: SessionInspectorContent): WorkbenchRow => ({
   key: filesPage,
-  label: 'Changed files',
+  label: filesTitle,
+  leadingMark: {
+    icon: 'diff',
+    tone: 'neutral',
+    label: filesTitle,
+    plain: true,
+  },
   value: summaryOf(content)?.files.toString(),
   page: {
-    title: 'Changed files',
+    title: filesTitle,
     children: content.changes ? (
       <ChangesFiles {...content.changes} />
     ) : (
@@ -85,6 +96,7 @@ const changeRow = (
 ): WorkbenchRow => ({
   key: `change:${change.id ?? change.number}`,
   label: `#${change.number} ${change.title}`,
+  leadingMark: resolveChangeStage(change),
   page: {
     title: `Change #${change.number}`,
     children: <ChangeDetail change={change} changes={changes} />,
@@ -113,7 +125,8 @@ export const agentRow = (
 ): WorkbenchRow => ({
   key: `agent:${agent.sessionId}`,
   label: agent.title,
-  value: subagentStateLabel(agent),
+  leadingMark: subagentMarkDescriptor(agent),
+  status: { label: subagentStateLabel(agent) },
   onPress: () => content.subagents?.onSelect?.(agent),
   page: {
     title: agent.title,
@@ -147,7 +160,8 @@ export const taskRow = (
 ): WorkbenchRow => ({
   key: `task:${shell.id}`,
   label: shellTitle(shell),
-  value: shellSupporting(shell),
+  leadingMark: shellRowMark(shell),
+  value: shell.status === 'running' ? shellSupporting(shell) : undefined,
   onPress: () => (props.onSelectFromWorkbench ?? props.onSelect)?.(shell),
   page: {
     title: shellTitle(shell),

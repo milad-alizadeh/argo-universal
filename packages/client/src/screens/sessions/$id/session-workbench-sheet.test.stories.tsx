@@ -146,13 +146,34 @@ export const PreviewsChangesAndOpensTheRest: Story = {
 };
 
 export const PreviewsFollowUpsAndOpensTheirList: Story = {
+  args: {
+    content: {
+      ...populated,
+      schedules: {
+        ...followUps,
+        items: [
+          shownFollowUp,
+          { ...secondFollowUp, paused: true, state: 'paused' },
+          laterFollowUp,
+        ],
+      },
+    },
+  },
   play: async ({ userEvent }) => {
     const sheet = await openSheet();
 
-    for (const item of [shownFollowUp, secondFollowUp])
-      await expect(
-        sheet.getByRole('link', { name: `${promptOf(item)}, Every 5 min` }),
-      ).toBeVisible();
+    await expect(
+      sheet.getByRole('link', {
+        name: `${promptOf(shownFollowUp)}, Every 5 min`,
+      }),
+    ).toBeVisible();
+
+    const paused = sheet.getByRole('link', {
+      name: `${promptOf(secondFollowUp)}, Paused`,
+    });
+
+    await expect(paused).toBeVisible();
+    await expect(within(paused).queryByText('Paused')).toBeNull();
 
     await expect(
       sheet.queryByRole('link', titled(promptOf(laterFollowUp))),

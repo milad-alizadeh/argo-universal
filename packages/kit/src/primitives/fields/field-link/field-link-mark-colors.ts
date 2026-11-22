@@ -1,21 +1,11 @@
 import type { ColorValue } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import type { FieldGroupKitProps } from '../../kit-props';
+import { toneDisc } from '../../../tone-mark';
+import type { FieldLinkMarkData } from './field-link-props';
 
-export type Mark = NonNullable<
-  FieldGroupKitProps<'FieldGroup.Link'>['leadingMark']
->;
+export type Mark = FieldLinkMarkData;
 
-const colors = {
-  neutral: ['bg-tone-neutral-100', 'text-tone-neutral-700'],
-  info: ['bg-tone-info-100', 'text-tone-info-700'],
-  done: ['bg-tone-done-100', 'text-tone-done-700'],
-  warning: ['bg-tone-warning-100', 'text-tone-warning-700'],
-  success: ['bg-tone-success-100', 'text-tone-success-700'],
-  danger: ['bg-tone-neutral-100', 'text-danger'],
-  teal: ['bg-tone-teal-100', 'text-tone-teal-700'],
-  pink: ['bg-tone-pink-100', 'text-tone-pink-700'],
-} as const;
+const danger = { fill: 'bg-tone-neutral-100', ink: 'text-danger' };
 
 type MarkColors = {
   fill: ColorValue | undefined;
@@ -24,9 +14,10 @@ type MarkColors = {
 };
 
 export function useMarkColors(mark: Mark): MarkColors {
-  const fill = useResolveClassNames(colors[mark.tone][0]).backgroundColor;
+  const palette = mark.tone === 'danger' ? danger : toneDisc(mark.tone);
+  const fill = useResolveClassNames(palette.fill).backgroundColor;
 
-  const ink = useResolveClassNames(colors[mark.tone][1]).color;
+  const ink = useResolveClassNames(palette.ink).color;
 
   const status = useResolveClassNames(
     mark.status?.tone === 'warning' ? 'bg-warning' : 'bg-success',

@@ -98,10 +98,11 @@ export const ListsEachRunAndOpensItsTerminal: Story = {
     const sheet = await openWorkbench(context);
 
     const web = sheet.getByRole('link', {
-      name: `${webRun.name}, Ready · :${webRun.port}`,
+      name: `${webRun.name}, Ready, :${webRun.port}`,
     });
 
     await expect(web).toBeVisible();
+    await expect(within(web).queryByText('Ready')).not.toBeInTheDocument();
     await expect(
       sheet.getByRole('link', { name: `${docsRun.name}, Stopped` }),
     ).toBeVisible();

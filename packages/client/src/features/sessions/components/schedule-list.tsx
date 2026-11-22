@@ -34,15 +34,23 @@ export const schedulePreviewValue = (item: Schedule): string =>
     ? scheduleInterval(item.intervalSeconds)
     : timing(item);
 
+export const scheduleMark = (item: Schedule) =>
+  ({
+    label: 'Follow-up',
+    icon: item.state === 'paused' ? 'pause' : 'clock',
+    tone: 'neutral',
+  }) as const;
+
 function previewRow(item: Schedule): React.JSX.Element {
   const label = schedulePreviewValue(item);
+  const mark = scheduleMark(item);
 
   return (
     <View key={item.id} className="flex-row items-center gap-2 px-1 py-2">
       <TintedAvatar
-        accessibilityLabel="Follow-up"
-        icon={item.state === 'paused' ? 'pause' : 'clock'}
-        tone="neutral"
+        accessibilityLabel={mark.label}
+        icon={mark.icon}
+        tone={mark.tone}
       />
       <View className="min-w-0 flex-1">
         <Text numberOfLines={1}>{scheduleTitle(item)}</Text>

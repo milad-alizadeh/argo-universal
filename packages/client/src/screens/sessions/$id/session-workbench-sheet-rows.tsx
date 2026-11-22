@@ -5,9 +5,14 @@ import {
   type SheetDestination,
   type SheetScreenProps,
 } from '@repo/kit/primitives/overlays/sheet';
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 
-export interface WorkbenchRow {
+type RowAppearance = Pick<
+  ComponentProps<typeof FieldGroup.Link>,
+  'leading' | 'leadingMark' | 'status'
+>;
+
+export interface WorkbenchRow extends RowAppearance {
   key: string;
   label: string;
   value?: string;
@@ -95,6 +100,7 @@ function fieldRow(
       <FieldGroup.Value
         key={row.key}
         title={row.label}
+        leading={typeof row.leading === 'string' ? row.leading : undefined}
         value={row.value ?? ''}
       />
     );
@@ -105,6 +111,9 @@ function fieldRow(
       id={row.key}
       title={row.label}
       value={row.value}
+      leading={row.leading}
+      leadingMark={row.leadingMark}
+      status={row.status}
       disabled={row.disabled}
       action={!opensPage}
       onPress={() => open(row)}

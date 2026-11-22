@@ -282,6 +282,7 @@ export {
   ScheduleList,
   schedulePreviewLimit,
   schedulePreviewValue,
+  scheduleMark,
   scheduleTitle,
 } from './components/schedule-list';
 
@@ -298,7 +299,16 @@ export { sidebarRows as sessionsListSidebarRows } from './components/session-row
 
 export { RunInspector } from './components/run-inspector';
 
-export { runIsActive, runStatusLabel } from './components/run-status';
+export {
+  runGroupStatus,
+  runIsActive,
+  runStatusLabel,
+  runStatusTone,
+} from './components/run-status';
+
+export { resolveChangeStage } from './components/change-stage/change-stage-model';
+
+export { shellRowMark } from './components/shell-list/shell-mark';
 
 export { RunTerminal } from './components/run-terminal';
 

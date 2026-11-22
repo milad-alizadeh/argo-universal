@@ -1,3 +1,4 @@
+import { RNHostView } from '@expo/ui';
 import { Circle, ZStack } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel,
@@ -6,9 +7,12 @@ import {
   opacity,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { leadingMarkClass } from '../../../leading-mark';
+import { iosImage } from '../../../symbols/ios-image';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { ToneMark } from '../../../tone-mark';
 import {
   markLabel,
   markOpacity,
@@ -34,6 +38,35 @@ export function FieldLinkMark({ mark }: MarkProps): ReactElement {
 }
 
 function MarkFace({ mark }: MarkProps): ReactElement {
+  return iosImage(mark.icon) ? (
+    <SymbolFace mark={mark} />
+  ) : (
+    <HostedFace mark={mark} />
+  );
+}
+
+// The native Button owns the press. The hosted SVG only draws the desktop glyph (ADR-0041).
+function HostedFace({ mark }: MarkProps): ReactElement {
+  return (
+    <RNHostView matchContents>
+      <View
+        collapsable={false}
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <ToneMark
+          icon={mark.icon}
+          tone={mark.tone}
+          form={mark.plain ? 'bare' : 'disc'}
+          disc="leading"
+        />
+      </View>
+    </RNHostView>
+  );
+}
+
+function SymbolFace({ mark }: MarkProps): ReactElement {
   const { fill, ink } = useMarkColors(mark);
   const size = Number(useResolveClassNames(leadingMarkClass).width);
 

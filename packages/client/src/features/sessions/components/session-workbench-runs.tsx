@@ -10,7 +10,12 @@ import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
-import { runIsActive, runStatusLabel, runStatusTone } from './run-status';
+import {
+  runGroupStatus,
+  runIsActive,
+  runStatusLabel,
+  runStatusTone,
+} from './run-status';
 
 type RunGroupControls = {
   status: RunDefaultGroup;
@@ -126,7 +131,7 @@ function RunAction({
 }
 
 function GroupRow({
-  status: { name, members, readyCount, url },
+  status,
   runs,
   compact,
   onStart,
@@ -135,12 +140,13 @@ function GroupRow({
   runs: readonly RunConfigurationRow[];
   compact?: boolean;
 }): ReactElement {
+  const { name, members, readyCount, url } = status;
+
   const active = runs.some(
     (run) => members.includes(run.name) && runIsActive(run),
   );
 
-  const runningState = active ? 'starting' : 'stopped';
-  const state = readyCount === members.length ? 'ready' : runningState;
+  const state = runGroupStatus(status, runs);
 
   return (
     <View className="flex-row items-center gap-1">

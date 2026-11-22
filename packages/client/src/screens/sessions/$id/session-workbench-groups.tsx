@@ -2,8 +2,11 @@ import type { RunConfigurationRow, ShellTerminal } from '@repo/contracts';
 import {
   activePreview,
   backgroundTaskIsRunning,
+  runGroupStatus,
   runStatusLabel,
+  runStatusTone,
   ScheduleList,
+  scheduleMark,
   schedulePreviewLimit,
   schedulePreviewValue,
   scheduleTitle,
@@ -12,6 +15,7 @@ import {
   subagentIsWorking,
   workbenchPreviewLimit,
 } from '#features/sessions';
+import { pluginSymbol } from '../../../lib/product/plugin-symbol';
 import { agentsFacts } from './sections/agents-facts';
 import { changesFacts } from './sections/changes-facts';
 import type { PluginCardLine } from './sections/plugin-card-rows';
@@ -137,18 +141,15 @@ const tasksGroup = (
     ? previewGroup(tasksPreview(shells), onVisit)
     : { key: shellsFacts.key, title: shellsFacts.title, rows: [] };
 
-// A Run's state, and its port once it has one, as the Runs card says them.
-function runValue(run: RunConfigurationRow): string {
-  const status = runStatusLabel(run, 0, false);
-
-  return run.port === null ? status : `${status} · :${run.port}`;
-}
-
 // A named Run opens its Terminal page.
 const runRow = (run: RunConfigurationRow): WorkbenchRow => ({
   key: runTabKey(run.name),
   label: run.name,
-  value: runValue(run),
+  status: {
+    label: runStatusLabel(run, 0, false),
+    tone: runStatusTone[run.status],
+  },
+  value: run.port === null ? undefined : `:${run.port}`,
   opens: runTabKey(run.name),
 });
 
@@ -156,11 +157,12 @@ const runRow = (run: RunConfigurationRow): WorkbenchRow => ({
 const terminalRow = (shell: ShellTerminal): WorkbenchRow => ({
   key: shellTabKey(shell.id),
   label: shell.name,
+  leading: 'terminal',
   value: shell.cwd,
   opens: workbenchShellPage(shell),
 });
 
-function defaultGroupRow({ defaultGroup }: SessionRuns): WorkbenchRow[] {
+function defaultGroupRow({ defaultGroup, runs }: SessionRuns): WorkbenchRow[] {
   if (!defaultGroup?.status.members.length) return [];
 
   const { name, readyCount, members } = defaultGroup.status;
@@ -169,7 +171,10 @@ function defaultGroupRow({ defaultGroup }: SessionRuns): WorkbenchRow[] {
     {
       key: 'run-group',
       label: name,
-      value: `${readyCount} of ${members.length} ready`,
+      status: {
+        label: `${readyCount} of ${members.length} ready`,
+        tone: runStatusTone[runGroupStatus(defaultGroup.status, runs)],
+      },
       opens: workbenchRunsKey,
     },
   ];
@@ -219,9 +224,23 @@ const followUpRow =
   (item: Schedules['items'][number]): WorkbenchRow => ({
     key: `${followUpsKey}:${item.id}`,
     label: scheduleTitle(item),
-    value: schedulePreviewValue(item),
+    leadingMark: scheduleMark(item),
+    value: item.state === 'active' ? schedulePreviewValue(item) : undefined,
+    status:
+      item.state === 'active'
+        ? undefined
+        : {
+            label: schedulePreviewValue(item),
+            tone: followUpTone[item.state],
+          },
     visits: list,
   });
+
+const followUpTone = {
+  paused: 'warning',
+  completed: 'done',
+  expired: 'muted',
+} as const;
 
 // The row naming how many of a section's items wait behind the page it opens.
 const moreRow = (
@@ -279,6 +298,7 @@ function pluginGroup(
   const open: WorkbenchRow = {
     key,
     label: `Open ${card.title}`,
+    leading: pluginSymbol(card.icon),
     hidden: lines.length > 0,
     page: { title: card.title, children: tab ?? page },
   };
