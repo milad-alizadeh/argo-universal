@@ -3,7 +3,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import type { DraftStep } from './draft-drawing-fixtures';
 import { DraftSteps } from './draft-drawing.mocks';
 import { DraftSeamContext, type DraftSeam } from './draft-seam';
@@ -59,7 +59,7 @@ export const ATableReadsARowTheAgentJustDrew: Story = {
   render: () => <DraftSteps steps={drawnRows} shown={1} />,
   play: async ({ canvas }) => {
     await canvas.findByText('Ada');
-    await expect(await canvas.findByText('Grace')).toBeVisible();
+    await waitFor(() => expect(canvas.getByText('Grace')).toBeVisible());
   },
 };
 
