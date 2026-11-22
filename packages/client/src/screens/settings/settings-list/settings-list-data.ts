@@ -83,6 +83,6 @@ const workspaceRows = (props: SettingsListViewProps): SettingsRow[] => [
   agentsRow(props),
   agentAccessRow(props),
   conversationRow(props),
-  composerRow(props),
+  composerRow(),
   pluginsRow(props),
 ];
