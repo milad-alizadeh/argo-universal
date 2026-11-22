@@ -11,6 +11,8 @@ export const start: Extract<ConversationEvent, { type: 'call.start' }> = {
   offer: 'offer',
 };
 
+const replacement = new AbortController().signal;
+
 export const events: ConversationEvent[] = [
   start,
   { type: 'call.answered', answer: 'answer', canLook: false },
@@ -19,6 +21,8 @@ export const events: ConversationEvent[] = [
   { type: 'call.sessionGone', reason: 'session-closed' },
   { type: 'call.sessionGone', reason: 'session-archived' },
   { type: 'call.appDisconnected' },
+  { type: 'call.appReconnect', signal: replacement },
+  { type: 'call.appReattached', signal: replacement },
   { type: 'voice.say', say: { kind: 'tell', text: 'Done', delivery: 'speak' } },
   providerEvent({ type: 'status', status: 'connected' }),
   providerEvent({ type: 'status', status: 'disconnected' }),

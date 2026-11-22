@@ -6,6 +6,7 @@ import {
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { AppPageSocket, appPageFetch } from '@repo/engine/mocks/app-socket';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 import { createTRPCClient } from './create-trpc-client';
 
 const binaryMime = 'application/octet-stream';
@@ -38,6 +39,7 @@ async function startTransportTestServer(): Promise<{
   url: string;
   connections: () => number;
   httpRequests: () => number;
+  stop: () => Promise<void>;
 }> {
   const host = await startEngineTestHost({ startedAt: serverStartedAt });
   // Node writes no Origin, so the caller stands in for the App's own page, which is what proves the Server Device (#1696).
@@ -55,11 +57,28 @@ async function startTransportTestServer(): Promise<{
     url: host.url.replace(/^http/, 'ws'),
     connections: (): number => sockets.mock.calls.length,
     httpRequests: (): number => requests.mock.calls.length,
+    stop: host.stop,
   };
 }
 
+const Handshake = z.object({
+  method: z.literal('connectionParams'),
+  data: z.object({ appInstance: z.string(), pluginSurface: z.string() }),
+});
+
+function connectionParamsOf(
+  calls: readonly (readonly unknown[])[],
+): z.output<typeof Handshake>['data'][] {
+  return calls.flatMap(([data]) => {
+    if (typeof data !== 'string' || !data.startsWith('{')) return [];
+    const parsed = Handshake.safeParse(JSON.parse(data));
+
+    return parsed.success ? [parsed.data.data] : [];
+  });
+}
+
 describe('createTRPCClient', () => {
-  it('reports the Plugin wire version in the WebSocket handshake', async () => {
+  it('reports the App instance and Plugin wire version in the WebSocket handshake', async () => {
     const server = await startTransportTestServer();
     const send = vi.spyOn(nativeSocketPrototype, 'send');
     const { client, close } = createTRPCClient(server.url);
@@ -67,17 +86,13 @@ describe('createTRPCClient', () => {
 
     await client.system.info.query();
 
-    expect(send).toHaveBeenCalledWith(
-      JSON.stringify({
-        method: 'connectionParams',
-        data: {
-          pluginSurface: JSON.stringify({
-            platform: 'web',
-            wireVersion: pluginWireVersion,
-          }),
-        },
+    expect(connectionParamsOf(send.mock.calls)).toContainEqual({
+      appInstance: expect.any(String),
+      pluginSurface: JSON.stringify({
+        platform: 'web',
+        wireVersion: pluginWireVersion,
       }),
-    );
+    });
   });
 
   it('reports an updated surface when the App reconnects', async () => {
@@ -97,15 +112,38 @@ describe('createTRPCClient', () => {
     app.webSocketClient.connection?.ws?.close();
 
     await expect
-      .poll(() => send)
-      .toHaveBeenCalledWith(
-        JSON.stringify({
-          method: 'connectionParams',
-          data: { pluginSurface: JSON.stringify(surface) },
-        }),
-      );
+      .poll(() => connectionParamsOf(send.mock.calls))
+      .toEqual([
+        {
+          appInstance: expect.any(String),
+          pluginSurface: JSON.stringify({ platform: 'ios', wireVersion: 1 }),
+        },
+        {
+          appInstance: connectionParamsOf(send.mock.calls)[0]?.appInstance,
+          pluginSurface: JSON.stringify(surface),
+        },
+      ]);
     expect(await app.client.system.info.query()).toEqual(systemInfo);
     expect(server.connections()).toBe(2);
+  });
+
+  it('reports the close code and reason when the Server stops', async () => {
+    const server = await startTransportTestServer();
+    const log = vi.spyOn(console, 'info');
+    const app = createTRPCClient(server.url);
+    closers.push(app.close);
+
+    await app.client.system.info.query();
+    await server.stop();
+
+    await expect
+      .poll(() => log)
+      .toHaveBeenCalledWith('App connection closed', {
+        side: 'Server',
+        code: 4002,
+        reason: 'Server stopping',
+        pongTimedOut: false,
+      });
   });
 
   it('sends queries and subscriptions over one WebSocket', async () => {

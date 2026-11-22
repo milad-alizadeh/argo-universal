@@ -160,6 +160,11 @@
       "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
     },
     {
+      // Logs expected App socket closes for diagnosis at info level, without an error overlay.
+      "files": ["packages/contracts/src/app-web-socket.ts"],
+      "rules": { "no-console": ["error", { "allow": ["info"] }] }
+    },
+    {
       // A Feed candidate is unparsed by design: a row assembled from a Feed patch, which acceptFeedCandidate parses with SessionUpdate before use.
       "files": ["packages/engine/src/feed/feed-change-candidate.ts"],
       "rules": { "anti-slop/no-unsafe-dictionary-type": "off" }

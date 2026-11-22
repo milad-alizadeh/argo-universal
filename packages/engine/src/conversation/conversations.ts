@@ -10,6 +10,7 @@ import type {
   ConversationUpdate,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
+import type { RpcConnection } from '../rpc';
 import { Changes } from './changes';
 import {
   answerOf,
@@ -133,15 +134,21 @@ export class Conversations implements ConversationsPort {
     this.actor.send({ type: 'sessions.attach', sessions });
   }
 
-  public async *watch(signal: AbortSignal): AsyncGenerator<ConversationStatus> {
-    for await (const update of this.updates(signal)) {
+  public async *watch(
+    signal: AbortSignal,
+    connection?: Pick<RpcConnection, 'signal'>,
+  ): AsyncGenerator<ConversationStatus> {
+    for await (const update of this.updates(signal, connection)) {
       yield { ...update, availability: await this.availability() };
     }
   }
 
   public async *updates(
     signal: AbortSignal,
+    connection?: Pick<RpcConnection, 'signal'>,
   ): AsyncGenerator<ConversationUpdate> {
+    if (connection)
+      this.actor.send({ type: 'call.appReconnect', signal: connection.signal });
     const changes = new Changes(this.actor, signal, this.choices);
 
     try {
