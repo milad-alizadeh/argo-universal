@@ -74,7 +74,7 @@ describe('loadingTree', () => {
           orientation: 'horizontal',
           value: 40,
           valueLabel: '40%',
-          fill: ['#ffd078', '#f0b040'],
+          fill: ['warm', 'warmer'],
           minimumValue: 1,
           maximumValue: 100,
           onValueChange: { operation: 'setBrightness', args: {} },
@@ -88,7 +88,11 @@ describe('loadingTree', () => {
 
     expect(tree).toEqual(
       node('Fader', 'light:desk', {
-        props: { orientation: 'horizontal', minimumValue: 1, maximumValue: 100 },
+        props: {
+          orientation: 'horizontal',
+          minimumValue: 1,
+          maximumValue: 100,
+        },
       }),
     );
   });
@@ -98,7 +102,9 @@ describe('loadingTree', () => {
       node('Stack', 'page', {
         children: [
           node('Text', 'title'),
-          node('Inspector', 'scenes', { props: { open: true, title: 'Scenes' } }),
+          node('Inspector', 'scenes', {
+            props: { open: true, title: 'Scenes' },
+          }),
         ],
       }),
     );

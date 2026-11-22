@@ -173,16 +173,20 @@ export const DrawsOnePlaceholderPerSpot: Story = {
   },
 };
 
-const placeholdersOf = (canvasElement: HTMLElement): HTMLElement[] => [
-  ...(canvasElement.querySelector(`[${overlayAttribute}]`)?.children ?? []),
-] as HTMLElement[];
+const placeholdersOf = (canvasElement: HTMLElement): HTMLElement[] =>
+  [
+    ...(canvasElement.querySelector(`[${overlayAttribute}]`)?.children ?? []),
+  ].filter((child) => child instanceof HTMLElement);
 
 const cardWidth = 240;
 
 // A card drawn as its shell: rounded and filled, holding only its own empty fill.
 function EmptyCard({ width }: { width: number }): ReactElement {
   return (
-    <View className="h-30 overflow-hidden rounded-2xl bg-card" style={{ width }}>
+    <View
+      className="h-30 overflow-hidden rounded-2xl bg-card"
+      style={{ width }}
+    >
       <View className="absolute inset-0 bg-muted" />
     </View>
   );
@@ -197,9 +201,7 @@ export const DrawsAnEmptyCardAsOnePlaceholder: Story = {
     </Skeleton>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() =>
-      expect(placeholdersOf(canvasElement)).toHaveLength(1),
-    );
+    await waitFor(() => expect(placeholdersOf(canvasElement)).toHaveLength(1));
     await expect(
       placeholdersOf(canvasElement)[0]?.getBoundingClientRect().width,
     ).toBeCloseTo(cardWidth, 0);
@@ -215,7 +217,7 @@ function SettlingCard(): ReactElement {
   useEffect(() => {
     const timer = setTimeout(() => setWidth(cardWidth), settleMs);
 
-    return () => clearTimeout(timer);
+    return (): void => clearTimeout(timer);
   }, []);
 
   return (

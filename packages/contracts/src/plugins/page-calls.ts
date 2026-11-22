@@ -179,6 +179,7 @@ export class PageCalls {
   }: MadeOperationCall): Promise<void> {
     const { scope, run, failed } = this.ports;
     const putBack = await showOptimistic(this.ports, optimistic);
+
     const ran = this.afterLastRun(() =>
       run({ operation, args, ...definedScope(scope) }),
     );
@@ -195,7 +196,7 @@ export class PageCalls {
   private afterLastRun(next: () => Promise<void>): Promise<void> {
     const ran = this.lastRun.then(next);
 
-    this.lastRun = ran.catch(() => undefined);
+    this.lastRun = ran.catch(() => {});
 
     return ran;
   }

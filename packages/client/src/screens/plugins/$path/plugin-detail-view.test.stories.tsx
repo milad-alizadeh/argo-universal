@@ -135,9 +135,11 @@ export const WaitingForPage: Story = {
 const settledTileWidth = 100;
 
 const tilePlaceholders = (status: HTMLElement): DOMRect[] =>
-  [...status.querySelectorAll('[data-skeleton-overlay] > *')]
-    .map((bar) => bar.getBoundingClientRect())
-    .filter((bounds) => bounds.width >= settledTileWidth);
+  [...status.querySelectorAll('[data-skeleton-overlay] > *')].flatMap((bar) => {
+    const bounds = bar.getBoundingClientRect();
+
+    return bounds.width >= settledTileWidth ? [bounds] : [];
+  });
 
 const homeTiles = 4;
 
@@ -152,9 +154,7 @@ export const HomeLoadsAsTileShells: Story = {
     const status = await canvas.findByRole('status', { name: 'Loading page' });
 
     await waitFor(() =>
-      expect(tilePlaceholders(status).length).toBeGreaterThanOrEqual(
-        homeTiles,
-      ),
+      expect(tilePlaceholders(status).length).toBeGreaterThanOrEqual(homeTiles),
     );
   },
 };
