@@ -1,21 +1,14 @@
 import { motionDuration } from '@repo/kit/motion';
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
-import { Platform, Text, View, type ViewStyle } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import type { DraftView } from './draft-drawing';
+import { boxless } from './boxless';
 import { regionLabel } from './draft-region-label';
 import { DraftFramedContext } from './draft-seam';
 
 const fadeIn = FadeIn.duration(motionDuration.enter);
 
 const fadeOut = FadeOut.duration(motionDuration.frame);
-
-/*
- * A wrapper must not move what it holds. Web draws it with no box of its own, so a flex child of a row keeps its
- * width; native has no such display, so the wrapper keeps its box there.
- */
-const boxless: ViewStyle | undefined =
-  Platform.OS === 'web' ? { display: 'contents' } : undefined;
 
 // A node's own new drawing fades in, then its wrapper stays, so a later draw of the node does not draw its subtree again.
 export function DraftFade({
@@ -79,39 +72,5 @@ export function DraftFrame({
         </Animated.View>
       ) : null}
     </View>
-  );
-}
-
-export function faded(
-  element: ReactElement | null,
-  key: string,
-  draft: DraftView | undefined,
-): ReactElement | null {
-  if (!element || !draft?.faded.has(key)) return element;
-
-  return (
-    <DraftFade key={element.key} reduced={draft.reduced}>
-      {element}
-    </DraftFade>
-  );
-}
-
-// The element of a node that is, or was, a region the Agent wrote: framed while it is being written. A region is matched by its bare key, so region ids must be unique across the page.
-export function framed(
-  element: ReactElement | null,
-  nodeKey: string,
-  draft: DraftView | undefined,
-): ReactElement | null {
-  if (!element || !draft?.regions.has(nodeKey)) return element;
-
-  return (
-    <DraftFrame
-      key={element.key}
-      region={nodeKey}
-      active={draft.framed.has(nodeKey)}
-      reduced={draft.reduced}
-    >
-      {element}
-    </DraftFrame>
   );
 }

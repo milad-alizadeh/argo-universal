@@ -1,13 +1,7 @@
-import { wrappingComponent } from '@repo/kit/wrapped-component';
-import {
-  createElement,
-  useContext,
-  useLayoutEffect,
-  useRef,
-  type ElementType,
-} from 'react';
+import { useContext, useLayoutEffect, useRef } from 'react';
 import type * as React from 'react';
-import { Platform, View, type ViewStyle } from 'react-native';
+import { Platform, View } from 'react-native';
+import { boxless } from './boxless';
 import {
   boxOf,
   DraftCommentingContext,
@@ -15,16 +9,13 @@ import {
   type Box,
   type NodeIdentity,
 } from './draft-commenting';
-import type { PluginProps } from './plugin-rendering';
 
 type Holder = React.ComponentRef<typeof View>;
-
-const wrappers = new WeakMap<object, Map<string, ElementType>>();
 
 const nowhere: Box = { x: 0, y: 0, width: -1, height: -1 };
 
 // The kit components whose own view fills the room its parent leaves, so their wrapper must too where it keeps a box.
-const filling = new Set([
+export const filling = new Set([
   'Screen',
   'ListDetail',
   'Detail',
@@ -33,18 +24,13 @@ const filling = new Set([
   'Board',
 ]);
 
-/*
- * A wrapper must not move what it holds. Web draws it with no box of its own, so a flex child keeps its width and a
- * list keeps filling its screen; native has no such display, so its wrapper keeps a box and fills where its node does.
- */
-const boxless: ViewStyle | undefined =
-  Platform.OS === 'web' ? { display: 'contents' } : undefined;
-
 // The corner of the node's first child, which a node of several children shares with the rest; 0 where it is square.
 function cornerOf(nodes: readonly Element[]): number {
   const [first] = nodes;
 
-  return first ? Number.parseFloat(getComputedStyle(first).borderTopLeftRadius) || 0 : 0;
+  return first
+    ? Number.parseFloat(getComputedStyle(first).borderTopLeftRadius) || 0
+    : 0;
 }
 
 // A boxless wrapper has no size, so its box is its children's. The marks the App lays over the node are fixed and are no part of it; counting them grew the box a frame at a time.
@@ -54,6 +40,7 @@ function webBox(view: Holder | null): Box {
   const nodes = [...view.children].filter(
     (child) => getComputedStyle(child).position !== 'fixed',
   );
+
   const rects = nodes.map((child) => child.getBoundingClientRect());
 
   if (rects.length === 0) return nowhere;
@@ -90,41 +77,11 @@ function measureBox(view: Holder | null, done: (box: Box) => void): void {
 }
 
 /*
- * The kit component drawn for a node of a dev Plugin's Draft page, inside a view the App can find on screen and
- * mark while the author comments. A node keeps its wrapper whether or not the author is commenting, so entering and
- * leaving comment mode redraws nothing and loses no scroll or input. The wrapper is one per node, so the node's
- * identity is not a prop a parent that spreads its child's props would pass on. Parents read it as the component it
- * wraps, as they read a Fragment's children.
+ * A view the App can find on screen and mark while the author comments, around a node of a dev Plugin's Draft page. A
+ * node keeps it whether or not the author is commenting, so entering and leaving comment mode redraws nothing and
+ * loses no scroll or input.
  */
-export function commentable(
-  component: ElementType,
-  identity: NodeIdentity,
-  type: string,
-): ElementType {
-  if (typeof component === 'string') return component;
-
-  const known = wrappers.get(component)?.get(identity.address);
-
-  if (known) return known;
-
-  function Commentable(props: PluginProps): React.JSX.Element {
-    return (
-      <CommentTarget identity={identity} fills={filling.has(type)}>
-        {createElement(component, props)}
-      </CommentTarget>
-    );
-  }
-
-  const wrapper = wrappingComponent(Commentable, component);
-  const byAddress = wrappers.get(component) ?? new Map<string, ElementType>();
-
-  byAddress.set(identity.address, wrapper);
-  wrappers.set(component, byAddress);
-
-  return wrapper;
-}
-
-function CommentTarget({
+export function CommentTarget({
   identity,
   fills,
   children,
