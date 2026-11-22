@@ -138,8 +138,3 @@ const leadingClass = (
     leadingClasses[lane],
     size === 'avatar' && cn(leadingMarkClass, 'self-center'),
   );
-
-export const separatorClass = (
-  separator: string,
-  size: ListItemProps['leadingSize'],
-): string => cn(separator, size === 'avatar' && 'left-14');

@@ -15,7 +15,7 @@ import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import { sessionMetaLine } from './session-row-meta-line';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
-import { sidebarDrawing, sidebarRows } from './session-row-sidebar';
+import { sidebarDrawing } from './session-row-sidebar';
 import { sessionProgress } from './session-row-todos';
 
 export type { SessionRowProps } from './session-row-props';
@@ -48,7 +48,6 @@ function RegularRow(props: CalledRow): React.JSX.Element {
       {...sessionRowMenu(props)}
       {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
-      leadingSize={sidebarRows ? undefined : 'avatar'}
       {...regularEnds(props)}
       metaAccessories={sessionMetaLine(props)}
       progress={sessionProgress(props.session)}

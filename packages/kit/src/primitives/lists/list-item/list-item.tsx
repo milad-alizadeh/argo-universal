@@ -20,7 +20,7 @@ import {
 import { drawingContent } from './list-item-drawing-content';
 import { RowMovePicker } from './list-item-move-picker';
 import { NestingItem } from './list-item-nesting';
-import { hasLeading, separatorClass } from './list-item-parts';
+import { hasLeading } from './list-item-parts';
 import { ItemPress, rowMenu, type DrawingProps } from './list-item-press';
 import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
@@ -56,12 +56,7 @@ function ItemSeparator({
 
   if ([highlighted, selected].some(Boolean)) return null;
 
-  return (
-    <View
-      className={separatorClass(separator, props.leadingSize)}
-      style={hairline}
-    />
-  );
+  return <View className={separator} style={hairline} />;
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {

@@ -26,7 +26,7 @@ import {
   type SessionRowProps,
   sessionRowLabel,
 } from './session-row-props';
-import { sidebarDrawing, sidebarRows } from './session-row-sidebar';
+import { sidebarDrawing } from './session-row-sidebar';
 import { compactStatusDot } from './session-row-status';
 
 type CompactEndProps = Pick<
@@ -119,7 +119,6 @@ export function CompactSessionRow(props: CalledCompactRow): React.JSX.Element {
       {...sidebarDrawing(props.session.status)}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
-      leadingSize={sidebarRows ? undefined : 'avatar'}
       {...compactEnd(props)}
       selected={props.selected ?? false}
       finished={props.session.archivedAt !== null}
