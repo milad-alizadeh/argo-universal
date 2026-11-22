@@ -120,6 +120,10 @@ export const exactTargetTree: WireNode = {
         icon: 'copy',
         onPress: { pageState: { copied: true } },
       }),
+      node('Action', 'share-link', {
+        label: 'Share link',
+        onPress: { pageState: { shared: true } },
+      }),
     ],
   },
   children: [

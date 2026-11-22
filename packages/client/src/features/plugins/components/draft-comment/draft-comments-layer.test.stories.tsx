@@ -410,3 +410,20 @@ export const APhoneTableTitleKeepsItsCellTarget: Story = {
     );
   },
 };
+
+export const AnOverflowActionKeepsItsOwnCommentTarget: Story = {
+  args: { root: exactTargetTree, regions: false, onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(
+      await canvas.findByRole('button', { name: 'More actions' }),
+    );
+    await pointer.click(
+      await editor().findByRole('menuitem', { name: 'Share link' }),
+    );
+    await waitFor(() =>
+      expect(editor().getByRole('group', { name: 'share-link' })).toBeVisible(),
+    );
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
