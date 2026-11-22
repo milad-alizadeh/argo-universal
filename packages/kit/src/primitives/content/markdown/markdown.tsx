@@ -8,7 +8,7 @@ import { ArrivalsContext, useArrivals } from './markdown-arrivals';
 import { MarkdownClamp } from './markdown-clamp';
 import type { MarkdownProps } from './markdown-props';
 import { MarkdownSelectable, MarkdownTone } from './markdown-tone';
-import { streamingText } from './streaming-text';
+import { lexStreamingMarkdown } from './streaming-text';
 
 // Foundations / Markdown: one prose drawing wherever the kit is used.
 export const Markdown = memo(function Markdown({
@@ -42,7 +42,7 @@ function useTokens(
   streaming: boolean,
 ): ReturnType<typeof keepBlockPrefix> {
   const tokens = useMemo(
-    () => lexMarkdown(streaming ? streamingText(text) : text),
+    () => (streaming ? lexStreamingMarkdown(text) : lexMarkdown(text)),
     [text, streaming],
   );
 
