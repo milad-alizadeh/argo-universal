@@ -1,5 +1,6 @@
 import type { DesktopShare } from './desktop-share';
 import type { ScreenCaptureAnswer } from './operations';
+import type { ChartPreviewAnswer, ChartPreviewDraft } from './operations/chart';
 
 export interface DesktopBridge {
   serverUrl: string | null;
@@ -31,6 +32,9 @@ export interface DesktopBridge {
     capture(): Promise<ScreenCaptureAnswer>;
     // Tells the desktop App whether this Device turned screen sight on; it refuses every capture until told yes.
     setEnabled(enabled: boolean): void;
+  };
+  chartPreview?: {
+    capture(draft: ChartPreviewDraft): Promise<ChartPreviewAnswer>;
   };
   symbols?: {
     render: (request: {

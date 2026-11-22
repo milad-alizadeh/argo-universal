@@ -1,6 +1,7 @@
 import type { AgentMessage as AgentMessageRow } from '@repo/contracts';
 import { memo } from 'react';
 import { FeedContent } from '../feed-content/feed-content';
+import { renderChartFence } from './chart-fence';
 
 export interface AgentMessageProps {
   row: AgentMessageRow;
@@ -14,6 +15,11 @@ export const AgentMessage = memo(function AgentMessage({
   streaming = false,
 }: AgentMessageProps) {
   return (
-    <FeedContent content={row.content} streaming={streaming} rowId={row.id} />
+    <FeedContent
+      content={row.content}
+      streaming={streaming}
+      rowId={row.id}
+      renderFence={renderChartFence}
+    />
   );
 });

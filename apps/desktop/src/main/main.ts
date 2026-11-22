@@ -9,6 +9,7 @@ import {
 } from './app-protocol';
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
+import { handleChartPreview } from './handle-chart-preview';
 import { handleExternalLinks } from './handle-external-links';
 import { handleScreenCapture } from './handle-screen-capture';
 import { answerAppPermissionRequests } from './microphone-permission';
@@ -143,6 +144,7 @@ const start = (): void => {
   );
 
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
+  handleChartPreview(windowOrigin, webDevelopmentUrl, webExportDirectory);
 
   // The microphone a Conversation listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
   answerAppPermissionRequests(session.defaultSession, windowOrigin);

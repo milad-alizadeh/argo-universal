@@ -7,19 +7,26 @@ import { Blocks } from './block-tokens';
 import { ArrivalsContext, useArrivals } from './markdown-arrivals';
 import { MarkdownClamp } from './markdown-clamp';
 import type { MarkdownProps } from './markdown-props';
-import { MarkdownSelectable, MarkdownTone } from './markdown-tone';
+import {
+  MarkdownFenceRendering,
+  MarkdownSelectable,
+  MarkdownTone,
+} from './markdown-tone';
 import { streamingText } from './streaming-text';
 
 // Foundations / Markdown: one prose drawing wherever the kit is used.
 export const Markdown = memo(function Markdown({
   tone,
   selectable = false,
+  renderFence,
   ...rest
 }: MarkdownProps) {
   return (
     <MarkdownTone value={tone}>
       <MarkdownSelectable value={selectable}>
-        <ClampedContent {...rest} />
+        <MarkdownFenceRendering value={renderFence}>
+          <ClampedContent {...rest} />
+        </MarkdownFenceRendering>
       </MarkdownSelectable>
     </MarkdownTone>
   );

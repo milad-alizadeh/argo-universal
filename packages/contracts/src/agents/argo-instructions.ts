@@ -59,6 +59,13 @@ const diagrams: ArgoInstruction = {
     'to mark a node, give it a tone class such as `class A success`: info, success, warning, danger, done or muted.',
 };
 
+const charts: ArgoInstruction = {
+  name: 'Charts',
+  text:
+    'Argo draws ```chart fences in Agent messages. Before sending one, pass the exact fence to chart.preview using operation_run. ' +
+    'Use operation_list with {"id":"chart.preview"} for the fields and a copyable example.',
+};
+
 // `gh pr create` leaves a pull request unattached, so the Agent attaches it itself.
 const pullRequests: ArgoInstruction = {
   name: 'Pull requests',
@@ -75,6 +82,7 @@ export const argoInstructions: readonly ArgoInstruction[] = [
   agents,
   followThrough,
   diagrams,
+  charts,
   pullRequests,
 ];
 
