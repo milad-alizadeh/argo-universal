@@ -300,7 +300,7 @@ export { sidebarRows as sessionsListSidebarRows } from './components/session-row
 export { RunInspector } from './components/run-inspector';
 
 export {
-  runGroupStatus,
+  runGroupState,
   runIsActive,
   runStatusLabel,
   runStatusTone,

@@ -27,15 +27,23 @@ export const runIsActive = ({
 }: Pick<RunConfigurationRow, 'status'>): boolean =>
   status === 'starting' || status === 'ready';
 
-export function runGroupStatus(
+type RunGroupState = {
+  active: boolean;
+  status: 'ready' | 'starting' | 'stopped';
+};
+
+export function runGroupState(
   { members, readyCount }: RunDefaultGroup,
   runs: readonly RunConfigurationRow[],
-): RunConfigurationStatus {
-  if (readyCount === members.length) return 'ready';
+): RunGroupState {
+  const active = runs.some(
+    (run) => members.includes(run.name) && runIsActive(run),
+  );
 
-  return runs.some((run) => members.includes(run.name) && runIsActive(run))
-    ? 'starting'
-    : 'stopped';
+  const incomplete = active ? 'starting' : 'stopped';
+  const status = readyCount === members.length ? 'ready' : incomplete;
+
+  return { active, status };
 }
 
 export function runStatusLabel(

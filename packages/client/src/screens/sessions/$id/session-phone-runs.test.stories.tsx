@@ -155,7 +155,17 @@ function WithDefaultGroup(): ReactElement {
 export const StartsAndStopsTheDefaultGroupInTheSheet: Story = {
   render: (): ReactElement => <WithDefaultGroup />,
   play: async (context) => {
-    const sheet = await openPhoneRuns(context);
+    const sheet = await openWorkbench(context);
+    const group = sheet.getByRole('link', { name: 'dev, Runs ready, 1 of 2' });
+
+    await expect(within(group).getByText('1 of 2')).toBeVisible();
+    await settleOverlays(group);
+    await context.userEvent.click(group);
+
+    await expect(
+      await sheet.findByRole('heading', { name: 'Runs' }),
+    ).toBeVisible();
+
     const stopButton = sheet.getByRole('button', { name: 'Stop dev group' });
 
     await settleOverlays(stopButton);

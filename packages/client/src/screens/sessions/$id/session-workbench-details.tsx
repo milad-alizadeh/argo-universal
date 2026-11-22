@@ -93,15 +93,20 @@ type Changes = SessionInspectorContent['changes'];
 const changeRow = (
   change: SessionPullRequest,
   changes: Changes,
-): WorkbenchRow => ({
-  key: `change:${change.id ?? change.number}`,
-  label: `#${change.number} ${change.title}`,
-  leadingMark: resolveChangeStage(change),
-  page: {
-    title: `Change #${change.number}`,
-    children: <ChangeDetail change={change} changes={changes} />,
-  },
-});
+): WorkbenchRow => {
+  const mark = resolveChangeStage(change);
+
+  return {
+    key: `change:${change.id ?? change.number}`,
+    label: `#${change.number} ${change.title}`,
+    leadingMark: mark,
+    status: { label: mark.label },
+    page: {
+      title: `Change #${change.number}`,
+      children: <ChangeDetail change={change} changes={changes} />,
+    },
+  };
+};
 
 type PullRequestDetail = { change: SessionPullRequest; changes: Changes };
 
@@ -157,19 +162,24 @@ export type Tasks = NonNullable<SessionInspectorContent['shells']>;
 export const taskRow = (
   shell: Tasks['shells'][number],
   props: Tasks,
-): WorkbenchRow => ({
-  key: `task:${shell.id}`,
-  label: shellTitle(shell),
-  leadingMark: shellRowMark(shell),
-  value: shell.status === 'running' ? shellSupporting(shell) : undefined,
-  onPress: () => (props.onSelectFromWorkbench ?? props.onSelect)?.(shell),
-  page: {
-    title: shellTitle(shell),
-    action: shellStopAction(shell, props.onStop),
-    onExit: props.onDeselect,
-    children: taskOutput(shell, props),
-  },
-});
+): WorkbenchRow => {
+  const mark = shellRowMark(shell);
+
+  return {
+    key: `task:${shell.id}`,
+    label: shellTitle(shell),
+    leadingMark: mark,
+    status: { label: mark.status?.label ?? mark.label },
+    value: shell.status === 'running' ? shellSupporting(shell) : undefined,
+    onPress: () => (props.onSelectFromWorkbench ?? props.onSelect)?.(shell),
+    page: {
+      title: shellTitle(shell),
+      action: shellStopAction(shell, props.onStop),
+      onExit: props.onDeselect,
+      children: taskOutput(shell, props),
+    },
+  };
+};
 
 const taskOutput = (
   shell: Tasks['shells'][number],

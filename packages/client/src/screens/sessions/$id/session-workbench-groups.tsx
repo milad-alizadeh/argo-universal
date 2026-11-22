@@ -2,7 +2,7 @@ import type { RunConfigurationRow, ShellTerminal } from '@repo/contracts';
 import {
   activePreview,
   backgroundTaskIsRunning,
-  runGroupStatus,
+  runGroupState,
   runStatusLabel,
   runStatusTone,
   ScheduleList,
@@ -166,15 +166,14 @@ function defaultGroupRow({ defaultGroup, runs }: SessionRuns): WorkbenchRow[] {
   if (!defaultGroup?.status.members.length) return [];
 
   const { name, readyCount, members } = defaultGroup.status;
+  const { status } = runGroupState(defaultGroup.status, runs);
 
   return [
     {
       key: 'run-group',
       label: name,
-      status: {
-        label: `${readyCount} of ${members.length} ready`,
-        tone: runStatusTone[runGroupStatus(defaultGroup.status, runs)],
-      },
+      status: { label: 'Runs ready', tone: runStatusTone[status] },
+      value: `${readyCount} of ${members.length}`,
       opens: workbenchRunsKey,
     },
   ];

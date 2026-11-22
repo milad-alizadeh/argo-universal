@@ -11,7 +11,7 @@ import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import {
-  runGroupStatus,
+  runGroupState,
   runIsActive,
   runStatusLabel,
   runStatusTone,
@@ -142,11 +142,7 @@ function GroupRow({
 }): ReactElement {
   const { name, members, readyCount, url } = status;
 
-  const active = runs.some(
-    (run) => members.includes(run.name) && runIsActive(run),
-  );
-
-  const state = runGroupStatus(status, runs);
+  const { active, status: state } = runGroupState(status, runs);
 
   return (
     <View className="flex-row items-center gap-1">
