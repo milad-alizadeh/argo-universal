@@ -88,6 +88,13 @@
         "@shopify/react-native-skia",
         "typescript"
       ]
+    },
+    "autolinking": {
+      "ios": {
+        "buildFromSource": [
+          "expo-camera"
+        ]
+      }
     }
   }
 }
