@@ -1,5 +1,5 @@
 import type { RunStatusResult } from '@repo/contracts';
-import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
+import { showToast, useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { skipToken, useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
@@ -60,16 +60,22 @@ export function useSessionRuns(
   const start = useMutation(trpc.run.start.mutationOptions());
   const stop = useMutation(trpc.run.stop.mutationOptions());
   const restart = useMutation(trpc.run.restart.mutationOptions());
-  const draft = useMutation(trpc.run.draft.mutationOptions());
+
+  const draft = useMutation(
+    trpc.run.draft.mutationOptions({
+      onError: ({ message }) =>
+        showToast({ title: 'Runs', message, tone: 'danger' }),
+    }),
+  );
+
   const shells = useShellControls(sessionId, active, status.shells);
 
   const message =
+    status.configurationError ??
     start.error?.message ??
     stop.error?.message ??
     restart.error?.message ??
-    draft.error?.message ??
-    shells.failure ??
-    status.configurationError;
+    shells.failure;
 
   useErrorToast(message ? { title: 'Runs', message } : undefined);
 

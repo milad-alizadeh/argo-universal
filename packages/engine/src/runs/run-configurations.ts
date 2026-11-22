@@ -11,9 +11,9 @@ import { z } from 'zod';
 // Where a Project checks in its Run Configurations, relative to the Checkout.
 export const runConfigurationsFile = '.argo/run.json';
 
-const validPattern = (source: string): boolean => {
+export const validReadyPattern = (source: string): boolean => {
   try {
-    new RegExp(source);
+    new RegExp(source, 'u');
 
     return true;
   } catch {
@@ -25,26 +25,51 @@ const highestPort = 65_535;
 
 const Ready = z.union([
   z.strictObject({
-    pattern: z.string().refine(validPattern, 'not a regular expression'),
+    pattern: z.string().refine(validReadyPattern, 'not a regular expression'),
   }),
   z.strictObject({ port: z.literal(true) }),
 ]);
 
 const RunConfiguration = z.strictObject({
-  name: z.string().min(1),
-  command: z.string().min(1),
-  cwd: z.string().min(1).default('.'),
-  env: z.record(z.string(), z.string()).default({}),
-  port: z.int().min(1).max(highestPort).optional(),
-  url: z.string().min(1).optional(),
-  ready: Ready.optional(),
+  name: z.string().min(1).describe('A unique Run Configuration name.'),
+  command: z.string().min(1).describe('The shell command that starts the Run.'),
+  cwd: z
+    .string()
+    .min(1)
+    .default('.')
+    .describe('The working folder. Relative paths start at the Checkout root.'),
+  env: z
+    .record(z.string(), z.string())
+    .default({})
+    .describe(
+      'Shared environment values. Keep secrets in personal Project settings.',
+    ),
+  port: z
+    .int()
+    .min(1)
+    .max(highestPort)
+    .optional()
+    .describe('A fixed port. Omit it to let Argo allocate one and set $PORT.'),
+  url: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('The app URL, which can include $PORT.'),
+  ready: Ready.optional().describe(
+    'Wait for an output regular expression or for the port to listen. By default, wait for the port.',
+  ),
 });
 
 export type RunConfiguration = z.infer<typeof RunConfiguration>;
 
 const RunGroup = z.strictObject({
-  members: z.array(z.string()),
-  stopAll: z.boolean().optional(),
+  members: z
+    .array(z.string())
+    .describe('Names of Run Configurations to start together.'),
+  stopAll: z
+    .boolean()
+    .optional()
+    .describe('Also stop the other group members when one member is stopped.'),
 });
 
 export type RunGroup = z.infer<typeof RunGroup>;
@@ -52,8 +77,14 @@ export type RunGroup = z.infer<typeof RunGroup>;
 const RunConfigurationsFile = z
   .strictObject({
     configurations: z.array(RunConfiguration).default([]),
-    groups: z.record(z.string(), RunGroup).default({}),
-    default: z.string().optional(),
+    groups: z
+      .record(z.string(), RunGroup)
+      .default({})
+      .describe('Named groups whose members refer to Run Configuration names.'),
+    default: z
+      .string()
+      .optional()
+      .describe('The name of a group to show in the Workbench.'),
   })
   .superRefine((file, context) => {
     const names = new Set<string>();
@@ -86,6 +117,13 @@ const RunConfigurationsFile = z
   });
 
 export type RunConfigurations = z.infer<typeof RunConfigurationsFile>;
+
+export function runConfigurationSchema(): z.core.JSONSchema.JSONSchema {
+  return z.toJSONSchema(RunConfigurationsFile, {
+    io: 'input',
+    target: 'draft-7',
+  });
+}
 
 type RunConfigurationsError = {
   message: string;

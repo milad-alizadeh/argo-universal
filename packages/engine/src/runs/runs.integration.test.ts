@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:net';
 import { join } from 'node:path';
+import { RunGuide } from '@repo/contracts';
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it, onTestFinished } from 'vitest';
@@ -604,6 +605,36 @@ it('refuses to draft over an existing .argo/run.json unless asked', async () => 
   expect(await readFile(join(project.path, runFile), 'utf8')).toContain(
     'worker',
   );
+});
+
+it('guides an Agent from an empty Checkout to a valid Run Configuration', async () => {
+  const { call, operations, project, terminals } = await startRuns();
+
+  await expect(call('run.draft')).rejects.toThrow(/run\.guide/u);
+  const guide = await runOperation(operations, { id: 'run.guide', params: {} });
+  expect(guide).toMatchObject({
+    path: runFile,
+    schema: {
+      type: 'object',
+      properties: {
+        configurations: { items: { required: ['name', 'command'] } },
+      },
+    },
+  });
+
+  const { template } = RunGuide.parse(guide);
+  const name = 'smoke-test';
+  await configure(project.path, template);
+  await expect(call(statusRun)).resolves.toMatchObject({
+    configurations: [{ name, status: 'stopped' }],
+  });
+  const started = call(startRun, { name });
+  const terminal = await terminals.next();
+  terminal.print('ARGO_RUN_READY\n');
+  await expect(started).resolves.toMatchObject({ ready: true });
+  await expect(call('run.stop', { name })).resolves.toMatchObject({
+    status: 'stopped',
+  });
 });
 
 const web2 = { name: 'web', command: 'x', ready: { pattern: 'up' } };

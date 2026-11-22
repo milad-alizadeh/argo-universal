@@ -101,15 +101,18 @@ async function expectDesktopEntry(page: Page, count: number): Promise<void> {
 }
 
 async function expectPhoneEntry(page: Page, count: number): Promise<void> {
-  await page.getByRole('button', { name: 'More', exact: true }).click();
-  await expect(
-    page.getByRole('menuitem', {
-      name: `Changed files · ${count}`,
-      exact: true,
-    }),
-  ).toBeVisible();
-  await capture(page, `changed-files-${count}-menu`);
+  await expect(await phoneFilesEntry(page, count)).toBeVisible();
+  await capture(page, `changed-files-${count}-workbench`);
   await page.keyboard.press('Escape');
+}
+
+async function phoneFilesEntry(page: Page, count: number): Promise<Locator> {
+  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+
+  return page.getByRole('dialog', { name: 'Workbench' }).getByRole('link', {
+    name: count === 0 ? /^Changed files(?:, 0)?$/u : `Changed files, ${count}`,
+    exact: true,
+  });
 }
 
 When('the Agent edits the greeting', async ({ app }) => {
@@ -124,10 +127,7 @@ export async function openChangedFiles(page: Page): Promise<void> {
 }
 
 async function openPhoneSheet(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'More', exact: true }).click();
-  await page
-    .getByRole('menuitem', { name: 'Changed files · 1', exact: true })
-    .click();
+  await (await phoneFilesEntry(page, 1)).click();
 }
 
 async function openInspector(page: Page): Promise<void> {
