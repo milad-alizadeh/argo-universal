@@ -1,3 +1,4 @@
+import { pressBlocks } from '@repo/contracts/kit-presses';
 import { nodeEventCall } from '@repo/contracts/plugins/board-moves';
 import {
   Handler,
@@ -52,10 +53,20 @@ const declareEvents = ({ node, definition }: ControlInput): Declared[] =>
   Object.entries(definition.events).map(([name, schema]) => ({
     name,
     schema,
-    rules: componentEventRules(schema),
+    rules: rulesOn(node.props, name, componentEventRules(schema)),
     handler: Handler.safeParse(componentEventHandler(node.props, name, schema))
       .data,
   }));
+
+// The event's rules on this node: a toggle's presses never hold it disabled.
+const rulesOn = (
+  props: ControlInput['node']['props'],
+  name: string,
+  rules: ComponentEventRules,
+): ComponentEventRules => ({
+  ...rules,
+  blocks: pressBlocks(props, name, rules.blocks),
+});
 
 // A missing callback still replaces whatever the node holds at the event's name.
 const placeCallbacks = (node: NodeEvents): Placed[] =>
