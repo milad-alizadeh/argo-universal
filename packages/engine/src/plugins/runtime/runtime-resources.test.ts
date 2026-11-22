@@ -84,11 +84,26 @@ it('marks every page when a change comes before the Server has drawn any of the 
   expect(open.marks).toEqual(['all']);
 });
 
-it('marks, with each change, an address whose draw asked the host beside its Query', async () => {
-  const open = await opened();
+it.each([
+  { answer: 1, change: 'the same' },
+  { answer: 2, change: 'a new' },
+])(
+  'marks an address whose draw asked the host beside its Query once, after its Query reads $change answer, not before',
+  async ({ answer }) => {
+    const open = await opened();
 
-  await open.drawnWithHostRead();
-  await open.ran('act');
+    await open.drawnWithHostRead();
+    await open.ran('act');
 
-  expect(open.marks).toEqual([[address]]);
-});
+    // A mark now would redraw from the answer the change made due, as a Hue light switched back before Hue replied.
+    expect(open.marks).toEqual([]);
+
+    open.elapse();
+    await vi.waitFor(() => expect(open.reads()).toHaveLength(2));
+    await open.answer(answer);
+
+    await vi.waitFor(() => expect(open.windows).toBe(0));
+    await open.resources.changesSettled();
+    expect(open.marks).toEqual([[address]]);
+  },
+);

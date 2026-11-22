@@ -42,14 +42,29 @@ export class DrawnReads {
     if (drawn) drawn.hostRead = true;
   }
 
-  // The addresses core cannot compare: no Query holds them, or their last draw also read the host.
-  public uncomparable(
+  // The addresses no Query holds, which core cannot compare at all.
+  public unheld(pluginId: string, held: ReadonlySet<string>): PageAddress[] {
+    return this.listed(pluginId, (key) => !held.has(key));
+  }
+
+  // The addresses a Query holds whose last draw also read the host, which core can compare only in part.
+  public heldWithHostRead(
     pluginId: string,
     held: ReadonlySet<string>,
   ): PageAddress[] {
+    return this.listed(
+      pluginId,
+      (key, drawn) => drawn.hostRead && held.has(key),
+    );
+  }
+
+  private listed(
+    pluginId: string,
+    wanted: (key: string, drawn: Drawn) => boolean,
+  ): PageAddress[] {
     return this.drawnOf(pluginId)
       .entries()
-      .filter(([key, drawn]) => drawn.hostRead || !held.has(key))
+      .filter(([key, drawn]) => wanted(key, drawn))
       .map(([, { address }]) => address)
       .toArray();
   }
