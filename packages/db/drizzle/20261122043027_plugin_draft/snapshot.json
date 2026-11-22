@@ -1,10 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "dd0702c7-6f0d-4f0c-b1aa-15756412203d",
+  "id": "d35d47a0-32fa-4642-ab3b-c9c18fea3758",
   "prevIds": [
-    "05341bef-2ee7-4634-8705-934640c66b15",
-    "c282ee4b-4dc0-46f0-8532-e063a1de8714"
+    "92aa29ed-4d4a-4550-a5c8-8edf5b1a1cc0"
   ],
   "ddl": [
     {
@@ -21,6 +20,26 @@
     },
     {
       "name": "project",
+      "entityType": "tables"
+    },
+    {
+      "name": "project_schedule",
+      "entityType": "tables"
+    },
+    {
+      "name": "project_schedule_occurrence",
+      "entityType": "tables"
+    },
+    {
+      "name": "closed_follow_through",
+      "entityType": "tables"
+    },
+    {
+      "name": "delegated_skill",
+      "entityType": "tables"
+    },
+    {
+      "name": "delegated_turn",
       "entityType": "tables"
     },
     {
@@ -49,6 +68,14 @@
     },
     {
       "name": "shell",
+      "entityType": "tables"
+    },
+    {
+      "name": "run",
+      "entityType": "tables"
+    },
+    {
+      "name": "run_settings",
       "entityType": "tables"
     },
     {
@@ -369,6 +396,276 @@
       "generated": null,
       "name": "id",
       "entityType": "columns",
+      "table": "project_schedule"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "table": "project_schedule"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "settings",
+      "entityType": "columns",
+      "table": "project_schedule"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "next_at",
+      "entityType": "columns",
+      "table": "project_schedule"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "latest_session_id",
+      "entityType": "columns",
+      "table": "project_schedule"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "paused",
+      "entityType": "columns",
+      "table": "project_schedule"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "schedule_id",
+      "entityType": "columns",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "at",
+      "entityType": "columns",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "result",
+      "entityType": "columns",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "turn_id",
+      "entityType": "columns",
+      "table": "closed_follow_through"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "starter_id",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "origin_turn_id",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "destination_id",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "arguments",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "command_digest",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "dispatched",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "skipped",
+      "entityType": "columns",
+      "table": "delegated_skill"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "delegated_turn"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "starter_id",
+      "entityType": "columns",
+      "table": "delegated_turn"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source_id",
+      "entityType": "columns",
+      "table": "delegated_turn"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "turn_id",
+      "entityType": "columns",
+      "table": "delegated_turn"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "delivered",
+      "entityType": "columns",
+      "table": "delegated_turn"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "revoked",
+      "entityType": "columns",
+      "table": "delegated_turn"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
       "table": "session"
     },
     {
@@ -643,11 +940,21 @@
     },
     {
       "type": "integer",
-      "notNull": true,
+      "notNull": false,
       "autoincrement": false,
       "default": null,
       "generated": null,
       "name": "interval_seconds",
+      "entityType": "columns",
+      "table": "session_schedule"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ends_at",
       "entityType": "columns",
       "table": "session_schedule"
     },
@@ -990,6 +1297,216 @@
       "name": "output_blob_id",
       "entityType": "columns",
       "table": "shell"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "checkout_path",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "command",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "cwd",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "port",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "url",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pid",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "exit_code",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "started_at",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ready_at",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ended_at",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "output_blob_id",
+      "entityType": "columns",
+      "table": "run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "table": "run_settings"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "run_settings"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "env",
+      "entityType": "columns",
+      "table": "run_settings"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "port",
+      "entityType": "columns",
+      "table": "run_settings"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "trusted",
+      "entityType": "columns",
+      "table": "run_settings"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "auto_start",
+      "entityType": "columns",
+      "table": "run_settings"
     },
     {
       "type": "integer",
@@ -1457,6 +1974,126 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
+      "name": "fk_project_schedule_project_id_project_id_fk",
+      "entityType": "fks",
+      "table": "project_schedule"
+    },
+    {
+      "columns": [
+        "schedule_id"
+      ],
+      "tableTo": "project_schedule",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_project_schedule_occurrence_schedule_id_project_schedule_id_fk",
+      "entityType": "fks",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "columns": [
+        "turn_id"
+      ],
+      "tableTo": "turn",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_closed_follow_through_turn_id_turn_id_fk",
+      "entityType": "fks",
+      "table": "closed_follow_through"
+    },
+    {
+      "columns": [
+        "starter_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_delegated_skill_starter_id_session_id_fk",
+      "entityType": "fks",
+      "table": "delegated_skill"
+    },
+    {
+      "columns": [
+        "origin_turn_id"
+      ],
+      "tableTo": "turn",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_delegated_skill_origin_turn_id_turn_id_fk",
+      "entityType": "fks",
+      "table": "delegated_skill"
+    },
+    {
+      "columns": [
+        "destination_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_delegated_skill_destination_id_session_id_fk",
+      "entityType": "fks",
+      "table": "delegated_skill"
+    },
+    {
+      "columns": [
+        "starter_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_delegated_turn_starter_id_session_id_fk",
+      "entityType": "fks",
+      "table": "delegated_turn"
+    },
+    {
+      "columns": [
+        "source_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_delegated_turn_source_id_session_id_fk",
+      "entityType": "fks",
+      "table": "delegated_turn"
+    },
+    {
+      "columns": [
+        "project_id"
+      ],
+      "tableTo": "project",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
       "name": "fk_session_project_id_project_id_fk",
       "entityType": "fks",
       "table": "session"
@@ -1583,6 +2220,51 @@
     },
     {
       "columns": [
+        "project_id"
+      ],
+      "tableTo": "project",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_run_project_id_project_id_fk",
+      "entityType": "fks",
+      "table": "run"
+    },
+    {
+      "columns": [
+        "output_blob_id"
+      ],
+      "tableTo": "blob",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_run_output_blob_id_blob_id_fk",
+      "entityType": "fks",
+      "table": "run"
+    },
+    {
+      "columns": [
+        "project_id"
+      ],
+      "tableTo": "project",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_run_settings_project_id_project_id_fk",
+      "entityType": "fks",
+      "table": "run_settings"
+    },
+    {
+      "columns": [
         "host",
         "account"
       ],
@@ -1687,6 +2369,16 @@
     },
     {
       "columns": [
+        "project_id",
+        "name"
+      ],
+      "nameExplicit": false,
+      "name": "run_settings_pk",
+      "entityType": "pks",
+      "table": "run_settings"
+    },
+    {
+      "columns": [
         "host",
         "account",
         "plugin"
@@ -1722,6 +2414,51 @@
       "nameExplicit": false,
       "name": "project_pk",
       "table": "project",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "project_schedule_pk",
+      "table": "project_schedule",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "project_schedule_occurrence_pk",
+      "table": "project_schedule_occurrence",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "turn_id"
+      ],
+      "nameExplicit": false,
+      "name": "closed_follow_through_pk",
+      "table": "closed_follow_through",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "delegated_skill_pk",
+      "table": "delegated_skill",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "delegated_turn_pk",
+      "table": "delegated_turn",
       "entityType": "pks"
     },
     {
@@ -1767,6 +2504,15 @@
       "nameExplicit": false,
       "name": "registry_cache_pk",
       "table": "registry_cache",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "run_pk",
+      "table": "run",
       "entityType": "pks"
     },
     {
@@ -1902,6 +2648,92 @@
     {
       "columns": [
         {
+          "value": "schedule_id",
+          "isExpression": false
+        },
+        {
+          "value": "at",
+          "isExpression": false
+        },
+        {
+          "value": "id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "project_schedule_history",
+      "entityType": "indexes",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "columns": [
+        {
+          "value": "schedule_id",
+          "isExpression": false
+        },
+        {
+          "value": "session_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "project_schedule_run_session",
+      "entityType": "indexes",
+      "table": "project_schedule_occurrence"
+    },
+    {
+      "columns": [
+        {
+          "value": "destination_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "delegated_skill_destination_index",
+      "entityType": "indexes",
+      "table": "delegated_skill"
+    },
+    {
+      "columns": [
+        {
+          "value": "delivered",
+          "isExpression": false
+        },
+        {
+          "value": "revoked",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "delegated_turn_pending_index",
+      "entityType": "indexes",
+      "table": "delegated_turn"
+    },
+    {
+      "columns": [
+        {
+          "value": "starter_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "delegated_turn_starter_index",
+      "entityType": "indexes",
+      "table": "delegated_turn"
+    },
+    {
+      "columns": [
+        {
           "value": "parent_session_id",
           "isExpression": false
         }
@@ -1962,6 +2794,38 @@
       "name": "turn_session_id_started_at_index",
       "entityType": "indexes",
       "table": "turn"
+    },
+    {
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false
+        },
+        {
+          "value": "checkout_path",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "run_checkout_index",
+      "entityType": "indexes",
+      "table": "run"
+    },
+    {
+      "columns": [
+        {
+          "value": "output_blob_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "run_output_blob_index",
+      "entityType": "indexes",
+      "table": "run"
     },
     {
       "columns": [
