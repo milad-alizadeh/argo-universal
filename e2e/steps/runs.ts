@@ -109,9 +109,7 @@ When(
     await rows(page)
       .getByRole('button', { name: `Create ${runFile}` })
       .click();
-    await expect(
-      toast(page, 'the template from run.guide', false),
-    ).toBeVisible();
+    await expect(toast(page, 'No sources in Checkout.')).toBeVisible();
   },
 );
 
