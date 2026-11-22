@@ -7,14 +7,8 @@ import {
   childNodeKey,
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
-import {
-  Fragment,
-  createElement,
-  type ElementType,
-  type ReactElement,
-} from 'react';
-import { commentable } from './commentable';
-import { faded, framed as drawingFrame } from './draft-drawing-nodes';
+import { Fragment, createElement, type ElementType } from 'react';
+import { draftWrapping, type DraftWrapping } from './draft-node';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 
@@ -26,49 +20,29 @@ type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
  * The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything
  * it could not draw is already its "Update Argo" note. A node it left as it was draws as the element it drew before,
  * so its row does not draw again. Kit components read their children's types and props, so a node draws as its kit
- * element itself, never inside a wrapper of its own.
+ * element itself, or as the one wrapper a Draft gives it (draft-node.tsx), which a parent reads as that kit element.
  */
 export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
-  return drawingFrame(drawnElement({ node, context }), node.key, context.draft);
-}
-
-function drawnElement({
-  node,
-  context,
-}: RenderNodeProps): React.JSX.Element | null {
-  const drawn = context.drawn.get(context.key, node);
+  const wrapping = draftWrapping(node, context);
+  const drawn = context.drawn.get(context.key, node, wrapping.id);
 
   if (drawn !== undefined) return drawn;
 
-  const element = faded(
-    framed(drawNode({ node, context }), node, context),
-    context.key,
-    context.draft,
-  );
+  const element = drawNode({ node, context, wrapping });
 
-  context.drawn.set(context.key, node, element);
+  context.drawn.set(context.key, { node, wrapping: wrapping.id, element });
 
   return element;
-}
-
-// While a Draft is open the App may frame a node; the frame takes the element's key, so its place among siblings holds.
-function framed(
-  element: ReactElement | null,
-  node: WireNode,
-  { seam }: Rendering.RenderContext,
-): ReactElement | null {
-  if (!element || !seam?.frames(node)) return element;
-
-  return createElement(seam.Frame, { key: element.key, node }, element);
 }
 
 function drawNode({
   node,
   context,
-}: RenderNodeProps): React.JSX.Element | null {
+  wrapping,
+}: RenderNodeProps & { wrapping: DraftWrapping }): React.JSX.Element | null {
   const definition = kitComponent(node.type);
   const drawing = registry.get(node.type);
 
@@ -78,18 +52,9 @@ function drawNode({
 
   const slots = renderedSlots(node, definition, context);
 
-  if (context.seam?.commentable)
-    return renderComponent(
-      commentable(
-        drawing,
-        { address: context.key, nodeKey: node.key },
-        node.type,
-      ),
-      input,
-      slots,
-    );
+  const component = context.drawn.wrappers.of(drawing, node, wrapping);
 
-  return renderComponent(drawing, input, slots);
+  return renderComponent(component, input, slots);
 }
 
 function renderComponent(

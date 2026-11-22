@@ -1,5 +1,5 @@
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
-import { kitTypeOf } from '#kit/wrapped-component';
+import { isKitElement } from '../../../typed-children';
 import type {
   CanvasDrawing,
   DrawingData,
@@ -20,32 +20,32 @@ import {
 } from './canvas-shapes';
 
 const rect = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<RectProps>(child) && kitTypeOf(child) === CanvasRect
+  isKitElement<RectProps>(child, CanvasRect)
     ? { kind: 'rect', props: child.props }
     : undefined;
 
 const circle = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<CircleProps>(child) && kitTypeOf(child) === CanvasCircle
+  isKitElement<CircleProps>(child, CanvasCircle)
     ? { kind: 'circle', props: child.props }
     : undefined;
 
 const line = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<LineProps>(child) && kitTypeOf(child) === CanvasLine
+  isKitElement<LineProps>(child, CanvasLine)
     ? { kind: 'line', props: child.props }
     : undefined;
 
 const path = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<PathProps>(child) && kitTypeOf(child) === CanvasPath
+  isKitElement<PathProps>(child, CanvasPath)
     ? { kind: 'path', props: child.props }
     : undefined;
 
 const text = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<CanvasTextProps>(child) && kitTypeOf(child) === CanvasText
+  isKitElement<CanvasTextProps>(child, CanvasText)
     ? { kind: 'text', props: child.props }
     : undefined;
 
 const group = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<GroupProps>(child) && kitTypeOf(child) === CanvasGroup
+  isKitElement<GroupProps>(child, CanvasGroup)
     ? {
         kind: 'group',
         props: child.props,

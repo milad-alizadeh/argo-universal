@@ -1,4 +1,3 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   createContext,
   useContext,
@@ -30,12 +29,12 @@ const ShownRegions = createContext<Shown | null>(null);
 
 // The frame a region's node draws in: what its tag says and does comes from the App's context, so a step redraws no node.
 function ConnectedFrame(props: {
-  node: WireNode;
+  nodeKey: string;
   children?: ReactElement;
 }): React.JSX.Element | null {
   const shown = useContext(ShownRegions);
   const drawing = useContext(DraftFramedContext);
-  const tag = shown?.tags.find(({ id }) => id === props.node.key);
+  const tag = shown?.tags.find(({ id }) => id === props.nodeKey);
 
   if (!shown || !tag) return props.children ?? null;
 

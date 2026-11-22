@@ -1,6 +1,6 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
+import { isKitElement } from '../../../typed-children';
 import type {
   ActionProps,
   ActionSectionProps,
@@ -49,8 +49,7 @@ export function submenuGroups(
 }
 
 function childGroups(child: ReactNode): ActionGroup[] {
-  if (isValidElement<ActionProps>(child) && kitTypeOf(child) === Action)
-    return actionGroup(child);
+  if (isKitElement<ActionProps>(child, Action)) return actionGroup(child);
 
   return nestedGroups(child);
 }
@@ -101,7 +100,7 @@ function unexpectedElement(child: ReactElement): ActionGroup[] {
 }
 
 function sectionGroups(child: ReactElement<ActionSectionProps>): ActionGroup[] {
-  if (kitTypeOf(child) !== ActionSection) return unexpectedElement(child);
+  if (!isKitElement(child, ActionSection)) return unexpectedElement(child);
 
   const groups = prefixedGroups(
     actionGroups(child.props.children),

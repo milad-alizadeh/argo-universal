@@ -7,6 +7,7 @@ import {
   useCallback,
   useContext,
   useLayoutEffect,
+  useMemo,
   useState,
   useRef,
 } from 'react';
@@ -19,6 +20,7 @@ import {
   type DraftView,
   type DraftNaming,
 } from './draft-drawing';
+import { DraftDrawingContext } from './draft-node';
 import { DraftSeamContext } from './draft-seam';
 import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
@@ -56,6 +58,8 @@ function useLatest<Args extends unknown[], Result>(
   );
 }
 
+const none: ReadonlySet<string> = new Set();
+
 type TreeIdentity = Pick<PluginTreeProps, 'pluginId'> & { key: string };
 
 function treeIdentity({ root, pluginId }: PluginTreeProps): TreeIdentity {
@@ -81,9 +85,17 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
     seam,
   };
 
+  // The wrappers read this from inside, and only a frame arming or dissolving, or the motion setting, changes it.
+  const drawing = useMemo(
+    () => ({ reduced: draft?.reduced ?? false, framed: draft?.framed ?? none }),
+    [draft?.reduced, draft?.framed],
+  );
+
   return (
     <PluginTreeContext value>
-      <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
+      <DraftDrawingContext value={drawing}>
+        <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
+      </DraftDrawingContext>
     </PluginTreeContext>
   );
 }

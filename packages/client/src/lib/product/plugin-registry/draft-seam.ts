@@ -10,7 +10,8 @@ export interface DraftSeam {
   frames: (node: WireNode) => boolean;
   // A dev Plugin's Draft page, whose every node draws in a view the App can find (see `commentable`), whether or not the author is commenting.
   commentable?: boolean;
-  Frame: ComponentType<{ node: WireNode; children?: ReactElement }>;
+  // `nodeKey` is the framed node's key, which holds across its redraws.
+  Frame: ComponentType<{ nodeKey: string; children?: ReactElement }>;
 }
 
 // Whether the region a node draws in wears the Agent's drawing frame now, which the App's frame reads from inside it.

@@ -3,10 +3,10 @@ import { Column } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
-import { kitTypeOf } from '#kit/wrapped-component';
 import { Button } from '#primitives/actions/button';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import { PositionContext } from '#primitives/fields/field-row';
+import { isKitElement } from '../../../typed-children';
 import { ButtonCard } from './field-group-button-card.android';
 import {
   caption,
@@ -71,4 +71,4 @@ const positioned = (rows: ReactElement[]): ReactElement[] =>
 
 // Every row draws its own card; a Button, which isn't a row, gets one from the section.
 const carded = (row: ReactElement): ReactElement =>
-  kitTypeOf(row) === Button ? <ButtonCard>{row}</ButtonCard> : row;
+  isKitElement(row, Button) ? <ButtonCard>{row}</ButtonCard> : row;

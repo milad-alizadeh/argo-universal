@@ -1,6 +1,6 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { kitTypeOf } from '#kit/wrapped-component';
+import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
+import { kitChildrenOf } from '../../../typed-children';
 import type {
   TableCellProps,
   TableColumn,
@@ -40,12 +40,6 @@ export function TableCellPart(_props: TableCellProps): null {
   return null;
 }
 
-const isRow = (child: ReactNode): child is ReactElement<TableRowProps> =>
-  isValidElement(child) && kitTypeOf(child) === TableRowPart;
-
-const isCell = (child: ReactNode): child is ReactElement<TableCellProps> =>
-  isValidElement(child) && kitTypeOf(child) === TableCellPart;
-
 function cellEntry(child: ReactElement<TableCellProps>): [string, TableCell] {
   const { column, text, children } = child.props;
   const content = flattenedChildren(children);
@@ -55,7 +49,9 @@ function cellEntry(child: ReactElement<TableCellProps>): [string, TableCell] {
 }
 
 const cellsOf = (children: ReactNode): Map<string, TableCell> =>
-  new Map(flattenedChildren(children).filter(isCell).map(cellEntry));
+  new Map(
+    kitChildrenOf<TableCellProps>(children, TableCellPart).map(cellEntry),
+  );
 
 const spokenRow = (
   columns: TableProps['columns'],
@@ -87,9 +83,9 @@ export const tableRows = (
   children: ReactNode,
   columns: TableProps['columns'],
 ): TableRow[] =>
-  flattenedChildren(children)
-    .filter(isRow)
-    .map((child, index) => rowOf(child, index, columns));
+  kitChildrenOf<TableRowProps>(children, TableRowPart).map((child, index) =>
+    rowOf(child, index, columns),
+  );
 
 const positionRoles = ['title', 'subtitle'] as const;
 

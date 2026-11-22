@@ -1,6 +1,5 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { kitTypeOf } from '#kit/wrapped-component';
-import { flattenedChildren } from '../../../flattened-children';
+import type { ReactElement, ReactNode } from 'react';
+import { kitChildrenOf } from '../../../typed-children';
 import type { BoardCardProps, BoardColumnProps } from './board-props';
 
 // A column the Board reads: its id, title, count and cards.
@@ -25,12 +24,6 @@ export interface BoardColumn {
   cards: BoardCard[];
 }
 
-const isColumn = (child: ReactNode): child is ReactElement<BoardColumnProps> =>
-  isValidElement(child) && kitTypeOf(child) === BoardColumnPart;
-
-const isCard = (child: ReactNode): child is ReactElement<BoardCardProps> =>
-  isValidElement(child) && kitTypeOf(child) === BoardCardPart;
-
 const cardOf = (child: ReactElement<BoardCardProps>): BoardCard => ({
   ...child.props,
   key: String(child.key ?? child.props.id),
@@ -47,7 +40,7 @@ const written = (child: ReactElement<BoardColumnProps>): WrittenColumn => {
 
   return {
     column: { key: String(child.key ?? id), id, title, count, cards: [] },
-    cards: flattenedChildren(children).filter(isCard).map(cardOf),
+    cards: kitChildrenOf<BoardCardProps>(children, BoardCardPart).map(cardOf),
   };
 };
 
@@ -68,7 +61,9 @@ function placeCards(read: readonly WrittenColumn[]): void {
  * it is written.
  */
 export function boardColumns(children: ReactNode): BoardColumn[] {
-  const read = flattenedChildren(children).filter(isColumn).map(written);
+  const read = kitChildrenOf<BoardColumnProps>(children, BoardColumnPart).map(
+    written,
+  );
 
   placeCards(read);
 

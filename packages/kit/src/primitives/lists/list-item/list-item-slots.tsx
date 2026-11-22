@@ -1,17 +1,12 @@
-import {
-  useContext,
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { useContext, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { kitTypeOf } from '#kit/wrapped-component';
 import { TextClassContext } from '#primitives/content/text';
 import { Svg } from '#primitives/visual';
 import { ListTileContext } from '../../../list-context';
 import { useCompactRows } from '../../../list-look-context';
 import { hasBadge, ItemBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
+import { isKitElement } from '../../../typed-children';
 import { cn } from '../../../utils';
 import { CompactContent, ItemContent, trailsTitle } from './list-item-content';
 import { Accessory, Control, Leading } from './list-item-parts';
@@ -117,5 +112,5 @@ function mediaFrameClass(media: ReactNode): string {
 }
 
 function isArtwork(media: ReactNode): boolean {
-  return isValidElement(media) && kitTypeOf(media) === Svg;
+  return isKitElement(media, Svg);
 }
