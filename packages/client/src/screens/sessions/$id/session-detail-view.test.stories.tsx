@@ -95,8 +95,8 @@ export const Idle: Story = {
     }),
 };
 
-// The band owns identity; the Feed and Composer keep the Session layout surface.
-export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
+// The detail pane owns identity; the Feed and Composer keep the Session layout surface.
+export const DetailOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
     const layout = within(await canvas.findByTestId('session-layout'));
@@ -105,7 +105,7 @@ export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
       name: /^Think briefly first/,
     });
 
-    await expect(canvas.getByTestId('window-band')).toContainElement(title);
+    await expect(canvas.getByTestId('desktop-detail')).toContainElement(title);
     await expect(layout.getByTestId(feedScrollTestId)).toBeVisible();
     await expect(
       layout.getByRole('textbox', { name: 'Message' }),

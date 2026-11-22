@@ -1,5 +1,4 @@
 import { transitionKeyOf } from '../utils/frame-timing';
-import type { PaneSpan } from '../utils/pane-shift';
 import { contentRegion } from './frame-layout-content';
 import { resizeHandles } from './frame-layout-handles';
 import {
@@ -70,13 +69,6 @@ function pageRegion(
   };
 }
 
-// The title starts on the content column's leading edge, and never under the band's leading group.
-const bandTitleLeading = (
-  { measures }: FrameLayoutInput,
-  content: PaneSpan,
-): number =>
-  Math.max(0, content.offset - measures.bandLeading) + measures.contentGutter;
-
 type Placed = Pick<
   FrameLayout,
   'rail' | 'list' | 'inspector' | 'page' | 'workbench'
@@ -140,7 +132,6 @@ export function frameLayout(input: FrameLayoutInput): FrameLayout {
     thresholds,
     sidebarWidth: railZone(input.measures) + placed.list.width,
     handles: resizeHandles(input, placed),
-    bandTitleLeading: bandTitleLeading(input, column.content),
     transitionKey: transitionKeyOf(arrangement(input, placed)),
   };
 }

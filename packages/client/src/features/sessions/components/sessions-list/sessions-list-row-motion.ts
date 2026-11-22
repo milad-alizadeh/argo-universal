@@ -19,7 +19,7 @@ export function rowFade(animate?: boolean): Partial<typeof fades> {
  * 2 above the next, its hover and selected tints at the menu-row radius; a Project's last row sits 20 above the next
  * Project's heading.
  */
-const sectionEnd = 'web:mb-4.5';
+const sectionEnd = 'web:mb-4.5 web:wide:mb-sidebar-section-gap';
 
 const flatRow = 'web:overflow-hidden web:rounded-xl';
 
@@ -39,9 +39,12 @@ export function useRowClassName(closing?: boolean): string {
   return rowClassName(closing, position === 'last' || position === 'only');
 }
 
-// A heading sits 2 below the list's top or the previous Project, 4 above its rows; collapsed, 20 above the next heading.
+// Wide sections use the sidebar's 8px heading gap and 16px section gap.
 export function headingClassName(collapsed: boolean): string {
-  return cn('web:pt-0.5', collapsed ? sectionEnd : 'web:mb-1');
+  return cn(
+    'web:pt-0.5 web:wide:pt-0',
+    collapsed ? sectionEnd : 'web:mb-1 web:wide:mb-sidebar-heading-gap',
+  );
 }
 
 // The empty Project's line ends its section as a last row does.

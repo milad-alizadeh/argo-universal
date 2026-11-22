@@ -1,6 +1,6 @@
 import { InspectorPlaceOffer } from '@repo/kit/primitives/scaffolds/inspector';
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import type { JSX, PropsWithChildren } from 'react';
+import type { JSX, PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { WindowBandProvider } from '#lib/product/window-band';
@@ -24,9 +24,10 @@ function Rail({ scaffold }: FrameState): JSX.Element {
   );
 }
 
-type SizedFrame = PropsWithChildren<
-  FrameState & { sizeClass: 'compact' | 'wide' }
->;
+type HostedContent = PropsWithChildren<{ list?: ReactNode }>;
+
+type SizedFrame = HostedContent &
+  FrameState & { sizeClass: 'compact' | 'wide' };
 
 function HostedScaffold(props: SizedFrame): JSX.Element {
   return (
@@ -34,7 +35,7 @@ function HostedScaffold(props: SizedFrame): JSX.Element {
       {...props.scaffold}
       sizeClass={props.sizeClass}
       sidebar={<Rail {...props} />}
-      list={<LayoutListMock name="Sessions" />}
+      list={props.list ?? <LayoutListMock name="Sessions" />}
       page={props.children}
     />
   );
@@ -43,21 +44,24 @@ function HostedScaffold(props: SizedFrame): JSX.Element {
 // The real Frame state around a props page: its Inspector draws in the hosted column.
 export function HostedScaffoldMock({
   children,
-}: PropsWithChildren): JSX.Element {
+  list,
+}: HostedContent): JSX.Element {
   const state = useFrameState();
 
   return (
     <View className="flex-1">
       <InspectorPlaceOffer value={state.inspectorPlace}>
         <WindowBandProvider places={state.bandPlaces}>
-          <AdaptiveScaffold {...state}>{children}</AdaptiveScaffold>
+          <AdaptiveScaffold {...state} list={list}>
+            {children}
+          </AdaptiveScaffold>
         </WindowBandProvider>
       </InspectorPlaceOffer>
     </View>
   );
 }
 
-function AdaptiveScaffold(props: PropsWithChildren<FrameState>): JSX.Element {
+function AdaptiveScaffold(props: HostedContent & FrameState): JSX.Element {
   return (
     <SizeClass
       compact={<HostedScaffold {...props} sizeClass="compact" />}

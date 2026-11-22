@@ -46,7 +46,7 @@ When(
   'I press {string} in the Session header',
   async ({ page }, name: string): Promise<void> => {
     await page
-      .getByTestId('window-band-trailing')
+      .getByTestId('desktop-detail')
       .getByRole('button', { name, exact: true })
       .click();
   },

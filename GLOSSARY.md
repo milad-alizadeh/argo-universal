@@ -673,7 +673,7 @@ What a Screen's header holds once it is known where it is drawn: Argo's own head
 _Avoid_: Header items, toolbar model
 
 **Header site**:
-Where a Screen's header draws, decided once from the facts around it: its own heading, the navigator's stack header, a list column's top row, or the window's band. One function picks it; each site's drawing only draws.
+Where a Screen's header draws, decided once from the facts around it: its own heading, the navigator's stack header, or a list column's top row. One function picks it; each site's drawing only draws.
 _Avoid_: Header placement, header mode
 
 **Content column**:

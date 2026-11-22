@@ -102,7 +102,7 @@ export function useHeaderDrawing(
   selection: SelectionMode | null,
 ): HeaderDrawing {
   const declared = useHeaderDeclaration(props, selection);
-  const plan = useHeaderPlan(kind);
+  const plan = useHeaderPlan(kind, Boolean(props.title));
   const extras = useScreenExtras(props, { selection, site: plan.site });
   const declaration = withAnchor(declared, extras.anchor);
   const { titleGroups, pageOptions } = extras;

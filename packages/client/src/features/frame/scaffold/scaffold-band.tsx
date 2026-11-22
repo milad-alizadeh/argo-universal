@@ -9,7 +9,6 @@ import {
   bandToggleAppearance,
 } from './band-control-appearance';
 import { BandTrailing } from './scaffold-band-controls';
-import { BandTitle } from './scaffold-band-title';
 import type {
   PartReads,
   ScaffoldLayout,
@@ -103,7 +102,7 @@ export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
         style={{ top: parts.layout.safeTop, height: parts.layout.panesTop }}
       >
         <BandLeading {...parts} />
-        <BandTitle {...parts} />
+        <View className="flex-1" />
         <BandTrailing {...parts} />
       </View>
     </FixedSizeChrome>

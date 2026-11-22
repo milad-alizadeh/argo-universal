@@ -5,11 +5,13 @@ import {
   type PromptDeliverySessions,
 } from '../queue-delivery';
 import type { SessionSources } from '../session-sources';
+import { DelegatedInputs } from './input-delivery';
 import {
-  allowsResult,
+  allowsDelegation,
   delegatedOutcome,
   delivered,
-  settledDelegations,
+  pendingDelegations,
+  type DelegatedTurn,
   type SettledDelegation,
 } from './result-store';
 
@@ -26,6 +28,7 @@ type ResultSources = Pick<SessionSources, 'database' | 'findWriter'> & {
 };
 
 export class DelegatedResults {
+  private readonly inputs: DelegatedInputs;
   private again = false;
   private reconciling = false;
   private scheduled: ReturnType<typeof setTimeout> | undefined;
@@ -34,7 +37,9 @@ export class DelegatedResults {
     private readonly sources: ResultSources,
     private readonly stopping: AbortSignal,
     private readonly log: (message: string) => void,
-  ) {}
+  ) {
+    this.inputs = new DelegatedInputs(sources, () => this.request());
+  }
 
   public start(): void {
     const writer = this.sources.findWriter();
@@ -46,6 +51,7 @@ export class DelegatedResults {
       'abort',
       () => {
         subscription.unsubscribe();
+        this.inputs.stop();
         clearTimeout(this.scheduled);
       },
       { once: true },
@@ -81,8 +87,17 @@ export class DelegatedResults {
   }
 
   private async pass(): Promise<void> {
+    const byStatus = Map.groupBy(
+      pendingDelegations(this.sources.database),
+      ({ status }) => status,
+    );
+
+    await this.deliverInput(
+      (byStatus.get('running') ?? []).map(({ work }) => work),
+    );
+
     const work = Map.groupBy(
-      settledDelegations(this.sources.database),
+      byStatus.get('ended') ?? [],
       ({ work }) => work.starterId,
     );
 
@@ -96,6 +111,16 @@ export class DelegatedResults {
           this.log(`Could not queue delegated results: ${String(error)}`);
         this.retry();
       }
+    }
+  }
+
+  private async deliverInput(work: DelegatedTurn[]): Promise<void> {
+    try {
+      if (await this.inputs.deliver(work, this.stopping)) this.retry();
+    } catch (error) {
+      if (!this.stopping.aborted)
+        this.log(`Could not queue delegated input: ${String(error)}`);
+      this.retry();
     }
   }
 
@@ -114,7 +139,7 @@ export class DelegatedResults {
     const { open, database } = this.sources;
 
     const available = rows.filter(({ work }) =>
-      allowsResult(database, starterId, [work.id]),
+      allowsDelegation(database, starterId, [work.id]),
     );
 
     const delivery = buildDelivery(

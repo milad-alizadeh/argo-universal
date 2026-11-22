@@ -18,16 +18,23 @@ const pending = and(
   eq(delegatedTurn.revoked, false),
 );
 
+export type DelegatedTurn = typeof delegatedTurn.$inferSelect;
+
 export type SettledDelegation = {
-  work: typeof delegatedTurn.$inferSelect;
+  work: DelegatedTurn;
   stopReason: (typeof turn.$inferSelect)['stopReason'];
   error: (typeof turn.$inferSelect)['error'];
 };
 
-export function settledDelegations(database: Database): SettledDelegation[] {
+type PendingDelegation = SettledDelegation & {
+  status: (typeof turn.$inferSelect)['status'];
+};
+
+export function pendingDelegations(database: Database): PendingDelegation[] {
   return database
     .select({
       work: delegatedTurn,
+      status: turn.status,
       stopReason: turn.stopReason,
       error: turn.error,
     })
@@ -39,7 +46,7 @@ export function settledDelegations(database: Database): SettledDelegation[] {
         eq(turn.sessionId, delegatedTurn.sourceId),
       ),
     )
-    .where(and(pending, eq(turn.status, 'ended')))
+    .where(pending)
     .orderBy(turn.endedAt, delegatedTurn.id)
     .all();
 }
@@ -124,7 +131,7 @@ export function closeFollowThrough(starterId: string): WriterJob {
   };
 }
 
-export function allowsResult(
+export function allowsDelegation(
   database: Database,
   starterId: string,
   ids: string[],
