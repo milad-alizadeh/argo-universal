@@ -7,10 +7,9 @@ import { observable } from '@trpc/server/observable';
 import * as React from 'react';
 import { View } from 'react-native';
 import { TRPCProvider } from '#features/connection';
-import { PluginDraftBar } from '../components/draft-bar/plugin-draft-bar';
+import { DraftPage } from '../components/draft-page/draft-page';
 import { draftComments, type DraftNote } from '../stores/draft-comments';
 import type { PageOpening } from '../utils/page-addresses';
-import { useDraftBar } from './use-draft-bar';
 
 const opening: PageOpening = { pluginId: 'tracker', path: '/issues' };
 
@@ -65,10 +64,6 @@ const listed = (withRegions: boolean): PluginList =>
     errors: [],
   });
 
-function BarOf(): React.ReactNode {
-  return <PluginDraftBar bar={useDraftBar(opening)} />;
-}
-
 export type ChooseCall = { path: string; input: unknown };
 
 function clientOver(
@@ -116,7 +111,9 @@ export function ChooseBarMock(props: {
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={client} queryClient={queryClient}>
         <View className="h-96 w-full bg-content">
-          <BarOf />
+          <DraftPage opening={opening} error={null}>
+            {() => null}
+          </DraftPage>
         </View>
       </TRPCProvider>
     </QueryClientProvider>

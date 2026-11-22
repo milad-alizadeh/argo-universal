@@ -5,7 +5,6 @@ import {
   type PageOpening,
   PluginSessionRowProvider,
   useOpenPluginPage,
-  usePluginDraft,
   usePluginLookup,
   usePluginPage,
 } from '#features/plugins';
@@ -27,25 +26,26 @@ type PageViewProps = PageOpening & {
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const { root, onPageCall, loadingTree, error } = usePluginPage(opening);
-  const draft = usePluginDraft(opening, error);
 
   // Let the destination paint its loading state even when its first tree is already cached.
   const deferredRoot = useDeferredValue(root, null);
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
-      <DraftPage opening={opening} draft={draft}>
-        <PluginDetailView
-          title={title}
-          root={draft.frame ?? deferredRoot}
-          callbacks={{
-            onOpenPage,
-            onPageCall,
-            pluginId: opening.pluginId,
-            draft: draft.tree,
-          }}
-          {...{ onBack, loadingTree }}
-        />
+      <DraftPage opening={opening} error={error}>
+        {(draft) => (
+          <PluginDetailView
+            title={title}
+            root={draft.frame ?? deferredRoot}
+            callbacks={{
+              onOpenPage,
+              onPageCall,
+              pluginId: opening.pluginId,
+              draft: draft.tree,
+            }}
+            {...{ onBack, loadingTree }}
+          />
+        )}
       </DraftPage>
     </PluginSymbol>
   );

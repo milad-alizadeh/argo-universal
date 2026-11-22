@@ -1,6 +1,12 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { draftBarOf, draftPageOf, type DraftEntry } from './draft-bar-model';
+import {
+  draftBarOf,
+  draftFrameOf,
+  draftPageOf,
+  type DraftBarModel,
+  type DraftEntry,
+} from './draft-bar-model';
 
 const manifestWith = (
   drafts?: NonNullable<PluginManifest['contributes']['drafts']>,
@@ -100,4 +106,54 @@ it('finds a Draft page only in a dev Plugin, at a path the page matches', () => 
   expect(draftPageOf(issues(), '/')).toBeNull();
   expect(draftPageOf(issues(true), '/other')).toBeNull();
   expect(draftPageOf(null, '/')).toBeNull();
+});
+
+const frameBar = (
+  current: DraftBarModel['current'],
+  missing: boolean,
+): DraftBarModel => ({
+  states: [
+    { id: 'empty', label: 'Empty', missing },
+    { id: 'populated', label: 'Populated', missing: false },
+  ],
+  current,
+  regions: [],
+});
+
+const loaderThrew = 'Loader threw';
+
+const notDeclared = 'not declared';
+
+const textOf = (frame: ReturnType<typeof draftFrameOf>): string =>
+  JSON.stringify(frame?.props.children);
+
+it('draws no frame for a page that is not a Draft', () => {
+  expect(draftFrameOf(null, loaderThrew)).toBeNull();
+});
+
+it('draws no frame for a state the Draft draws', () => {
+  expect(draftFrameOf(frameBar('populated', false), null)).toBeNull();
+});
+
+it('says why a state the Draft does not declare draws nothing', () => {
+  const text = textOf(draftFrameOf(frameBar('empty', true), null));
+
+  expect(text).toEqual(expect.stringContaining('Empty'));
+  expect(text).toEqual(expect.stringContaining(notDeclared));
+});
+
+it('says why a state whose Loader failed draws nothing, with the Loader error', () => {
+  const text = textOf(
+    draftFrameOf(frameBar('populated', false), 'No issues field'),
+  );
+
+  expect(text).toEqual(expect.stringContaining('Populated'));
+  expect(text).toEqual(expect.stringContaining('No issues field'));
+});
+
+it('names the missing state before a failure the Loader may have for it', () => {
+  const text = textOf(draftFrameOf(frameBar('empty', true), loaderThrew));
+
+  expect(text).toEqual(expect.stringContaining(notDeclared));
+  expect(text).not.toEqual(expect.stringContaining(loaderThrew));
 });

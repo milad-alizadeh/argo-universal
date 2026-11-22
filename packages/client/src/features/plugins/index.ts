@@ -85,20 +85,7 @@ export { type PluginEntry, usePluginEntries } from './hooks/use-plugin-entries';
 
 export { invalidatePluginState } from './utils/plugin-state-refresh';
 
-export { PluginDraftBar } from './components/draft-bar/plugin-draft-bar';
-
-export { DraftBar } from './components/draft-bar/draft-bar';
-
-export { useDraftBar } from './hooks/use-draft-bar';
-
-export { usePluginDraft } from './hooks/use-plugin-draft';
-
-export { DraftPage } from './components/draft-page/draft-page';
-
-export { useDraftNaming } from './stores/draft-namings';
-
-export { DraftCommentsLayer } from './components/draft-comment/draft-comments-layer';
-
-export { DraftRegionsProvider } from './components/draft-region/draft-regions';
-
-export { useDraftRegions } from './hooks/use-draft-regions';
+export {
+  DraftPage,
+  type DraftDrawing,
+} from './components/draft-page/draft-page';

@@ -15,7 +15,7 @@ import {
   DraftSeamContext,
   type DraftSeam,
 } from '../../../../lib/product/plugin-registry/draft-seam';
-import type { DraftRegions } from '../../hooks/use-draft-regions';
+import type { DraftRegions } from '../../hooks/use-plugin-draft';
 import { DraftRegionFrame } from './draft-region-frame';
 
 type Shown = DraftRegions & {

@@ -4,7 +4,6 @@ import {
   type PageOpening,
   PluginSessionRowProvider,
   useOpenPluginPage,
-  usePluginDraft,
   usePluginPage,
 } from '#features/plugins';
 import { closeSessionPanel } from '#features/sessions';
@@ -139,15 +138,16 @@ export function PluginTabPage({
 // The tab or sheet is a page of its own, so a dev Plugin's Draft of it has its bar, region tags and comments as a Plugin page does (ADR-0057).
 function DrawnTabPage({ opening }: { opening: PageOpening }): ReactNode {
   const page = usePluginPage(opening);
-  const draft = usePluginDraft(opening, page.error);
 
   return (
-    <DraftPage opening={opening} draft={draft}>
-      <DrawnPluginPage
-        page={draft.frame ? { ...page, root: draft.frame } : page}
-        pluginId={opening.pluginId}
-        draft={draft.tree}
-      />
+    <DraftPage opening={opening} error={page.error}>
+      {(draft) => (
+        <DrawnPluginPage
+          page={draft.frame ? { ...page, root: draft.frame } : page}
+          pluginId={opening.pluginId}
+          draft={draft.tree}
+        />
+      )}
     </DraftPage>
   );
 }
