@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
+import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { Skeleton } from './index';
 import { loadedSkeleton, loadingSkeleton } from './skeleton-fixtures';
+import { overlayAttribute } from './skeleton-marks';
 import { SkeletonNoData, SkeletonWithRows } from './skeleton-no-data';
 import { SkeletonSample } from './skeleton-sample';
 
@@ -138,5 +141,34 @@ export const KeepsLoadedContentAccessibleWhenFontsFinish: Story = {
     } finally {
       Reflect.deleteProperty(fonts, 'ready');
     }
+  },
+};
+
+// Two badges stacked on one spot (a cross-fading icon, an avatar under its status) stand in as one placeholder.
+function StackedBadges(): ReactElement {
+  return (
+    <Skeleton {...loadingSkeleton}>
+      <View className="size-10">
+        <View className="absolute inset-0 rounded-full bg-primary" />
+        <View className="absolute inset-0 rounded-full bg-primary" />
+      </View>
+    </Skeleton>
+  );
+}
+
+export const DrawsOnePlaceholderPerSpot: Story = {
+  args: loadingSkeleton,
+  render: () => <StackedBadges />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('status');
+
+    const overlay = (): Element | null =>
+      canvasElement.querySelector(`[${overlayAttribute}]`);
+
+    await waitFor(() =>
+      expect(overlay()?.childElementCount).toBeGreaterThan(0),
+    );
+    await expect(overlay()?.childElementCount).toBe(1);
   },
 };
