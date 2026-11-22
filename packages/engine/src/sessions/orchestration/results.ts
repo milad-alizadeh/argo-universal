@@ -5,8 +5,9 @@ import {
   type PromptDeliverySessions,
 } from '../queue-delivery';
 import type { SessionSources } from '../session-sources';
+import { DelegatedInputs } from './input-delivery';
 import {
-  allowsResult,
+  allowsDelegation,
   delegatedOutcome,
   delivered,
   settledDelegations,
@@ -26,6 +27,7 @@ type ResultSources = Pick<SessionSources, 'database' | 'findWriter'> & {
 };
 
 export class DelegatedResults {
+  private readonly inputs: DelegatedInputs;
   private again = false;
   private reconciling = false;
   private scheduled: ReturnType<typeof setTimeout> | undefined;
@@ -34,7 +36,9 @@ export class DelegatedResults {
     private readonly sources: ResultSources,
     private readonly stopping: AbortSignal,
     private readonly log: (message: string) => void,
-  ) {}
+  ) {
+    this.inputs = new DelegatedInputs(sources, () => this.request());
+  }
 
   public start(): void {
     const writer = this.sources.findWriter();
@@ -46,6 +50,7 @@ export class DelegatedResults {
       'abort',
       () => {
         subscription.unsubscribe();
+        this.inputs.stop();
         clearTimeout(this.scheduled);
       },
       { once: true },
@@ -81,6 +86,8 @@ export class DelegatedResults {
   }
 
   private async pass(): Promise<void> {
+    await this.deliverInput();
+
     const work = Map.groupBy(
       settledDelegations(this.sources.database),
       ({ work }) => work.starterId,
@@ -99,6 +106,16 @@ export class DelegatedResults {
     }
   }
 
+  private async deliverInput(): Promise<void> {
+    try {
+      if (await this.inputs.deliver(this.stopping)) this.retry();
+    } catch (error) {
+      if (!this.stopping.aborted)
+        this.log(`Could not queue delegated input: ${String(error)}`);
+      this.retry();
+    }
+  }
+
   private retry(): void {
     if (this.scheduled || this.stopping.aborted) return;
     this.scheduled = setTimeout(() => {
@@ -114,7 +131,7 @@ export class DelegatedResults {
     const { open, database } = this.sources;
 
     const available = rows.filter(({ work }) =>
-      allowsResult(database, starterId, [work.id]),
+      allowsDelegation(database, starterId, [work.id]),
     );
 
     const delivery = buildDelivery(

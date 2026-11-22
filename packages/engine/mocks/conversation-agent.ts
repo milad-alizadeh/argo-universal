@@ -105,7 +105,7 @@ const permissionRequest = (title: string): ScriptedStep => ({
   },
 });
 
-const permissionSteps = (title: string | undefined): ScriptedStep[] =>
+export const permissionSteps = (title: string | undefined): ScriptedStep[] =>
   title === undefined ? [] : [askedToolCall(title), permissionRequest(title)];
 
 const stepsOf = (reply: ConversationAgentReply): ScriptedStep[] => [
