@@ -3,15 +3,16 @@ import { chartDefaults, tones } from '../kit-tokens';
 import { svgProps } from './core-kit-props';
 import { svgCharacterLimit } from './wire-limits';
 
-const labelLimit = 120;
+export const visualLabelLength = { minimum: 1, maximum: 120 } as const;
 
-const pointLimit = 2000;
-
-const seriesLimit = 8;
+export const chartLimits = { pointsPerSeries: 2000, series: 8 } as const;
 
 const number = z.number().finite();
 
-const label = z.string().min(1).max(labelLimit);
+const label = z
+  .string()
+  .min(visualLabelLength.minimum)
+  .max(visualLabelLength.maximum);
 
 const point = z.strictObject({ x: number, y: number });
 
@@ -20,7 +21,7 @@ const series = z.strictObject({
   tone: z.enum(tones),
   points: z
     .array(point)
-    .max(pointLimit)
+    .max(chartLimits.pointsPerSeries)
     .refine(distinctXs, 'each series must use distinct x values'),
 });
 
@@ -36,7 +37,7 @@ export const chartProps = z.strictObject({
   onPress: svgProps.shape.onPress,
   series: z
     .array(series)
-    .max(seriesLimit)
+    .max(chartLimits.series)
     .refine(distinctTones, 'series must use distinct tones'),
 });
 

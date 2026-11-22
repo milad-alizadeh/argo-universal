@@ -2,7 +2,10 @@ import type { ContentBlock } from '@repo/contracts';
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
 import { resourceIcon, resourceName } from '@repo/kit/primitives/content/code';
-import { Markdown } from '@repo/kit/primitives/content/markdown';
+import {
+  Markdown,
+  type MarkdownProps,
+} from '@repo/kit/primitives/content/markdown';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { imageKeyAt } from '../../view/keyed-image';
@@ -80,6 +83,7 @@ function FeedNonTextContent({
 
 interface TextDrawing {
   streaming: boolean;
+  renderFence?: MarkdownProps['renderFence'];
   // Words a Conversation is still saying draw in the muted colour; nothing else about the text changes.
   tone?: 'muted';
 }
@@ -92,9 +96,15 @@ interface FeedContentBlockProps extends TextDrawing {
 
 const markdown = (
   text: string,
-  { streaming, tone }: TextDrawing,
+  { streaming, tone, renderFence }: TextDrawing,
 ): React.JSX.Element => (
-  <Markdown text={text} streaming={streaming} selectable tone={tone} />
+  <Markdown
+    text={text}
+    streaming={streaming}
+    selectable
+    tone={tone}
+    renderFence={renderFence}
+  />
 );
 
 function FeedContentBlock({
@@ -124,7 +134,10 @@ const keyedBlocks = ({
   content,
   streaming,
   rowId,
-}: KeyedBlocks): ({ key: string } & Omit<FeedContentBlockProps, 'tone'>)[] =>
+}: KeyedBlocks): ({ key: string } & Omit<
+  FeedContentBlockProps,
+  'tone' | 'renderFence'
+>)[] =>
   withOccurrenceKeys(content, blockType).map(({ item, key }, index) => ({
     key,
     block: item,
@@ -135,6 +148,7 @@ const keyedBlocks = ({
 interface FeedContentProps {
   content: readonly ContentBlock[];
   streaming?: boolean;
+  renderFence?: MarkdownProps['renderFence'];
   tone?: 'muted';
   // The row the blocks belong to, so its images open among the Feed's other images.
   rowId?: string;
@@ -143,13 +157,19 @@ interface FeedContentProps {
 export function FeedContent({
   content,
   streaming = false,
+  renderFence,
   tone,
   rowId,
 }: FeedContentProps): React.JSX.Element {
   return (
     <View className="gap-2.5">
       {keyedBlocks({ content, streaming, rowId }).map(({ key, ...block }) => (
-        <FeedContentBlock key={key} {...block} tone={tone} />
+        <FeedContentBlock
+          key={key}
+          {...block}
+          tone={tone}
+          renderFence={renderFence}
+        />
       ))}
     </View>
   );

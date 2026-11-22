@@ -128,3 +128,15 @@ it('asks the Agent to attach each pull request it opens, naming both Operations 
   for (const word of ['github.discover', 'github.attach', 'operation_run'])
     expect(pullRequests).toContain(word);
 });
+
+it('asks the Agent to preview its exact Chart fence before sending it', () => {
+  const charts = argoInstructions.find(({ name }) => name === 'Charts')?.text;
+
+  for (const phrase of [
+    'Agent messages',
+    'chart.preview',
+    'operation_run',
+    'operation_list',
+  ])
+    expect(charts).toContain(phrase);
+});

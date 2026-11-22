@@ -165,6 +165,19 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
+    chart: router({
+      preview: publicProcedure
+        .input(operations['chart.preview'].params)
+        .output(operations['chart.preview'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'chart.preview',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)

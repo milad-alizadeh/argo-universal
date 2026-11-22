@@ -2,6 +2,10 @@
 
 import type { DesktopBridge } from '@repo/contracts';
 import type { ScreenCaptureAnswer } from '@repo/contracts/operations';
+import type {
+  ChartPreviewAnswer,
+  ChartPreviewDraft,
+} from '@repo/contracts/operations/chart';
 import { productCompatibility } from '@repo/contracts/product-identity';
 /*
  * See the Electron documentation for details on how to use preload scripts:
@@ -108,6 +112,10 @@ const desktopBridge = {
         linkListeners.delete(listener);
       };
     },
+  },
+  chartPreview: {
+    capture: (draft: ChartPreviewDraft): Promise<ChartPreviewAnswer> =>
+      ipcRenderer.invoke('chart:preview', draft),
   },
   screen: {
     capture: (): Promise<ScreenCaptureAnswer> =>
