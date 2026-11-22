@@ -6,7 +6,7 @@ import {
 } from './conversation-publication.mocks';
 
 const meta = {
-  title: 'Tests/Conversation/Publication',
+  title: 'Tests/Conversation/ConversationPublication',
 } satisfies Meta;
 
 export default meta;
