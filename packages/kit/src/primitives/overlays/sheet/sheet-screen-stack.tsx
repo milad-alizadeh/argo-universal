@@ -29,8 +29,9 @@ interface StackProps {
 
 // The web's pages: a pushed page slides in from the trailing edge over the one below, and slides back out on Back.
 export function SheetScreenStack(props: StackProps): ReactElement {
+  // A sheet that declares no pages draws no title row, so its content takes the top inset, below the drag handle.
   if (props.stack.pages.length === 0)
-    return <SheetScreenContent {...props} insetTop={props.hideRootTitle} />;
+    return <SheetScreenContent {...props} insetTop />;
 
   return <StackScreens {...props} />;
 }
