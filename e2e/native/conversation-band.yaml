@@ -1,0 +1,6 @@
+appId: dev.argo.app
+name: The Conversation band runs on the native UI thread
+---
+# Start in Composer → Composer → Conversation → Band Connecting.
+- assertVisible: "Connecting.*"
+- assertNotVisible: ".*Worklets.*"

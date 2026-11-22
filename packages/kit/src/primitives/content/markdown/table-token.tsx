@@ -1,20 +1,30 @@
 import type { Token, Tokens } from 'marked';
-import type { ReactElement } from 'react';
+import { useContext, type ReactElement } from 'react';
 import { withOccurrenceKeys } from '#kit/occurrence-keys';
 import { Text } from '#primitives/content/text';
 import { Table, type TableProps } from '#primitives/lists/table';
 import { ClampedBlock } from './clamped-block';
 import { InlineTokens } from './inline-tokens';
 import type { BlockTokenProps } from './markdown-tokens';
+import { MarkdownSelectable } from './markdown-tone';
 import { columnWidths } from './table-widths';
+
+// A cell's text breaks inside its column rather than over the next one, and selects like the rest of the Feed.
+function CellText({ tokens }: { tokens: Token[] }): ReactElement {
+  const selectable = useContext(MarkdownSelectable);
+
+  return (
+    <Text selectable={selectable} className="min-w-0 shrink wrap-anywhere">
+      <InlineTokens tokens={tokens} />
+    </Text>
+  );
+}
 
 function Cells({ cells }: { cells: Tokens.TableCell[] }): ReactElement[] {
   return withOccurrenceKeys(cells, (cell) => cell.text).map(
     ({ item: cell, key }, column) => (
       <Table.Cell key={key} column={String(column)} text={cell.text}>
-        <Text>
-          <InlineTokens tokens={cell.tokens} />
-        </Text>
+        <CellText tokens={cell.tokens} />
       </Table.Cell>
     ),
   );

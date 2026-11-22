@@ -1,4 +1,5 @@
 import type { AutomationState } from './pull-automation';
+import type { CheckoutIdentity } from './pull-checkout';
 import type { PullInfo } from './pull-info';
 import type { PullLink } from './pull-store';
 import type { Pulls } from './pull-sync';
@@ -31,4 +32,12 @@ export type Automation = {
 };
 
 // The automations the Plugin keeps itself; Auto-merge is GitHub's own and is never kept here.
-export type Automations = { fix: Automation; archive: Automation };
+export type AutoFix = Automation & {
+  enableFirst: (input: {
+    link: PullLink;
+    checkout: CheckoutIdentity;
+    requireAttached: () => Promise<void>;
+  }) => Promise<boolean>;
+};
+
+export type Automations = { fix: AutoFix; archive: Automation };

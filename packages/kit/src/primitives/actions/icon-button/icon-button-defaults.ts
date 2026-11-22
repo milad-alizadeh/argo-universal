@@ -5,9 +5,9 @@ import {
 import type { IconButtonProps } from './icon-button';
 
 export const variantOf = (
-  props: IconButtonProps,
+  props: Pick<IconButtonProps, 'variant'>,
 ): NonNullable<IconButtonProps['variant']> =>
   props.variant ?? iconButtonDefaults.variant;
 
-export const sizeOf = (props: IconButtonProps): IconButtonSize =>
+export const sizeOf = (props: Pick<IconButtonProps, 'size'>): IconButtonSize =>
   props.size ?? iconButtonDefaults.size;

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
+import type { FeedDelegated } from '#features/feed';
+import type { ElicitationFormProps } from '#features/requests';
 import { composerTodos } from '../../../../mocks/composer-mock';
 import {
   elicitationProps,
@@ -36,6 +38,7 @@ import {
   phonePluginActions,
   pluginActionsSession,
 } from './session-header-actions.mocks';
+import { skillOfferElicitation } from './skill-offer-elicitation';
 
 const meta = {
   title: 'Screens/Sessions/Session',
@@ -205,3 +208,61 @@ export const ChangesAndTodos: Story = {
   },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
+
+const delegatedStory = (
+  items: FeedDelegated[],
+  elicitation?: ElicitationFormProps,
+): Story => ({
+  args: {
+    state: 'open',
+    ...runningSession,
+    elicitation,
+    feed: {
+      ...runningSession.feed,
+      items: [...runningSession.feed.items, ...items],
+    },
+  },
+});
+
+export const DelegatedInput = delegatedStory([
+  {
+    type: 'delegated',
+    id: 'permission',
+    sourceSessionId: 'reviewer',
+    title: 'Review the checkout',
+    kind: 'permission',
+    onOpen: fn(),
+  },
+  {
+    type: 'delegated',
+    id: 'question',
+    sourceSessionId: 'tester',
+    title: 'Run the checks',
+    kind: 'elicitation',
+    onOpen: fn(),
+  },
+]);
+
+const delegatedSkillStory = (args: string): Story =>
+  delegatedStory(
+    [
+      {
+        type: 'delegated',
+        id: 'offer',
+        sourceSessionId: 'starter',
+        title: 'the starter Session',
+        kind: 'offered_skill',
+        onOpen: fn(),
+      },
+    ],
+    skillOfferElicitation(
+      { id: 'offer', name: 'implement', arguments: args },
+      fn(),
+    ),
+  );
+
+export const DelegatedSkill = delegatedSkillStory('#12345');
+
+export const DelegatedSkillLong = delegatedSkillStory(
+  '#12345 Review changes in the destination Checkout and run the verification requested in the original Session.',
+);

@@ -70,10 +70,21 @@ export const listDetailProps = z.object({
 });
 
 export const inspectorProps = z.object({
+  ...screenProps.pick({ search: true, value: true, onChangeText: true }).shape,
   title: stringLabel.describe(
     'The Inspector heading; on compact screens, the sheet title.',
   ),
+  closeLabel: z
+    .string()
+    .optional()
+    .describe('Text for the Inspector’s close action.'),
   open: z.boolean().describe('Whether the Inspector is shown.'),
+  scrollable: z
+    .boolean()
+    .optional()
+    .describe(
+      'Set false for fixed controls that use drag gestures in the compact sheet.',
+    ),
   onOpenChange: handler('onOpenChange').describe(
     'Reports the Inspector closing, by its close button, a swipe down, Escape or Back.',
   ),

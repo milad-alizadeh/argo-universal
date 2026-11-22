@@ -43,6 +43,11 @@ function CalloutSheet(props: CalloutProps): React.JSX.Element {
       open={dismissed !== content}
       onOpenChange={(open) => setDismissed(open ? undefined : content)}
       label={props.title}
+      footer={
+        props.actions && (
+          <View className="gap-2 px-4 pt-4">{props.actions}</View>
+        )
+      }
     >
       <PhoneCallout {...props} />
     </Sheet>
@@ -72,7 +77,6 @@ function PhoneCallout(props: CalloutProps): React.JSX.Element {
         <CalloutText {...props} />
       </View>
       <CalloutDetail detail={props.detail} />
-      {props.actions && <View className="gap-2">{props.actions}</View>}
     </View>
   );
 }

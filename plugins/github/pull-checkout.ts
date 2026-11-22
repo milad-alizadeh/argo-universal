@@ -44,11 +44,13 @@ export async function checkoutIdentity(
 const lower = (name: string | null | undefined): string | undefined =>
   name?.toLowerCase();
 
-const sameBranch = (change: ChangeItem, checkout: CheckoutIdentity): boolean =>
-  checkout.branch !== null && change.branch === checkout.branch;
+const sameBranch = (
+  change: Pick<ChangeItem, 'branch'>,
+  checkout: CheckoutIdentity,
+): boolean => checkout.branch !== null && change.branch === checkout.branch;
 
 const sameRepository = (
-  change: ChangeItem,
+  change: Pick<ChangeItem, 'headRepository'>,
   checkout: CheckoutIdentity,
 ): boolean =>
   checkout.repository !== null &&
@@ -59,8 +61,8 @@ const sameRepository = (
  * Checkout's repository. It is explicit identity, repository plus branch (ADR-0052), never a title and never a branch
  * name alone, so another fork's same-named branch is not the Checkout's.
  */
-const isOnCheckout = (
-  change: ChangeItem,
+export const isOnCheckout = (
+  change: Pick<ChangeItem, 'branch' | 'headRepository'>,
   checkout: CheckoutIdentity,
 ): boolean => sameBranch(change, checkout) && sameRepository(change, checkout);
 

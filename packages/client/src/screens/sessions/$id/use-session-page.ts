@@ -1,5 +1,5 @@
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
-import { use } from 'react';
+import { use, useCallback } from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl } from '#features/connection';
 import { useSessionWork } from '#features/sessions';
@@ -67,6 +67,7 @@ type SessionSurroundings =
   | keyof ReturnType<typeof useSessionLink>
   | 'elicitation'
   | 'permission'
+  | 'onStartReached'
   | 'onAtEndChange'
   | 'shells'
   | 'inspectorPanels';
@@ -76,7 +77,10 @@ function useSessionSurroundings(
   offered: ReturnType<typeof offeredWith>,
   { feed }: ConnectedFeed,
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
+  const { loadOlder } = feed;
+
   return {
+    onStartReached: useCallback(() => void loadOlder(), [loadOlder]),
     ...useFeedRequests(sessionId, feed),
     ...useSessionWork(sessionId, feed.snapshot, offered),
     agents: useInstalledAgents(),
@@ -99,7 +103,11 @@ function useSessionViewProps(
   const bar = useWithSessionBar(sessionId, sources.feed, changed);
   const changes = useWithSessionPullRequests(sessionId, sources.feed, bar);
 
-  return withPluginCards(withAgentFeed(changes), cards, sources.schedules);
+  const schedules = hasFollowUps(sources.schedules)
+    ? sources.schedules
+    : undefined;
+
+  return withPluginCards(withAgentFeed(changes), cards, schedules);
 }
 
 // What the view draws, from the Session's own sources and everything the page read around it.
@@ -135,6 +143,9 @@ const withAgentFeed = (
 ): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, renderSubagentFeed } : props;
 
+const hasFollowUps = (schedules: ConnectedFeed['schedules']): boolean =>
+  schedules.canCreate || schedules.items.length > 0;
+
 function usePageProps(
   page: SessionPage,
   cards: readonly SessionPluginCard[],
@@ -144,7 +155,7 @@ function usePageProps(
 
   const surroundings = useSessionSurroundings(
     page,
-    offeredWith(cards, sources.schedules.items.length),
+    offeredWith(cards, hasFollowUps(sources.schedules)),
     sources,
   );
 

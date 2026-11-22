@@ -81,7 +81,7 @@ const finalOf = ({ item }: Spoken, text: string): FeedViewItem => ({
 });
 
 // The Feed's items at each step: the first words, more of them, then the stored row with no partial left.
-const stepsOf = (fixture: Spoken): FeedViewItem[][] => [
+const stepsOf = (fixture: Spoken): (readonly FeedViewItem[])[] => [
   withPartialTranscripts([], [partialOf(fixture, spoken.first)], 'session-1'),
   withPartialTranscripts([], [partialOf(fixture, spoken.grown)], 'session-1'),
   withPartialTranscripts([finalOf(fixture, spoken.grown)], [], 'session-1'),

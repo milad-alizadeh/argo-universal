@@ -1,4 +1,5 @@
 import type { ContentBlock, SessionUpdate } from '@repo/contracts';
+import { withoutVoiceInstruction } from '@repo/contracts';
 
 const TITLE_MAX_LENGTH = 40;
 
@@ -18,7 +19,9 @@ export function titleFromPrompt(prompt: ContentBlock[]): string {
   return shortened(
     prompt
       .flatMap((block): string[] =>
-        block.type === 'text' ? block.text.split('\n') : [],
+        block.type === 'text'
+          ? withoutVoiceInstruction(block.text).split('\n')
+          : [],
       )
       .map((line): string => line.trim())
       .find(Boolean) ?? '',

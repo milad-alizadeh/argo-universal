@@ -68,3 +68,23 @@ it(
   },
   slow,
 );
+
+it.each(['fix', 'archive'])(
+  'turns Auto-%s on for an Agent with no Permission request, even with no active Turn',
+  async (kind) => {
+    const run = await journey();
+
+    await attach(run, reference);
+
+    await expect(
+      run.test.operations.run({
+        name: 'automationSet',
+        params: { reference, kind, on: true },
+        caller,
+        confirm: () => Promise.reject(new Error('A request was raised')),
+      }),
+    ).resolves.toBeDefined();
+    expect(run.github.autoMergeCalls()).toEqual([]);
+  },
+  slow,
+);

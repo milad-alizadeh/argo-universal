@@ -45,6 +45,20 @@ const turnDone =
   (fields: TurnFields): Step =>
   (turns) => [...turns.done(speaker, utteranceOf(fields)), ...after];
 
+const personDone =
+  (fields: TurnFields): Step =>
+  (turns) => {
+    const { id, text } = utteranceOf(fields);
+    const transcript = turns.done('person', { id, text });
+
+    return text.trim()
+      ? [
+          ...transcript,
+          { type: 'person.turn.completed', id, text: text.trim() },
+        ]
+      : transcript;
+  };
+
 // The service closed the call: the words still being said end first, then the close with the reason it gave.
 const closed =
   ({ reason }: { reason?: string }): Step =>
@@ -115,7 +129,7 @@ const reported = z.union([
     .transform(turnGrew),
   z
     .looseObject({ type: z.literal('turn.done'), ...userTurn })
-    .transform(turnDone('person')),
+    .transform(personDone),
   z
     .looseObject({ type: z.literal('turn.done'), ...assistantTurn })
     .transform(turnDone('voice', { type: 'speaking', speaking: false })),

@@ -4,6 +4,7 @@ import type { DrawnIcon } from '@repo/kit/symbols/icon-symbol';
 // Each section's title and icon, top to bottom in the rail and the drawer. A section's key is also its route: `/sessions` and the drawer screen `sessions`.
 export const sections = {
   sessions: { title: 'Sessions', icon: 'sessions' },
+  scheduled: { title: 'Scheduled', icon: 'clock' },
   settings: { title: 'Settings', icon: 'settings' },
 } as const satisfies Record<string, { title: string; icon: IconName }>;
 

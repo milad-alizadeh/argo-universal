@@ -28,6 +28,7 @@ export default meta;
 
 const sections = [
   ['Sessions', 'sessions'],
+  ['Scheduled', 'scheduled'],
   ['Settings', 'settings'],
 ] as const;
 
@@ -111,7 +112,7 @@ export const RailListsOnlySections: ScaffoldStory = {
       rail
         .getAllByRole('button')
         .map((button) => button.getAttribute('aria-label')),
-    ).toEqual(['Sessions', 'Settings']);
+    ).toEqual(sections.map(([name]) => name));
     await expect(
       rail.getByRole('button', { name: 'Settings' }),
     ).toHaveAttribute(currentAttribute, 'page');

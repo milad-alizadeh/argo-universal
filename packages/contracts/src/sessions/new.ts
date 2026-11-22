@@ -62,6 +62,12 @@ export type SessionNewInput = z.infer<typeof SessionNewInput>;
 
 // What `session.new` runs with: a Session that runs it gives its own Project and Agent, and the main Checkout is the default.
 export const SessionNewParams = SessionNewInput.extend({
+  followThrough: z
+    .boolean()
+    .optional()
+    .describe(
+      'Deliver the first Turn result to the starter. Requires a Session caller and a Prompt.',
+    ),
   projectId: SessionNewInput.shape.projectId
     .optional()
     .describe('The Project; a Session that runs this starts in its own.'),

@@ -7,26 +7,6 @@ export const rules: {
   expected: unknown;
 }[] = [
   {
-    rule: 'Subagents count running child Sessions once',
-    input: {
-      ...idle,
-      children: [
-        { ...stored, id: 'child-1', parentSessionId: 'session-1' },
-        { ...stored, id: 'child-2', parentSessionId: 'session-1' },
-        { ...stored, id: 'child-3', parentSessionId: 'session-1' },
-      ],
-      turns: [
-        { ...turn, id: 'child-turn-1', sessionId: 'child-1' },
-        { ...turn, id: 'child-turn-2', sessionId: 'child-1' },
-        { ...turn, id: 'child-turn-3', sessionId: 'child-2', status: 'ended' },
-      ],
-    },
-    expected: {
-      information: { ...information, subagents: { total: 3, running: 1 } },
-      running: false,
-    },
-  },
-  {
     rule: 'activityAt comes from the Feed actor when its revision is ahead',
     input: { ...idle, feed: { maxRevision: 2, activityAt: 300 } },
     expected: {

@@ -37,11 +37,26 @@ it('gives each Operation the first sentence of its description', () => {
 it('says to run an Operation directly, and when to look one up', () => {
   const catalog = operationCatalog();
 
-  expect(catalog).toContain('operation_run');
-  expect(catalog).toContain('operation_list');
+  expect(catalog).toContain(
+    'Call simple Operations directly with operation_run',
+  );
+  expect(catalog).toContain('call operation_list with {"id":"operation.id"}');
 });
 
-// About 2,000 tokens: small enough for every Session, unlike every schema at about 29,000.
-it('stays under 8,500 characters', () => {
-  expect(operationCatalog().length).toBeLessThan(8500);
+it('shows a configuration override accepted by the Session creation schema', () => {
+  const example = operationCatalog().match(
+    /Configuration override: (.*)\. Use IDs/,
+  )?.[1];
+
+  expect(example).toBeDefined();
+  expect(
+    operations['session.new'].params.parse(JSON.parse(example ?? '')),
+  ).toMatchObject({
+    configOptions: [{ configId: '<configId>', value: '<value>' }],
+  });
+});
+
+// About 2,000 tokens, including examples for common nested params.
+it('stays under 9,000 characters', () => {
+  expect(operationCatalog().length).toBeLessThan(9000);
 });

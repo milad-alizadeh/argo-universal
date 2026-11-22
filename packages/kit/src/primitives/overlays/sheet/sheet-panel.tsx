@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { cn } from '#kit/utils';
+import { SheetFooter } from './sheet-footer';
 import type { SheetProps } from './sheet-props';
 import { ReactContent } from './sheet-react-content';
 import { SheetScreenStack } from './sheet-screen-stack';
@@ -40,9 +42,9 @@ export function SheetPanel(
 ): ReactElement {
   return (
     <ReactContent>
-      <View className="min-h-0 shrink">
+      <View className={cn('min-h-0 shrink', !!props.footer && 'grow')}>
         <SheetScreenStack {...props}>{props.children}</SheetScreenStack>
-        {props.footer}
+        <SheetFooter>{props.footer}</SheetFooter>
       </View>
     </ReactContent>
   );

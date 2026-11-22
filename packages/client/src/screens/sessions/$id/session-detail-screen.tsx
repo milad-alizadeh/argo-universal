@@ -1,5 +1,8 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
+import {
+  RetainedPageVisibility,
+  usePageFocused,
+} from '@repo/kit/use-shown-page';
 import { useIsPreview } from 'expo-router';
 import { memo, useDeferredValue, useState } from 'react';
 import type * as React from 'react';
@@ -18,6 +21,7 @@ import { SessionNewScreen } from './session-new-screen';
 import { ConnectedSessionHeader } from './session-page-header';
 import { type SessionPageMenu, useSessionPageMenu } from './session-page-menu';
 import { sessionHeader } from './session-plugin-cards';
+import { useDelegatedAttention } from './use-delegated-attention';
 import {
   type OpenedSession,
   type SessionPage,
@@ -162,7 +166,15 @@ function headed(
 
   return (
     <>
-      <SessionDetailView {...props} drawHeader={drawHeader} />
+      {props.state === 'open' && !props.archived ? (
+        <DelegatedSessionView
+          {...props}
+          sessionId={sessionId}
+          drawHeader={drawHeader}
+        />
+      ) : (
+        <SessionDetailView {...props} drawHeader={drawHeader} />
+      )}
       {dialogs}
     </>
   );
@@ -170,3 +182,30 @@ function headed(
 
 const previewed = (props: SessionDetailViewProps): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, preview: true } : props;
+
+function DelegatedSessionView({
+  sessionId,
+  drawHeader,
+  ...props
+}: Extract<SessionDetailViewProps, { state: 'open' }> & {
+  sessionId: string;
+  drawHeader: (page: SessionDetailViewProps) => React.JSX.Element;
+}): React.JSX.Element {
+  const delegated = useDelegatedAttention(sessionId);
+  const shown = usePageFocused();
+
+  const feed = delegated.items.length
+    ? { ...props.feed, items: [...props.feed.items, ...delegated.items] }
+    : props.feed;
+
+  return (
+    <SessionDetailView
+      {...props}
+      feed={feed}
+      elicitation={
+        props.elicitation ?? (shown ? delegated.elicitation : undefined)
+      }
+      drawHeader={drawHeader}
+    />
+  );
+}

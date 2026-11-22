@@ -1,6 +1,6 @@
 import { once } from 'node:events';
-import { connect, createServer } from 'node:net';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { connect, createServer, Socket } from 'node:net';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { acquireBrowserSuiteLock, type WaitReport } from './browser-suite-lock';
 import {
   freePort,
@@ -10,6 +10,7 @@ import {
   POLL_MS,
   stopOtherSuites,
 } from './other-suite';
+import { enqueue, type QueueTicket } from './queue';
 
 afterEach(stopOtherSuites);
 
@@ -136,5 +137,34 @@ describe('acquireBrowserSuiteLock on a real port', () => {
 
     expect(onWait).not.toHaveBeenCalled();
     release();
+  });
+});
+
+describe('browser suite queue liveness', () => {
+  it('checks the predecessor again after a connection reset', async () => {
+    const port = await freePort();
+    const predecessor = await enqueue(port, false);
+    const dial = vi.fn<(path: string) => Socket>(connect);
+
+    dial.mockImplementationOnce((path): Socket =>
+      new Socket().destroy(
+        Object.assign(new Error(`connect ECONNRESET ${path}`), {
+          code: 'ECONNRESET',
+        }),
+      ),
+    );
+
+    let waiter: QueueTicket;
+
+    try {
+      waiter = await enqueue(port, false, dial);
+      onTestFinished(waiter.close);
+      await expect(waiter.first()).resolves.toBe(false);
+      await expect(waiter.first()).resolves.toBe(false);
+    } finally {
+      predecessor.close();
+    }
+
+    await expect(waiter.first()).resolves.toBe(true);
   });
 });

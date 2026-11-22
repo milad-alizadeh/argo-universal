@@ -1,18 +1,13 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { useClock } from '@repo/kit/use-clock';
 import { useMutation } from '@tanstack/react-query';
-import { useCallback } from 'react';
 import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { withEdge } from '../components/conversation-band/conversation-band-slot';
 import { useConversationConnection } from '../stores/conversation-connection-context';
 import { placedConversation } from '../stores/placed-conversation';
-import {
-  silentSpectrum,
-  type ConversationConnection,
-  type VoiceSpectrum,
-} from '../types/conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 import {
   sessionConversation,
   type SessionConversationActions,
@@ -26,8 +21,7 @@ import { useSessionTitle, useStartCall } from './use-conversation-reads';
 import { useConversationStatus } from './use-conversation-status';
 import { useHeldPartials } from './use-held-partials';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
-
-const noSpectrum = silentSpectrum();
+import { useSpectrum } from './use-spectrum';
 
 // The Session page a call is seen from, and how it opens its live Feed again after a start.
 export interface ConversationPage {
@@ -70,12 +64,6 @@ function useActions(
     open: (target) => navigate(sessionHref(target)),
   };
 }
-
-// The band reads the App's own bands each frame, so it moves without the page rendering again.
-const useSpectrum = (
-  connection: ConversationConnection | null,
-): (() => VoiceSpectrum) =>
-  useCallback(() => connection?.spectrum() ?? noSpectrum, [connection]);
 
 // The Session the call runs in, when it runs in another one than the page shows.
 const elsewhereOf = (

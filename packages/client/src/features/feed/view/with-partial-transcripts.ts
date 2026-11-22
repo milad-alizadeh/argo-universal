@@ -38,11 +38,60 @@ export function withPartialTranscripts(
   items: FeedViewItem[],
   partials: readonly ConversationPartial[],
   sessionId: string,
-): FeedViewItem[] {
-  if (partials.length === 0) return items;
+): readonly FeedViewItem[] {
+  return appendPartialTranscripts(
+    items,
+    partials.map((partial) => partialItem(partial, sessionId)),
+  );
+}
 
-  const stored = new Set(items.map(feedItemKey));
-  const saying = partials.filter((partial) => !stored.has(partial.rowId));
+export function appendPartialTranscripts(
+  stored: readonly FeedViewItem[],
+  rows: readonly PartialRow[],
+  storedKeys?: ReadonlySet<string>,
+): readonly FeedViewItem[] {
+  if (!rows.length) return stored;
 
-  return [...items, ...saying.map((p) => partialItem(p, sessionId))];
+  const keys = storedKeys ?? new Set(stored.map(feedItemKey));
+  const saying = rows.filter(({ row }) => !keys.has(row.id));
+
+  return saying.length ? [...stored, ...saying] : stored;
+}
+
+export interface PartialTranscript {
+  partial: ConversationPartial;
+  row: PartialRow;
+}
+
+function samePartial(
+  first: ConversationPartial,
+  second: ConversationPartial,
+): boolean {
+  return (
+    first.rowId === second.rowId &&
+    first.id === second.id &&
+    first.speaker === second.speaker &&
+    first.text === second.text
+  );
+}
+
+export function projectPartialTranscripts(
+  partials: readonly ConversationPartial[],
+  sessionId: string,
+  previous: readonly PartialTranscript[],
+): readonly PartialTranscript[] {
+  const byId = new Map(previous.map((item) => [item.partial.rowId, item]));
+
+  const rows = partials.map((partial) => {
+    const prior = byId.get(partial.rowId);
+
+    return prior && samePartial(partial, prior.partial)
+      ? prior
+      : { partial, row: partialItem(partial, sessionId) };
+  });
+
+  return rows.length === previous.length &&
+    rows.every((row, index) => row === previous[index])
+    ? previous
+    : rows;
 }

@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
-import { View, type ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
 import { cn } from '#kit/utils';
 import { Content } from './fader-content';
+import { DragFrame } from './fader-drag';
 import { useFader } from './fader-frame';
 import type { FaderProps } from './fader-props';
 import { Surface } from './fader-surface';
@@ -25,7 +26,7 @@ const touchClass = {
 const frameClass = (props: FaderProps, orientation: Orientation): string =>
   cn(
     'w-full flex-1 overflow-hidden rounded-2xl bg-card',
-    touchClass[orientation],
+    !props.disabled && touchClass[orientation],
     props.disabled && 'opacity-50',
   );
 
@@ -36,17 +37,18 @@ const frameClass = (props: FaderProps, orientation: Orientation): string =>
  * element behind the children, which stay elements of their own.
  */
 export function Fader(props: FaderProps): ReactElement {
-  const { orientation, control, frame } = useFader(props);
+  const { orientation, control, source, onLayout } = useFader(props);
 
   return (
-    <View
-      {...frame}
+    <DragFrame
+      source={source}
+      onLayout={onLayout}
       style={minHeights[orientation]}
       className={frameClass(props, orientation)}
     >
       <Surface {...props} orientation={orientation} control={control} />
       <Content {...props} orientation={orientation} shown={control.value} />
-    </View>
+    </DragFrame>
   );
 }
 

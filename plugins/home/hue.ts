@@ -26,7 +26,12 @@ export const applicationKeyUrl = routeApi;
 // UNCONFIRMED: CLIP API v2 through the cloud; each call also carries the application key in `hue-application-key`.
 const resourceUrl = `https://${hueHost}/route/clip/v2/resource`;
 
-export type HueResource = 'light' | 'room' | 'grouped_light';
+export type HueResource =
+  | 'light'
+  | 'room'
+  | 'grouped_light'
+  | 'scene'
+  | 'zigbee_connectivity';
 
 export const resourcesUrl = (kind: HueResource): string =>
   `${resourceUrl}/${kind}`;

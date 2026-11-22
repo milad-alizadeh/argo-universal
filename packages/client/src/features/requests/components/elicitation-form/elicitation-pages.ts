@@ -5,6 +5,8 @@ import { elicitationChoices } from './elicitation-property';
 export function elicitationPages(
   fields: ElicitationEntry[],
 ): ElicitationEntry[][] {
+  if (fields.length === 0) return [[]];
+
   const choices = fields.filter((entry) => elicitationChoices(entry.property));
 
   const owners = new Map(

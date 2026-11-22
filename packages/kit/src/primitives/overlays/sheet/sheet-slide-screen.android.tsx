@@ -3,6 +3,7 @@ import { View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { cn } from '#kit/utils';
 import { SheetBody } from './sheet-body';
+import { isDismissible } from './sheet-dismissible';
 import type { SheetProps } from './sheet-props';
 import { SheetScreenHeader } from './sheet-screen-header';
 import type { SheetScreenEntry, SheetStack } from './sheet-screens';
@@ -66,7 +67,9 @@ const hideHeader = (props: ScreenProps): boolean =>
 
 // Only the root page closes the sheet; every page above it goes back to the one below instead.
 const screenClose = (props: ScreenProps): (() => void) | undefined =>
-  props.root ? props.stack.navigation.close : undefined;
+  props.root && isDismissible(props.dismissible)
+    ? props.stack.navigation.close
+    : undefined;
 
 function ScreenHeader(props: ScreenProps): ReactElement | null {
   return (

@@ -33,10 +33,13 @@ describe('syntaxRuns', () => {
   );
 
   it('colours code of exactly the length limit, and draws one character past it plain', () => {
-    const atLimit = 'a'.repeat(20_000);
+    // A comment exercises the cutoff without sending a long identifier through Prism's grammar.
+    const atLimit = `/*${'a'.repeat(19_996)}*/`;
 
-    expect(syntaxRuns(atLimit, 'ts')?.length).toBeGreaterThan(0);
-    expect(syntaxRuns(`${atLimit}a`, 'ts')).toBeUndefined();
+    expect(syntaxRuns(atLimit, 'ts')).toEqual([
+      { text: atLimit, type: 'comment' },
+    ]);
+    expect(syntaxRuns(`${atLimit}\n`, 'ts')).toBeUndefined();
   });
 
   it('draws nothing for empty code', () => {

@@ -3,9 +3,20 @@ export function mayDismiss(dismissible: boolean | undefined): boolean {
   return dismissible !== false;
 }
 
-interface Press {
+interface Pointed {
   target: unknown;
   currentTarget: unknown;
+}
+
+/*
+ * A press counts from where it began. A menu that opens on pointer down takes the pointer from the card under it, and
+ * a drag out of a field leaves the card, so either press ends on the scrim though it began inside the card.
+ */
+export function beginsOnBackdrop(pointer: Pointed): boolean {
+  return pointer.target === pointer.currentTarget;
+}
+
+interface Press extends Pointed {
   isDefaultPrevented: () => boolean;
 }
 

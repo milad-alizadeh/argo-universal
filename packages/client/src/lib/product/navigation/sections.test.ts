@@ -9,6 +9,8 @@ const sectionCases: [string | undefined, string][] = [
   ['/sessions/[id]', 'sessions'],
   ['/issues', 'sessions'],
   ['/atlas', 'sessions'],
+  ['/scheduled', 'scheduled'],
+  ['/scheduled/schedule-id', 'scheduled'],
   ['/settings', 'settings'],
   ['/settings/accounts', 'settings'],
   ['/settings/projects/example-project', 'settings'],
@@ -65,6 +67,6 @@ describe('listAbove', () => {
 
 describe('sectionOrder', () => {
   it('lists the sections top to bottom', () => {
-    expect(sectionOrder).toEqual(['sessions', 'settings']);
+    expect(sectionOrder).toEqual(['sessions', 'scheduled', 'settings']);
   });
 });

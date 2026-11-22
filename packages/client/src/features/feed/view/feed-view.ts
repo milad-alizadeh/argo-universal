@@ -64,7 +64,13 @@ export interface FeedSubagent {
   type: 'subagent';
   id: string;
   subagentSessionId: string;
-  kind: 'started' | 'messaged' | 'replied';
+  kind:
+    | 'started'
+    | 'messaged'
+    | 'replied'
+    | 'permission'
+    | 'elicitation'
+    | 'offered_skill';
   // The Agent's name for the child.
   title: string;
   // Tints and names the row's avatar; Argo falls back to the General mark without one.
@@ -102,6 +108,15 @@ export interface ParentResult {
   childPosition?: number;
 }
 
+export interface FeedDelegated {
+  type: 'delegated';
+  id: string;
+  sourceSessionId: string;
+  title: string;
+  onOpen: () => void;
+  kind: 'permission' | 'elicitation' | 'offered_skill';
+}
+
 export type FeedViewItem =
   | ParentResult
   | ChildReply
@@ -109,6 +124,7 @@ export type FeedViewItem =
   | FeedGroup
   | FeedStandaloneRow
   | FeedSubagent
+  | FeedDelegated
   | FeedTurnEnd;
 
 // The active Plan sits above the Composer.

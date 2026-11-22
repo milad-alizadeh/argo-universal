@@ -31,9 +31,19 @@ const deliverImage = (call: StartedCall, image: ScreenImage): void =>
   call.look?.(image);
 
 function deliver(call: StartedCall, say: VoiceSay): void {
-  if (say.kind === 'reply') call.reply(say.requestId, say.text, say.delivery);
-  else if (say.kind === 'image') deliverImage(call, say.image);
-  else call.tell(say.text, say.delivery);
+  switch (say.kind) {
+    case 'reply':
+      call.reply(say.requestId, say.text, say.delivery);
+      break;
+    case 'image':
+      deliverImage(call, say.image);
+      break;
+    case 'permission':
+      call.tell(say.text, say.delivery, 'live');
+      break;
+    default:
+      call.tell(say.text, say.delivery);
+  }
 }
 
 // The provider's call, from the moment it answers to the moment the machine stops wanting it.

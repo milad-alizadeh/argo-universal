@@ -142,7 +142,7 @@ export const pluginOperations = {
     label: 'Plugin blueprint',
     icon: 'guide',
     description:
-      'Read how to build, create or scaffold an Argo Plugin: the blueprint and an index of kit components; pass components to read their props. Read it before building a Plugin, then run plugin.new.',
+      'Read the Plugin blueprint and kit index. Pass components to read their props. Read it before building a Plugin, then run plugin.new.',
     params: PluginGuideInput,
     result: PluginGuide,
     tier: 'read',

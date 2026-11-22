@@ -1,10 +1,31 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { When, Then } from './fixtures';
-import { onPhone } from './frame';
+import { readAgent } from './agents';
+import { Given, When, Then } from './fixtures';
+import { onPhone, openAppOnce, wide } from './frame';
 import { expectMessage } from './new-session';
+import { firstProjectId, seedSession } from './seed-session';
 
-const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists', 'Issues'];
+Given(
+  'a Session row named {string} on a wide Frame',
+  async ({ page, server }, title: string): Promise<void> => {
+    const projectId = await firstProjectId(page, server.httpUrl);
+    const { id: agent } = await readAgent(page, server.httpUrl, 1);
+
+    await seedSession(page, server.httpUrl, { projectId, agent, title });
+    await page.setViewportSize(wide);
+    await openAppOnce(page);
+  },
+);
+
+const sectionNames = [
+  'Sessions',
+  'Scheduled',
+  'Settings',
+  'Counter',
+  'Lists',
+  'Issues',
+];
 
 // A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
 export async function navigation(page: Page): Promise<Locator> {
@@ -40,7 +61,7 @@ Then(
   'the navigation lists core sections before Plugin items',
   async ({ page }): Promise<void> => {
     const items = (await navigation(page)).getByRole('button', {
-      name: /^(Sessions|Settings|Counter|Lists|Issues)$/,
+      name: /^(Sessions|Scheduled|Settings|Counter|Lists|Issues)$/,
     });
 
     await expect(items).toHaveCount(sectionNames.length);

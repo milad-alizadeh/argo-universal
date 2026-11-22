@@ -7,13 +7,17 @@ import {
   useInstalledAgents,
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
-import { useListedConversation } from '#features/conversation';
+import {
+  MiniConversationBand,
+  useListedConversation,
+} from '#features/conversation';
 import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
   liveUpdatesStopped,
   type QueryProgress,
   RenameSessionDialog,
+  type SessionRowCall,
   type SessionsView,
   sessionsLoadState,
 } from '#features/sessions';
@@ -113,11 +117,28 @@ function useRowPlugins(
   };
 }
 
+function useRowCall(): SessionRowCall | null {
+  const call = useListedConversation();
+
+  return useMemo(() => {
+    if (!call) return null;
+
+    const { band, sessionId, startedAt } = call;
+
+    return {
+      sessionId,
+      startedAt,
+      muted: band.call.microphoneMuted,
+      indicator: <MiniConversationBand {...band} />,
+    };
+  }, [call]);
+}
+
 // What the rows carry beyond the Session: the Plugins' items and the live Conversation.
 function useRowMarks(
   sessions: SessionListViewProps['sessions'],
 ): Pick<SessionListViewProps, 'plugins' | 'call'> {
-  return { ...useRowPlugins(sessions), call: useListedConversation() };
+  return { ...useRowPlugins(sessions), call: useRowCall() };
 }
 
 function useSessionsViewProps(

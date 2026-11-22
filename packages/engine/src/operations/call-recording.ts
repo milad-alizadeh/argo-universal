@@ -2,7 +2,6 @@ import {
   discoveryOperation,
   operations,
   type OperationId,
-  type OperationRow,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { CalledOperation, SessionOperationCall } from '../sessions';
@@ -48,8 +47,6 @@ function failed(call: SessionOperationCall, cause: unknown): never {
   throw cause;
 }
 
-export const listedOutput = (value: OperationRow[]): Json => wireJson(value);
-
 // A captured screen is for the one reader that asked: its Tool call says one was taken and never holds the picture.
 const shownScreenshot = (result: OperationResult): Json => {
   const capture = operations['app.screenshot'].result.safeParse(result);
@@ -71,10 +68,12 @@ export const recordedOutput =
       ? (shownBy[id] ?? wireJson)(value.result)
       : wireJson(value);
 
-export const discoveryCall = (filter: string): CalledOperation => ({
+export const discoveryCall = (
+  input: { filter: string } | { id: string },
+): CalledOperation => ({
   name: discoveryOperation.id,
   label: discoveryOperation.label,
-  input: { filter },
+  input,
 });
 
 export const operationCall = ({

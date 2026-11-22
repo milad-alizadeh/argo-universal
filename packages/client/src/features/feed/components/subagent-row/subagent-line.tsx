@@ -12,6 +12,9 @@ const words = {
   started: (title: string) => `Started ${title}`,
   messaged: (title: string) => `Messaged ${title}`,
   replied: (title: string) => `${title} replied`,
+  permission: (title: string) => `${title} requests permission`,
+  elicitation: (title: string) => `${title} asks a question`,
+  offered_skill: (title: string) => `Skill offered by ${title}`,
 } as const;
 
 // A clamped line shrinks with the box around it, so the lane keeps its width while the words give way.

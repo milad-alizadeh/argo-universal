@@ -180,6 +180,9 @@
   max-width: calc(var(--spacing) * 160);
   margin-inline: auto;
 }
+.sheet-drawer {
+  padding-bottom: calc(var(--spacing) * 6 + env(safe-area-inset-bottom, 0px));
+}
 .sheet-paged {
   min-height: min(50dvh, calc(100dvh - var(--spacing) * 14));
 }

@@ -10,6 +10,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { resourceInitialization } from '#mocks/acp-resource';
 import { closeTestSession } from '#mocks/close-session';
+import { operationCaller } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { discoverOptions } from '#mocks/session-access';
 
@@ -147,6 +148,21 @@ it.each(['session/resume', 'session/load'] as const)(
     expect(serverAt(request).name).toBe(serverAt(requestAt(openings, 0)).name);
     expect(request.mcpServers).toMatchObject([{ args: ['mcp'] }]);
     expect(request.mcpServers).not.toEqual(requestAt(openings, 0).mcpServers);
+
+    const token = serverAt(request).env.find(
+      ({ name }) => name === 'ARGO_TOKEN',
+    );
+
+    assert(token);
+    const caller = await operationCaller(host, token.value);
+    expect(
+      await caller.operations.inputSchema.query({ id: 'session.new' }),
+    ).toEqual([
+      expect.objectContaining({
+        id: 'session.new',
+        params: expect.any(Object),
+      }),
+    ]);
   },
   30_000,
 );

@@ -1,6 +1,8 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { Platform } from 'react-native';
 import { loadingTree } from '#features/plugins';
+import homeC2 from './home-c2-fixture.json';
+import homePower from './home-power-pending-fixture.json';
 import paceTrees from './plugin-detail-view-development-pace.json' with { type: 'json' };
 import homeTrees from './plugin-detail-view-home.json' with { type: 'json' };
 import trees from './plugin-detail-view-issue-filters.json' with { type: 'json' };
@@ -63,3 +65,49 @@ export const homeConnect = { root: WireNode.parse(homeTrees.connect) };
 export const homeUnreachable = { root: WireNode.parse(homeTrees.failed) };
 
 export const homeSignedOut = { root: WireNode.parse(homeTrees.signedOut) };
+
+export const homeFaders = { root: WireNode.parse(homeC2.tiles) };
+
+export const homePowerPending = { root: WireNode.parse(homePower) };
+
+export const homeLightEditor = { root: WireNode.parse(homeC2.light) };
+
+export const homeScenesEditor = { root: WireNode.parse(homeC2.scenes) };
+
+// These states share the same page and replace only its open editor.
+type HomeEditorFixture = typeof homeScenesEditor;
+
+function homeEditorFixture(editor: WireNode): HomeEditorFixture {
+  const root = WireNode.parse(homeC2.scenes);
+  const layout = root.children[0];
+
+  if (!layout) throw new Error('Home editor fixture has no layout');
+
+  return {
+    root: {
+      ...root,
+      children: [
+        {
+          ...layout,
+          children: layout.children.map((node) =>
+            node.type === 'Inspector' ? editor : node,
+          ),
+        },
+      ],
+    },
+  };
+}
+
+export const homeManyScenes = homeEditorFixture(WireNode.parse(homeC2.many));
+
+export const homeFilteredScenes = homeEditorFixture(
+  WireNode.parse(homeC2.searched),
+);
+
+export const homeNoMatchingScenes = homeEditorFixture(
+  WireNode.parse(homeC2.noMatch),
+);
+
+export const homeNoScenes = homeEditorFixture(WireNode.parse(homeC2.empty));
+
+export const homeOffLight = { root: WireNode.parse(homeC2.off) };

@@ -4,6 +4,7 @@ import { fn } from 'storybook/test';
 import { PromptQueue } from './prompt-queue';
 import {
   attachmentOnly,
+  delegatedResults,
   queuedPrompts,
   singlePrompt,
   steerablePrompts,
@@ -41,6 +42,8 @@ type Story = StoryObj<typeof meta>;
 export const Queued: Story = {};
 
 export const Attachment: Story = { args: attachmentOnly };
+
+export const DelegatedResults: Story = { args: delegatedResults };
 
 export const Steerable: Story = { args: steerablePrompts };
 

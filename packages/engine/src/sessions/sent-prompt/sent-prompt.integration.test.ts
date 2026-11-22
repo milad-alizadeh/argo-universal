@@ -69,6 +69,46 @@ describe('a Prompt sent to a busy Session', () => {
     30_000,
   );
 
+  it('from the Conversation joins its Prompt still waiting in the queue, and both end with one Turn', async () => {
+    const journey = await sendingJourney();
+    await journey.busy();
+
+    const first = await journey.send(
+      'Pull the logs',
+      senders['the Conversation'],
+    );
+
+    const second = await journey.send(extra, senders['the Conversation']);
+
+    expect(second).toMatchObject({
+      status: 'queued',
+      queuedId: 'queuedId' in first ? first.queuedId : '',
+    });
+    journey.release();
+    expect(await second.ended).toBe(await first.ended);
+    expect(journey.requests).toHaveLength(1);
+    expect(JSON.stringify(journey.requests[0]?.prompt)).toMatch(
+      /Pull the logs.*Also check the logs/,
+    );
+  }, 30_000);
+
+  it.each(everySender.filter(([, { type }]) => type !== 'conversation'))(
+    'from %s queues each Prompt on its own',
+    async (_name, sender) => {
+      const journey = await sendingJourney();
+      await journey.busy();
+      const first = await journey.send('Pull the logs', sender);
+      const second = await journey.send(extra, sender);
+
+      expect('queuedId' in second && second.queuedId).not.toBe(
+        'queuedId' in first && first.queuedId,
+      );
+      journey.release();
+      await expect.poll(() => journey.requests.length).toBe(2);
+    },
+    30_000,
+  );
+
   it('from a Plugin waits its turn even when the Agent could be steered', async () => {
     const journey = await sendingJourney({ steering: true });
     await journey.busy();

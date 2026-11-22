@@ -1,6 +1,7 @@
 import {
   SessionAgentOptionsInput,
   AgentOptionsUpdate,
+  DelegatedAttention,
   SessionAnswerElicitationInput,
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
@@ -23,6 +24,7 @@ import {
 import { agentOptionsUpdates } from './configuration';
 import type { SessionList } from './list/session-list';
 import type { OpenSessions } from './open-sessions';
+import { delegatedAttention } from './orchestration/input-requests';
 import {
   answerSessionElicitation,
   answerSessionPermission,
@@ -75,6 +77,16 @@ const openSession = async (
 
 const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
+    delegatedAttention: authenticatedAppProcedure
+      .input(SessionOpenInput)
+      .output(zAsyncIterable({ yield: DelegatedAttention }))
+      .subscription(({ input, ctx, signal }) =>
+        delegatedAttention(
+          sources,
+          input.sessionId,
+          AbortSignal.any([ctx.connection.signal, ...(signal ? [signal] : [])]),
+        ),
+      ),
     open: publicProcedure
       .input(SessionOpenInput)
       .output(SessionOpenOutput)

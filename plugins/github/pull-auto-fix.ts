@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { Automation, Offers } from './pull-automations';
+import type { AutoFix, Offers } from './pull-automations';
+import { isOnCheckout } from './pull-checkout';
 import { fetchComments } from './pull-comments';
 import { autoFix, fixOf, openedByAnother } from './pull-fix';
 import { failedOf, runningOf } from './pull-fix-facts';
@@ -102,12 +103,43 @@ async function offersOf(
  * Auto-fix (ADR-0055): the Session's Agent is prompted once about each new failed Check, review comment and conflict
  * on a pull request, and it stops after three Prompts on one head commit. What it has seen and sent is its own.
  */
+// The first enable is an atomic insert. The existing Watch processes checks and comments.
+async function enableFirst(
+  { fetch, fix }: { fetch: Fetch; fix: FixStore },
+  { link, checkout, requireAttached }: Parameters<AutoFix['enableFirst']>[0],
+): Promise<boolean> {
+  const existing = (await fix.forSessions([link.sessionId])).find((record) =>
+    sameLink(record, link),
+  );
+
+  if (existing) return existing.enabled;
+
+  const [pull, viewer] = await Promise.all([
+    fetchPull(fetch, link),
+    fetchViewer(fetch, link),
+  ]);
+
+  if (!pull.author || !viewer || openedByAnother(pull, viewer))
+    throw new Error('Only pull requests you opened can use Auto-fix.');
+
+  if (pull.stage !== 'open')
+    throw new Error('Auto-fix requires an open pull request.');
+
+  if (!isOnCheckout(pull, checkout))
+    throw new Error('The pull request must belong to this Session’s Checkout.');
+  await requireAttached();
+  await fix.enableFirst(link);
+
+  return isOn(fix, link);
+}
+
 export function createAutoFix(
   argo: Pick<Argo, 'storage' | 'fetch' | 'sessions'>,
-): Automation {
+): AutoFix {
   const fix = createFixStore(argo);
 
   return {
+    enableFirst: (input) => enableFirst({ ...argo, fix }, input),
     offers: (sessionIds) => offersOf(fix, sessionIds),
     set: (link, on) =>
       on ? enable({ ...argo, fix }, link) : disable({ ...argo, fix }, link),

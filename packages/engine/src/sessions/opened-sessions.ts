@@ -1,18 +1,40 @@
 import type { Subscription } from 'xstate';
-import type { SessionHandlerSources } from './session-sources';
+import type { SessionActorRef } from './session-machine';
+import type { HandlerSources } from './session-sources';
+import type { TurnHappening } from './turn-happenings';
 import { onWriterChange } from './writer-changes';
 
-type OpenedSources = Pick<SessionHandlerSources, 'findWriter' | 'open'>;
+type OpenedSources = HandlerSources<
+  'findWriter',
+  'queued' | 'ids' | 'session' | 'subscribe'
+>;
 
-// A Session that opened, and the Session that started it through an Operation, or null.
-export type OpenedListener = (
+type TurnEnded = Extract<TurnHappening, { type: 'turn.ended' }>;
+
+type ObservationLifetime =
+  | { retain?: false }
+  | { retain: true; stop: () => void };
+
+// Domain events from one direct Started Session. Only retained observers survive a close.
+export type StartedSessionObservation = {
+  availability?: (open: boolean) => void;
+  changed?: () => void;
+  turnEnded?: (happening: TurnEnded) => void;
+} & ObservationLifetime;
+
+export type StartedSessionObserver = (
   sessionId: string,
-  startedBy: string | null,
-) => void;
+) => StartedSessionObservation;
 
 type Row = ReturnType<OpenedSources['open']['queued']>;
 
-// The Session's row, from storage or from the Writer's queued jobs, once it can be read.
+type FollowedSession = {
+  actor: SessionActorRef;
+  observer: StartedSessionObservation;
+  subscriptions: Subscription[];
+};
+
+// A Session's row includes the Writer's queued insert, once it exists.
 function rowOf(sources: OpenedSources, sessionId: string): Row | undefined {
   try {
     return sources.open.queued(sessionId);
@@ -21,18 +43,37 @@ function rowOf(sources: OpenedSources, sessionId: string): Row | undefined {
   }
 }
 
+function subscribeToSession(
+  actor: SessionActorRef,
+  { changed, turnEnded }: StartedSessionObservation,
+): Subscription[] {
+  const state = changed
+    ? [actor.subscribe({ next: changed, complete: changed })]
+    : [];
+
+  const turns = turnEnded ? [actor.on('turn.ended', turnEnded)] : [];
+
+  return [...state, ...turns];
+}
+
 /*
- * Hears each Session as it opens, those open now first, once its row can be read: a new Session opens before its row
- * is written, so it is heard when the Writer takes the row. One that closes and opens again is heard again.
+ * Follow direct Started Sessions once their origin can be read. All subscriptions
+ * follow the actor lifetime. Conversation state can survive until the watch stops.
  */
-class OpenedSessions {
-  private readonly open = new Set<string>();
+class StartedSessionWatch {
+  private readonly checked = new Set<string>();
   private readonly unwritten = new Set<string>();
+  private readonly retained = new Map<
+    string,
+    StartedSessionObservation & { retain: true }
+  >();
+  private readonly following = new Map<string, FollowedSession>();
   private readonly subscriptions: Subscription[];
 
   public constructor(
     private readonly sources: OpenedSources,
-    private readonly listener: OpenedListener,
+    private readonly starterId: string,
+    private readonly observe: StartedSessionObserver,
   ) {
     const writer = sources.findWriter();
     const writes = writer ? [onWriterChange(writer, () => this.written())] : [];
@@ -46,53 +87,107 @@ class OpenedSessions {
 
   public stop(): void {
     for (const subscription of this.subscriptions) subscription.unsubscribe();
+
+    for (const id of this.following.keys()) this.unfollow(id);
+
+    for (const observer of this.retained.values()) observer.stop();
+    this.retained.clear();
   }
 
   private opened(): void {
     const now = new Set(this.sources.open.ids());
-    this.forgetClosed(now);
+
+    for (const id of this.checked) {
+      if (now.has(id)) continue;
+      this.checked.delete(id);
+      this.unfollow(id);
+    }
+
+    for (const id of this.unwritten)
+      if (!now.has(id)) this.unwritten.delete(id);
 
     for (const id of now) this.openedOne(id);
   }
 
-  private forgetClosed(now: ReadonlySet<string>): void {
-    for (const id of this.open) {
-      if (now.has(id)) continue;
-      this.open.delete(id);
-      this.unwritten.delete(id);
-    }
+  private openedOne(id: string): void {
+    const actor = this.sources.open.session(id);
+    const previous = this.following.get(id);
+
+    if (previous && previous.actor === actor) return;
+
+    if (previous) this.unfollow(id);
+
+    if (!actor) return;
+
+    const observer = this.retained.get(id);
+
+    if (observer) return this.follow(id, actor, observer);
+
+    if (!this.checked.has(id) && !this.unwritten.has(id))
+      this.enroll(id, actor);
   }
 
-  private openedOne(sessionId: string): void {
-    if (this.open.has(sessionId)) return;
-    this.open.add(sessionId);
-    this.offer(sessionId);
+  private unfollow(id: string): void {
+    const followed = this.following.get(id);
+
+    if (!followed) return;
+
+    this.following.delete(id);
+    this.checked.delete(id);
+
+    for (const subscription of followed.subscriptions)
+      subscription.unsubscribe();
+    followed.observer.availability?.(false);
   }
 
   private written(): void {
-    for (const sessionId of this.unwritten) this.offer(sessionId);
+    for (const id of this.unwritten) {
+      const actor = this.sources.open.session(id);
+
+      if (actor) this.enroll(id, actor);
+    }
   }
 
-  private offer(sessionId: string): void {
-    const row = rowOf(this.sources, sessionId);
+  private enroll(id: string, actor: SessionActorRef): void {
+    const row = rowOf(this.sources, id);
 
     if (!row) {
-      this.unwritten.add(sessionId);
+      this.unwritten.add(id);
 
       return;
     }
 
-    this.unwritten.delete(sessionId);
-    this.listener(sessionId, row.startedBySessionId ?? null);
+    this.unwritten.delete(id);
+    this.checked.add(id);
+
+    if (row.startedBySessionId !== this.starterId) return;
+
+    const observer = this.observe(id);
+
+    if (observer.retain) this.retained.set(id, observer);
+    this.follow(id, actor, observer);
+  }
+
+  private follow(
+    id: string,
+    actor: SessionActorRef,
+    observer: StartedSessionObservation,
+  ): void {
+    const subscriptions = subscribeToSession(actor, observer);
+
+    this.checked.add(id);
+    this.following.set(id, { actor, observer, subscriptions });
+    observer.availability?.(true);
   }
 }
 
-// Hears each Session as it opens, with the Session that started it, once its row can be read, until the returned function is called.
-export function watchOpenedSessions(
+// Watches direct Started Sessions, including those already open, until the returned function is called.
+export function watchStartedSessions(
   sources: OpenedSources,
-  listener: OpenedListener,
+  starterId: string,
+  observer: StartedSessionObserver,
 ): () => void {
-  const opened = new OpenedSessions(sources, listener);
+  const watch = new StartedSessionWatch(sources, starterId, observer);
 
-  return (): void => opened.stop();
+  return (): void => watch.stop();
 }

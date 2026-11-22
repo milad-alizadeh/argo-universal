@@ -4,15 +4,14 @@ import { List } from '@repo/kit/primitives/lists/list';
 import { ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { ComposerPopover } from '../composer-popover/composer-popover';
+import { attachChoices } from './composer-attach-choices';
 import { PhoneAttachChoices } from './composer-phone-attach-choices';
-import {
-  type AttachChoice,
-  slashCommandsChoice,
-} from './composer-slash-commands-choice';
+import type { AttachChoice } from './composer-slash-commands-choice';
 import type { AttachLayout } from './composer-toolbar-types';
 
+// The web and the desktop app: a popover on a wide window, a sheet on a narrow one. iOS and Android open a system menu (composer-attach-menu.native).
 export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
   return (
     <ComposerPopover
@@ -46,9 +45,9 @@ function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   if (!menu.layout.wide) return <PhoneAttachChoices {...menu} />;
 
   return (
-    <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
-      {/* A phone's sheet fills its height, so the List scrolls in it; a web popover fits its rows. */}
-      <List appearance="plain" fit={Platform.OS === 'web'}>
+    <View className="bg-content wide:bg-card">
+      {/* A popover fits its rows. */}
+      <List appearance="plain" fit>
         <ListSection>
           <ComposerAttachItems {...menu} />
         </ListSection>
@@ -61,7 +60,7 @@ function ComposerAttachItems({
   layout,
   close,
 }: AttachMenuProps): React.JSX.Element {
-  const choices = wideChoices(layout);
+  const choices = attachChoices(layout);
 
   return (
     <>
@@ -70,20 +69,6 @@ function ComposerAttachItems({
       ))}
     </>
   );
-}
-
-function wideChoices(layout: AttachLayout): AttachChoice[] {
-  const { props } = layout;
-
-  return [
-    {
-      label: 'Files',
-      icon: 'folder',
-      onPress: props.onAttachFiles ?? props.onAttachImages,
-    },
-    slashCommandsChoice(layout),
-    { label: 'Goal', icon: 'goal', onPress: props.onCreateGoal },
-  ];
 }
 
 interface AttachItemProps {
@@ -100,7 +85,6 @@ function ComposerAttachItem({
       title={item.label}
       leading={<Icon name={item.icon} />}
       accessibilityRole="button"
-
       disabled={!item.onPress}
       onPress={() => close(item.onPress)}
     />

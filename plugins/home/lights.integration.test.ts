@@ -1,3 +1,4 @@
+import type { WireNode } from '@argo/plugin-kit/testing';
 import { serialiseOnOAuthPort } from '@argo/plugin-kit/testing/oauth-port';
 import { expect, it } from 'vitest';
 import { homeWords } from './home-words';
@@ -13,7 +14,13 @@ const desk = 'light-desk';
 
 const ceiling = 'light-ceiling';
 
-const lightSection = 'FieldGroup.Section';
+const offline = 'Bridge is offline';
+
+const office = 'group-office';
+
+const deskColour = '#ffd078';
+
+const lightSection = 'Fader';
 
 it(
   'shows each room with its own card and its lights’ cards, then the lights in no room, each with power and brightness',
@@ -21,18 +28,54 @@ it(
     const page = await connected(await startHome());
 
     expect(page.find('Office').type).toBe('Text');
-    expect(page.find(homeWords.allLights).props.footer).toBe('2 lights');
-    expect(page.find('Desk lamp').type).toBe(lightSection);
+    expect(page.findText('2 lights · 60%')).toBeDefined();
+    expect(page.find(sliderOf(desk)).type).toBe(lightSection);
     expect(page.find(homeWords.otherLights).type).toBe('Text');
     expect(shown(page, toggleOf(desk))).toBe('true');
     expect(shown(page, toggleOf(ceiling))).toBe('false');
     expect(shown(page, sliderOf('light-porch'))).toBe('100');
-    expect(shown(page, toggleOf('group-office'))).toBe('true');
-    expect(page.find(sliderOf(desk)).props).toMatchObject({
-      min: 1,
-      max: 100,
+    expect(shown(page, toggleOf(office))).toBe('true');
+
+    const deskFader = page.find(sliderOf(desk)).props;
+    const roomFader = page.find(sliderOf(office)).props;
+
+    expect(deskFader).toMatchObject({
+      minimumValue: 1,
+      maximumValue: 100,
       valueLabel: '80%',
     });
+    expect(deskFader.fill).toEqual([
+      expect.not.stringContaining(deskColour),
+      deskColour,
+    ]);
+    expect(roomFader.fill).toEqual([
+      deskColour,
+      expect.not.stringContaining(deskColour),
+    ]);
+    expect(page.find(sliderOf(ceiling)).props.fill).toBeUndefined();
+  },
+  timeoutMs,
+);
+
+it(
+  'uses the distinct colours of the on lights for the room fill',
+  async () => {
+    const home = await startHome();
+    const [, secondLight] = home.hue.home.lights;
+    const ceilingColour = '#e8feff';
+
+    if (!secondLight)
+      throw new Error('The Office fixture has no second light.');
+
+    secondLight.on = true;
+    secondLight.xy = [0.3, 0.33];
+
+    const page = await connected(home);
+    const room = page.find(sliderOf(office)).props;
+    const ceilingFader = page.find(sliderOf(ceiling)).props;
+
+    expect(room.fill).toEqual([deskColour, ceilingColour]);
+    expect(ceilingFader.fill).toEqual([expect.any(String), ceilingColour]);
   },
   timeoutMs,
 );
@@ -43,7 +86,7 @@ it(
     const home = await startHome();
     const page = await connected(home);
 
-    await page.act(toggleOf(desk), 'onValueChange', false);
+    await page.act(toggleOf(desk), 'onPress');
 
     expect(home.hue.puts()).toEqual([
       {
@@ -57,6 +100,55 @@ it(
   timeoutMs,
 );
 
+it.each([
+  { title: 'Desk lamp', on: false, value: 0, label: 'Off' },
+  { title: 'Ceiling', on: true, value: 40, label: '40%' },
+  { title: 'All lights', on: false, value: 0, label: '2 lights · Off' },
+])(
+  'shows $title power as $on before Hue replies and restores it if the write fails',
+  async ({ title, on, value, label }) => {
+    const home = await startHome();
+    const page = await connected(home);
+
+    const power = (node: WireNode): boolean =>
+      node.props.accessibilityLabel === `${title} power`;
+
+    const level = (node: WireNode): boolean =>
+      node.props.accessibilityLabel === `${title} brightness`;
+
+    const initialLevel = page.find(level).props.value;
+    const pending = home.hue.holdNextPut();
+
+    await Promise.all([
+      expect(page.act(power, 'onPress')).rejects.toThrow(offline),
+      pending.requested.then((): void => {
+        try {
+          expect(page.find(power).props).toMatchObject({
+            selected: on,
+            disabled: false,
+            variant: 'primary',
+          });
+          expect(page.find(level).props.value).toBe(value);
+          expect(page.findText(label)).toBeDefined();
+        } finally {
+          home.hue.fail({
+            status: 503,
+            json: { errors: [{ description: offline }], data: [] },
+          });
+          pending.release();
+        }
+      }),
+    ]);
+
+    expect(page.find(power).props).toMatchObject({
+      selected: !on,
+      variant: 'secondary',
+    });
+    expect(page.find(level).props.value).toBe(initialLevel);
+  },
+  timeoutMs,
+);
+
 it(
   'dims a light with its Slider and every light in a room with the room’s card',
   async () => {
@@ -64,7 +156,8 @@ it(
     const page = await connected(home);
 
     await page.act(sliderOf(ceiling), 'onValueChange', 25);
-    await page.act(toggleOf('group-office'), 'onValueChange', false);
+    await home.test.clock.advance(150);
+    await page.act(toggleOf(office), 'onPress');
 
     expect(home.hue.puts().map(({ path, body }) => ({ path, body }))).toEqual([
       {
@@ -76,7 +169,7 @@ it(
         body: { on: { on: false } },
       },
     ]);
-    expect(shown(page, sliderOf(ceiling))).toBe('25');
+    expect(page.findText('Was 25%')).toBeDefined();
   },
   timeoutMs,
 );
@@ -93,6 +186,7 @@ it(
     ).toMatchObject({ every: 10_000 });
 
     if (deskLamp) deskLamp.on = false;
+    await home.test.clock.advance(10_000);
     await page.draw();
 
     expect(shown(page, toggleOf(desk))).toBe('false');
@@ -108,13 +202,15 @@ it(
     await connected(home);
     home.hue.fail({
       status: 503,
-      json: { errors: [{ description: 'Bridge is offline' }], data: [] },
+      json: { errors: [{ description: offline }], data: [] },
     });
+    await home.test.pages.draw({ path: '/', serverDevice: true, pull: true });
+
     const page = await homePage(home);
 
     expect(page.find(homeWords.failed).props).toMatchObject({
       tone: 'danger',
-      description: 'Bridge is offline',
+      description: offline,
     });
     home.hue.heal();
     const again = await page.press(homeWords.retry);
@@ -134,6 +230,8 @@ it(
       status: 403,
       json: { errors: [{ description: 'unauthorized user' }], data: [] },
     });
+    await home.test.pages.draw({ path: '/', serverDevice: true, pull: true });
+
     const page = await homePage(home);
 
     expect(page.findText(homeWords.connect)).toBeDefined();
@@ -152,12 +250,14 @@ it(
       name: 'Desk strip',
       on: false,
       brightness: 30,
+      xy: null,
+      reachable: true,
     });
     const page = await connected(home);
 
-    expect(page.find('Desk lamp').type).toBe(lightSection);
-    expect(page.find('Desk strip').type).toBe(lightSection);
-    expect(page.find(homeWords.allLights).props.footer).toBe('3 lights');
+    expect(page.find(sliderOf(desk)).type).toBe(lightSection);
+    expect(page.find(sliderOf('light-desk-2')).type).toBe(lightSection);
+    expect(page.findText('3 lights · 60%')).toBeDefined();
   },
   timeoutMs,
 );

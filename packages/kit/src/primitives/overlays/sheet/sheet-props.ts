@@ -20,6 +20,7 @@ export type SheetProps = KitProps<'Sheet'> & {
   floating?: boolean;
   // The pages scroll themselves, as a FieldGroup does, so the sheet gives them its height and wraps them in no scroller of its own; a page may say otherwise.
   contentScrolls?: boolean;
+  // A container for actions and feedback, fixed below the scrollable page and above the safe area.
   footer?: ReactNode;
   // Pads composed content, such as a form or a Plugin's, with the standard sheet inset; lists and pages that draw their own margins, a FieldGroup among them, leave it off.
   inset?: boolean;
@@ -30,7 +31,15 @@ export type SheetProps = KitProps<'Sheet'> & {
   wide?: boolean;
 };
 
+export interface SheetScreenSearch {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+}
+
 export interface SheetScreenProps {
+  closeLabel?: string;
+  search?: SheetScreenSearch;
   name: string;
   onExit?: () => void;
   // Shown in the page's title row; a pushed page also gets a back button.

@@ -2,6 +2,7 @@ import type { SessionRecord, SessionUpdate } from '@repo/contracts';
 import type { StorageTransaction, WriterJob } from '../storage';
 import type { OutputBlob } from './acp/tool-output';
 import type { BlobHoldingJob } from './blob-receipt.machine';
+import { recordDelegatedTurns } from './delegated-turns';
 import {
   insertOutputBlobs,
   insertOutputBlobRefs,
@@ -51,6 +52,7 @@ export class FeedRowsJob implements WriterJob, QueuedFeedJob, BlobHoldingJob {
     upsertFeedRows(transaction, this.input);
     insertOutputBlobRefs(transaction, this.input);
     advanceFeedSession(transaction, this.input);
+    recordDelegatedTurns(transaction, this.input);
   }
 
   public queuedFeedRows(): QueuedFeedRows {

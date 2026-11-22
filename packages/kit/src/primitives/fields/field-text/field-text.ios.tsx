@@ -1,4 +1,5 @@
 import {
+  LabeledContent,
   VStack,
   SecureField,
   TextField,
@@ -23,24 +24,40 @@ import { fieldTextTone } from './field-text-tone';
 
 type SwiftKeyboard = Parameters<typeof keyboardType>[0];
 
-/*
- * The title above the input, both leading-aligned, at every width: a long title wraps on its own lines and is
- * never cut short beside the value.
- */
+type FieldAlignment = 'leading' | 'trailing';
+
 export function FieldText(props: FieldTextProps): ReactElement {
-  const field = useFieldProps(props);
+  const alignment = props.hideTitle
+    ? 'leading'
+    : (props.iosValuePlacement ?? 'leading');
+
+  const field = useFieldProps(props, alignment);
+
+  const input = props.secure ? (
+    <SecureField {...field} />
+  ) : (
+    <TextField {...field} />
+  );
+
+  const title = props.hideTitle ? null : (
+    <RowTitle {...props} tone={fieldTextTone(props.error)} />
+  );
+
+  if (alignment === 'trailing')
+    return <LabeledContent label={title}>{input}</LabeledContent>;
 
   return (
     <VStack alignment="leading" spacing={8}>
-      {props.hideTitle ? null : (
-        <RowTitle {...props} tone={fieldTextTone(props.error)} />
-      )}
-      {props.secure ? <SecureField {...field} /> : <TextField {...field} />}
+      {title}
+      {input}
     </VStack>
   );
 }
 
-function useFieldProps(props: FieldTextProps): TextFieldProps {
+function useFieldProps(
+  props: FieldTextProps,
+  alignment: FieldAlignment,
+): TextFieldProps {
   const text = useSwiftFieldText(props.value);
   const ref = useRef<TextFieldRef>(null);
 
@@ -52,7 +69,7 @@ function useFieldProps(props: FieldTextProps): TextFieldProps {
     placeholder: props.placeholder,
     onTextChange: props.onChangeText,
     onFocusChange: (focused) => focusChanged(props, ref, focused),
-    modifiers: modifiers(props),
+    modifiers: modifiers(props, alignment),
   };
 }
 
@@ -74,9 +91,12 @@ function selectAll(
     void ref.current?.setSelection(0, props.value.length);
 }
 
-function modifiers(props: FieldTextProps): TextFieldProps['modifiers'] {
+function modifiers(
+  props: FieldTextProps,
+  alignment: FieldAlignment,
+): TextFieldProps['modifiers'] {
   return [
-    multilineTextAlignment('leading'),
+    multilineTextAlignment(alignment),
     accessibilityLabel(props.title),
     ...errorHint(props.error),
     ...secureModifiers(props.secure),

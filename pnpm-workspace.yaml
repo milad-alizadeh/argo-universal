@@ -195,6 +195,9 @@ catalog:
   "@babel/parser": 7.29.9
   "@babel/types": 7.29.8
   expo-image: ~58.0.16
+  # Spike only: Conversation audio on a phone (docs/research/voice-mode.md).
+  react-native-webrtc: 155.0.1
+  "@config-plugins/react-native-webrtc": 15.0.2
   "@modelcontextprotocol/sdk": 1.32.2
   "@noble/hashes": 2.4.0
   "@noble/ciphers": 2.4.0

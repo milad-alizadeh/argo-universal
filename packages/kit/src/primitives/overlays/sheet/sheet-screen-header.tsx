@@ -23,6 +23,7 @@ export function SheetScreenHeader(
     <SheetTitleRow
       title={props.page.title}
       action={props.page.action}
+      closeLabel={props.page.closeLabel}
       backLabel={props.root ? undefined : backLabel(props.stack)}
       onBack={props.stack.navigation.back}
       onClose={props.onClose}

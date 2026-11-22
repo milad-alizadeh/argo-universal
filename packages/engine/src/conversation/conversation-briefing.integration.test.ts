@@ -18,7 +18,7 @@ describe('the briefing a new call starts with', () => {
     expect(briefing).not.toContain('[COMPLETE]');
   });
 
-  it('stops at about 5,000 tokens, keeping the newest of the Feed', async () => {
+  it('fits earlier excerpts and the newest of the Feed in the briefing budget', async () => {
     const messages = Array.from(
       { length: 30 },
       (_, index) => `Entry ${index}: ${'filler words '.repeat(170)}`,
@@ -26,9 +26,11 @@ describe('the briefing a new call starts with', () => {
 
     const briefing = await briefingOf(messages);
 
-    expect(briefing.length).toBeLessThanOrEqual(21_000);
+    expect(briefing.length).toBeLessThanOrEqual(20_000);
     expect(briefing).toContain('Entry 29:');
-    expect(briefing).not.toContain('Entry 0:');
+    expect(briefing).toMatch(
+      /Earlier conversation excerpts:\nPerson: Hello\nAgent: Entry/,
+    );
   });
 });
 
