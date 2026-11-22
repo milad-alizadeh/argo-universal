@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { vi } from 'vitest';
 import { SessionSwitchScaffold } from './scaffold-session-switch.mocks';
 import {
   sampleMotionFrames,
@@ -26,27 +27,46 @@ const hideInspector = 'Hide Inspector';
 
 const showInspector = 'Show Inspector';
 
-// Includes the settled destination after the Frame's 280ms transition.
 const motionFrames = 24;
+
+// Time a heavy Inspector commit can spend on the main thread before paint.
+const heavyCommit = 240;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
-async function assertSliding(canvas: Canvas, action: string): Promise<void> {
+async function assertSliding(
+  canvas: Canvas,
+  action: string,
+  busy = 0,
+): Promise<void> {
   const workbench = await canvas.findByTestId(workbenchId);
   const button = canvas.getByRole('button', { name: action });
-  const left = (): number => workbench.getBoundingClientRect().left;
+  const left = (): number => Math.round(workbench.getBoundingClientRect().left);
   const start = left();
 
-  const positions = await sampleWorkbenchSlide(
+  const { startTime, currentTime, positions } = await sampleWorkbenchSlide(
     workbench,
     () => button.click(),
-    { measure: left },
+    busy,
   );
 
-  await expect(positions.at(-1)).not.toBe(start);
-  await expect(new Set(positions.map(Math.round)).size).toBeGreaterThan(2);
+  const end = left();
+  const min = Math.min(start, end);
+  const max = Math.max(start, end);
+
+  const between = positions.filter(
+    (position) => position > min && position < max,
+  );
+
+  await expect(startTime).toBeNull();
+  await expect(currentTime).toBe(0);
+  await expect(positions[0]).toBe(start);
+  await expect(end).not.toBe(start);
+  await expect(new Set(between).size).toBeGreaterThan(busy === 0 ? 0 : 4);
   await expect(canvas.getByTestId(workbenchId)).toBe(workbench);
-  await expect(workbench).toBeVisible();
+
+  const visibility = expect(workbench);
+  await (action === showInspector ? visibility.not : visibility).toBeVisible();
 }
 
 function closesAt(width: number): Story {
@@ -98,64 +118,31 @@ export const WorkbenchTakesItsPlaceAtOnceOnASessionSwitch: Story = {
     const left = (): number => workbench.getBoundingClientRect().left;
     const start = left();
 
-    const positions = await sampleMotionFrames(
-      () => button.click(),
-      left,
-      motionFrames,
-    );
+    const animate = vi.spyOn(workbench, 'animate');
 
-    const end = positions.at(-1);
-    const between = positions.filter((at) => at !== start && at !== end);
+    try {
+      const positions = await sampleMotionFrames(
+        () => button.click(),
+        left,
+        motionFrames,
+      );
+      const end = positions.at(-1);
+      const between = positions.filter((at) => at !== start && at !== end);
 
-    await expect(end).not.toBe(start);
-    await expect(between).toEqual([]);
+      await expect(end).not.toBe(start);
+      await expect(between).toEqual([]);
+      await expect(canvas.getByTestId(workbenchId)).toBe(workbench);
+      await expect(animate).not.toHaveBeenCalled();
+    } finally {
+      animate.mockRestore();
+    }
   },
 };
-
-// A pane's first render that holds the main thread this long in the press's commit.
-const heavyCommit = 240;
-
-// Places strictly between where the Workbench was and where it settles, while it still shows.
-async function travelAfterHeavyCommit(
-  canvas: Canvas,
-  action: string,
-): Promise<number[]> {
-  const workbench = await canvas.findByTestId(workbenchId);
-  const button = canvas.getByRole('button', { name: action });
-  const shown = (): boolean => getComputedStyle(workbench).opacity !== '0';
-
-  const left = (): number =>
-    shown() ? Math.round(workbench.getBoundingClientRect().left) : Number.NaN;
-
-  const start = left();
-
-  const positions = await sampleWorkbenchSlide(
-    workbench,
-    () => button.click(),
-    { measure: left, commitWorkMs: heavyCommit },
-  );
-
-  const drawn = positions.filter((at) => !Number.isNaN(at));
-  const end = drawn.at(-1);
-
-  return drawn.filter((at) => at !== start && at !== end);
-}
-
-// Drawn at several places on the way, not landed on its place in a frame or two.
-async function assertTravelsAfterHeavyCommit(
-  canvas: Canvas,
-  action: string,
-): Promise<void> {
-  const between = await travelAfterHeavyCommit(canvas, action);
-
-  await expect(new Set(between).size).toBeGreaterThan(4);
-}
 
 // A heavy Inspector commit must not spend the Workbench's motion before it paints: it keeps pace with the panes.
 export const WorkbenchSlidesAfterAHeavyInspectorClose: Story = {
   ...closesAt(2560),
-  play: async ({ canvas }) =>
-    assertTravelsAfterHeavyCommit(canvas, hideInspector),
+  play: async ({ canvas }) => assertSliding(canvas, hideInspector, heavyCommit),
 };
 
 export const WorkbenchSlidesOutAfterAHeavyInspectorOpen: Story = {
@@ -163,6 +150,6 @@ export const WorkbenchSlidesOutAfterAHeavyInspectorOpen: Story = {
   beforeEach: (): Promise<void> => settleLayout(1856),
   play: async ({ canvas }) => {
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    await assertTravelsAfterHeavyCommit(canvas, showInspector);
+    await assertSliding(canvas, showInspector, heavyCommit);
   },
 };

@@ -14,3 +14,7 @@ export interface SkeletonMeasure {
   // Elements that hide with their whole subtree.
   hidden: Element[];
 }
+
+// A placeholder is its box: two that share one are drawn once.
+export const placeholderKey = (placeholder: SkeletonPlaceholder): string =>
+  `${placeholder.left},${placeholder.top},${placeholder.width},${placeholder.height}`;

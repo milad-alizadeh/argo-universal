@@ -7,6 +7,7 @@ import { conversationOperations } from './conversation';
 import { conversationDeviceOperations } from './conversation-devices';
 import { conversationSettingsOperations } from './conversation-settings';
 import { diagramOperations } from './diagram';
+import type { ImageVisibility } from './image-visibility';
 import type { OperationTier, OperationPolicy } from './metadata';
 import { pluginOperations } from './plugins';
 import { projectScheduleOperations } from './project-schedules';
@@ -80,6 +81,7 @@ export interface OperationDefinition {
   tier: OperationTier;
   policy: OperationPolicy;
   keywords: readonly string[];
+  imageVisibility?: ImageVisibility;
 }
 
 export const operations = {
@@ -110,15 +112,16 @@ export type OperationId = z.infer<typeof OperationId>;
 
 export type OperationDescription = Omit<
   OperationDefinition,
-  'params' | 'result'
+  'params' | 'result' | 'imageVisibility'
 > & {
   params: z.core.JSONSchema.JSONSchema;
   result: z.core.JSONSchema.JSONSchema;
 };
 
-export function describeOperation(
-  operation: OperationDefinition,
-): OperationDescription {
+export function describeOperation({
+  imageVisibility: _imageVisibility,
+  ...operation
+}: OperationDefinition): OperationDescription {
   return {
     ...operation,
     params: operationJsonSchema(operation.params),
