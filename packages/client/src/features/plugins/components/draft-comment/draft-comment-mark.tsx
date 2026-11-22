@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
+import { useWindowPlaced } from '../../hooks/use-window-placed';
 import type { Box } from '../../../../lib/product/plugin-registry/draft-commenting';
 
 const pinSize = 22;
@@ -27,7 +28,14 @@ export function DraftCommentMark({
   if (box === null) return null;
 
   const laid = box && {
-    outline: { left: box.x, top: box.y, width: box.width, height: box.height },
+    // On the node's own edge, since a list clips a row to its box and would cut an outline drawn outside it.
+    outline: {
+      left: box.x,
+      top: box.y,
+      width: box.width,
+      height: box.height,
+      borderRadius: box.radius ?? 0,
+    },
     pin: {
       left: box.x + box.width - pinSize - pinInset,
       top: box.y + pinInset,
@@ -36,15 +44,22 @@ export function DraftCommentMark({
 
   return (
     <>
-      {selected && (
-        <View
-          pointerEvents="none"
-          style={laid?.outline}
-          className={`${laid ? 'fixed' : 'absolute inset-0'} border border-border bg-selected`}
-        />
-      )}
+      {selected && <Outline style={laid?.outline} />}
       {count > 0 && <DraftCommentPin count={count} style={laid?.pin} />}
     </>
+  );
+}
+
+function Outline({ style }: { style?: ViewStyle }): React.JSX.Element {
+  const placed = useWindowPlaced(style);
+
+  return (
+    <View
+      ref={placed.ref}
+      pointerEvents="none"
+      style={placed.style}
+      className={`${style ? 'fixed' : 'absolute inset-0 rounded-lg'} border border-border`}
+    />
   );
 }
 
@@ -56,12 +71,15 @@ export function DraftCommentPin({
   count: number;
   style?: ViewStyle;
 }): React.JSX.Element {
+  const placed = useWindowPlaced(style);
+
   return (
     <View
+      ref={placed.ref}
       pointerEvents="none"
       role="img"
       aria-label={count === 1 ? '1 comment' : `${count} comments`}
-      style={style}
+      style={placed.style}
       className={`${style ? 'fixed' : 'absolute right-1 top-1'} size-5.5 items-center justify-center rounded-full rounded-bl-grouped-inner bg-warning shadow-control`}
     >
       <Text className="type-badge text-primary-foreground">{count}</Text>

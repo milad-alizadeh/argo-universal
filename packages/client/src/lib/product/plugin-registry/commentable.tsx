@@ -40,13 +40,21 @@ const filling = new Set([
 const boxless: ViewStyle | undefined =
   Platform.OS === 'web' ? { display: 'contents' } : undefined;
 
-// A boxless wrapper has no size, so its box is its children's.
+// The corner of the node's first child, which a node of several children shares with the rest; 0 where it is square.
+function cornerOf(nodes: readonly Element[]): number {
+  const [first] = nodes;
+
+  return first ? Number.parseFloat(getComputedStyle(first).borderTopLeftRadius) || 0 : 0;
+}
+
+// A boxless wrapper has no size, so its box is its children's. The marks the App lays over the node are fixed and are no part of it; counting them grew the box a frame at a time.
 function webBox(view: Holder | null): Box {
   if (!(view instanceof Element)) return nowhere;
 
-  const rects = [...view.children].map((child) =>
-    child.getBoundingClientRect(),
+  const nodes = [...view.children].filter(
+    (child) => getComputedStyle(child).position !== 'fixed',
   );
+  const rects = nodes.map((child) => child.getBoundingClientRect());
 
   if (rects.length === 0) return nowhere;
 
@@ -58,6 +66,7 @@ function webBox(view: Holder | null): Box {
     y: top,
     width: Math.max(...rects.map((rect) => rect.right)) - left,
     height: Math.max(...rects.map((rect) => rect.bottom)) - top,
+    radius: cornerOf(nodes),
   };
 }
 

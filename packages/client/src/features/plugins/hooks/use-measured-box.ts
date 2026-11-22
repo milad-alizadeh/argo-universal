@@ -6,7 +6,8 @@ const same = (a: Box | null, b: Box): boolean =>
   a.x === b.x &&
   a.y === b.y &&
   a.width === b.width &&
-  a.height === b.height;
+  a.height === b.height &&
+  a.radius === b.radius;
 
 /*
  * Where a node is in the window while `active`, followed frame by frame, since a node that draws no box of its own has

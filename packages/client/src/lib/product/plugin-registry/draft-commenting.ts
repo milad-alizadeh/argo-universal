@@ -13,7 +13,14 @@ export type DraftPlace = {
   letter: string;
 };
 
-export type Box = { x: number; y: number; width: number; height: number };
+// `radius` is the node's own corner radius where the window can read it, so what is drawn over the node follows its corners.
+export type Box = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  radius?: number;
+};
 
 export const boxOf = ([x, y, width, height]: readonly [
   number,
