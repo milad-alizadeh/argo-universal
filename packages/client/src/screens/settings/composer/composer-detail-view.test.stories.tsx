@@ -5,30 +5,29 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { SettingsListView } from './settings-list-view';
-import { readySettings } from './settings-list-view-fixtures';
+import { ComposerDetailView } from './composer-detail-view';
+import { suggestionModels } from './composer-detail-view-fixtures';
 
 const onSuggestionModelChange = fn();
 
 const meta = {
-  title: 'Tests/Screens/Settings/SuggestionModels',
-  component: SettingsListView,
+  title: 'Tests/Screens/Settings/Composer',
+  component: ComposerDetailView,
   args: {
-    ...readySettings,
-    onSelect: fn(),
-    onThemeChange: fn(),
+    followUpSuggestions: true,
+    suggestionModels,
     onFollowUpSuggestionsChange: fn(),
     onSuggestionModelChange,
   },
   render: (args): React.JSX.Element => (
     <View className="h-175 w-full">
-      <SettingsListView {...args} />
+      <ComposerDetailView {...args} />
     </View>
   ),
   beforeEach: (): void => {
     onSuggestionModelChange.mockClear();
   },
-} satisfies Meta<typeof SettingsListView>;
+} satisfies Meta<typeof ComposerDetailView>;
 
 export default meta;
 
@@ -40,7 +39,7 @@ function required<Value>(value: Value | undefined, what: string): Value {
   return value;
 }
 
-const recorded = readySettings.suggestionModels ?? [];
+const recorded = suggestionModels;
 
 const first = required(recorded[0], 'a first Agent');
 
@@ -94,7 +93,6 @@ const choosesAModel = (width: number): Story => ({
       type: 'model',
       value: model.value,
     });
-    await expect(context.args.onSelect).not.toHaveBeenCalled();
   },
 });
 
@@ -102,7 +100,7 @@ export const ChoosesAModelPhone = choosesAModel(layoutWidths.phone);
 
 export const ChoosesAModelWide = choosesAModel(layoutWidths.wide);
 
-// With no Installed Agents answered yet, the Composer group keeps only its toggle.
+// With no Installed Agents answered yet, the page keeps only its toggle.
 export const NoAgentsYet: Story = {
   args: { suggestionModels: undefined },
   play: async ({ canvas }) => {

@@ -149,6 +149,8 @@ export { AgentAccessDetailScreen } from './screens/settings/agent-access/agent-a
 
 export { ConversationDetailScreen } from './screens/settings/conversation/conversation-detail-screen';
 
+export { ComposerDetailScreen } from './screens/settings/composer/composer-detail-screen';
+
 export { PluginSignInDetailScreen } from './screens/settings/plugins/sign-in/$id/plugin-sign-in-detail-screen';
 
 export { ScheduledDetailScreen } from './screens/scheduled/$id/schedule-detail-screen';
