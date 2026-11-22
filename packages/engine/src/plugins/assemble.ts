@@ -5,11 +5,12 @@ import { PluginAccounts } from './accounts/plugin-accounts';
 import type { OAuthOptions } from './accounts/plugin-oauth';
 import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
+import { DraftReview } from './drafts/draft-review';
 import { PluginDrafts } from './drafts/plugin-drafts';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
 import { LocatedCache } from './located-cache';
-import { pluginManifest } from './located-plugins';
+import { pluginManifest, type PluginServiceDeps } from './located-plugins';
 import { runtimeFor } from './runtime-for';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
@@ -49,6 +50,7 @@ type Discovery = Pick<
 
 export type Assembled = {
   service: PluginService;
+  drafts: DraftReview;
   accounts: PluginAccounts;
   listChanges: PluginListChanges;
   runtime: PluginRuntime;
@@ -115,31 +117,29 @@ function foundations(options: PluginsOptions): Foundations {
   };
 }
 
-function serviceFor(
+function depsFor(
   options: PluginsOptions,
   parts: Foundations,
   runtime: PluginRuntime,
-): PluginService {
-  return new PluginService(
-    {
-      ...(options.watchPlugins === true && { dev: true }),
-      ...parts.discovery,
-      pluginAccounts: parts.accounts,
-      pluginRuntime: runtime,
-      pluginSettings: parts.settings,
-    },
-    new PluginDrafts(options),
-  );
+): PluginServiceDeps {
+  return {
+    ...(options.watchPlugins === true && { dev: true }),
+    ...parts.discovery,
+    pluginAccounts: parts.accounts,
+    pluginRuntime: runtime,
+    pluginSettings: parts.settings,
+  };
 }
 
 // The one place PluginService is built, with every dependency in hand.
 export function assemble(options: PluginsOptions): Assembled {
   const parts = foundations(options);
   const runtime = runtimeFor(options, parts);
-  const service = serviceFor(options, parts, runtime);
+  const deps = depsFor(options, parts, runtime);
 
   return {
-    service,
+    service: new PluginService(deps),
+    drafts: new DraftReview(deps, new PluginDrafts(options)),
     runtime,
     accounts: parts.accounts,
     listChanges: parts.listChanges,

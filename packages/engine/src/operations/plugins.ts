@@ -2,8 +2,7 @@ import type { OperationId } from '@repo/contracts/operations';
 import { pluginGuide } from '@repo/contracts/operations/plugin-guide';
 import type { PluginList, PluginSettings } from '@repo/contracts/plugins';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
-import type { PluginService } from '../plugins';
-import type { Sessions } from '../sessions';
+import type { DraftSessions, PluginsRouterDeps } from '../plugins';
 import type { OperationImplementations } from './operations';
 
 // `plugin.new` writes into a Session's Checkout, so Sessions answer it.
@@ -12,21 +11,21 @@ type PluginImplementations = Pick<
   Exclude<Extract<OperationId, `plugin.${string}`>, 'plugin.new'>
 >;
 
-// Delivers the author's Choose to a Session as the Plugin whose Draft it is (ADR-0055).
-type DraftSessions = Pick<Sessions, 'promptFromPlugin'>;
-
 type PluginCompletion = { ok: true };
 
 // The guide answers from Contracts' own text, so the blueprint and the kit's reference come from where their schemas are.
-const readOperations = (
-  plugins: PluginService,
-): Pick<PluginImplementations, 'plugin.list' | 'plugin.guide'> => ({
+const readOperations = ({
+  plugins,
+}: Pick<PluginsRouterDeps, 'plugins'>): Pick<
+  PluginImplementations,
+  'plugin.list' | 'plugin.guide'
+> => ({
   'plugin.list': (): Promise<PluginList> => plugins.list(),
   'plugin.guide': async (input) => pluginGuide(input),
 });
 
 export function createPluginOperations(
-  plugins: PluginService,
+  { plugins, drafts }: Pick<PluginsRouterDeps, 'plugins' | 'drafts'>,
   sessions: DraftSessions,
 ): PluginImplementations {
   return {
@@ -36,24 +35,16 @@ export function createPluginOperations(
       plugins.settings(pluginId),
     'plugin.setSetting': (change): Promise<PluginCompletion> =>
       complete(plugins.setSetting(change)),
-    ...readOperations(plugins),
+    ...readOperations({ plugins }),
     'plugin.draft.show': ({
       pluginId,
       region,
       sessionId,
     }): Promise<PluginCompletion> =>
-      complete(plugins.showDraft(pluginId, region, sessionId)),
-    'plugin.draft.choose': (choice) =>
-      plugins.chooseDraft(choice, async (sessionId, { text, ...sender }) => {
-        const sent = await sessions.promptFromPlugin(
-          { sessionId, prompt: [{ type: 'text', text }] },
-          { type: 'plugin', ...sender },
-        );
-
-        return sent.status;
-      }),
+      complete(drafts.show(pluginId, region, sessionId)),
+    'plugin.draft.choose': (choice) => drafts.choose(choice, sessions),
     'plugin.draft.pick': async ({ pluginId }) => ({
-      choice: plugins.draftChoice(pluginId),
+      choice: drafts.pick(pluginId),
     }),
     'plugin.activate': ({ pluginId }): Promise<PluginStatus> =>
       plugins.activate(pluginId),

@@ -1,5 +1,4 @@
 import type { PluginInstruction } from '@repo/contracts/operations/control';
-import type { DraftChoice } from '@repo/contracts/operations/plugin-drafts';
 import type {
   HookEventName,
   PluginList,
@@ -10,7 +9,6 @@ import {
   type DeclaredItems,
   type DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
-import { draftChoiceRefusal } from '@repo/contracts/plugins/drafts';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import {
   hooksEvent,
@@ -33,8 +31,6 @@ import {
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { startsWithServer } from './discovery/plugin-contributions';
-import { draftPrompt } from './drafts/draft-prompt';
-import type { ChosenDraft, DraftStore } from './drafts/plugin-drafts';
 import { callerOf } from './hooks/hook-rules';
 import { LocatedCache } from './located-cache';
 import {
@@ -54,20 +50,11 @@ import { slotItemsFor } from './slots/slot-streams';
 
 export type { PluginServiceDeps } from './located-plugins';
 
-// Hands a Plugin's Draft choice to a Session as that Plugin; answers whether it began a Turn or joined the queue.
-export type DeliverDraft = (
-  sessionId: string,
-  prompt: { pluginId: string; title: string; text: string },
-) => Promise<'started' | 'queued'>;
-
 export class PluginService {
   private readonly deps: PluginServiceDeps;
 
   // Where Plugins are found is read from disk once and kept; a Server shares its cache with the runtime's dev builds.
-  constructor(
-    deps: PluginServiceDeps,
-    private readonly drafts: DraftStore,
-  ) {
+  constructor(deps: PluginServiceDeps) {
     this.deps = { ...deps, located: deps.located ?? new LocatedCache() };
   }
 
@@ -99,77 +86,6 @@ export class PluginService {
     return this.deps.pluginRuntime.activate(
       await pluginLocation(this.deps, pluginId),
     );
-  }
-
-  // Rebuilds a dev Plugin at once; a build that fails keeps the worker and is the refusal (ADR-0057).
-  async showDraft(
-    pluginId: string,
-    region?: string,
-    sessionId?: string,
-  ): Promise<void> {
-    await this.activate(pluginId);
-
-    // The Session that draws is the one the author's Choose answers to.
-    if (sessionId) await this.drafts.drawnBy(pluginId, sessionId);
-
-    // The mark of the worker this swaps in names the region, so Apps frame it (ADR-0057).
-    const done = this.deps.pluginRuntime.changes.drawing(pluginId, region);
-
-    try {
-      const error = await this.deps.pluginRuntime.showDraft(pluginId);
-
-      if (error) throw new Error(error);
-
-      // Answered once the new worker reports, so the Agent's next step sees the Draft drawn.
-      const status = await this.activate(pluginId);
-
-      if (status.state !== 'running')
-        throw new Error(status.error ?? 'Plugin did not start');
-    } finally {
-      done();
-    }
-  }
-
-  // Records the author's choice and hands it to the Session whose Agent draws the Draft (ADR-0057).
-  async chooseDraft(
-    { pluginId, ...chosen }: ChosenDraft & { pluginId: string },
-    deliver: DeliverDraft,
-  ): Promise<{ sessionId: string; delivery: 'started' | 'queued' }> {
-    const { name, contributes } = await locatePlugin(this.deps, pluginId).then(
-      ({ plugin }) => plugin.manifest,
-    );
-
-    if (this.deps.dev !== true)
-      throw new Error(`${pluginId} is not a dev Plugin, so it has no Draft`);
-
-    const refusal = draftChoiceRefusal(
-      contributes.drafts,
-      chosen.picks,
-      chosen.comments,
-    );
-
-    if (refusal) throw new Error(refusal);
-
-    const sessionId = this.drafts.sessionOf(pluginId);
-
-    if (!sessionId)
-      throw new Error(
-        `No Session is drawing ${pluginId}'s Draft: its Agent runs plugin.draft.show from its Session first.`,
-      );
-
-    await this.drafts.choose(pluginId, chosen);
-
-    const delivery = await deliver(sessionId, {
-      pluginId,
-      title: name,
-      text: draftPrompt({ pluginId, title: name }, chosen),
-    });
-
-    return { sessionId, delivery };
-  }
-
-  draftChoice(pluginId: string): DraftChoice | null {
-    return this.drafts.choice(pluginId);
   }
 
   // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.

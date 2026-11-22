@@ -40,14 +40,6 @@ function settingsOf(settings: Map<string, boolean>): ServiceSettings {
   };
 }
 
-// These tests never draw a Draft, so no Session is drawing one.
-const noDrafts: ConstructorParameters<typeof PluginService>[1] = {
-  sessionOf: () => null,
-  choice: () => null,
-  drawnBy: () => Promise.resolve(),
-  choose: () => Promise.resolve(),
-};
-
 async function serviceOf(
   plugins: Parameters<typeof createRuntimePlugins>[0],
   dev?: true,
@@ -69,23 +61,20 @@ async function serviceOf(
 
   const pluginRuntime = fakeRuntime(home, activated);
 
-  const service = new PluginService(
-    {
-      home,
-      version: '1.2.3',
-      firstPartyPluginsDirectory: join(home, shippedFolder),
-      located: cache,
-      pluginRuntime,
-      pluginAccounts: {
-        list: (): never[] => [],
-        grants: (): never[] => [],
-        removePlugin: vi.fn<() => Promise<void>>(),
-      },
-      pluginSettings: settingsOf(new Map()),
-      ...(dev && { dev }),
+  const service = new PluginService({
+    home,
+    version: '1.2.3',
+    firstPartyPluginsDirectory: join(home, shippedFolder),
+    located: cache,
+    pluginRuntime,
+    pluginAccounts: {
+      list: (): never[] => [],
+      grants: (): never[] => [],
+      removePlugin: vi.fn<() => Promise<void>>(),
     },
-    noDrafts,
-  );
+    pluginSettings: settingsOf(new Map()),
+    ...(dev && { dev }),
+  });
 
   return { service, discoveries: () => runs, activated, cache };
 }

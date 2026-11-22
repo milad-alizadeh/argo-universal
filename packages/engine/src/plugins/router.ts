@@ -20,6 +20,7 @@ import {
 } from '../rpc';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
+import type { DraftReview } from './drafts/draft-review';
 import type { PluginListChanges } from './list-changes';
 import type { PluginOperationService } from './operations';
 import type { LoaderPages } from './pages';
@@ -120,6 +121,8 @@ const createPageStreamsRouter = routerFactory((pages: LoaderPages) =>
 
 export type PluginsRouterDeps = {
   plugins: PluginService;
+  // Draft review: which Session draws a dev Plugin's Draft, and the author's choice.
+  drafts: DraftReview;
   accounts: PluginAccounts;
   listChanges: PluginListChanges;
   operations: PluginOperationService;
