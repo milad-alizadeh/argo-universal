@@ -1,37 +1,19 @@
 import type { ChartPreviewBounds } from '@repo/contracts/operations/chart';
+import { isChartDrawingReady } from '@repo/kit/primitives/visual';
 
 export const chartPreviewRootId = 'chart-preview';
 
 const nextFrame = (): Promise<number> =>
   new Promise((resolve) => requestAnimationFrame(resolve));
 
-function chartLabelsReady(root: HTMLElement): boolean {
-  // The legend mounts with its labels. It has no rows when there are no positive pie slices.
-  const legend = root.querySelector('[data-testid="chart-legend"]');
-  const axes = root.querySelector('[data-testid="chart-axes"]');
-
-  return legend !== null || Boolean(axes?.childElementCount);
-}
-
 function measuredChart(): ChartPreviewBounds | null {
   const root = document.getElementById(chartPreviewRootId);
-  const canvas = root?.querySelector('canvas');
 
-  if (!root || !canvas?.width || !canvas.height || !chartLabelsReady(root))
-    return null;
+  if (!root || !isChartDrawingReady(root)) return null;
 
   const frame = root.getBoundingClientRect();
-  const plot = canvas.getBoundingClientRect();
 
-  if (
-    plot.width <= 0 ||
-    plot.height <= 0 ||
-    frame.width <= 0 ||
-    frame.height <= 0
-  )
-    return null;
-
-  return crop(frame);
+  return frame.width > 0 && frame.height > 0 ? crop(frame) : null;
 }
 
 function crop(bounds: DOMRect): ChartPreviewBounds {
