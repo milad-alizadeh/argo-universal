@@ -1,5 +1,4 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 
 const plural = (comments: number): string =>
@@ -12,8 +11,8 @@ function chooseLabel(comments: number): string {
   return `Choose · ${plural(comments)}`;
 }
 
-// A phone's bar has no room for the word, so it keeps the count alone.
-function chooseCompactLabel(comments: number): string {
+// The bar shows the count in a compact label.
+function visibleLabel(comments: number): string {
   if (comments === 0) return 'Choose';
 
   return `Choose · ${comments}`;
@@ -21,24 +20,20 @@ function chooseCompactLabel(comments: number): string {
 
 export function DraftChooseButton({
   comments,
+  disabled,
   onPress,
 }: {
   comments: number;
+  disabled?: boolean;
   onPress: () => void;
 }): React.JSX.Element {
-  const spoken = chooseLabel(comments);
-
   return (
-    <SizeClass
-      compact={
-        <Button
-          label={chooseCompactLabel(comments)}
-          accessibilityLabel={spoken}
-          size="sm"
-          onPress={onPress}
-        />
-      }
-      wide={<Button label={spoken} size="sm" onPress={onPress} />}
+    <Button
+      label={visibleLabel(comments)}
+      accessibilityLabel={chooseLabel(comments)}
+      disabled={disabled}
+      size="sm"
+      onPress={onPress}
     />
   );
 }

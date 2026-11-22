@@ -3,8 +3,10 @@ import { expect, waitFor } from 'storybook/test';
 import {
   ChooseBarMock,
   type ChooseCall,
+  type ChooseReply,
 } from '../../hooks/draft-bar-choose.mocks';
 import type { DraftNote } from '../../stores/draft-comments';
+import { leftNotes } from '../draft-comment/draft-comment-fixtures';
 
 const note: DraftNote = {
   address: 'list/row-409',
@@ -13,6 +15,8 @@ const note: DraftNote = {
   variant: 'rows',
   note: 'Use a coloured chip',
 };
+
+const chooseWithTwoComments = 'Choose · 2 comments';
 
 const chooseCalls = (calls: ChooseCall[]): ChooseCall[] =>
   calls.filter(({ path }) => path === 'plugin.draft.choose');
@@ -64,7 +68,7 @@ export const ChooseCarriesTheComments: Story = {
   },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Choose · 2 comments' }),
+      await canvas.findByRole('button', { name: chooseWithTwoComments }),
     );
 
     await waitFor(() => expect(chooseCalls(args.calls)).toHaveLength(1));
@@ -97,5 +101,78 @@ export const RegionlessDraftChoosesOnceItHasAComment: Story = {
       picks: [],
       comments: [{ nodeKey: 'row-409' }],
     });
+  },
+};
+
+const reviewedNotes: DraftNote[] = [
+  note,
+  { address: 'title', nodeKey: 'title', note: 'Bigger' },
+];
+
+export const DeliveredShowsWhatWasSent: Story = {
+  args: { calls: [], notes: reviewedNotes },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: chooseWithTwoComments }),
+    );
+    const status = await canvas.findByRole('status');
+
+    await expect(status).toHaveTextContent('Sent to drawing Session');
+    await expect(status).toHaveTextContent(
+      'Your picks and 2 comments were sent.',
+    );
+    await expect(canvas.getByRole('button', { name: 'Choose' })).toBeVisible();
+  },
+};
+
+function rejectedChoice(
+  reply: ChooseReply,
+  title: string,
+  explanation: string,
+): Story {
+  return {
+    args: { calls: [], notes: reviewedNotes, reply },
+    play: async ({ canvas, userEvent }) => {
+      const choose = await canvas.findByRole('button', {
+        name: chooseWithTwoComments,
+      });
+
+      await userEvent.click(choose);
+      const alert = await canvas.findByRole('alert');
+
+      await expect(alert).toHaveTextContent(title);
+      await expect(alert).toHaveTextContent(explanation);
+      await expect(choose).toBeVisible();
+      await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await expect(choose).toBeVisible();
+    },
+  };
+}
+
+export const RefusedNamesTheUnavailableVariant = rejectedChoice(
+  'unavailable',
+  'Couldn’t send your choice',
+  'The Rows Variant is no longer available. Pick another Variant and choose again.',
+);
+
+export const ChooseBeforeShowExplainsHowToRecover = rejectedChoice(
+  'no-session',
+  'No drawing Session yet',
+  'Ask the Agent in your drafting Session to show this Draft, then choose again.',
+);
+
+export const DarkCommentsUseANeutralToggleAndSolidPins: Story = {
+  globals: { mode: 'dark' },
+  args: { calls: [], commenting: true, showPage: true, notes: leftNotes },
+  play: async ({ canvas, userEvent }) => {
+    const toggle = await canvas.findByRole('button', { name: 'Comments' });
+    const pin = (await canvas.findAllByRole('img', { name: '1 comment' }))[0];
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle.getBoundingClientRect().width).toBe(34);
+    await expect(pin?.getBoundingClientRect().width).toBe(23);
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   },
 };

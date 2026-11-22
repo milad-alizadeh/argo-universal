@@ -1,5 +1,4 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import type { PluginTreeProps } from '../../../../lib/product/plugin-registry';
 import { usePluginDraft } from '../../hooks/use-plugin-draft';
@@ -8,6 +7,8 @@ import type { PageOpening } from '../../utils/page-addresses';
 import { DraftBar } from '../draft-bar/draft-bar';
 import { DraftBarDock } from '../draft-bar/draft-bar-dock';
 import { DraftChooseButton } from '../draft-bar/draft-choose-button';
+import { DraftChooseFeedbackCard } from '../draft-bar/draft-choose-feedback';
+import { DraftCommentToggle } from '../draft-comment/draft-comment-toggle';
 import { DraftCommentsLayer } from '../draft-comment/draft-comments-layer';
 import { DraftRegionsProvider } from '../draft-region/draft-regions';
 
@@ -26,16 +27,17 @@ function DraftBarOfPage({
 
   return (
     <DraftBarDock>
+      {bar.feedback && (
+        <DraftChooseFeedbackCard
+          feedback={bar.feedback}
+          onDismiss={bar.onDismissFeedback}
+        />
+      )}
       <DraftBar
         {...bar}
         commentToggle={
-          <IconButton
-            icon="message"
-            accessibilityLabel="Comments"
-            size="md"
-            variant="secondary"
+          <DraftCommentToggle
             selected={bar.commenting}
-            aria-pressed={bar.commenting}
             onPress={bar.onToggleComments}
           />
         }
@@ -43,6 +45,7 @@ function DraftBarOfPage({
           bar.onChoose && (
             <DraftChooseButton
               comments={bar.commentCount}
+              disabled={bar.choosing}
               onPress={bar.onChoose}
             />
           )

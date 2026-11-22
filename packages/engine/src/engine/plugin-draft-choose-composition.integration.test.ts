@@ -153,7 +153,10 @@ it('refuses a choice no Agent is drawing, and never lets an Agent choose', async
 
   await expect(
     host.caller.plugin.draft.choose({ pluginId: dev, picks, comments }),
-  ).rejects.toThrow(/plugin\.draft\.show/);
+  ).rejects.toMatchObject({
+    code: 'PRECONDITION_FAILED',
+    message: expect.stringMatching(/plugin\.draft\.show/),
+  });
 
   await agent(show, { pluginId: dev });
   await expect(
@@ -188,7 +191,10 @@ it('refuses a pick for a region or Variant the Draft does not declare', async ()
       pluginId: dev,
       picks: [{ region: 'header', variant: 'grid' }],
     }),
-  ).rejects.toThrow(/no Variant grid/);
+  ).rejects.toMatchObject({
+    code: 'CONFLICT',
+    message: expect.stringContaining('no Variant grid'),
+  });
   expect(await host.caller.plugin.draft.pick({ pluginId: dev })).toEqual({
     choice: null,
   });

@@ -6,8 +6,7 @@ import {
 } from '@repo/contracts/plugins/drafts';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useTRPC } from '#features/connection';
+import { useQuery } from '@tanstack/react-query';
 import type { PluginTreeProps } from '../../../lib/product/plugin-registry';
 import {
   draftComments,
@@ -27,12 +26,16 @@ import {
   type DraftRegionTag,
 } from '../utils/draft-regions-model';
 import type { PageOpening } from '../utils/page-addresses';
+import { useDraftChoose, type DraftChooseFeedback } from './use-draft-choose';
 import { usePageAddresses } from './use-page-addresses';
 import { usePluginEntries } from './use-plugin-entries';
 
 export type DraftBarState = DraftBarModel & {
   onStateChange: (state: DraftStateId) => void;
   onChoose: (() => void) | null;
+  choosing: boolean;
+  feedback: DraftChooseFeedback | null;
+  onDismissFeedback: () => void;
   commenting: boolean;
   commentCount: number;
   onToggleComments: () => void;
@@ -83,14 +86,11 @@ function useDraftBar(
   const bar = draftBarOf(entry, opening.path, pageState);
   const { notes, commenting } = useDraftComments(opening);
 
-  const shown = shownPicks(draftPageOf(entry, opening.path), pageState);
+  const draft = draftPageOf(entry, opening.path);
+  const shown = shownPicks(draft, pageState);
   const picks = picksOf(shown, notes.length);
 
-  const choose = useMutation({
-    ...useTRPC().plugin.draft.choose.mutationOptions(),
-    // The notes that went with the pick are gone, whichever call carried them.
-    onSuccess: (_choice, { comments }) => draftComments.sent(opening, comments),
-  });
+  const choice = useDraftChoose(opening, draft);
 
   if (!bar) return null;
 
@@ -102,12 +102,15 @@ function useDraftBar(
     onChoose:
       picks &&
       (() => {
-        choose.mutate({
+        choice.choose({
           pluginId: opening.pluginId,
           picks,
           comments: draftCommentsOf(notes),
         });
       }),
+    choosing: choice.choosing,
+    feedback: choice.feedback,
+    onDismissFeedback: choice.dismiss,
     commenting,
     commentCount: notes.length,
     onToggleComments: () => draftComments.setCommenting(opening, !commenting),

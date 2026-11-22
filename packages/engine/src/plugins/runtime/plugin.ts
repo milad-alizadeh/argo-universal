@@ -11,7 +11,7 @@ type Waiter = (status: PluginStatus) => void;
 
 /*
  * One Plugin in the runtime: its lifecycle machine, the dev build it watches and the activations
- * waiting on it. Only first-party Plugins load (the loader refuses the rest), and they run from source.
+ * waiting on it. The loader admits shipped Plugins and explicit links in an isolated watch Server (ADR-0030).
  */
 export class RuntimePlugin {
   private readonly actor: Actor<typeof runtimePluginMachine>;

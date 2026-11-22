@@ -2,11 +2,13 @@ import { PluginList, PluginManifest } from '@repo/contracts/plugins';
 import type { PluginDrafts } from '@repo/contracts/plugins/drafts';
 import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createTRPCClient, type TRPCLink } from '@trpc/client';
+import { createTRPCClient, TRPCClientError, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
 import * as React from 'react';
 import { View } from 'react-native';
 import { TRPCProvider } from '#features/connection';
+import { PluginTree } from '../../../lib/product/plugin-registry/plugin-registry';
+import { issuesTree } from '../components/draft-comment/draft-comment-fixtures';
 import { DraftPage } from '../components/draft-page/draft-page';
 import { draftComments, type DraftNote } from '../stores/draft-comments';
 import type { PageOpening } from '../utils/page-addresses';
@@ -66,15 +68,48 @@ const listed = (withRegions: boolean): PluginList =>
 
 export type ChooseCall = { path: string; input: unknown };
 
+export type ChooseReply = 'delivered' | 'unavailable' | 'no-session';
+
+const refusals = {
+  unavailable: {
+    code: 'CONFLICT',
+    httpStatus: 409,
+    message: 'Region list declares no Variant rows',
+  },
+  'no-session': {
+    code: 'PRECONDITION_FAILED',
+    httpStatus: 412,
+    message:
+      "No Session is drawing tracker's Draft: its Agent runs plugin.draft.show from its Session first.",
+  },
+} as const;
+
+function chooseRefusal(
+  reply: Exclude<ChooseReply, 'delivered'>,
+): TRPCClientError<AppRouter> {
+  const { message, ...data } = refusals[reply];
+
+  return TRPCClientError.from<AppRouter>({
+    error: { code: -32000, message, data },
+  });
+}
+
 function clientOver(
   withRegions: boolean,
   calls: ChooseCall[],
+  reply: ChooseReply,
 ): ReturnType<typeof createTRPCClient<AppRouter>> {
   const link: TRPCLink<AppRouter> = () => (operation) =>
     observable((observer) => {
       const { path, input } = operation.op;
       calls.push({ path, input });
       void Promise.resolve().then(() => {
+        if (path === 'plugin.draft.choose' && reply !== 'delivered') {
+          observer.error(chooseRefusal(reply));
+
+          return;
+        }
+
         observer.next({
           result: {
             data:
@@ -94,15 +129,19 @@ export function ChooseBarMock(props: {
   withRegions: boolean;
   calls: ChooseCall[];
   notes?: DraftNote[];
+  reply?: ChooseReply;
+  commenting?: boolean;
+  showPage?: boolean;
 }): React.JSX.Element {
   const [queryClient] = React.useState(() => new QueryClient());
 
   const [client] = React.useState(() =>
-    clientOver(props.withRegions, props.calls),
+    clientOver(props.withRegions, props.calls, props.reply ?? 'delivered'),
   );
 
   React.useState(() => {
     draftComments.sent(opening);
+    draftComments.setCommenting(opening, props.commenting ?? false);
 
     for (const note of props.notes ?? []) draftComments.save(opening, note);
   });
@@ -110,9 +149,19 @@ export function ChooseBarMock(props: {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={client} queryClient={queryClient}>
-        <View className="h-96 w-full bg-content">
+        <View
+          className={
+            props.showPage
+              ? 'h-screen w-full bg-content p-6'
+              : 'h-96 w-full bg-content'
+          }
+        >
           <DraftPage opening={opening} error={null}>
-            {() => null}
+            {({ tree }) =>
+              props.showPage ? (
+                <PluginTree root={issuesTree} draft={tree} />
+              ) : null
+            }
           </DraftPage>
         </View>
       </TRPCProvider>

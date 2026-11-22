@@ -45,3 +45,10 @@ Feature: Plugin Drafts
     And the Plugin page text reads "List cards"
     And the "Header" region tag reads "Header · B 2/3"
     And the "List" region tag reads "List · B 2/2"
+
+  @dev-plugins
+  Scenario: Choose before the Agent shows a Draft explains how to recover
+    Given a phone Frame
+    When I open the Drafts Plugin
+    And I choose the Draft
+    Then the Draft bar explains there is no drawing Session

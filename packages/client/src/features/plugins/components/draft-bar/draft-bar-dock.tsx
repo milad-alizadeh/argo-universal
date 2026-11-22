@@ -10,7 +10,7 @@ export function DraftBarDock({
   return (
     <View
       pointerEvents="box-none"
-      className="absolute inset-x-0 bottom-6 items-center px-1"
+      className="absolute inset-x-0 bottom-6 items-center gap-4 px-1 wide:gap-3"
     >
       {children}
     </View>

@@ -28,6 +28,8 @@ export type PluginServerOptions = {
   pluginClock?: PluginClock;
   // A dev Server watches Plugin sources and rebuilds on a change; any other builds each Plugin once.
   watchPlugins?: boolean;
+  // The launcher confirms the watch Server has a separate ARGO_HOME.
+  acceptLinkedDevPlugins?: boolean;
 };
 
 // What the Engine hands over; the Plugin module builds everything else.
@@ -45,7 +47,7 @@ export type PluginsOptions = PluginServerOptions & {
 
 type Discovery = Pick<
   PluginsOptions,
-  'home' | 'version' | 'firstPartyPluginsDirectory'
+  'home' | 'version' | 'firstPartyPluginsDirectory' | 'acceptLinkedDevPlugins'
 > & { located: LocatedCache };
 
 export type Assembled = {
@@ -106,7 +108,16 @@ function foundations(options: PluginsOptions): Foundations {
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const located = new LocatedCache();
-  const discovery = { home, version, firstPartyPluginsDirectory, located };
+
+  const discovery = {
+    home,
+    version,
+    firstPartyPluginsDirectory,
+    located,
+    acceptLinkedDevPlugins:
+      options.watchPlugins === true && options.acceptLinkedDevPlugins === true,
+  };
+
   const parts = { secretStore, heldSecrets, discovery, listChanges };
 
   return {

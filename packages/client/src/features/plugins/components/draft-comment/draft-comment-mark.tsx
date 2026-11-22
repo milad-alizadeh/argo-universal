@@ -1,9 +1,12 @@
 import type * as React from 'react';
 import { Text, type ViewStyle } from 'react-native';
+import { useUniwind } from 'uniwind';
 import type { Box } from '../../../../lib/product/plugin-registry/draft-commenting';
 import { WindowPlacedView } from './window-placed-view';
 
 const pinSize = 22;
+
+const darkPinSize = 23;
 
 const pinInset = 4;
 
@@ -23,6 +26,9 @@ export function DraftCommentMark({
   selected,
   box,
 }: DraftCommentMarkProps): React.JSX.Element | null {
+  const { theme } = useUniwind();
+  const width = theme === 'dark' ? darkPinSize : pinSize;
+
   if (!selected && count === 0) return null;
 
   if (box === null) return null;
@@ -37,7 +43,7 @@ export function DraftCommentMark({
       borderRadius: box.radius ?? 0,
     },
     pin: {
-      left: box.x + box.width - pinSize - pinInset,
+      left: box.x + box.width - width - pinInset,
       top: box.y + pinInset,
     },
   };
@@ -74,9 +80,11 @@ function DraftCommentPin({
       role="img"
       aria-label={count === 1 ? '1 comment' : `${count} comments`}
       style={style}
-      className={`${style ? 'fixed' : 'absolute right-1 top-1'} size-5.5 items-center justify-center rounded-full rounded-bl-grouped-inner bg-warning shadow-control`}
+      className={`${style ? 'fixed' : 'absolute right-1 top-1'} size-5.5 items-center justify-center rounded-full rounded-bl-grouped-inner bg-warning shadow-control dark:size-draft-comment-pin dark:rounded-bl-draft-comment-pin-tail dark:border dark:border-draft-comment-pin dark:bg-draft-comment-pin`}
     >
-      <Text className="type-badge text-primary-foreground">{count}</Text>
+      <Text className="type-badge text-primary-foreground dark:font-bold dark:text-draft-comment-pin-foreground">
+        {count}
+      </Text>
     </WindowPlacedView>
   );
 }

@@ -1,6 +1,6 @@
 import type { Dirent } from 'node:fs';
-import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { lstat, readdir, realpath, stat } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import { productName } from '@repo/contracts/product-identity';
 import { z } from 'zod';
@@ -14,10 +14,12 @@ export interface PluginsDeps {
   version: string;
   // The Server resolves where its shipped Plugins sit, so the loader never assumes a workspace layout; without one there are none.
   firstPartyPluginsDirectory?: string;
+  acceptLinkedDevPlugins?: boolean;
 }
 
 type Discovery = {
   firstParty: boolean;
+  acceptLinkedDevPlugins: boolean;
   version: string;
   result: PluginList;
   locations: Map<string, string>;
@@ -41,6 +43,7 @@ export async function discoverPlugins(
   for (const { directory, firstParty } of pluginRoots(deps))
     await scan(directory, {
       firstParty,
+      acceptLinkedDevPlugins: deps.acceptLinkedDevPlugins === true,
       version: deps.version,
       result,
       locations,
@@ -72,7 +75,7 @@ async function scan(directory: string, discovery: Discovery): Promise<void> {
     const entries = await readDirectory(folder, discovery.result);
 
     if (entries.some((entry) => entry.name === 'plugin.json'))
-      await admit(folder, discovery);
+      await admit(folder, depth, discovery);
     else pending.push(...(await children(folder, depth, entries)));
   }
 }
@@ -145,17 +148,41 @@ const ThrownError = z
 const missingDirectory = (error: Error): boolean =>
   'code' in error && error.code === 'ENOENT';
 
-async function admit(directory: string, discovery: Discovery): Promise<void> {
+// A direct symlink is the explicit admission for development (ADR-0030).
+async function devLink(
+  directory: string,
+  depth: number,
+  { acceptLinkedDevPlugins }: Discovery,
+): Promise<string | null> {
+  if (!acceptLinkedDevPlugins || depth !== 1) return null;
+
+  if (!(await lstat(directory)).isSymbolicLink()) return null;
+
+  if (!(await lstat(dirname(directory))).isDirectory()) return null;
+
+  return realpath(directory);
+}
+
+async function admit(
+  directory: string,
+  depth: number,
+  discovery: Discovery,
+): Promise<void> {
   try {
-    const manifest = await readManifest(directory, discovery.version);
+    const source = discovery.firstParty
+      ? directory
+      : await devLink(directory, depth, discovery);
+
+    const manifest = await readManifest(source ?? directory, discovery.version);
 
     // A Plugin that will not load has its untrusted icon file left unread.
-    const iconMarkup = discovery.firstParty
-      ? await readIconMarkup(directory, manifest.icon)
+    const iconMarkup = source
+      ? await readIconMarkup(source, manifest.icon)
       : undefined;
 
-    addManifest({ manifest, iconMarkup }, discovery);
-    discovery.locations.set(manifest.id, directory);
+    addManifest({ manifest, iconMarkup }, discovery, source !== null);
+
+    if (source) discovery.locations.set(manifest.id, source);
   } catch (error) {
     reportError(directory, ThrownError.parse(error), discovery.result);
   }
@@ -175,14 +202,15 @@ function reportError(
 function addManifest(
   admitted: Admitted,
   { firstParty, result }: Discovery,
+  loadable: boolean,
 ): void {
   const { id } = admitted.manifest;
 
   if (result.plugins.some((plugin) => plugin.manifest.id === id))
     throw new Error(`Duplicate Plugin id: ${id}`);
 
-  // Third-party Plugins wait for consent and an operating-system boundary (ADR-0030), like Obsidian's Restricted mode.
-  if (!firstParty)
+  // Installed Plugins wait for consent and an operating-system boundary (ADR-0030).
+  if (!loadable)
     throw new Error(
       `Plugin is not loaded: only Plugins shipped with ${productName} load until ${productName} asks for consent`,
     );

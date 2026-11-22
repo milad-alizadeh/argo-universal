@@ -1,5 +1,6 @@
 import type { DraftChoice } from '@repo/contracts/operations/plugin-drafts';
 import { draftChoiceRefusal } from '@repo/contracts/plugins/drafts';
+import { TRPCError } from '@trpc/server';
 import type { Sessions } from '../../sessions';
 import {
   locatePlugin,
@@ -68,14 +69,15 @@ export class DraftReview {
       chosen.comments,
     );
 
-    if (refusal) throw new Error(refusal);
+    if (refusal) throw new TRPCError({ code: 'CONFLICT', message: refusal });
 
     const sessionId = this.store.sessionOf(pluginId);
 
     if (!sessionId)
-      throw new Error(
-        `No Session is drawing ${pluginId}'s Draft: its Agent runs plugin.draft.show from its Session first.`,
-      );
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message: `No Session is drawing ${pluginId}'s Draft: its Agent runs plugin.draft.show from its Session first.`,
+      });
 
     await this.store.choose(pluginId, chosen);
 

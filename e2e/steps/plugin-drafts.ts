@@ -60,3 +60,24 @@ Then(
     await expect(page.getByText('Drafts could not draw a view')).toHaveCount(0);
   },
 );
+
+When('I choose the Draft', async ({ page }): Promise<void> => {
+  await page
+    .getByRole('toolbar', { name: 'Draft' })
+    .getByRole('button', { name: 'Choose', exact: true })
+    .click();
+});
+
+Then(
+  'the Draft bar explains there is no drawing Session',
+  async ({ page }): Promise<void> => {
+    const feedback = page.getByRole('alert').filter({
+      hasText: 'No drawing Session yet',
+    });
+
+    await expect(feedback).toBeVisible();
+    await expect(feedback).toContainText(
+      'Ask the Agent in your drafting Session to show this Draft, then choose again.',
+    );
+  },
+);
