@@ -1,6 +1,6 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { draftBarOf, type DraftEntry } from './draft-bar-model';
+import { draftBarOf, draftPageOf, type DraftEntry } from './draft-bar-model';
 
 const manifestWith = (
   drafts?: NonNullable<PluginManifest['contributes']['drafts']>,
@@ -92,4 +92,12 @@ it('lists the regions the Draft page declares, for the page to frame', () => {
 
   expect(draftBarOf(entry, '/', {})?.regions).toEqual(['header', 'list']);
   expect(draftBarOf(issues(true), '/', {})?.regions).toEqual([]);
+});
+
+it('finds a Draft page only in a dev Plugin, at a path the page matches', () => {
+  expect(draftPageOf(issues(true), '/')?.page).toBe('/');
+  expect(draftPageOf(issues(false), '/')).toBeNull();
+  expect(draftPageOf(issues(), '/')).toBeNull();
+  expect(draftPageOf(issues(true), '/other')).toBeNull();
+  expect(draftPageOf(null, '/')).toBeNull();
 });

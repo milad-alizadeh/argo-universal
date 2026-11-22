@@ -1,5 +1,5 @@
-export function regionLabel(region: string): string {
-  const words = region.replaceAll(/[-_]+/g, ' ').trim();
+import { draftRegionLabel } from '@repo/contracts/plugins/drafts';
 
-  return `Drawing · ${words.charAt(0).toUpperCase()}${words.slice(1)}`;
-}
+// The drawing frame's title; the region's own label is the contracts Draft module's.
+export const regionLabel = (region: string): string =>
+  `Drawing · ${draftRegionLabel(region)}`;

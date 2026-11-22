@@ -1,12 +1,15 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
 import {
+  currentDraftState,
+  draftPageAt,
+  draftRegions,
   draftStateIds,
-  draftStateKey,
   draftStateLabels,
+  missingDraftStates,
+  type DraftPage,
   type DraftStateId,
 } from '@repo/contracts/plugins/drafts';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import { matchPagePath } from '@repo/contracts/plugins/page-address';
 
 export type DraftEntry = {
   dev?: boolean;
@@ -25,50 +28,33 @@ export type DraftBarModel = {
   regions: string[];
 };
 
-const restingState: DraftStateId = 'populated';
+// A Draft is drawn in a dev Plugin only; the Server says which Plugins are dev.
+export const draftPageOf = (
+  entry: DraftEntry | null,
+  path: string,
+): DraftPage | null =>
+  entry?.dev === true
+    ? draftPageAt(entry.manifest.contributes.drafts, path)
+    : null;
 
 export function draftBarOf(
   entry: DraftEntry | null,
   path: string,
   pageState: PageState,
 ): DraftBarModel | null {
-  const draft = entry?.dev === true ? draftAt(entry, path) : null;
-  const declared = draft?.states;
+  const draft = draftPageOf(entry, path);
 
-  if (!declared) return null;
+  if (!draft) return null;
+
+  const missing = missingDraftStates(draft.states);
 
   return {
     states: draftStateIds.map((id) => ({
       id,
       label: draftStateLabels[id],
-      missing: !declared.includes(id),
+      missing: missing.includes(id),
     })),
-    current: currentState(declared, pageState),
-    regions: draft.regions?.map(({ id }) => id) ?? [],
+    current: currentDraftState(draft.states, pageState),
+    regions: draftRegions(draft).map(({ id }) => id),
   };
-}
-
-function draftAt(
-  entry: DraftEntry,
-  path: string,
-): NonNullable<PluginManifest['contributes']['drafts']>[number] | null {
-  return (
-    entry.manifest.contributes.drafts?.find(
-      ({ page }) => matchPagePath(page, path) !== null,
-    ) ?? null
-  );
-}
-
-// A chosen state the Draft does not declare stays chosen, so the page can say why it draws nothing.
-function currentState(
-  declared: readonly DraftStateId[],
-  pageState: PageState,
-): DraftStateId {
-  const chosen = draftStateIds.find((id) => id === pageState[draftStateKey]);
-
-  if (chosen) return chosen;
-
-  if (declared.includes(restingState)) return restingState;
-
-  return draftStateIds.find((id) => declared.includes(id)) ?? restingState;
 }

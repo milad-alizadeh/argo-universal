@@ -229,31 +229,31 @@ function pageRefusal(
 ): string | null {
   const regions = draftRegions(page);
 
-  const places = [
-    ...picks,
-    ...comments.flatMap(({ nodeKey, region, variant }) => {
-      if (region === undefined && variant !== undefined)
-        return [
-          {
-            refusal: `Comment on ${nodeKey} names Variant ${variant} without a region`,
-          },
-        ];
+  const placeRefusal = (region: string, variant?: string): string | null => {
+    const declared = regions.find(({ id }) => id === region);
 
-      return region === undefined ? [] : [{ region, variant }];
-    }),
-  ];
+    if (!declared) return `The Draft declares no region ${region}`;
 
-  for (const place of places) {
-    if ('refusal' in place) return place.refusal;
+    const named = variant ?? declared.variants[0]?.id ?? '-';
 
-    const declared = regions.find(({ id }) => id === place.region);
+    return declared.variants.some(({ id }) => id === named)
+      ? null
+      : `Region ${region} declares no Variant ${named}`;
+  };
 
-    if (!declared) return `The Draft declares no region ${place.region}`;
+  for (const { region, variant } of picks) {
+    const refusal = placeRefusal(region, variant);
 
-    const variant = place.variant ?? declared.variants[0]?.id ?? '-';
+    if (refusal) return refusal;
+  }
 
-    if (!declared.variants.some(({ id }) => id === variant))
-      return `Region ${place.region} declares no Variant ${variant}`;
+  for (const { nodeKey, region, variant } of comments) {
+    if (region === undefined && variant !== undefined)
+      return `Comment on ${nodeKey} names Variant ${variant} without a region`;
+
+    const refusal = region === undefined ? null : placeRefusal(region, variant);
+
+    if (refusal) return refusal;
   }
 
   return null;

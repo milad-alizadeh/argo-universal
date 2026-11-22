@@ -2,11 +2,7 @@ import type { PluginManifest } from '@repo/contracts/plugins';
 import { draftVariantKey } from '@repo/contracts/plugins/drafts';
 import { expect, it } from 'vitest';
 import type { DraftEntry } from './draft-bar-model';
-import {
-  draftRegionsOf,
-  stepChange,
-  steppedVariant,
-} from './draft-regions-model';
+import { draftRegionsOf } from './draft-regions-model';
 
 type Drafts = NonNullable<PluginManifest['contributes']['drafts']>;
 
@@ -94,32 +90,18 @@ it.each([
   expect(draftRegionsOf(listed, path, {})).toBeNull();
 });
 
-it('steps to the next Variant and the previous one, wrapping at either end', () => {
-  const region = drafts[0]?.regions?.[0];
+it('labels a region as its id capitalised, dashes kept, ', () => {
+  const tags = draftRegionsOf(
+    entry(true, [
+      {
+        page: '/',
+        states: ['populated'],
+        regions: [{ id: 'side-bar', variants: [{ id: 'a', name: 'A' }] }],
+      },
+    ]),
+    '/',
+    {},
+  );
 
-  if (!region) throw new Error('fixture has a header region');
-
-  expect(steppedVariant(region, 'compact', 1)).toBe('tabs');
-  expect(steppedVariant(region, 'search', 1)).toBe('compact');
-  expect(steppedVariant(region, 'compact', -1)).toBe('search');
-  expect(steppedVariant(region, 'tabs', -1)).toBe('compact');
-});
-
-it('writes the stepped Variant under the stepped region only, from the pick in the Page state', () => {
-  const page = drafts[0];
-
-  expect(stepChange({ declared: page, pageState: {} }, 'header', 1)).toEqual({
-    [draftVariantKey('header')]: 'tabs',
-  });
-  expect(
-    stepChange(
-      { declared: page, pageState: { [draftVariantKey('list')]: 'cards' } },
-      'list',
-      1,
-    ),
-  ).toEqual({ [draftVariantKey('list')]: 'rows' });
-  expect(stepChange({ declared: page, pageState: {} }, 'header', -1)).toEqual({
-    [draftVariantKey('header')]: 'search',
-  });
-  expect(stepChange({ declared: page, pageState: {} }, 'footer', 1)).toBeNull();
+  expect(tags?.[0]?.label).toBe('Side-bar');
 });

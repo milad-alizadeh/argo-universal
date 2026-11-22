@@ -1,5 +1,6 @@
 import {
   draftStateKey,
+  shownPicks,
   type DraftStateId,
 } from '@repo/contracts/plugins/drafts';
 import { useMutation } from '@tanstack/react-query';
@@ -9,8 +10,11 @@ import {
   draftCommentsOf,
   useDraftComments,
 } from '../stores/draft-comments';
-import { draftBarOf, type DraftBarModel } from '../utils/draft-bar-model';
-import { draftPicksOf } from '../utils/draft-picks';
+import {
+  draftBarOf,
+  draftPageOf,
+  type DraftBarModel,
+} from '../utils/draft-bar-model';
 import type { PageOpening } from '../utils/page-addresses';
 import { useDraftEntry } from './use-draft-entry';
 import { usePageAddresses } from './use-page-addresses';
@@ -31,9 +35,8 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
   const { notes, commenting } = useDraftComments(opening);
 
   // A Draft with no regions has nothing to pick, so only a comment gives its author something to send.
-  const picks =
-    draftPicksOf(entry, opening.path, pageState) ??
-    (notes.length > 0 ? [] : null);
+  const shown = shownPicks(draftPageOf(entry, opening.path), pageState);
+  const picks = shown.length > 0 ? shown : notes.length > 0 ? [] : null;
 
   const choose = useMutation({
     ...useTRPC().plugin.draft.choose.mutationOptions(),
