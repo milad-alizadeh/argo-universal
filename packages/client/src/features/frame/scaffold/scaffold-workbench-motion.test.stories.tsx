@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { SessionSwitchScaffold } from './scaffold-session-switch.mocks';
 import {
-  sampleBusyMotionFrames,
   sampleMotionFrames,
+  sampleWorkbenchSlide,
 } from './scaffold-workbench-motion.test.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
@@ -37,10 +37,10 @@ async function assertSliding(canvas: Canvas, action: string): Promise<void> {
   const left = (): number => workbench.getBoundingClientRect().left;
   const start = left();
 
-  const positions = await sampleMotionFrames(
+  const positions = await sampleWorkbenchSlide(
+    workbench,
     () => button.click(),
-    left,
-    motionFrames,
+    { measure: left },
   );
 
   await expect(positions.at(-1)).not.toBe(start);
@@ -115,9 +115,6 @@ export const WorkbenchTakesItsPlaceAtOnceOnASessionSwitch: Story = {
 // A pane's first render that holds the main thread this long in the press's commit.
 const heavyCommit = 240;
 
-// Frames on the real clock: longer than the motion at a 60Hz paint.
-const realFrames = 30;
-
 // Places strictly between where the Workbench was and where it settles, while it still shows.
 async function travelAfterHeavyCommit(
   canvas: Canvas,
@@ -132,10 +129,11 @@ async function travelAfterHeavyCommit(
 
   const start = left();
 
-  const positions = await sampleBusyMotionFrames(() => button.click(), left, {
-    frames: realFrames,
-    busy: heavyCommit,
-  });
+  const positions = await sampleWorkbenchSlide(
+    workbench,
+    () => button.click(),
+    { measure: left, commitWorkMs: heavyCommit },
+  );
 
   const drawn = positions.filter((at) => !Number.isNaN(at));
   const end = drawn.at(-1);

@@ -1,10 +1,11 @@
+import { expect, waitFor } from 'storybook/test';
 import { vi } from 'vitest';
 
 const animationClock = {
   toFake: ['performance', 'requestAnimationFrame', 'cancelAnimationFrame'],
 } satisfies NonNullable<Parameters<typeof vi.useFakeTimers>[0]>;
 
-// Steps the animation clock at each browser paint, so a busy runner cannot skip the motion's middle.
+// Step the JavaScript clock as the alternate Session settles, in case it starts a JavaScript animation.
 export async function sampleMotionFrames(
   action: () => void,
   measure: () => number,
@@ -57,19 +58,66 @@ function holdMainThread(milliseconds: number): void {
   }
 }
 
-// Samples on the real clock after a press whose commit keeps the main thread busy, so a motion that started its clock inside the commit has spent it before its first frame.
-export async function sampleBusyMotionFrames(
-  action: () => void,
+function motionPositions(
+  animation: Animation,
   measure: () => number,
-  { frames, busy }: { frames: number; busy: number },
-): Promise<number[]> {
-  action();
-  holdMainThread(busy);
+): number[] {
+  const duration = animation.effect?.getComputedTiming().duration;
 
-  return collectFrames(measure, frames, {
-    requestPaint: requestAnimationFrame,
-    step: () => {
-      // The real clock advances itself.
-    },
+  if (
+    typeof duration !== 'number' ||
+    !Number.isFinite(duration) ||
+    duration <= 0
+  )
+    throw new Error('The Workbench animation must have a finite duration');
+
+  const intervals = 23;
+
+  return Array.from({ length: intervals + 1 }, (_, index) => {
+    animation.currentTime = (duration * index) / intervals;
+
+    return measure();
   });
+}
+
+type SlideSample = { measure: () => number; commitWorkMs?: number };
+
+// Freeze the browser animation when the commit creates it, then measure the real element at controlled times.
+export async function sampleWorkbenchSlide(
+  workbench: HTMLElement,
+  action: () => void,
+  { measure, commitWorkMs = 0 }: SlideSample,
+): Promise<number[]> {
+  const start = workbench.animate.bind(workbench);
+  let motion: Animation | undefined;
+
+  const animate = vi
+    .spyOn(workbench, 'animate')
+    .mockImplementation((frames, timing) => {
+      const animation = start(frames, timing);
+
+      if (commitWorkMs > 0) holdMainThread(commitWorkMs);
+      animation.pause();
+      motion = animation;
+
+      return animation;
+    });
+
+  try {
+    action();
+
+    const animation = await waitFor(() => {
+      if (!motion)
+        throw new Error('The Workbench did not start a browser animation');
+
+      return motion;
+    });
+
+    await expect(animation.currentTime).toBe(0);
+
+    return motionPositions(animation, measure);
+  } finally {
+    animate.mockRestore();
+    motion?.cancel();
+  }
 }
