@@ -17,8 +17,9 @@ Read this before you draw or review a Plugin Draft: a page drawn from canned dat
 
 ## Facts that bite
 
+- `packages/contracts/src/plugins/drafts.ts` answers every question about what a Draft declares: its page for a path, regions, shown Variants, declared picks and comment places, label, Page state keys and minimum states. Ask it; do not re-derive a rule in a caller.
 - `plugin.draft.show` rebuilds mid-Turn and needs the Server running with `--watch`. `region` is the region you write next, so Apps frame it; leave it out after the last one. `sessionId` is the caller's own Session for Agents.
-- Region ids are unique across the page, since the App matches nodes by bare key. A region's label is its id, capitalised.
+- Region ids are unique across the page, since the App matches nodes by bare key. A region's label is its id, capitalised (`draftRegionLabel`), everywhere it is shown.
 - A Variant pick is Page state `draftVariant.<regionId>` (`draftVariantKey` in `packages/contracts/src/plugins/drafts.ts`). An undeclared Page state key still reaches the Loader, but declare a default for each.
 - Choose runs only in an App. It delivers the picks to the Session whose Agent last ran `plugin.draft.show`; read them with `argo run plugin.draft.pick`. Schemas: `packages/contracts/src/operations/plugin-drafts.ts`.
 
