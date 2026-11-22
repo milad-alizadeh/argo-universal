@@ -21,7 +21,7 @@ const keyedInput = z.object({ input: SessionListInput });
 /*
  * Applies a live update to the pages the list already holds, and says whether the Server must be asked again.
  * A changed row the list already shows is replaced where it sits, so a Session streaming for a minute costs no request.
- * Everything else asks again: a Session new to a list, one that joined or left it by its title, Project or archive state, and one removed.
+ * A matching new row inside the loaded range also appears immediately. A fresh read reconciles page boundaries, removals and filter changes.
  * Pages order by creation, which no update changes, so a row older than the last loaded page is not in the list yet and asks nothing.
  */
 export function applySessionListUpdate(
@@ -60,7 +60,21 @@ function applyToPages(
   { query, data }: { query: Query; data: ListPages },
   session: SessionInfo,
 ): Outcome {
-  const outcome = outcomeFor(data, session, inputOf(query));
+  const input = inputOf(query);
+  const outcome = outcomeFor(data, session, input);
+
+  if (
+    outcome === 'asks' &&
+    matches(session, input) &&
+    input.cursor === undefined
+  ) {
+    // An older in-flight read could otherwise replace the pages before the reconciliation runs.
+    void client.cancelQueries(
+      { queryKey: query.queryKey, exact: true },
+      { revert: true, silent: true },
+    );
+    client.setQueryData(query.queryKey, inserted(data, session));
+  }
 
   if (outcome === 'placed')
     client.setQueryData(query.queryKey, replaced(data, session));
@@ -117,6 +131,29 @@ function replaced(data: ListPages, session: SessionInfo): ListPages {
   };
 }
 
+// Keep the loaded cursor boundaries until the Server reconciles the pages.
+function inserted(data: ListPages, session: SessionInfo): ListPages {
+  const index = data.pages.findIndex((page) =>
+    sortsBefore(session, page.sessions.at(-1)),
+  );
+
+  const destination = index === -1 ? data.pages.length - 1 : index;
+
+  return {
+    ...data,
+    pages: data.pages.map((page, pageIndex) =>
+      pageIndex === destination
+        ? {
+            ...page,
+            sessions: [...page.sessions, session].sort((a, b) =>
+              creationOrder(b, a),
+            ),
+          }
+        : page,
+    ),
+  };
+}
+
 // Whether the list would show the row among the pages loaded: every page is loaded, or it sorts at or before the last row loaded.
 function isLoaded(data: ListPages, session: SessionInfo): boolean {
   const last = data.pages.at(-1);
@@ -133,10 +170,11 @@ function sortsBefore(
 
 // Newest created first, as the Server pages, so a later creation sorts before; ties break by the higher id.
 function creationOrder(session: SessionInfo, end: SessionInfo): number {
-  return (
-    session.createdAt - end.createdAt ||
-    (session.sessionId > end.sessionId ? 1 : -1)
-  );
+  const time = session.createdAt - end.createdAt;
+
+  if (time !== 0 || session.sessionId === end.sessionId) return time;
+
+  return session.sessionId > end.sessionId ? 1 : -1;
 }
 
 type Filter = (session: SessionInfo, input: SessionListInput) => boolean;

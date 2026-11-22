@@ -5,6 +5,7 @@ import type {
   ConversationStartInput,
   ConversationStartOutput,
   ConversationStatus,
+  ConversationUpdate,
 } from '@repo/contracts';
 import type { ConversationDevices } from './conversation-devices';
 import type { ConversationSessions } from './session-link';
@@ -22,6 +23,7 @@ export interface ConversationsPort {
   // An Agent ends its Session's call; refused when the Session has no call.
   hangUp: (sessionId?: string) => ConversationEndOutput;
   watch: (signal: AbortSignal) => AsyncGenerator<ConversationStatus>;
+  updates: (signal: AbortSignal) => AsyncGenerator<ConversationUpdate>;
   // Gives the call the Sessions it sends Prompts to and listens to.
   attach: (sessions: ConversationSessions) => void;
   // Settings › Conversation: what the person chose and can choose from, and changing it; the next call uses it.

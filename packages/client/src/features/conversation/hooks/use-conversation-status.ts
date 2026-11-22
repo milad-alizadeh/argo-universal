@@ -1,9 +1,11 @@
 import {
   defaultConversationOptions,
   type ConversationStatus,
+  type ConversationUpdate,
 } from '@repo/contracts';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
+import { useMemo } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import {
   usePlacedConversation,
@@ -21,21 +23,38 @@ const loadingStatus: ConversationStatus = {
   microphoneGain: defaultConversationOptions.microphoneGain,
 };
 
-// Keeps the read Conversation standing current from the Server on every Device.
-function useFollowConversationStatus(): void {
+// Follow live data independently so a status query cannot delay or overwrite a stream update.
+function useConversationUpdate(): ConversationUpdate | undefined {
   const trpc = useTRPC();
   const cache = useQueryClient();
-  const key = trpc.conversation.status.queryKey();
 
-  const subscription = useSubscription(
+  const options = trpc.conversation.updates.subscriptionOptions(undefined, {
+    onData: (update) => {
+      cache.setQueryData(options.queryKey, update);
+    },
+  });
+
+  const subscription = useSubscription(options);
+
+  // Older Servers only have the original status stream.
+  const legacy = useSubscription(
     trpc.conversation.watch.subscriptionOptions(undefined, {
-      onData: (status: ConversationStatus): void => {
-        cache.setQueryData(key, status);
+      enabled: subscription.error?.data?.code === 'NOT_FOUND',
+      onData: (status) => {
+        cache.setQueryData(trpc.conversation.status.queryKey(), status);
       },
     }),
   );
 
+  const update = useQuery<ConversationUpdate>({
+    queryKey: options.queryKey,
+    queryFn: skipToken,
+  });
+
   useResubscribeOnReconnect(subscription);
+  useResubscribeOnReconnect(legacy);
+
+  return update.data;
 }
 
 // The Conversation's standing: read once, then followed from the Server on every Device, with a call this App is placing.
@@ -43,7 +62,14 @@ export function useConversationStatus(): ConversationStatus {
   const trpc = useTRPC();
   const read = useQuery(trpc.conversation.status.queryOptions());
   const placed = usePlacedConversation();
-  useFollowConversationStatus();
+  const update = useConversationUpdate();
 
-  return withPlacedConversation(read.data ?? loadingStatus, placed);
+  return useMemo(
+    () =>
+      withPlacedConversation(
+        { ...loadingStatus, ...read.data, ...update },
+        placed,
+      ),
+    [read.data, update, placed],
+  );
 }

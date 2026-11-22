@@ -103,8 +103,8 @@ export const ConversationPartial = z.strictObject({
 
 export type ConversationPartial = z.infer<typeof ConversationPartial>;
 
-// What the App draws its Composer from: the running Conversation, how the last one ended, and whether a new one can start.
-export const ConversationStatus = z.strictObject({
+// The live Conversation and its settings, streamed to the App without probing the provider.
+export const ConversationUpdate = z.strictObject({
   conversation: Conversation.nullable(),
   ended: z
     .strictObject({
@@ -113,7 +113,6 @@ export const ConversationStatus = z.strictObject({
       reason: ConversationEnd,
     })
     .nullable(),
-  availability: ConversationAvailability,
   // Whether the person keeps Conversations on; with them off no Composer offers the voice button.
   enabled: z.boolean(),
   // What is being said now, at most one per speaker; drawn at the tail of the Conversation's Session's Feed.
@@ -121,6 +120,13 @@ export const ConversationStatus = z.strictObject({
   // The App plays the voice this loud and sends the microphone at this gain, a running Conversation included.
   volume: ConversationOptions.shape.volume,
   microphoneGain: ConversationOptions.shape.microphoneGain,
+});
+
+export type ConversationUpdate = z.infer<typeof ConversationUpdate>;
+
+// A status read also checks whether the provider can start a new Conversation.
+export const ConversationStatus = ConversationUpdate.extend({
+  availability: ConversationAvailability,
 });
 
 export type ConversationStatus = z.infer<typeof ConversationStatus>;
