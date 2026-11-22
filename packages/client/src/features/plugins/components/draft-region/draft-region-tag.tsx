@@ -13,6 +13,9 @@ export interface DraftRegionTagProps {
   onNext: () => void;
 }
 
+// The resting and the active tag share one box and left padding, so the label stays put when a tag wakes; only the chevrons add width.
+const tagBox = 'min-h-5.5 flex-row items-center rounded-md border pl-1.5';
+
 const summary = ({ label, letter, position, count }: Tag): string =>
   `${label} · ${letter} ${position}/${count}`;
 
@@ -25,7 +28,7 @@ export function DraftRegionTag(props: DraftRegionTagProps): React.JSX.Element {
     <View
       role="group"
       aria-label={`${tag.label} Variant`}
-      className="flex-row items-center gap-0.5 rounded-md border border-border bg-card py-0.5 pl-2 pr-1 shadow-control"
+      className={`${tagBox} gap-0.5 border-border bg-card pr-1 shadow-control`}
     >
       <Text role="badge">{summary(tag)}</Text>
       <StepButton
@@ -51,7 +54,7 @@ function RestingTag({
       role="group"
       aria-label={`${tag.label} Variant`}
       onPress={onActivate}
-      className="rounded-md border border-hairline bg-content px-1.5"
+      className={`${tagBox} border-hairline bg-content pr-1.5`}
     >
       <Text role="badge" dimmed>
         {summary(tag)}
@@ -59,6 +62,9 @@ function RestingTag({
     </Pressable>
   );
 }
+
+// A 16 chevron with 14 on each side is a 44 touch area.
+const stepSlop = 14;
 
 function StepButton(props: {
   label: string;
@@ -70,7 +76,7 @@ function StepButton(props: {
       role="button"
       aria-label={props.label}
       onPress={props.onPress}
-      hitSlop={6}
+      hitSlop={stepSlop}
     >
       <Icon name={props.icon} size="sm" tone="muted" />
     </Pressable>
