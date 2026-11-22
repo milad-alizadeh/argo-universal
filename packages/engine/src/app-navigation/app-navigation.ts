@@ -4,31 +4,20 @@ import {
   type ScreenDestination,
 } from '@repo/contracts/navigation';
 import type { AppOpenResult } from '@repo/contracts/operations';
+import { LocalDesktopRequests } from '../local-desktop';
 import type { RpcConnection } from '../rpc';
-import { Queue } from './queue';
-
-interface Receiver {
-  connection: RpcConnection;
-  send: (destination: ScreenDestination) => void;
-}
 
 export interface AppNavigationInput {
   serverId: string;
 }
-
-// Only the App on the Server Device's own desktop is driven from here: never a phone, a browser or a paired Device (ADR-0022).
-export const isLocalDesktop = (connection: RpcConnection): boolean =>
-  isServerDevice(connection) && connection.surface?.platform === 'desktop';
-
-const isServerDevice = ({ identity }: RpcConnection): boolean =>
-  identity?.serverDevice === true;
 
 /*
  * Sends a destination to at most one live desktop App Connection on the Server Device, the one that listened most
  * recently. It never launches an App, and a delivery says nothing about whether the Screen then opened.
  */
 export class AppNavigation {
-  private readonly receivers = new Set<Receiver>();
+  private readonly receivers =
+    new LocalDesktopRequests<NavigationStreamEvent>();
   public constructor(private readonly input: AppNavigationInput) {}
 
   public get serverId(): string {
@@ -37,10 +26,10 @@ export class AppNavigation {
 
   public open(destination: ScreenDestination): AppOpenResult {
     const link = formatScreenLink(this.input.serverId, destination);
-    const receiver = [...this.receivers].findLast(live);
+    const receiver = this.receivers.latest();
 
     if (!receiver) return { status: 'not_opened', link };
-    receiver.send(destination);
+    receiver.send({ type: 'open', destination });
 
     return { status: 'delivered', link };
   }
@@ -50,32 +39,9 @@ export class AppNavigation {
     connection: RpcConnection,
     signal: AbortSignal,
   ): AsyncGenerator<NavigationStreamEvent> {
-    const queue = new Queue<NavigationStreamEvent>();
-    const leave = this.join(connection, queue);
-
-    try {
-      yield { type: 'ready', serverId: this.input.serverId };
-      yield* queue.items(AbortSignal.any([signal, connection.signal]));
-    } finally {
-      leave();
-    }
-  }
-
-  private join(
-    connection: RpcConnection,
-    queue: Queue<NavigationStreamEvent>,
-  ): () => void {
-    const receiver: Receiver = {
-      connection,
-      send: (destination) => queue.push({ type: 'open', destination }),
-    };
-
-    if (isLocalDesktop(connection)) this.receivers.add(receiver);
-
-    return () => {
-      this.receivers.delete(receiver);
-    };
+    yield* this.receivers.listen(connection, signal, {
+      type: 'ready',
+      serverId: this.input.serverId,
+    });
   }
 }
-
-const live = ({ connection }: Receiver): boolean => !connection.signal.aborted;

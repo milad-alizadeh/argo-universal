@@ -1,4 +1,4 @@
-// What the CLI reads from the Server's two control procedures, without the Operation registry: it treats every result as JSON (ADR-0044).
+// The CLI reads JSON from the Server’s control procedures without loading the Operation registry (ADR-0044).
 export {
   OperationExecution,
   OperationRunResponse,
@@ -14,3 +14,5 @@ export {
 } from './control-input';
 
 export { PluginInstruction } from './plugin-instructions';
+
+export { agentImageResult } from './agent-image-result';

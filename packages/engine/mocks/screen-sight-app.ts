@@ -30,6 +30,7 @@ export interface ScreenSightApp {
   ready: Promise<void>;
   // The person turning screen sight on or off in this App while it stays connected.
   setEnabled: (enabled: boolean) => void;
+  stopListening: () => void;
   close: () => Promise<void>;
 }
 
@@ -38,7 +39,7 @@ export interface ScreenSightAppOptions {
   // Whether the person turned screen sight on for this Device; the App checks it as each request arrives, and refuses with `off` when it is not.
   enabled?: boolean;
   // What the App answers each request with once screen sight is on; a picture by default.
-  answer?: (request: CaptureRequest) => ScreenCaptureAnswer;
+  answer?: (request: CaptureRequest) => ScreenCaptureAnswer | null;
 }
 
 const defaults: Required<ScreenSightAppOptions> = {
@@ -81,12 +82,15 @@ const onEvent =
     if (event.type === 'ready') return ready.resolve();
     asked.push(event);
 
-    void client.screenSight.answer.mutate({
-      requestId: event.requestId,
-      answer: options.enabled
-        ? options.answer(event)
-        : { status: 'refused', reason: 'off' },
-    });
+    const answer = options.enabled
+      ? options.answer(event)
+      : ({ status: 'refused', reason: 'off' } as const);
+
+    if (answer)
+      void client.screenSight.answer.mutate({
+        requestId: event.requestId,
+        answer,
+      });
   };
 
 function listen(
@@ -131,5 +135,11 @@ export function connectScreenSightApp(
 
   onTestFinished(close);
 
-  return { asked, ready, setEnabled: enabling(options), close };
+  return {
+    asked,
+    ready,
+    setEnabled: enabling(options),
+    stopListening: stop,
+    close,
+  };
 }

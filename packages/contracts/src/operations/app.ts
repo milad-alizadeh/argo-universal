@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ScreenDestination } from '../navigation/screen-link';
+import type { ImageVisibility } from './image-visibility';
 import type { OperationDefinition } from './index';
 import { AppScreenshotResult } from './screen-sight';
 
@@ -14,6 +15,30 @@ export const AppOpenResult = z.strictObject({
 });
 
 export type AppOpenResult = z.infer<typeof AppOpenResult>;
+
+const capturedScreen = z.looseObject({
+  status: z.literal('captured'),
+  image: z.looseObject({ data: z.string(), mimeType: z.string() }),
+});
+
+const capturedStatus = { status: 'captured' } as const;
+
+const screenVisibility: ImageVisibility = {
+  forAgent(result) {
+    const capture = capturedScreen.safeParse(result);
+
+    if (!capture.success) return null;
+
+    const { data, mimeType } = capture.data.image;
+
+    return { summary: capturedStatus, image: { data, mimeType } };
+  },
+  forToolCall(result) {
+    const capture = AppScreenshotResult.safeParse(result);
+
+    return capture.data?.status === 'captured' ? capturedStatus : null;
+  },
+};
 
 export const appOperations = {
   'app.open': {
@@ -36,6 +61,7 @@ export const appOperations = {
       'Take one picture of the person’s whole screen and return it as an image, so you can see what they see. It needs no permission, and works only when the person turned screen sight on for this Device. It answers captured with the image, refused with why (off), not_opened when no desktop App is reachable, or not_available with what to do. The picture is never stored; the Feed shows one Notice that a capture was taken.',
     params: z.strictObject({}).default({}),
     result: AppScreenshotResult,
+    imageVisibility: screenVisibility,
     tier: 'act',
     policy: 'allow',
     keywords: ['screen', 'screenshot', 'see', 'look', 'capture', 'display'],

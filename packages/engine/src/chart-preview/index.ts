@@ -4,20 +4,8 @@ import {
   type ChartPreviewAnswer,
   type ChartPreviewDraft,
 } from '@repo/contracts/operations/chart';
-import { isLocalDesktop, Queue } from '../app-navigation';
+import { LocalDesktopRequests, PendingReplies } from '../local-desktop';
 import type { RpcConnection } from '../rpc';
-
-type Receiver = {
-  connection: RpcConnection;
-  queue: Queue<ChartPreviewRequest>;
-  signal: AbortSignal;
-};
-
-type Capture = {
-  receiver: Receiver;
-  requestId: string;
-  settle: (answer: ChartPreviewAnswer) => void;
-};
 
 const unavailable = (reason: string): ChartPreviewAnswer => ({
   status: 'unavailable',
@@ -30,87 +18,51 @@ const captureDeadlineMs = 20_000;
 
 // Drafts go to one local desktop App and are held only while that App answers.
 export class ChartPreview {
-  private readonly receivers = new Set<Receiver>();
-  private capture: Capture | undefined;
-  private sequence = 0;
+  private readonly receivers = new LocalDesktopRequests<ChartPreviewRequest>();
+  private readonly pending = new PendingReplies<ChartPreviewAnswer>();
 
   public render(draft: ChartPreviewDraft): Promise<ChartPreviewAnswer> {
-    const receiver = [...this.receivers].findLast(
-      ({ signal }) => !signal.aborted,
-    );
+    const receiver = this.receivers.latest();
 
     if (!receiver)
       return Promise.resolve(
         unavailable('No desktop Chart renderer is available on this Server.'),
       );
 
-    if (this.capture)
+    if (this.pending.busy)
       return Promise.resolve(
         unavailable(
           'The desktop Chart renderer is already capturing a preview.',
         ),
       );
 
-    const requestId = String(++this.sequence);
-    const result = Promise.withResolvers<ChartPreviewAnswer>();
-
-    const settle = (answer: ChartPreviewAnswer): void => {
-      clearTimeout(deadline);
-      this.capture = undefined;
-      result.resolve(answer);
-    };
-
-    const deadline = setTimeout(
-      () =>
-        settle(
-          unavailable('The desktop Chart renderer did not finish in time.'),
+    return this.pending.ask({
+      connection: receiver.connection,
+      signal: receiver.signal,
+      disconnected: desktopClosed,
+      deadline: {
+        milliseconds: captureDeadlineMs,
+        answer: unavailable(
+          'The desktop Chart renderer did not finish in time.',
         ),
-      captureDeadlineMs,
-    );
-
-    this.capture = { receiver, requestId, settle };
-    receiver.queue.push({ type: 'capture', requestId, draft });
-
-    return result.promise;
+      },
+      send: (requestId) => receiver.send({ type: 'capture', requestId, draft }),
+    });
   }
 
   public answer(connection: RpcConnection, reply: ChartPreviewReply): void {
-    const capture = this.capture;
-
-    if (
-      capture?.receiver.connection === connection &&
-      capture.requestId === reply.requestId
-    )
-      capture.settle(reply.answer);
+    this.pending.answer(connection, reply);
   }
 
   public async *requests(
     connection: RpcConnection,
     signal: AbortSignal = connection.signal,
   ): AsyncGenerator<ChartPreviewRequest> {
-    const receiver = {
-      connection,
-      queue: new Queue<ChartPreviewRequest>(),
-      signal: AbortSignal.any([signal, connection.signal]),
-    };
-
-    if (isLocalDesktop(connection)) this.receivers.add(receiver);
-
-    try {
-      yield { type: 'ready' };
-
-      for await (const event of receiver.queue.items(receiver.signal)) {
-        if (
-          event.type === 'capture' &&
-          this.capture?.requestId === event.requestId
-        )
-          yield event;
-      }
-    } finally {
-      this.receivers.delete(receiver);
-
-      if (this.capture?.receiver === receiver)
-        this.capture.settle(desktopClosed);
+    for await (const event of this.receivers.listen(connection, signal, {
+      type: 'ready',
+    })) {
+      if (event.type === 'ready' || this.pending.has(event.requestId))
+        yield event;
     }
   }
 }

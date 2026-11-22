@@ -5,6 +5,7 @@ import {
   chartProps,
   visualLabelLength,
 } from '../plugins/visual-props';
+import type { ImageVisibility } from './image-visibility';
 import type { OperationDefinition } from './index';
 
 const example = [
@@ -137,6 +138,23 @@ const ChartPreviewResult = z.discriminatedUnion('valid', [
   ]),
 ]);
 
+const chartVisibility: ImageVisibility = {
+  forAgent(result) {
+    const capture = ChartPreviewCapturedResult.safeParse(result);
+
+    if (!capture.success) return null;
+
+    const { image, valid, status, platform, width, theme } = capture.data;
+
+    return { summary: { valid, status, platform, width, theme }, image };
+  },
+  forToolCall(result) {
+    return ChartPreviewCapturedResult.safeParse(result).success
+      ? { valid: true, status: 'captured' }
+      : null;
+  },
+};
+
 export const chartOperations = {
   'chart.preview': {
     id: 'chart.preview',
@@ -146,6 +164,7 @@ export const chartOperations = {
       'Preview the exact Chart fence before sending it in an Agent message. Correct any reported field errors before sending.',
     params: ChartPreviewInput,
     result: ChartPreviewResult,
+    imageVisibility: chartVisibility,
     tier: 'read',
     policy: 'allow',
     keywords: ['chart', 'plot', 'validate', 'preview', 'fence'],

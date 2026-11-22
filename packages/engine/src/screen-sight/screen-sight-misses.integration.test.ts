@@ -43,3 +43,15 @@ it('tells the Agent why when the App cannot capture', async () => {
     .poll(async () => (await missedNoticesOf(missing)).length)
     .toBe(1);
 }, 60_000);
+
+it('settles a waiting capture when the App stops listening on its Connection', async () => {
+  const journey = await journeyWithApp({ answer: () => null });
+  const capture = agentScreenshot(journey);
+
+  await expect.poll(() => journey.app.asked.length).toBe(1);
+  journey.app.stopListening();
+
+  expect(await capture).toEqual([
+    { status: 'fulfilled', value: { status: 'not_opened' } },
+  ]);
+}, 30_000);
