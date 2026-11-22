@@ -101,6 +101,17 @@ describe('applying a live update to the loaded Sessions list', () => {
     expect(shown(client)[0]?.title).toBe('Renamed');
   });
 
+  it('shows a newly listed Session on receipt of its live row', () => {
+    const client = listWith([session('older', 1)], 'more');
+
+    applySessionListUpdate(client, list, {
+      type: 'changed',
+      session: session('new', 9),
+    });
+
+    expect(shown(client).map((row) => row.sessionId)).toEqual(['new', 'older']);
+  });
+
   it('asks again for a new Session, an archive, and a removal', () => {
     const client = listWith([session('a', 1)], null, { archived: false });
 
