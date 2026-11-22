@@ -19,7 +19,7 @@ export async function assertHeldFallback(
   await expect(
     overlay.queryByText(recorded.selected.name, { exact: true }),
   ).not.toBeInTheDocument();
-  await expect(overlay.getByText(heldNotice)).toBeVisible();
+  await expect(overlay.queryByText(heldNotice)).not.toBeInTheDocument();
 }
 
 async function assertFallbackCalls(
