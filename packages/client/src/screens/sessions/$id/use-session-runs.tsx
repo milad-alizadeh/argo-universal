@@ -51,6 +51,14 @@ function useRunStatus(sessionId: string, active: boolean): RunStatusResult {
     : { configurations: [] };
 }
 
+function showDraftError({ message }: { message: string }): void {
+  showToast({
+    title: 'Runs',
+    message: message.split('\n', 1)[0],
+    tone: 'danger',
+  });
+}
+
 export function useSessionRuns(
   sessionId: string,
   active: boolean,
@@ -63,8 +71,7 @@ export function useSessionRuns(
 
   const draft = useMutation(
     trpc.run.draft.mutationOptions({
-      onError: ({ message }) =>
-        showToast({ title: 'Runs', message, tone: 'danger' }),
+      onError: showDraftError,
     }),
   );
 

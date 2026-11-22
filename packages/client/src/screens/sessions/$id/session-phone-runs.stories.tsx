@@ -1,10 +1,12 @@
 import type { RunConfigurationRow } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useEffect, useState, type ReactElement } from 'react';
 import { runIsActive, RunTerminal, type SessionRuns } from '#features/sessions';
 import { partiallyReadyGroup } from '../../../../mocks/run-configurations';
 import { idleSession } from './session-detail-view.mocks';
+import { draftUnavailable } from './session-phone-runs-fixtures';
 import {
   createPhoneRunLog,
   runActions,
@@ -105,13 +107,40 @@ const meta = {
   parameters: { screenPreview: true },
   render: PhoneRunsPreview,
   args: { page: 'overview' },
-} satisfies Meta<{ page: Page }>;
+} satisfies Meta<{ page: Page; draftPreview?: typeof draftUnavailable }>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Workbench: Story = {};
+
+export const DraftUnavailable: StoryObj<{
+  draftPreview: typeof draftUnavailable;
+}> = {
+  args: { draftPreview: draftUnavailable },
+  render: ({ draftPreview }) => (
+    <SessionWorkbenchSheet
+      content={{
+        ...draftPreview.content,
+        runs: {
+          ...draftPreview.content.runs,
+          draft: {
+            pending: false,
+            onPress: () =>
+              showToast({
+                title: 'Runs',
+                message: draftPreview.message,
+                tone: 'danger',
+              }),
+          },
+        },
+      }}
+      open
+      onOpenChange={(): void => {}}
+    />
+  ),
+};
 
 export const WorkbenchBefore: Story = { args: { page: 'before' } };
 
