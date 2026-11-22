@@ -4,6 +4,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { loadingTree } from '#features/plugins';
 import { PluginDetailView } from './plugin-detail-view';
 import { homeFaders, loading } from './plugin-detail-view-fixtures';
 
@@ -127,6 +128,34 @@ export const WaitingForPage: Story = {
       await expect(bounds.width).toBeGreaterThan(0);
       await expect(bounds.height).toBeGreaterThan(0);
     });
+  },
+};
+
+// Home's tiles once their Grid has laid out its columns: wider than a gap, as no settled tile is narrower.
+const settledTileWidth = 100;
+
+const tilePlaceholders = (status: HTMLElement): DOMRect[] =>
+  [...status.querySelectorAll('[data-skeleton-overlay] > *')]
+    .map((bar) => bar.getBoundingClientRect())
+    .filter((bounds) => bounds.width >= settledTileWidth);
+
+const homeTiles = 4;
+
+/*
+ * Home loads as one pulsing shell per tile, at the tile's own width: the Grid lays its columns out under the
+ * Skeleton as it does on the page.
+ */
+export const HomeLoadsAsTileShells: Story = {
+  args: { root: null, loadingTree: loadingTree(homeFaders.root) },
+  play: async ({ canvas }) => {
+    await settleLayout(1280, 500);
+    const status = await canvas.findByRole('status', { name: 'Loading page' });
+
+    await waitFor(() =>
+      expect(tilePlaceholders(status).length).toBeGreaterThanOrEqual(
+        homeTiles,
+      ),
+    );
   },
 };
 
