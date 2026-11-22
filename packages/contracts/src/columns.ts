@@ -35,6 +35,7 @@ export const registryCacheColumns = createSelectSchema(registryCache);
 export const shellColumns = createSelectSchema(shell);
 
 export const pluginDraftColumns = createSelectSchema(pluginDraft);
+
 export const runColumns = createSelectSchema(run);
 
 export const pluginStateColumns = createSelectSchema(pluginState);
