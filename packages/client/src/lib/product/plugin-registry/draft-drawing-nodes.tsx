@@ -71,7 +71,7 @@ export function DraftFrame({
           exiting={reduced ? undefined : fadeOut}
           className="absolute -inset-1 rounded-2xl border-2 border-dashed border-info"
         >
-          <View className="absolute left-0 top-0 rounded-br-md bg-info px-1.5">
+          <View className="absolute bottom-full left-3 rounded-md bg-info px-1.5">
             <Text className="type-badge text-primary-foreground">
               {regionLabel(region)}
             </Text>
