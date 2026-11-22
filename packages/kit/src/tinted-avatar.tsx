@@ -5,17 +5,8 @@ import { StatusDot } from '#primitives/status/status-dot';
 import { leadingMarkClass } from './leading-mark';
 import type { IconName } from './symbols/icon-names';
 import { useIconBox } from './symbols/icon-size';
+import { toneDisc, type MarkTone } from './tone-mark';
 import { cn } from './utils';
-
-const palettes = {
-  info: { fill: 'bg-tone-info-100', ink: 'text-tone-info-700' },
-  neutral: { fill: 'bg-tone-neutral-100', ink: 'text-tone-neutral-700' },
-  done: { fill: 'bg-tone-done-100', ink: 'text-tone-done-700' },
-  warning: { fill: 'bg-tone-warning-100', ink: 'text-tone-warning-700' },
-  success: { fill: 'bg-tone-success-100', ink: 'text-tone-success-700' },
-  teal: { fill: 'bg-tone-teal-100', ink: 'text-tone-teal-700' },
-  pink: { fill: 'bg-tone-pink-100', ink: 'text-tone-pink-700' },
-};
 
 const glyphSize = 'sm';
 
@@ -27,7 +18,7 @@ const styles = StyleSheet.create({
 interface TintedAvatarProps {
   icon: IconName;
   accessibilityLabel?: string;
-  tone: keyof typeof palettes;
+  tone: MarkTone;
   size?: 'leading' | 'inline';
   dimmed?: boolean;
   status?: { tone: 'success' | 'warning'; accessibilityLabel: string };
@@ -55,7 +46,7 @@ function AvatarGlyph({
   tone,
 }: Pick<TintedAvatarProps, 'icon' | 'size' | 'tone'>): ReactElement {
   const glyph = (
-    <Icon name={icon} size={glyphSize} className={palettes[tone].ink} />
+    <Icon name={icon} size={glyphSize} className={toneDisc(tone).ink} />
   );
 
   return size === 'inline' ? (
@@ -69,7 +60,7 @@ const avatarClass = ({ tone, size, dimmed }: TintedAvatarProps): string =>
   cn(
     'relative shrink-0 self-center items-center justify-center rounded-full',
     size !== 'inline' && leadingMarkClass,
-    palettes[tone].fill,
+    toneDisc(tone).fill,
     dimmed && 'opacity-50',
   );
 

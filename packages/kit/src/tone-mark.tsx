@@ -53,6 +53,17 @@ const palettes = {
 
 export type MarkTone = keyof typeof palettes;
 
+// A disc's fill and the ink on it, for a mark that draws its own disc (TintedAvatar) or a plain mark in a hue.
+export interface DiscTone {
+  fill: string;
+  ink: string;
+}
+
+export const toneDisc = (tone: MarkTone): DiscTone => ({
+  fill: palettes[tone].disc,
+  ink: palettes[tone].ink,
+});
+
 // The tone's text colour beside a bare mark, for a label that is not ToneCaption, such as a link's.
 export const toneTextClass = (tone: MarkTone): string => palettes[tone].bare;
 
