@@ -34,7 +34,9 @@ const list = (children: WireNode[]): WireNode => ({
 });
 
 const placeholders = (): WireNode[] =>
-  ['one', 'two', 'three'].map((key) => row(key, 'Issue title goes here', 'Status'));
+  ['one', 'two', 'three'].map((key) =>
+    row(key, 'Issue title goes here', 'Status'),
+  );
 
 const loadedRows = (): WireNode[] => [
   row('ARGO-412', 'Workbench card loses its tab after a reload', 'In progress'),

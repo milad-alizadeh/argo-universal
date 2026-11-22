@@ -72,7 +72,7 @@ export const ReturnsTheTagWhenTheFrameDissolves: Story = {
 export const HidingTheTagKeepsTheRegionContent: Story = {
   render: (): ReactElement => <DraftPage from={0} />,
   play: async ({ canvas, userEvent }) => {
-    const [placeholder] = await canvas.findAllByText('Loading');
+    const placeholder = await canvas.findByText('Page title');
     const next = canvas.getByRole('button', { name: 'Next step' });
 
     await expect(await canvas.findByText(headerSays)).toBeVisible();
@@ -80,7 +80,7 @@ export const HidingTheTagKeepsTheRegionContent: Story = {
     await userEvent.click(next);
     await canvas.findByTestId('draft-frame-header');
     await expect(canvas.queryByText(headerSays)).toBeNull();
-    await expect(canvas.getAllByText('Loading')[0]).toBe(placeholder);
+    await expect(canvas.getByText('Page title')).toBe(placeholder);
   },
 };
 

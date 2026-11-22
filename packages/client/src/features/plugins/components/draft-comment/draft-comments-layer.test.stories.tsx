@@ -74,8 +74,10 @@ export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
     await pointer.click(await canvas.findByText('Issues'));
     await settleOverlays();
 
-    await waitFor(async () =>
-      expect(await editor().findByText('Issues')).toBeVisible(),
+    const named = await editor().findByRole('group', { name: 'title' });
+
+    await waitFor(() =>
+      expect(within(named).getByText('Issues')).toBeVisible(),
     );
     await userEvent.type(
       await editor().findByRole('textbox', { name: 'Comment' }),
