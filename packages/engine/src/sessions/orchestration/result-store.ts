@@ -20,20 +20,21 @@ const pending = and(
 
 export type DelegatedTurn = typeof delegatedTurn.$inferSelect;
 
-export function pendingDelegations(database: Database): DelegatedTurn[] {
-  return database.select().from(delegatedTurn).where(pending).all();
-}
-
 export type SettledDelegation = {
   work: DelegatedTurn;
   stopReason: (typeof turn.$inferSelect)['stopReason'];
   error: (typeof turn.$inferSelect)['error'];
 };
 
-export function settledDelegations(database: Database): SettledDelegation[] {
+type PendingDelegation = SettledDelegation & {
+  status: (typeof turn.$inferSelect)['status'];
+};
+
+export function pendingDelegations(database: Database): PendingDelegation[] {
   return database
     .select({
       work: delegatedTurn,
+      status: turn.status,
       stopReason: turn.stopReason,
       error: turn.error,
     })
@@ -45,7 +46,7 @@ export function settledDelegations(database: Database): SettledDelegation[] {
         eq(turn.sessionId, delegatedTurn.sourceId),
       ),
     )
-    .where(and(pending, eq(turn.status, 'ended')))
+    .where(pending)
     .orderBy(turn.endedAt, delegatedTurn.id)
     .all();
 }

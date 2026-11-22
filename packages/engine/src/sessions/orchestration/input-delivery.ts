@@ -7,11 +7,7 @@ import {
   type PromptDeliverySessions,
 } from '../queue-delivery';
 import type { SessionActorRef } from '../session-machine';
-import {
-  allowsDelegation,
-  pendingDelegations,
-  type DelegatedTurn,
-} from './result-store';
+import { allowsDelegation, type DelegatedTurn } from './result-store';
 
 function notice(
   work: DelegatedTurn,
@@ -79,9 +75,10 @@ export class DelegatedInputs {
     this.watching.clear();
   }
 
-  public async deliver(signal: AbortSignal): Promise<boolean> {
-    const work = pendingDelegations(this.sources.database);
-
+  public async deliver(
+    work: DelegatedTurn[],
+    signal: AbortSignal,
+  ): Promise<boolean> {
     this.watch(work);
     let needsRetry = false;
 

@@ -10,7 +10,8 @@ import {
   allowsDelegation,
   delegatedOutcome,
   delivered,
-  settledDelegations,
+  pendingDelegations,
+  type DelegatedTurn,
   type SettledDelegation,
 } from './result-store';
 
@@ -86,10 +87,17 @@ export class DelegatedResults {
   }
 
   private async pass(): Promise<void> {
-    await this.deliverInput();
+    const byStatus = Map.groupBy(
+      pendingDelegations(this.sources.database),
+      ({ status }) => status,
+    );
+
+    await this.deliverInput(
+      (byStatus.get('running') ?? []).map(({ work }) => work),
+    );
 
     const work = Map.groupBy(
-      settledDelegations(this.sources.database),
+      byStatus.get('ended') ?? [],
       ({ work }) => work.starterId,
     );
 
@@ -106,9 +114,9 @@ export class DelegatedResults {
     }
   }
 
-  private async deliverInput(): Promise<void> {
+  private async deliverInput(work: DelegatedTurn[]): Promise<void> {
     try {
-      if (await this.inputs.deliver(this.stopping)) this.retry();
+      if (await this.inputs.deliver(work, this.stopping)) this.retry();
     } catch (error) {
       if (!this.stopping.aborted)
         this.log(`Could not queue delegated input: ${String(error)}`);
