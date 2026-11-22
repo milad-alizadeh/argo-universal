@@ -100,9 +100,7 @@ async function testHeldConfiguration(
   const overlay = within(document.body);
   const picker = configure(context, scenario.width);
   await picker.open();
-  await waitFor(() =>
-    expect(overlay.queryByText(heldNotice)).not.toBeInTheDocument(),
-  );
+  await expect(overlay.queryByText(heldNotice)).not.toBeInTheDocument();
   const effortSteps = await selectHeldEffort(scenario, picker);
   await picker.chooseModel(scenario.recorded.narrower.name);
   await assertHeldFallback(scenario, effortSteps);
