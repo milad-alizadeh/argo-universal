@@ -24,17 +24,6 @@ const managedEnablement = (): PluginServiceDeps['pluginSettings'] => {
   };
 };
 
-const noDraft = (): Promise<never> =>
-  Promise.reject(new Error('Plugin Drafts are not available in a Plugin test'));
-
-// A Plugin's own tests draw no Draft, so no Session is drawing one and nothing is chosen.
-const noDrafts: ConstructorParameters<typeof PluginService>[1] = {
-  sessionOf: () => null,
-  choice: () => null,
-  drawnBy: noDraft,
-  choose: noDraft,
-};
-
 export type ServiceParts = {
   runtime: PluginRuntime;
   accounts: PluginServiceDeps['pluginAccounts'];
@@ -45,15 +34,12 @@ export function serviceFor(
   options: ConfiguredTest,
   { runtime, accounts }: ServiceParts,
 ): PluginService {
-  return new PluginService(
-    {
-      home,
-      version: options.version,
-      firstPartyPluginsDirectory: resolve(options.directory),
-      pluginRuntime: runtime,
-      pluginSettings: managedEnablement(),
-      pluginAccounts: accounts,
-    },
-    noDrafts,
-  );
+  return new PluginService({
+    home,
+    version: options.version,
+    firstPartyPluginsDirectory: resolve(options.directory),
+    pluginRuntime: runtime,
+    pluginSettings: managedEnablement(),
+    pluginAccounts: accounts,
+  });
 }

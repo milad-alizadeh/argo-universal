@@ -21,12 +21,6 @@ export type PluginDraftsDeps = {
 
 export type ChosenDraft = Pick<DraftChoice, 'picks' | 'comments'>;
 
-// What the service needs of the store, so a test can stand one in without a database.
-export type DraftStore = Pick<
-  PluginDrafts,
-  'sessionOf' | 'choice' | 'drawnBy' | 'choose'
->;
-
 const Picks = z.array(DraftPick);
 
 const Comments = z.array(DraftComment);

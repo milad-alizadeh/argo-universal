@@ -65,12 +65,13 @@ export class Plugins {
 
   // What the Plugin procedures reach: the service, its Accounts and the Operations Plugins declare.
   private routerDeps(): PluginsRouterDeps {
-    const { service, runtime, accounts, listChanges } = this.parts;
+    const { service, drafts, runtime, accounts, listChanges } = this.parts;
 
     const operations = new PluginOperationService(service, runtime.operations);
 
     return {
       plugins: service,
+      drafts,
       accounts,
       listChanges,
       operations,
