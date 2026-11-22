@@ -93,23 +93,11 @@ function hasTuning(configuration: ComposerConfigurationProps): boolean {
   );
 }
 
-function configurationNotice(
-  configuration: ComposerConfigurationProps,
-): string | undefined {
-  return configuration.turnRunning
-    ? 'A Turn is running. Changes apply from the next Turn.'
-    : undefined;
-}
-
 function choicesSection(props: SectionProps): ReactElement {
   const { configuration } = props;
 
-  const notice = hasTuning(configuration)
-    ? undefined
-    : configurationNotice(configuration);
-
   return (
-    <FieldGroup.Section key="choices" footer={notice}>
+    <FieldGroup.Section key="choices">
       {agentRow(configuration, props.picking)}
       {modelRow(configuration)}
       {otherSelections(configuration).map((option) =>
@@ -145,10 +133,7 @@ function tuningSection(props: ContentsProps): ReactElement | null {
   const effort = effortControl({ configuration });
 
   return (
-    <FieldGroup.Section
-      key="tuning"
-      footer={configurationNotice(configuration)}
-    >
+    <FieldGroup.Section key="tuning">
       {effort}
       {switchRows}
     </FieldGroup.Section>

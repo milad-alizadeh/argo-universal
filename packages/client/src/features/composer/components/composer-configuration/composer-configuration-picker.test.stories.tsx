@@ -148,7 +148,10 @@ export const RunningTurnWithoutTuning: Story = {
       canvas.getByRole('button', { name: agentModelLabel }),
     );
     const overlay = within(document.body);
-    await waitFor(() => expect(overlay.getByText(/next Turn/)).toBeVisible());
+    await waitFor(() =>
+      expect(overlay.getByRole('button', { name: /^Model,/ })).toBeVisible(),
+    );
+    await expect(overlay.queryByText(/next Turn/)).not.toBeInTheDocument();
     await expect(
       overlay.queryByRole('slider', { name: 'Effort' }),
     ).not.toBeInTheDocument();

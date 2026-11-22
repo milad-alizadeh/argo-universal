@@ -77,4 +77,6 @@ const triggerProps = (props: TriggerProps): Attributes => ({
 const triggerClassName = cn(
   rowPressTargetClassName,
   'flex flex-row items-center justify-between web:whitespace-nowrap web:disabled:cursor-not-allowed',
+  // The row reaches the card's clipping edges, so the ring is drawn inside it.
+  'web:focus-visible:focus-ring',
 );
