@@ -53,7 +53,7 @@ export interface SheetScreenProps {
    * Android draws it; the platforms whose pages are drawn before they move never need it.
    */
   placeholder?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 // An action in a page's header, such as Stop; destructive draws it in the danger colour. With an icon it is an icon button named by its label.

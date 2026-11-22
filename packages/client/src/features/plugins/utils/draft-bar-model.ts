@@ -62,8 +62,16 @@ export function draftBarOf(
 }
 
 const framed = (text: string): WireNode => ({
-  ...pluginPageFallback,
-  props: { ...pluginPageFallback.props, children: text },
+  type: 'Surface',
+  key: 'draft-state-explanation',
+  props: { kind: 'card', padding: 3 },
+  children: [
+    {
+      ...pluginPageFallback,
+      props: { ...pluginPageFallback.props, children: text },
+    },
+  ],
+  slots: {},
 });
 
 /*

@@ -7,6 +7,16 @@ Feature: Plugin Drafts
     And the Draft bar is shown
     When I choose the "Empty" Draft state
     Then the Plugin page text reads "Nothing here yet"
+    When I choose the "Pending" Draft state
+    Then the Plugin page text reads "The Pending state is not declared"
+    And the Draft page has no drawing failure toast
+
+    When I choose the "Error" Draft state
+    Then the Plugin page text reads "The Error state is not declared"
+    And the Draft page has no drawing failure toast
+    When I choose the "Signed out" Draft state
+    Then the Plugin page text reads "The Signed out state is not declared"
+    And the Draft page has no drawing failure toast
 
     Examples:
       | frame |

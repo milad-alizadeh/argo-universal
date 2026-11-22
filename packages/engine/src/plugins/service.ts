@@ -9,7 +9,13 @@ import {
   type DeclaredItems,
   type DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
+import {
+  currentDraftState,
+  draftPageAt,
+  draftStateKey,
+} from '@repo/contracts/plugins/drafts';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
+import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import {
   hooksEvent,
   rendersSlot,
@@ -80,6 +86,27 @@ export class PluginService {
 
   async declared(input: DeclaredItemsInput): Promise<DeclaredItems> {
     return declaredItems(await this.list(), input);
+  }
+
+  // A state the manifest does not declare has no Loader answer. The Draft explains it in the page.
+  async missingDraftState({
+    pluginId,
+    path,
+    pageState,
+  }: PageAddress): Promise<string | null> {
+    if (!this.deps.dev || typeof pageState[draftStateKey] !== 'string')
+      return null;
+
+    const { plugin } = await locatePlugin(this.deps, pluginId);
+    const page = draftPageAt(plugin.manifest.contributes.drafts, path);
+
+    if (!page) return null;
+
+    const state = currentDraftState(page.states, pageState);
+
+    return page.states.includes(state)
+      ? null
+      : `Draft state ${state} is not declared.`;
   }
 
   async activate(pluginId: string): Promise<PluginStatus> {

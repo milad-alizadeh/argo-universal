@@ -30,17 +30,17 @@ export function DraftRegionFrame(
       onPointerLeave={(event) => {
         if (event.nativeEvent.pointerType !== 'touch') props.onDeactivate();
       }}
-      className="relative"
+      className="relative pt-6"
     >
       {children}
       {active && (
         <View
           pointerEvents="none"
-          className="absolute inset-0 rounded-xl border border-border"
+          className="absolute inset-x-0 bottom-0 top-2.5 rounded-xl border border-border"
         />
       )}
       {tagged && (
-        <View className="absolute -top-2.5 left-3">
+        <View className="absolute top-0 left-3">
           <DraftRegionTag {...props} />
         </View>
       )}

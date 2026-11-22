@@ -95,3 +95,89 @@ export const longListTree: WireNode = {
     },
   ],
 };
+
+export const tableTree: WireNode = {
+  ...node('Table', 'issues', { columns: [{ id: 'title', title: 'Issue' }] }),
+  children: [
+    {
+      ...node('Table.Row', 'first-issue', { id: 'first' }),
+      children: [
+        node('Table.Cell', 'issue-title', {
+          column: 'title',
+          text: 'First issue',
+        }),
+      ],
+    },
+  ],
+};
+
+export const exactTargetTree: WireNode = {
+  ...node('Screen', 'exact-targets', { title: 'Exact targets' }),
+  slots: {
+    actions: [
+      node('Action', 'copy-link', {
+        label: 'Copy link',
+        icon: 'copy',
+        onPress: { pageState: { copied: true } },
+      }),
+    ],
+  },
+  children: [
+    {
+      ...node('Canvas', 'canvas', {
+        label: 'Draft diagram',
+        width: 800,
+        height: 150,
+        camera: 'fixed',
+      }),
+      children: [
+        node('Canvas.Rect', 'diagram-shape', {
+          x: 0,
+          y: 0,
+          width: 800,
+          height: 150,
+          tone: 'muted',
+          fill: true,
+        }),
+        node('Canvas.Circle', 'diagram-circle', {
+          cx: 200,
+          cy: 70,
+          r: 40,
+          tone: 'accent',
+          fill: true,
+        }),
+      ],
+    },
+  ],
+};
+
+export const boardTree: WireNode = {
+  ...node('Board', 'issue-board', { accessibilityLabel: 'Issue board' }),
+  children: [
+    {
+      ...node('Board.Column', 'open-column', {
+        id: 'open',
+        title: 'Open lane',
+      }),
+      children: [
+        node('Board.Card', 'first-card', {
+          id: 'first-card',
+          title: 'First card',
+        }),
+      ],
+    },
+  ],
+};
+
+export const sheetTree: WireNode = {
+  ...node('Sheet', 'details-sheet', { open: true, label: 'Issue details' }),
+  children: [
+    {
+      ...node('Sheet.Screen', 'issue-details', {
+        name: 'details',
+        title: 'Issue details',
+      }),
+      children: [node('Text', 'issue-summary', { children: 'Issue summary' })],
+    },
+  ],
+};

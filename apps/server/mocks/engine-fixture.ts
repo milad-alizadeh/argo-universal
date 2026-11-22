@@ -13,7 +13,11 @@ const descendant = spawn(
 
 writeFileSync(
   process.env.ARGO_FIXTURE_PIDFILE ?? '',
-  JSON.stringify({ engine: process.pid, descendant: descendant.pid }),
+  JSON.stringify({
+    engine: process.pid,
+    descendant: descendant.pid,
+    args: process.argv.slice(2),
+  }),
 );
 
 if (process.env.ARGO_FIXTURE_IGNORE_TERM) process.on('SIGTERM', () => {});

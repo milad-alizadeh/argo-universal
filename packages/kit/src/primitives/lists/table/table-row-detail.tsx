@@ -3,6 +3,7 @@ import { useListLook } from '#kit/list-look-context';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { nodeValue } from './table-cell';
 import type { TableColumn, TableProps } from './table-props';
 import { cellOf, type TableCell, type TableRow } from './table-rows';
@@ -55,13 +56,18 @@ interface DetailItemProps {
 function DetailItem({ column, cell }: DetailItemProps): ReactElement {
   const { valuePlacement } = useListLook();
 
-  if (!cell.content) return <ListItem title={column.title} value={cell.text} />;
+  if (!cell.content)
+    return wrapKitDrawing(
+      cell.wrap,
+      <ListItem title={column.title} value={cell.text} />,
+    );
 
-  return (
+  return wrapKitDrawing(
+    cell.wrap,
     <ListItem
       title={column.title}
       accessibilityLabel={`${column.title}, ${cell.text}`}
       {...nodeValue(cell.content, valuePlacement)}
-    />
+    />,
   );
 }

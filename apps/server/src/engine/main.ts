@@ -29,8 +29,8 @@ const engine = composeEngine({
   port,
   version: packageJson.version,
   firstPartyPluginsDirectory,
-  // Only the dev Server (`node --watch`) rebuilds a Plugin when its sources change.
-  watchPlugins: process.execArgv.includes('--watch'),
+  // Node consumes its watch option before starting the Engine script.
+  watchPlugins: process.argv.includes('--watch', 2),
   startedAt: new Date().toISOString(),
 });
 

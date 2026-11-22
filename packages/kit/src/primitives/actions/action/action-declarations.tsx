@@ -1,6 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import { isKitElement } from '../../../typed-children';
+import { kitDrawingWrapper } from '../../../wrapped-component';
 import type {
   ActionProps,
   ActionSectionProps,
@@ -58,8 +59,12 @@ function childGroups(child: ReactNode): ActionGroup[] {
 function actionGroup(child: ReactElement<ActionProps>): ActionGroup[] {
   const id = encodeURIComponent(String(child.key));
 
-  if (isPressProps(child.props)) return [{ actions: [{ ...child.props, id }] }];
-  const submenu = declaredSubmenu(child.props, id);
+  const wrap = kitDrawingWrapper(child);
+
+  if (isPressProps(child.props))
+    return [{ actions: [{ ...child.props, id, wrap }] }];
+
+  const submenu = { ...declaredSubmenu(child.props, id), wrap };
 
   return submenu.sections.length ? [{ actions: [submenu] }] : [];
 }

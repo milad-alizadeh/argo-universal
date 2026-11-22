@@ -1,20 +1,35 @@
 import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement, ReactNode } from 'react';
+import { useWindowDimensions, View } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
 import { populatedDraft } from './draft-bar-fixtures';
 import { DraftChooseButton } from './draft-choose-button';
 
+function BarFrame({ children }: { children: ReactNode }): ReactElement {
+  const { width } = useWindowDimensions();
+
+  return (
+    <View className="relative h-96" style={{ width: width - 48 }}>
+      {children}
+    </View>
+  );
+}
+
 const meta = {
   title: 'Tests/Plugins/DraftBar',
   component: DraftBar,
   decorators: [
     (Story): React.JSX.Element => (
-      <DraftBarDock>
-        <Story />
-      </DraftBarDock>
+      <BarFrame>
+        <DraftBarDock>
+          <Story />
+        </DraftBarDock>
+      </BarFrame>
     ),
   ],
   args: { ...populatedDraft, onStateChange: fn() },
@@ -27,7 +42,7 @@ type Story = StoryObj<typeof meta>;
 // The State menu opens over the page, outside the story's own canvas.
 const menu = (): ReturnType<typeof within> => within(document.body);
 
-export const WideTabsDrawOnlyDeclaredStates: Story = {
+export const WideTabsMarkMissingStates: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
 
@@ -35,8 +50,8 @@ export const WideTabsDrawOnlyDeclaredStates: Story = {
       await canvas.findByRole('button', { name: 'Loading' }),
     ).toBeVisible();
     await expect(
-      canvas.queryByRole('button', { name: 'Signed out' }),
-    ).toBeNull();
+      await canvas.findByRole('button', { name: /Signed out.*missing/ }),
+    ).toBeVisible();
   },
 };
 
@@ -126,6 +141,9 @@ export const PhoneStateMenuChecksTheCurrentState: Story = {
 export const PhoneBarFitsTheWindowWithComments: Story = {
   args: {
     form: 'menu',
+    commentToggle: (
+      <IconButton icon="message" accessibilityLabel="Comments" onPress={fn()} />
+    ),
     choose: <DraftChooseButton comments={12} onPress={fn()} />,
   },
   play: async ({ canvas }) => {
@@ -137,10 +155,14 @@ export const PhoneBarFitsTheWindowWithComments: Story = {
       name: 'Choose · 12 comments',
     });
 
+    const state = await canvas.findByRole('button', { name: 'State' });
+    const label = within(state).getByText('Populated');
+
+    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
     await expect(bar.getBoundingClientRect().right).toBeLessThanOrEqual(
       window.innerWidth,
     );
-    await expect(choose.getBoundingClientRect().right).toBeLessThanOrEqual(
+    await expect(choose.getBoundingClientRect().right).toBeLessThan(
       bar.getBoundingClientRect().right,
     );
   },

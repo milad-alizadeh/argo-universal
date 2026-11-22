@@ -12,7 +12,7 @@ const text = (key: string, children: string, role?: string): WireNode => ({
 const row = (key: string, title: string, subtitle: string): WireNode => ({
   type: 'ListItem',
   key,
-  props: { title, subtitle },
+  props: { title, subtitle, multiline: true },
   children: [],
   slots: {},
 });
@@ -28,15 +28,57 @@ const stack = (key: string, children: WireNode[]): WireNode => ({
 const list = (children: WireNode[]): WireNode => ({
   type: 'List',
   key: 'list',
-  props: { appearance: 'cards' },
+  props: { appearance: 'grouped' },
+  children: [
+    { type: 'List.Section', key: 'rows', props: {}, children, slots: {} },
+  ],
+  slots: {},
+});
+
+const skeletonRect = (key: string, bounds: WireNode['props']): WireNode => ({
+  type: 'Canvas.Rect',
+  key,
+  props: { rx: 8, tone: 'muted', intensity: 0.22, fill: true, ...bounds },
+  children: [],
+  slots: {},
+});
+
+const placeholder = (
+  key: string,
+  viewport: { label: string; height: number },
+  children: WireNode[],
+): WireNode => ({
+  type: 'Canvas',
+  key,
+  props: { ...viewport, width: 440, camera: 'fixed' },
   children,
   slots: {},
 });
 
-const placeholders = (): WireNode[] =>
-  ['one', 'two', 'three'].map((key) =>
-    row(key, 'Issue title goes here', 'Status'),
-  );
+const skeletonEdge = (key: string, d: string): WireNode => ({
+  type: 'Canvas.Path',
+  key,
+  props: { d, tone: 'muted', intensity: 0.12, fill: true },
+  children: [],
+  slots: {},
+});
+
+const listSkeleton = (): WireNode =>
+  placeholder('list', { label: 'Issue list skeleton', height: 135 }, [
+    skeletonEdge('first', 'M16 0 H424 Q440 0 440 16 V44 H0 V16 Q0 0 16 0 Z'),
+    skeletonRect('second', {
+      x: 0,
+      y: 45,
+      width: 440,
+      height: 44,
+      rx: 0,
+      intensity: 0.12,
+    }),
+    skeletonEdge(
+      'third',
+      'M0 90 H440 V119 Q440 135 424 135 H16 Q0 135 0 119 Z',
+    ),
+  ]);
 
 const loadedRows = (): WireNode[] => [
   row('ARGO-412', 'Workbench card loses its tab after a reload', 'In progress'),
@@ -45,7 +87,19 @@ const loadedRows = (): WireNode[] => [
 ];
 
 const headerSkeleton = (): WireNode =>
-  stack('header', [text('placeholder', 'Page title', 'heading')]);
+  stack('header', [
+    placeholder('placeholder', { label: 'Page title skeleton', height: 56 }, [
+      skeletonRect('title', { x: 0, y: 8, width: 96, height: 18 }),
+      skeletonRect('count', { x: 0, y: 33, width: 72, height: 12 }),
+      skeletonRect('filters', {
+        x: 300,
+        y: 12,
+        width: 140,
+        height: 28,
+        rx: 12,
+      }),
+    ]),
+  ]);
 
 const headerLanded = (): WireNode =>
   stack('header', [
@@ -54,10 +108,10 @@ const headerLanded = (): WireNode =>
   ]);
 
 const skeletonPage = (): WireNode =>
-  stack('page', [headerSkeleton(), list(placeholders())]);
+  stack('page', [headerSkeleton(), listSkeleton()]);
 
 const headerLandedPage = (): WireNode =>
-  stack('page', [headerLanded(), list(placeholders())]);
+  stack('page', [headerLanded(), listSkeleton()]);
 
 export const listLandedPage = (): WireNode =>
   stack('page', [headerLanded(), list(loadedRows())]);

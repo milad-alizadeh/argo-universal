@@ -32,6 +32,7 @@ export function DraftCommentEditor(
         </Text>
       )}
       <TextArea
+        appearance="field"
         label="Comment"
         placeholder="Leave a note for the Agent"
         value={note}

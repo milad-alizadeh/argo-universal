@@ -137,6 +137,11 @@ export function assemble(options: PluginsOptions): Assembled {
   const runtime = runtimeFor(options, parts);
   const deps = depsFor(options, parts, runtime);
 
+  if (options.watchPlugins)
+    runtime.changes.onRestarted((pluginId) =>
+      parts.listChanges.changed(pluginId),
+    );
+
   return {
     service: new PluginService(deps),
     drafts: new DraftReview(deps, new PluginDrafts(options)),

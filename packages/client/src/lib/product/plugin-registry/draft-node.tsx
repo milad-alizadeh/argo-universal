@@ -1,5 +1,8 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { wrappingComponent } from '@repo/kit/wrapped-component';
+import {
+  wrappingComponent,
+  type KitDrawingHit,
+} from '@repo/kit/wrapped-component';
 import {
   createContext,
   createElement,
@@ -108,12 +111,19 @@ export class DraftWrappers {
     const identity = { address, nodeKey };
     const Frame = this.seam?.Frame;
 
-    function DraftNode(props: PluginProps): React.JSX.Element {
-      let drawn = createElement(component, props);
+    function wrapDrawing(
+      drawing: React.ReactElement,
+      hit?: KitDrawingHit,
+    ): React.ReactElement {
+      let drawn = drawing;
 
       if (wrapping.comment)
         drawn = (
-          <CommentTarget identity={identity} fills={filling.has(type)}>
+          <CommentTarget
+            identity={identity}
+            fills={filling.has(type)}
+            hit={hit}
+          >
             {drawn}
           </CommentTarget>
         );
@@ -128,7 +138,11 @@ export class DraftWrappers {
       return drawn;
     }
 
-    return wrappingComponent(DraftNode, component);
+    function DraftNode(props: PluginProps): React.JSX.Element {
+      return wrapDrawing(createElement(component, props));
+    }
+
+    return wrappingComponent(DraftNode, component, wrapDrawing);
   }
 }
 

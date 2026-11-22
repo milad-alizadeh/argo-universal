@@ -39,11 +39,13 @@ export const RestingTagHasNoControls: Story = {
 
 export const TagSitsOnTheTopEdge: Story = {
   play: async ({ canvas }) => {
-    const tag = (await canvas.findByText(tagText)).getBoundingClientRect();
+    const group = await canvas.findByRole('group', { name: 'Header Variant' });
+    const tag = group.getBoundingClientRect();
 
     const drawing = (await canvas.findByText('Issues')).getBoundingClientRect();
 
-    await expect(tag.top).toBeLessThan(drawing.top);
+    await expect(tag.top).toBeGreaterThanOrEqual(0);
+    await expect(tag.bottom).toBeLessThanOrEqual(drawing.top);
   },
 };
 

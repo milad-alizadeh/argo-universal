@@ -1,5 +1,8 @@
+import type { KitDrawingHit } from '@repo/kit/wrapped-component';
+
 export type Placed = {
   address: string;
+  hit?: KitDrawingHit;
   x: number;
   y: number;
   width: number;
@@ -7,7 +10,11 @@ export type Placed = {
 };
 
 const contains = (box: Placed, { x, y }: { x: number; y: number }): boolean =>
-  x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
+  x >= box.x &&
+  x <= box.x + box.width &&
+  y >= box.y &&
+  y <= box.y + box.height &&
+  (box.hit?.({ x: x - box.x, y: y - box.y }) ?? true);
 
 /*
  * The node a press picks: of the boxes the point is in, the smallest, since a node sits inside the node that holds

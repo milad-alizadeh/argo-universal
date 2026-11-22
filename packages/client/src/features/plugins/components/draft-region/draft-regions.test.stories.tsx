@@ -43,6 +43,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const titleSkeleton = 'Page title skeleton';
+
 export const HidesTheTagOfAFramedRegion: Story = {
   play: async ({ canvas }) => {
     await canvas.findByTestId('draft-frame-header');
@@ -72,7 +74,12 @@ export const ReturnsTheTagWhenTheFrameDissolves: Story = {
 export const HidingTheTagKeepsTheRegionContent: Story = {
   render: (): ReactElement => <DraftPage from={0} />,
   play: async ({ canvas, userEvent }) => {
-    const placeholder = await canvas.findByText('Page title');
+    await canvas.findByLabelText(titleSkeleton);
+    await waitFor(() =>
+      expect(canvas.queryByLabelText('Loading Page title skeleton')).toBeNull(),
+    );
+
+    const placeholder = canvas.getByLabelText(titleSkeleton);
     const next = canvas.getByRole('button', { name: 'Next step' });
 
     await expect(await canvas.findByText(headerSays)).toBeVisible();
@@ -80,7 +87,7 @@ export const HidingTheTagKeepsTheRegionContent: Story = {
     await userEvent.click(next);
     await canvas.findByTestId('draft-frame-header');
     await expect(canvas.queryByText(headerSays)).toBeNull();
-    await expect(canvas.getByText('Page title')).toBe(placeholder);
+    await expect(canvas.getByLabelText(titleSkeleton)).toBe(placeholder);
   },
 };
 

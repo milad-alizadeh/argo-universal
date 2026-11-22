@@ -151,7 +151,7 @@ function choiceItems(
 ): NativeMenuItem[] {
   return group.options.map((choice) => ({
     id: `${idPrefix}${choice.value}`,
-    title: choice.label,
+    title: choice.detail ? `${choice.label} · ${choice.detail}` : choice.label,
     checked: choice.value === group.value,
     disabled: Boolean(choice.disabled),
     icon: choice.icon,

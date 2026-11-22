@@ -50,6 +50,8 @@ function Advances({
   );
 }
 
+const titleSkeleton = 'Page title skeleton';
+
 export const FramesTheRegionBeingWritten: Story = {
   args: { shown: drawingHeader },
   play: async ({ canvas }) => {
@@ -97,13 +99,18 @@ export const KeepsUnchangedNodesStill: Story = {
 export const FramingARegionKeepsItsContent: Story = {
   render: () => <Advances from={0} />,
   play: async ({ canvas, userEvent }) => {
-    const placeholder = await canvas.findByText('Page title');
+    await canvas.findByLabelText(titleSkeleton);
+    await waitFor(() =>
+      expect(canvas.queryByLabelText('Loading Page title skeleton')).toBeNull(),
+    );
+
+    const placeholder = canvas.getByLabelText(titleSkeleton);
     const next = canvas.getByRole('button', { name: 'Next step' });
 
     await userEvent.click(next);
     await userEvent.click(next);
     await canvas.findByTestId(frameOf('header'));
-    await expect(canvas.getByText('Page title')).toBe(placeholder);
+    await expect(canvas.getByLabelText(titleSkeleton)).toBe(placeholder);
   },
 };
 

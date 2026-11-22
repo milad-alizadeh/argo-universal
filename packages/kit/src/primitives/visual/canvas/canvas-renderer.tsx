@@ -6,18 +6,24 @@ import {
 } from '@shopify/react-native-skia';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
+import { wrapKitDrawing, type KitDrawingHit } from '../../../wrapped-component';
 import { CanvasAccessibleList } from './canvas-accessibility';
+import { worldPoint } from './canvas-camera';
 import { CanvasFrame } from './canvas-frame';
 import { positionLabelBounds } from './canvas-label-bounds';
 import { CanvasLabels } from './canvas-labels';
-import { CanvasTooltip, SelectionOutline } from './canvas-overlay';
-import type { CanvasProps, Camera } from './canvas-props';
+import {
+  CanvasTooltip,
+  SelectionOutline,
+  selectionBounds,
+} from './canvas-overlay';
+import type { Bounds, Camera, CanvasProps } from './canvas-props';
 import {
   useCanvasRendering,
   frameProps,
   type Rendering,
 } from './canvas-rendering';
-import { entryKey } from './canvas-scene-types';
+import { entryAt, entryKey, type SceneEntry } from './canvas-scene-types';
 
 interface PictureProps {
   picture: SkPicture;
@@ -121,10 +127,78 @@ function CanvasOverlays({
   return (
     <>
       <CanvasLabels {...labels} />
+      <CanvasDrawingTargets context={context} />
       <SelectionOutline {...selectedProps(context)} />
       <CanvasTooltip {...tooltipProps(context)} />
     </>
   );
+}
+
+// Skia draws into one picture, so a declared shape's wrapper measures its transformed bounds.
+function CanvasDrawingTargets({
+  context,
+}: {
+  context: Rendering;
+}): React.ReactNode {
+  const { scene, view, controls } = context;
+
+  return scene.entries.map((entry) => {
+    const { wrap } = entry.drawing;
+
+    if (!wrap) return null;
+
+    const bounds = selectionBounds({
+      entry,
+      view,
+      bounds: positionLabelBounds(
+        entry,
+        view,
+        controls.labelHits.get(entry.address),
+      ),
+    });
+
+    if (!bounds) return null;
+
+    return (
+      <View
+        key={entry.address}
+        pointerEvents="box-none"
+        style={{
+          position: 'absolute',
+          left: bounds.x,
+          top: bounds.y,
+          width: Math.max(1, bounds.width),
+          height: Math.max(1, bounds.height),
+        }}
+      >
+        {wrapKitDrawing(
+          wrap,
+          <View
+            pointerEvents="none"
+            style={{
+              width: Math.max(1, bounds.width),
+              height: Math.max(1, bounds.height),
+            }}
+          />,
+          drawingHit(context, entry, bounds),
+        )}
+      </View>
+    );
+  });
+}
+
+function drawingHit(
+  { scene, view }: Rendering,
+  entry: SceneEntry,
+  bounds: Bounds,
+): KitDrawingHit | undefined {
+  if (entry.drawing.kind === 'text') return;
+
+  return ({ x, y }) =>
+    entryAt(
+      scene.entries,
+      worldPoint({ x: bounds.x + x, y: bounds.y + y }, view),
+    ) === entry;
 }
 
 function labelProps(context: Rendering): ComponentProps<typeof CanvasLabels> {

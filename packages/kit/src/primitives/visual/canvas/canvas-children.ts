@@ -1,5 +1,6 @@
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { isKitElement } from '../../../typed-children';
+import { kitDrawingWrapper } from '../../../wrapped-component';
 import type {
   CanvasDrawing,
   DrawingData,
@@ -87,5 +88,5 @@ function keyedDrawing(child: React.ReactElement): CanvasDrawing {
 
   if (!data) throw new Error('Canvas only accepts drawing children');
 
-  return { ...data, key: String(child.key) };
+  return { ...data, key: String(child.key), wrap: kitDrawingWrapper(child) };
 }

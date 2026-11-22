@@ -11,6 +11,7 @@ import {
 } from '../../../list-look-context';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { drawsMovePicker } from '../list/list-move-picker-drawing';
 import {
   drawsPlaceholderRows,
@@ -73,7 +74,7 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
     <ContextActions actions={actions} builtIn={moves} menu={rowMenu(props)}>
       <>
         <RowPositionContext value={context}>
-          <ItemSurface {...props} />
+          {wrapKitDrawing(props.wrapDrawing, <ItemSurface {...props} />)}
         </RowPositionContext>
         {footer}
       </>

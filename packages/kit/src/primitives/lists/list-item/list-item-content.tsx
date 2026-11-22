@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { LineEnd } from './list-item-line-end';
 import { CompactMeta, hasMeta, Meta } from './list-item-meta';
 import {
@@ -84,10 +85,13 @@ function TextLines(props: PlacedContentProps): ReactElement {
   return (
     <InertLane className="min-w-0 gap-0.5">
       <LineEnd end={titleLineEnd(props)}>
-        <Title {...props} />
+        {wrapKitDrawing(props.wrapLabels?.title, <Title {...props} />)}
       </LineEnd>
       <LineEnd end={props.subtitleEnd}>
-        <Subtitle {...subtitleOf(props)} />
+        {wrapKitDrawing(
+          props.wrapLabels?.subtitle,
+          <Subtitle {...subtitleOf(props)} />,
+        )}
       </LineEnd>
     </InertLane>
   );

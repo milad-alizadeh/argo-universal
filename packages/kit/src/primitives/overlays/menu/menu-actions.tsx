@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { windowEdgeInset } from '#kit/menu-surface';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { MenuActionLabel } from './menu-action-label';
 import {
   ChoiceCheck,
@@ -109,7 +110,8 @@ function SubmenuRows({
 function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
   const label = submenu.accessibilityLabel ?? submenu.label;
 
-  return (
+  return wrapKitDrawing(
+    submenu.wrap,
     <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
         <ChoiceCheck />
@@ -117,7 +119,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
         <SubmenuCount count={submenu.count} />
         <Chevron direction="right" />
       </View>
-    </RadixMenu.SubTrigger>
+    </RadixMenu.SubTrigger>,
   );
 }
 
@@ -128,7 +130,8 @@ function SubmenuCount({
 }
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
-  return (
+  return wrapKitDrawing(
+    action.wrap,
     <TextClassContext.Provider value={menuTextClass(action.tone)}>
       <RadixMenu.Item {...actionItemProps(action)}>
         <View {...actionRow(action)}>
@@ -136,7 +139,7 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
           <MenuActionLabel {...action} />
         </View>
       </RadixMenu.Item>
-    </TextClassContext.Provider>
+    </TextClassContext.Provider>,
   );
 }
 

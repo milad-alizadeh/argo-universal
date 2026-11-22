@@ -77,6 +77,7 @@ export function menuEntries(entries: ListChild[]): ListChild[] {
 
 // A lane's `key` is its Section's key, as the List's moves name it.
 export interface Lane {
+  wrapDrawing?: SectionState['wrapDrawing'];
   key: string;
   // The Section's title, which names its lane for a screen reader; none for rows outside any Section.
   title: string | undefined;
@@ -100,6 +101,7 @@ const looseLane = (key: string, items: ListChild[]): Lane => ({
 
 const sectionLane = ({ key, section, blocks }: SectionBlock): Lane => ({
   key,
+  wrapDrawing: section.wrapDrawing,
   title: section.title,
   header: section.header,
   footer: section.footer,

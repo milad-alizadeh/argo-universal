@@ -5,9 +5,13 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as pointer } from 'vitest/browser';
 import { draftComments } from '../../stores/draft-comments';
 import {
+  boardTree,
+  exactTargetTree,
   fieldRowTree,
   issuesPage,
   longListTree,
+  sheetTree,
+  tableTree,
 } from './draft-comment-fixtures';
 import {
   CommentingPage,
@@ -121,19 +125,27 @@ export const OutsideCommentModeAPressRunsTheNode: Story = {
   },
 };
 
-export const CommentModeBlocksKeyboardActivation: Story = {
+export const KeyboardSelectsTheExactRowWithoutRunningIt: Story = {
   args: { onPageCall: fn() },
   play: async ({ args, canvas, userEvent }) => {
     await settleLayout('wide');
 
-    const row = (await canvas.findByText(pairing)).closest<HTMLElement>(
-      '[tabindex]',
-    );
+    const row = await canvas.findByRole('button', {
+      name: /Comment on.*row-409/,
+    });
 
-    row?.focus();
+    await expect(row).toHaveAttribute('tabindex', '0');
+
+    for (let step = 0; document.activeElement !== row && step < 20; step++)
+      await userEvent.tab();
+
+    await expect(row).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     await settleOverlays();
 
+    await expect(
+      await editor().findByRole('group', { name: 'List · A · row-409' }),
+    ).toBeVisible();
     await expect(args.onPageCall).not.toHaveBeenCalled();
   },
 };
@@ -269,5 +281,132 @@ export const APhonePicksOnALongPress: Story = {
     await expect(
       await editor().findByRole('textbox', { name: 'Comment' }),
     ).toBeVisible();
+  },
+};
+
+export const ATableCellKeepsItsOwnCommentTarget: Story = {
+  args: { root: tableTree, regions: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const cell = await canvas.findByRole('cell');
+    await pointer.click(cell);
+    await settleOverlays();
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'issue-title' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+function exactTarget(
+  root: typeof tableTree,
+  shown: string,
+  key: string,
+): Story {
+  return {
+    args: { root, regions: false, onPageCall: fn() },
+    play: async ({ args, canvas }) => {
+      await settleLayout('wide');
+
+      const target = await canvas.findByText(shown);
+      await pointer.click(target);
+      await waitFor(() =>
+        expect(editor().getByRole('group', { name: key })).toBeVisible(),
+      );
+      await expect(args.onPageCall).not.toHaveBeenCalled();
+    },
+  };
+}
+
+export const ABoardColumnKeepsItsOwnCommentTarget = exactTarget(
+  boardTree,
+  'Open lane',
+  'open-column',
+);
+
+export const ABoardCardKeepsItsOwnCommentTarget = exactTarget(
+  boardTree,
+  'First card',
+  'first-card',
+);
+
+export const ACanvasDrawingKeepsItsOwnCommentTarget: Story = {
+  args: { root: exactTargetTree, regions: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await canvas.findByRole('button', { name: 'Comment on diagram-shape' });
+    await pointer.click(await canvas.findByLabelText('Draft diagram'));
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'diagram-shape' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const AnActionKeepsItsOwnCommentTarget: Story = {
+  args: { root: exactTargetTree, regions: false, onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(
+      await canvas.findByRole('button', { name: 'Copy link' }),
+    );
+    await waitFor(() =>
+      expect(editor().getByRole('group', { name: 'copy-link' })).toBeVisible(),
+    );
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const ASheetScreenKeepsItsOwnCommentTarget: Story = {
+  args: { root: sheetTree, regions: false },
+  play: async ({ userEvent }) => {
+    await settleLayout('wide');
+
+    const target = await editor().findByRole('button', {
+      name: 'Comment on issue-details',
+    });
+
+    target.focus();
+    await expect(target).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'issue-details' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const ACanvasPressSelectsTheVisibleDrawing: Story = {
+  args: { root: exactTargetTree, regions: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await canvas.findByRole('button', { name: 'Comment on diagram-circle' });
+
+    const drawing = await canvas.findByLabelText('Draft diagram');
+    const { width, height } = drawing.getBoundingClientRect();
+    await pointer.click(drawing, {
+      position: { x: (165 / 800) * width, y: (35 / 150) * height },
+    });
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'diagram-shape' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const APhoneTableTitleKeepsItsCellTarget: Story = {
+  args: { root: tableTree, regions: false, longPressMilliseconds: 60 },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    await holdOn(await canvas.findByText('First issue'), 120);
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'issue-title' }),
+      ).toBeVisible(),
+    );
   },
 };

@@ -125,7 +125,7 @@ const loaderThrew = 'Loader threw';
 const notDeclared = 'not declared';
 
 const textOf = (frame: ReturnType<typeof draftFrameOf>): string =>
-  JSON.stringify(frame?.props.children);
+  JSON.stringify(frame?.children[0]?.props.children);
 
 it('draws no frame for a page that is not a Draft', () => {
   expect(draftFrameOf(null, loaderThrew)).toBeNull();

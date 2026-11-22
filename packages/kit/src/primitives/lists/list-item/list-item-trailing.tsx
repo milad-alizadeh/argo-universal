@@ -4,6 +4,7 @@ import { Text } from '#primitives/content/text';
 import { useListLook } from '../../../list-look-context';
 import { sidebarStatus } from '../../../row-badge';
 import { cn } from '../../../utils';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import {
   AccessoryLane,
   InertLane,
@@ -13,7 +14,12 @@ import type { ListItemProps } from './list-item-props';
 
 type TrailingProps = Pick<
   ListItemProps,
-  'trailing' | 'value' | 'badge' | 'valueTone' | 'trailingAccessories'
+  | 'trailing'
+  | 'value'
+  | 'badge'
+  | 'valueTone'
+  | 'trailingAccessories'
+  | 'wrapLabels'
 >;
 
 function trailingContent(props: TrailingProps): ReactNode {
@@ -21,9 +27,12 @@ function trailingContent(props: TrailingProps): ReactNode {
     props.trailing
   ) : (
     <View className="flex-row items-center gap-1.5">
-      <Text role="row" tone={props.valueTone ?? 'muted'}>
-        {props.value}
-      </Text>
+      {wrapKitDrawing(
+        props.wrapLabels?.value,
+        <Text role="row" tone={props.valueTone ?? 'muted'}>
+          {props.value}
+        </Text>,
+      )}
       {props.trailing}
     </View>
   );

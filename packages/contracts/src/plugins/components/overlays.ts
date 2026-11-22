@@ -26,6 +26,14 @@ export const overlaysComponents = {
     children: true,
     events: { onOpenChange: openChange(sheetProps) },
   }),
+  'Sheet.Screen': defineKitComponent(
+    'A page within a Sheet.',
+    z.object({
+      name: z.string().describe('Name of this page in the Sheet.'),
+      title: z.string().optional().describe('Heading shown on the page.'),
+    }),
+    { group: 'overlays', children: true },
+  ),
   Menu: defineKitComponent('A choice or action menu.', menuSchema, {
     group: 'overlays',
     wire: false,

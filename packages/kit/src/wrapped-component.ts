@@ -2,6 +2,30 @@ import type { ReactElement } from 'react';
 
 type Component = Exclude<ReactElement['type'], string>;
 
+// Declarative kit children are drawn by their parent. Carry their wrapper to the drawing it makes.
+export type KitDrawingHit = (point: { x: number; y: number }) => boolean;
+
+export type KitDrawingWrapper = (
+  drawing: ReactElement,
+  hit?: KitDrawingHit,
+) => ReactElement;
+
+const drawings = new WeakMap<Component, KitDrawingWrapper>();
+
+export function kitDrawingWrapper(
+  element: ReactElement,
+): KitDrawingWrapper | undefined {
+  return typeof element.type === 'string'
+    ? undefined
+    : drawings.get(element.type);
+}
+
+export const wrapKitDrawing = (
+  wrap: KitDrawingWrapper | undefined,
+  drawing: ReactElement,
+  hit?: KitDrawingHit,
+): ReactElement => wrap?.(drawing, hit) ?? drawing;
+
 const wraps = new WeakMap<Component, Component>();
 
 const markPrefix = 'argo.kit.';
@@ -13,6 +37,7 @@ const markPrefix = 'argo.kit.';
 export function wrappingComponent<Wrapper extends Component>(
   wrapper: Wrapper,
   wrapped: Component,
+  drawing?: KitDrawingWrapper,
 ): Wrapper {
   for (const mark of Object.getOwnPropertySymbols(wrapped))
     if (mark.description?.startsWith(markPrefix))
@@ -20,6 +45,8 @@ export function wrappingComponent<Wrapper extends Component>(
 
   // A wrapper of a wrapper reads as the kit component at the end of the chain.
   wraps.set(wrapper, wraps.get(wrapped) ?? wrapped);
+
+  if (drawing) drawings.set(wrapper, drawing);
 
   return wrapper;
 }

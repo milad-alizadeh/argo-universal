@@ -18,6 +18,8 @@ let events: { type: string }[];
 
 let killTimeoutMs: number | undefined;
 
+let watch: boolean;
+
 type StoppableActor = { stop: () => void };
 
 let supervisor: StoppableActor = { stop: (): void => {} };
@@ -36,7 +38,7 @@ const parent = setup({ actors: { engine: engineProcess } }).createMachine({
   invoke: {
     id: 'engine',
     src: 'engine',
-    input: (): EngineProcessInput => ({ watch: false, entry, killTimeoutMs }),
+    input: (): EngineProcessInput => ({ watch, entry, killTimeoutMs }),
   },
   on: { '*': { actions: ({ event }): void => void events.push(event) } },
 });
@@ -45,6 +47,7 @@ async function startEngine(): Promise<{
   engine: AnyActorRef;
   leader: number;
   descendant: number;
+  args: string[];
 }> {
   const actor = createActor(parent).start();
   supervisor = actor;
@@ -57,10 +60,19 @@ async function startEngine(): Promise<{
   if (!engine) throw new Error('The Engine actor did not start');
 
   const pids = z
-    .object({ engine: z.number(), descendant: z.number() })
+    .object({
+      engine: z.number(),
+      descendant: z.number(),
+      args: z.array(z.string()),
+    })
     .parse(JSON.parse(readFileSync(join(folder, 'pids.json'), 'utf8')));
 
-  return { engine, leader: pids.engine, descendant: pids.descendant };
+  return {
+    engine,
+    leader: pids.engine,
+    descendant: pids.descendant,
+    args: pids.args,
+  };
 }
 
 const outcomes = (): string[] =>
@@ -72,6 +84,7 @@ beforeEach((): void => {
   folder = mkdtempSync(join(tmpdir(), 'argo-engine-process-'));
   events = [];
   killTimeoutMs = undefined;
+  watch = false;
   vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
   vi.stubEnv('ARGO_HOME', folder);
 });
@@ -116,4 +129,12 @@ it('stopping the Supervisor takes the Engine and its descendant down', async () 
   const { descendant } = await startEngine();
   supervisor.stop();
   await vi.waitFor(() => expect(isAlive(descendant)).toBe(false), patience);
+});
+
+it('forwards watch mode to the running Engine as a script argument', async () => {
+  watch = true;
+  const { engine, args } = await startEngine();
+  engine.send(stopEvent);
+  await vi.waitFor(() => expect(outcomes()).toContain(exitedType), patience);
+  expect(args).toContain('--watch');
 });

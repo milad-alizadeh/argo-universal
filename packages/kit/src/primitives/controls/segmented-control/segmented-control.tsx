@@ -36,7 +36,9 @@ function Segment(props: SegmentProps): ReactElement {
 }
 
 function SegmentLabel({ option, value }: SegmentProps): ReactElement {
-  const labelClass = segmentLabelClass(option.value === value);
+  const labelClass = segmentLabelClass(
+    !option.detail && option.value === value,
+  );
 
   return (
     <Text
@@ -44,8 +46,15 @@ function SegmentLabel({ option, value }: SegmentProps): ReactElement {
       selectable={false}
       numberOfLines={1}
       className={labelClass}
+      tone={option.detail ? 'muted' : undefined}
     >
       {option.label}
+      {option.detail && (
+        <Text role="badge" tone="warning">
+          {' '}
+          {option.detail}
+        </Text>
+      )}
     </Text>
   );
 }

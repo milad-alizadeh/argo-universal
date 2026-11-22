@@ -1,4 +1,5 @@
-import { useContext, useLayoutEffect, useRef } from 'react';
+import type { KitDrawingHit } from '@repo/kit/wrapped-component';
+import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { boxless } from './boxless';
@@ -7,6 +8,8 @@ import {
   DraftCommentingContext,
   DraftPlaceContext,
   type Box,
+  type DraftCommenting,
+  type DraftPlace,
   type NodeIdentity,
 } from './draft-commenting';
 
@@ -17,6 +20,7 @@ const nowhere: Box = { x: 0, y: 0, width: -1, height: -1 };
 // The kit components whose own view fills the room its parent leaves, so their wrapper must too where it keeps a box.
 export const filling = new Set([
   'Screen',
+  'Sheet.Screen',
   'ListDetail',
   'Detail',
   'List',
@@ -38,7 +42,9 @@ function webBox(view: Holder | null): Box {
   if (!(view instanceof Element)) return nowhere;
 
   const nodes = [...view.children].filter(
-    (child) => getComputedStyle(child).position !== 'fixed',
+    (child) =>
+      !child.hasAttribute('data-draft-comment-address') &&
+      getComputedStyle(child).position !== 'fixed',
   );
 
   const rects = nodes.map((child) => child.getBoundingClientRect());
@@ -76,6 +82,70 @@ function measureBox(view: Holder | null, done: (box: Box) => void): void {
   view.measureInWindow((...rect) => done(boxOf(rect)));
 }
 
+function useOutsidePick(
+  ref: React.RefObject<Holder | null>,
+  address: string,
+  commenting: DraftCommenting | null,
+): void {
+  useLayoutEffect(() => {
+    const element = ref.current;
+
+    if (!commenting || Platform.OS !== 'web' || !(element instanceof Element))
+      return;
+
+    const pick = (event: Event): void => {
+      if (event instanceof KeyboardEvent && !['Enter', ' '].includes(event.key))
+        return;
+
+      if (!(event.target instanceof Element)) return;
+
+      const target = event.target.closest('[data-draft-comment-node]');
+
+      if (target !== element || !commenting.pickOutside(element, address))
+        return;
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    element.addEventListener('click', pick, true);
+    element.addEventListener('keydown', pick, true);
+
+    return (): void => {
+      element.removeEventListener('click', pick, true);
+      element.removeEventListener('keydown', pick, true);
+    };
+  }, [ref, address, commenting]);
+}
+
+function CommentFocus(props: {
+  identity: NodeIdentity;
+  place: DraftPlace | null;
+  onFocusChange: (focused: boolean) => void;
+}): React.JSX.Element {
+  const { identity, place, onFocusChange } = props;
+  const label = [place?.label, identity.nodeKey].filter(Boolean).join(' · ');
+
+  return (
+    <View
+      role="button"
+      aria-label={`Comment on ${label}`}
+      {...{ dataSet: { draftCommentAddress: identity.address } }}
+      tabIndex={0}
+      className="sr-only"
+      onFocus={() => onFocusChange(true)}
+      onBlur={() => onFocusChange(false)}
+    />
+  );
+}
+
+interface CommentTargetProps {
+  identity: NodeIdentity;
+  fills: boolean;
+  hit?: KitDrawingHit;
+  children: React.ReactNode;
+}
+
 /*
  * A view the App can find on screen and mark while the author comments, around a node of a dev Plugin's Draft page. A
  * node keeps it whether or not the author is commenting, so entering and leaving comment mode redraws nothing and
@@ -84,16 +154,13 @@ function measureBox(view: Holder | null, done: (box: Box) => void): void {
 export function CommentTarget({
   identity,
   fills,
+  hit,
   children,
-}: {
-  identity: NodeIdentity;
-  fills: boolean;
-  children: React.ReactNode;
-}): React.JSX.Element {
+}: CommentTargetProps): React.JSX.Element {
   const commenting = useContext(DraftCommentingContext);
   const place = useContext(DraftPlaceContext);
   const ref = useRef<Holder>(null);
-  const { address, nodeKey } = identity;
+  const [focused, setFocused] = useState(false);
 
   const measure = (done: (box: Box) => void): void =>
     measureBox(ref.current, done);
@@ -101,20 +168,38 @@ export function CommentTarget({
   const text = (): string => firstLine(ref.current);
 
   useLayoutEffect(
-    () => commenting?.register({ address, nodeKey, place, measure, text }),
+    () => commenting?.register({ ...identity, place, measure, text, hit }),
     // The measure reads the ref, which never changes.
-    [commenting, address, nodeKey, place],
+    [commenting, identity, place, hit],
   );
+
+  useOutsidePick(ref, identity.address, commenting);
 
   return (
     <View
       ref={ref}
+      {...(commenting &&
+        Platform.OS === 'web' && {
+          dataSet: { draftCommentNode: identity.address },
+        })}
       style={boxless}
       className={fills ? 'min-h-0 min-w-0 flex-1' : 'relative min-w-0 shrink'}
     >
       {children}
+      {commenting && Platform.OS === 'web' && (
+        <CommentFocus
+          identity={identity}
+          place={place}
+          onFocusChange={setFocused}
+        />
+      )}
       {commenting && (
-        <commenting.Mark address={address} place={place} measure={measure} />
+        <commenting.Mark
+          address={identity.address}
+          place={place}
+          measure={measure}
+          focused={focused}
+        />
       )}
     </View>
   );

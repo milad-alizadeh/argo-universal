@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { trayClassName } from '../../../tray-surface';
 import { useSpacing } from '../../../use-spacing';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { CellContent, columnClass, scrolledColumnStyle } from './table-cell';
 import { HeaderCell } from './table-header';
 import type { TableColumn, TableProps } from './table-props';
@@ -92,7 +93,10 @@ function PinnedCell({ column, row }: CellRowProps): ReactElement {
       accessibilityLabel={row.accessibilityLabel}
       contentClassName="min-h-12 shrink-0 justify-center py-3 pl-3"
     >
-      <CellContent cell={cell} column={column} first />
+      {wrapKitDrawing(
+        cell.wrap,
+        <CellContent cell={cell} column={column} first />,
+      )}
     </MeasuredScrollRow>
   );
 }
@@ -158,12 +162,17 @@ function ScrolledRow(props: {
 }
 
 function ScrolledCell({ column, row }: CellRowProps): ReactElement {
+  const cell = cellOf(row, column);
+
   return (
     <View
       className={columnClass(column, false)}
       style={scrolledColumnStyle(column)}
     >
-      <CellContent cell={cellOf(row, column)} column={column} first={false} />
+      {wrapKitDrawing(
+        cell.wrap,
+        <CellContent cell={cell} column={column} first={false} />,
+      )}
     </View>
   );
 }

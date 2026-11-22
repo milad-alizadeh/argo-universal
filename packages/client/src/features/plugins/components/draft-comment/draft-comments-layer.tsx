@@ -1,14 +1,17 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo, useRef } from 'react';
 import type * as React from 'react';
-import { Platform } from 'react-native';
+import { Platform, type View } from 'react-native';
 import {
   DraftCommentingContext,
   type Box,
   type DraftCommenting,
   type DraftPlace,
 } from '../../../../lib/product/plugin-registry/draft-commenting';
-import { useCommentPicking } from '../../hooks/use-comment-picking';
+import {
+  useCommentPicking,
+  type CommentPicking,
+} from '../../hooks/use-comment-picking';
 import { useMeasuredBox } from '../../hooks/use-measured-box';
 import { useDraftComments } from '../../stores/draft-comments';
 import { keyOf, titleOf } from '../../utils/draft-comment-hit';
@@ -26,16 +29,18 @@ const MarksContext = createContext<Marks>({ counts: new Map(), picked: null });
 
 function Mark({
   address,
+  focused,
   place,
   measure,
 }: {
   address: string;
+  focused: boolean;
   place: DraftPlace | null;
   measure: (done: (box: Box) => void) => void;
 }): React.JSX.Element {
   const { counts, picked } = useContext(MarksContext);
   const count = counts.get(pinKey(address, place)) ?? 0;
-  const selected = picked === address;
+  const selected = picked === address || focused;
 
   const box = useMeasuredBox(
     measure,
@@ -81,12 +86,10 @@ function DraftPage(props: LayerProps): React.JSX.Element {
   const { opening, commenting, children } = props;
   const picking = useCommentPicking(opening);
   const { notes } = useDraftComments(opening);
-  const { register, picked } = picking;
+  const { picked } = picking;
+  const holderRef = useRef<React.ComponentRef<typeof View>>(null);
 
-  const seam = useMemo<DraftCommenting | null>(
-    () => (commenting ? { register, Mark } : null),
-    [commenting, register],
-  );
+  const seam = useDraftCommenting(commenting, holderRef, picking);
 
   const marks = useMemo<Marks>(
     () => ({
@@ -99,28 +102,15 @@ function DraftPage(props: LayerProps): React.JSX.Element {
   // A part in each slot keeps its state as the window crosses a size class.
   const holder = (press: Press): React.JSX.Element => (
     <PressHolder
+      holder={holderRef}
       press={press}
       commenting={commenting}
       longPressMilliseconds={props.longPressMilliseconds ?? defaultLongPress}
       onPick={picking.pickAt}
+      onPickAddress={picking.pickAddress}
     >
       {children}
-      {commenting && picked && (
-        <DraftCommentSheet
-          open
-          anchor={picked.anchor}
-          longPressed={press === 'long'}
-          title={titleOf({
-            place: picked.target.place,
-            text: picked.target.text(),
-          })}
-          nodeName={keyOf(picked.target)}
-          note={picking.note}
-          onNoteChange={picking.setNote}
-          onSave={picking.save}
-          onCancel={picking.close}
-        />
-      )}
+      {commenting && <CommentEditor picking={picking} press={press} />}
     </PressHolder>
   );
 
@@ -130,5 +120,61 @@ function DraftPage(props: LayerProps): React.JSX.Element {
         <SizeClass wide={holder('pointer')} compact={holder('long')} />
       </MarksContext>
     </DraftCommentingContext>
+  );
+}
+
+function useDraftCommenting(
+  commenting: boolean,
+  holderRef: React.RefObject<React.ComponentRef<typeof View> | null>,
+  { register, pickAddress }: CommentPicking,
+): DraftCommenting | null {
+  return useMemo<DraftCommenting | null>(
+    () =>
+      commenting
+        ? {
+            register,
+            Mark,
+            pickOutside: (element, address): boolean => {
+              const holder = holderRef.current;
+
+              if (!(holder instanceof Element) || holder.contains(element))
+                return false;
+
+              pickAddress(holder, address);
+
+              return true;
+            },
+          }
+        : null,
+    [commenting, holderRef, register, pickAddress],
+  );
+}
+
+function CommentEditor({
+  picking,
+  press,
+}: {
+  picking: CommentPicking;
+  press: Press;
+}): React.JSX.Element | null {
+  const { picked } = picking;
+
+  if (!picked) return null;
+
+  return (
+    <DraftCommentSheet
+      open
+      anchor={picked.anchor}
+      longPressed={press === 'long'}
+      title={titleOf({
+        place: picked.target.place,
+        text: picked.target.text(),
+      })}
+      nodeName={keyOf(picked.target)}
+      note={picking.note}
+      onNoteChange={picking.setNote}
+      onSave={picking.save}
+      onCancel={picking.close}
+    />
   );
 }

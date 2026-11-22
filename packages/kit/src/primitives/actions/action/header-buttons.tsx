@@ -5,6 +5,7 @@ import {
   IconButton,
   type IconButtonSize,
 } from '#primitives/actions/icon-button';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import {
   submenuGroups,
   isSubmenu,
@@ -109,12 +110,13 @@ function HeaderSubmenu(
 ): ReactElement {
   const { submenu } = props;
 
-  return (
+  return wrapKitDrawing(
+    submenu.wrap,
     <ActionMenu
       groups={submenuGroups(submenu)}
       label={submenuLabel(submenu)}
       trigger={submenuTrigger(props)}
-    />
+    />,
   );
 }
 
@@ -141,7 +143,8 @@ function submenuTrigger(
 function HeaderAction(props: LookProps & { action: IconAction }): ReactElement {
   const { action, look } = props;
 
-  return (
+  return wrapKitDrawing(
+    action.wrap,
     <HeaderButtonTooltip label={action.label}>
       <IconButton
         icon={action.icon}
@@ -151,6 +154,6 @@ function HeaderAction(props: LookProps & { action: IconAction }): ReactElement {
         size={look.size}
         variant="ghost"
       />
-    </HeaderButtonTooltip>
+    </HeaderButtonTooltip>,
   );
 }

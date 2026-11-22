@@ -29,7 +29,7 @@ export function DraftSteps({
   if (!step) throw new Error('No step to draw');
 
   return (
-    <View className="p-8">
+    <View className="min-h-0 flex-1 px-5 py-6">
       <PluginTree
         root={step.root}
         draft={{ naming: step.naming ?? null, regions }}

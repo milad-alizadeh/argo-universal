@@ -22,6 +22,7 @@ const distance = (from: Point, to: Point): number =>
 function useBlockedActivation(
   holder: React.RefObject<Holder | null>,
   on: boolean,
+  pick: (holder: Holder, address: string) => void,
 ): void {
   useEffect(() => {
     const element = holder.current;
@@ -41,6 +42,15 @@ function useBlockedActivation(
 
       event.preventDefault();
       event.stopPropagation();
+
+      if (
+        event instanceof KeyboardEvent &&
+        event.target instanceof HTMLElement
+      ) {
+        const address = event.target.dataset['draftCommentAddress'];
+
+        if (address && holder.current) pick(holder.current, address);
+      }
     };
 
     active?.addEventListener('click', block, true);
@@ -50,21 +60,23 @@ function useBlockedActivation(
       active?.removeEventListener('click', block, true);
       active?.removeEventListener('keydown', block, true);
     };
-  }, [holder, on]);
+  }, [holder, on, pick]);
 }
 
 export function PressHolder(props: {
+  holder: React.RefObject<Holder | null>;
   press: Press;
   commenting: boolean;
   longPressMilliseconds: number;
   onPick: (holder: Holder, point: Point) => void;
+  onPickAddress: (holder: Holder, address: string) => void;
   children: React.ReactNode;
 }): React.JSX.Element {
   const { press, commenting, longPressMilliseconds, onPick, children } = props;
-  const holder = useRef<Holder>(null);
+  const { holder } = props;
   const started = useRef({ at: 0, point: { x: 0, y: 0 }, moved: false });
 
-  useBlockedActivation(holder, commenting);
+  useBlockedActivation(holder, commenting, props.onPickAddress);
 
   const release = (event: GestureResponderEvent): void => {
     const { at, point, moved } = started.current;

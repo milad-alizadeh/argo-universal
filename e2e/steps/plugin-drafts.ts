@@ -17,13 +17,13 @@ When(
     const bar = page.getByRole('toolbar', { name: 'Draft' });
 
     if (!onPhone(page)) {
-      await bar.getByRole('button', { name: state, exact: true }).click();
+      await bar.getByRole('button', { name: stateChoice(state) }).click();
 
       return;
     }
 
     await bar.getByRole('button', { name: 'State' }).click();
-    await page.getByRole('menuitemradio', { name: state, exact: true }).click();
+    await page.getByRole('menuitemradio', { name: stateChoice(state) }).click();
   },
 );
 
@@ -46,5 +46,17 @@ When(
     await page
       .getByRole('button', { name: `Next ${region} Variant`, exact: true })
       .click();
+  },
+);
+
+// The state can have a missing marker beside the label.
+function stateChoice(state: string): RegExp {
+  return new RegExp(`^${RegExp.escape(state)}(?:[ ·]+missing)?$`, 'i');
+}
+
+Then(
+  'the Draft page has no drawing failure toast',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText('Drafts could not draw a view')).toHaveCount(0);
   },
 );

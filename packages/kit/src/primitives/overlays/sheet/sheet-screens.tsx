@@ -8,8 +8,10 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
+import { View } from 'react-native';
 import { ListItem } from '#primitives/lists/list-item';
 import { isKitElement } from '../../../typed-children';
+import { kitDrawingWrapper, wrapKitDrawing } from '../../../wrapped-component';
 import {
   pushDestination,
   registerDestination,
@@ -60,8 +62,19 @@ export function sheetScreens(children: ReactNode): SheetScreenEntry[] {
       keepsHeaderInset: page.props.keepsHeaderInset,
       placeholder: page.props.placeholder,
       onExit: page.props.onExit,
-      content: page.props.children,
+      content: pageContent(page),
     }));
+}
+
+function pageContent(page: ReactElement<SheetScreenProps>): ReactNode {
+  const wrap = kitDrawingWrapper(page);
+
+  return wrap
+    ? wrapKitDrawing(
+        wrap,
+        <View className="min-h-0 grow">{page.props.children}</View>,
+      )
+    : page.props.children;
 }
 
 function isScreen(child: ReactNode): child is ReactElement<SheetScreenProps> {

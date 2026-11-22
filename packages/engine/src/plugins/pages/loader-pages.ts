@@ -24,6 +24,7 @@ import type { PluginDraws } from './plugin-draws';
 // What drawing needs of the Plugin service: a running worker, started on the first draw as a page starts it.
 export type PagesHost = {
   activate: (pluginId: string) => Promise<PluginStatus>;
+  missingDraftState: (address: PageAddress) => Promise<string | null>;
 };
 
 // The Connection a draw is for.
@@ -96,6 +97,10 @@ export class LoaderPages {
 
     if (notStarted) return failedDraw(notStarted);
 
+    const missing = await this.host.missingDraftState({ pluginId, ...at });
+
+    if (missing) return failedDraw(missing);
+
     const address = { ...at, ...askedBy(asking) };
 
     return this.draws.answer({ pluginId, at: address }, known);
@@ -112,6 +117,10 @@ export class LoaderPages {
     const notStarted = await this.startFailure(pluginId);
 
     if (notStarted) return yield { kind: 'failed', error: notStarted };
+
+    const missing = await this.host.missingDraftState({ pluginId, ...at });
+
+    if (missing) return yield { kind: 'failed', error: missing };
 
     const address = { ...at, pages: 1, ...askedBy(asking) };
 

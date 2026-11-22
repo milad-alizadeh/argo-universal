@@ -28,10 +28,27 @@ function measured(
 
     for (const target of targets)
       target.measure((box) => {
-        boxes.push({ address: target.address, ...box });
+        boxes.push({ address: target.address, hit: target.hit, ...box });
 
         if (boxes.length === targets.length) done(boxes, origin);
       });
+  });
+}
+
+type OpenComment = (target: CommentTarget, anchor: Anchor) => void;
+
+function pickAddressOf(
+  holder: Holder,
+  target: CommentTarget | undefined,
+  open: OpenComment,
+): void {
+  if (!target) return;
+
+  holder.measureInWindow((x, y) => {
+    target.measure((box) => {
+      if (box.width > 0 && box.height > 0)
+        open(target, { ...box, x: box.x - x, y: box.y - y });
+    });
   });
 }
 
@@ -41,6 +58,7 @@ export interface CommentPicking {
   setNote: (note: string) => void;
   register: (target: CommentTarget) => () => void;
   pickAt: (holder: Holder, point: { x: number; y: number }) => void;
+  pickAddress: (holder: Holder, address: string) => void;
   save: () => void;
   close: () => void;
 }
@@ -54,9 +72,7 @@ export function useCommentPicking(opening: PageOpening): CommentPicking {
   const register = useCallback((target: CommentTarget) => {
     targets.current.set(target.address, target);
 
-    return (): void => {
-      targets.current.delete(target.address);
-    };
+    return targets.current.delete.bind(targets.current, target.address);
   }, []);
 
   const open = (target: CommentTarget, anchor: Anchor): void => {
@@ -79,8 +95,6 @@ export function useCommentPicking(opening: PageOpening): CommentPicking {
     });
   };
 
-  const close = (): void => setPicked(null);
-
   const save = (): void => {
     if (!picked) return;
 
@@ -92,8 +106,18 @@ export function useCommentPicking(opening: PageOpening): CommentPicking {
       note,
       ...(place && { region: place.region, variant: place.variant }),
     });
-    close();
+    setPicked(null);
   };
 
-  return { picked, note, setNote, register, pickAt, save, close };
+  return {
+    picked,
+    note,
+    setNote,
+    register,
+    pickAt,
+    pickAddress: (holder, address): void =>
+      pickAddressOf(holder, targets.current.get(address), open),
+    save,
+    close: (): void => setPicked(null),
+  };
 }

@@ -7,9 +7,10 @@ import {
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
-import type {
-  SegmentedControlProps,
-  SegmentOption,
+import {
+  segmentTitle,
+  type SegmentedControlProps,
+  type SegmentOption,
 } from './segmented-control-props';
 
 export function SegmentedControlDrawing(
@@ -36,7 +37,7 @@ function Segment(props: SegmentProps): ReactElement {
   return (
     <SegmentedButton {...segmentProps(props)}>
       <SegmentedButton.Label>
-        <Text>{props.option.label}</Text>
+        <Text>{segmentTitle(props.option)}</Text>
       </SegmentedButton.Label>
     </SegmentedButton>
   );

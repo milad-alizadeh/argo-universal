@@ -3,6 +3,7 @@ import { View, type ViewStyle } from 'react-native';
 import type { ValuePlacement } from '#kit/list-look';
 import { cn } from '#kit/utils';
 import { Text } from '#primitives/content/text';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import type { TableColumn } from './table-props';
 import type { TableCell } from './table-rows';
 
@@ -101,7 +102,7 @@ export function GridCell(props: CellProps): ReactElement {
         alignClass(props.column),
       )}
     >
-      <CellContent {...props} />
+      {wrapKitDrawing(props.cell.wrap, <CellContent {...props} />)}
     </View>
   );
 }

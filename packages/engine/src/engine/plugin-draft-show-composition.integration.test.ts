@@ -4,7 +4,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { processWait } from '#mocks/data-fixture';
-import { writeHookPlugins } from '#mocks/hook-plugins';
+import { writeHookPlugins, type HookPlugin } from '#mocks/hook-plugins';
 import { drawnRoot, pageAt } from '#mocks/plugin-pages';
 import { shippedFolder } from '#mocks/runtime-plugins';
 
@@ -23,11 +23,16 @@ type DraftingHost = {
 };
 
 // A dev Plugin that has run once, with a Turn running that may be writing its sources.
-async function draftingDuringATurn(): Promise<DraftingHost> {
+async function draftingDuringATurn(
+  drafts?: HookPlugin['drafts'],
+): Promise<DraftingHost> {
   const host = await startAcpEngine({
     steps: [{ type: 'wait-for-cancel' }],
+    watchPlugins: true,
     installPlugins: (home) =>
-      writeHookPlugins(home, [{ id: 'dev', source: source('initial') }]),
+      writeHookPlugins(home, [
+        { id: 'dev', source: source('initial'), drafts },
+      ]),
   });
 
   const { sessionId } = await host.caller.session.new(emptySessionInput);
@@ -142,6 +147,75 @@ it('marks the Draft page stale with the region the Agent is writing when plugin.
   }
 
   expect(seen.at(-1)).toEqual({ pluginId: 'dev', region: 'list' });
+}, 30_000);
+
+it('answers a missing Draft state without reporting a Plugin drawing failure', async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    watchPlugins: true,
+    installPlugins: (home) =>
+      writeHookPlugins(home, [
+        {
+          id: 'dev',
+          source: pageSource('populated').replace(
+            "load: async () => 'populated'",
+            'load: ({ state }) => { throw Error(state.draftState); }',
+          ),
+          drafts: [{ page: '/', states: ['populated'] }],
+        },
+      ]),
+  });
+
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = host.createCaller({ signal: controller.signal });
+  await expect(
+    caller.plugins.draw({
+      ...pageAt('dev', '/', { draftState: 'pending' }),
+      pages: 1,
+    }),
+  ).resolves.toMatchObject({ kind: 'failed' });
+  const failures = (await caller.plugins.failures())[Symbol.asyncIterator]();
+  await expect(failures.next()).resolves.toMatchObject({ value: [] });
+}, 30_000);
+
+it('tells open Apps to reread the manifest when a Draft ships', async () => {
+  const { host, endTurn } = await draftingDuringATurn([
+    { page: '/', states: ['populated'] },
+  ]);
+
+  const path = join(host.home, shippedFolder, 'dev/plugin.json');
+  const manifest = JSON.parse(await readFile(path, 'utf8'));
+  const { drafts: _drafts, ...contributes } = manifest.contributes;
+
+  expect(
+    (await host.caller.plugin.list()).plugins[0]?.manifest.contributes.drafts,
+  ).toHaveLength(1);
+
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+
+  const changes = (
+    await host
+      .createCaller({
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(5_000),
+        ]),
+      })
+      .plugins.listChanges()
+  )[Symbol.asyncIterator]();
+
+  const changed = changes.next();
+
+  await writeFile(path, JSON.stringify({ ...manifest, contributes }));
+  await expect.poll(() => deferredBuilds(host.home), processWait).toBe(1);
+  await endTurn();
+
+  await expect(changed).resolves.toMatchObject({ value: { pluginId: 'dev' } });
+  expect(
+    (await host.caller.plugin.list()).plugins[0]?.manifest.contributes.drafts,
+  ).toBeUndefined();
 }, 30_000);
 
 async function deferredBuilds(home: string): Promise<number> {

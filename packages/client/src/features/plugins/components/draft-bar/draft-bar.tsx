@@ -22,7 +22,7 @@ export interface DraftBarProps {
 
 const stateLabel = 'State';
 
-// The menu has no place for a note beside a row, so a state the Draft does not draw says so in its label. Choosing it draws the frame that says why.
+// Choosing a missing state opens the frame that explains it.
 const missingNote = 'missing';
 
 // The bar over a dev Plugin's Draft page: the Draft badge, the states, then a slot each for the comment toggle and Choose. App chrome, drawn apart from the page's own tree so it never reads as the Plugin's design.
@@ -33,10 +33,10 @@ export function DraftBar(props: DraftBarProps): React.JSX.Element {
     <View
       role="toolbar"
       aria-label="Draft"
-      className="flex-row items-center gap-2 max-w-full rounded-xl border border-hairline bg-tray p-1.5 shadow-raised"
+      className="flex-row items-center gap-1 max-w-full web:w-max rounded-xl border border-hairline bg-tray p-1 shadow-raised"
     >
       <DraftBadge />
-      <View className="min-w-0 shrink">
+      <View className="shrink-0">
         <States {...props} />
       </View>
       {commentToggle}
@@ -47,7 +47,7 @@ export function DraftBar(props: DraftBarProps): React.JSX.Element {
 
 function DraftBadge(): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-1.5 min-h-8 rounded-lg bg-warning/18 px-2.5">
+    <View className="flex-row items-center gap-1.5 min-h-8 rounded-lg bg-warning/18 px-2">
       <StatusDot tone="warning" size="sm" />
       <Text role="badge" tone="neutral">
         Draft
@@ -77,9 +77,7 @@ function StateTabs({
   return (
     <SegmentedControl
       label={stateLabel}
-      options={states
-        .filter(({ missing }) => !missing)
-        .map(({ id, label }) => ({ value: id, label }))}
+      options={states.map(stateOption)}
       value={current}
       onValueChange={(value) => onStateChange(stateOf(value))}
     />
@@ -97,15 +95,20 @@ function StateMenu({
     <Menu
       accessibilityLabel={stateLabel}
       value={current}
-      options={states.map(({ id, label: name, missing }) => ({
-        value: id,
-        label: missing ? `${name} · ${missingNote}` : name,
-      }))}
+      options={states.map(stateOption)}
       onValueChange={(value) => onStateChange(stateOf(value))}
       trigger={<MenuTrigger label={label} />}
     />
   );
 }
+
+type StateOption = { value: DraftStateId; label: string; detail?: string };
+
+const stateOption = ({ id, label, missing }: DraftBarState): StateOption => ({
+  value: id,
+  label,
+  ...(missing && { detail: missingNote }),
+});
 
 function stateOf(value: string): DraftStateId {
   const state = draftStateIds.find((id) => id === value);

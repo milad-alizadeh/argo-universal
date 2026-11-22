@@ -7,6 +7,7 @@ import { RowPositionContext, type ListPosition } from '../../../list-context';
 import type { ListLook } from '../../../list-look';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlight, useSeparatorCovered } from '../../../row-highlights';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { GridCell } from './table-cell';
 import type { TableProps } from './table-props';
 import { cellOf, type TableRow } from './table-rows';
@@ -24,14 +25,15 @@ export function GridRow(props: RowProps): ReactElement {
     ? isSelected(props, props.row.id)
     : undefined;
 
-  return (
+  return wrapKitDrawing(
+    props.row.wrap,
     <View className="relative">
       <ContextActions actions={props.row.actions}>
         <RowPress {...props} selected={selected} />
       </ContextActions>
       {selected ? <SelectedTint /> : null}
       <RowSeparator />
-    </View>
+    </View>,
   );
 }
 
