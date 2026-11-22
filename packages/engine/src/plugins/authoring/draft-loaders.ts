@@ -1,4 +1,5 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
+import { draftPages } from '@repo/contracts/plugins/drafts';
 import {
   parseSync,
   Visitor,
@@ -14,7 +15,6 @@ import {
   type PluginDiagnostic,
   type SourceFile,
 } from './diagnostics';
-import { draftsOf } from './drafts';
 import { firstString, memberPath } from './expressions';
 
 /*
@@ -52,7 +52,7 @@ export function inspectDraftLoaders(
   input: SourceFile,
   manifest: PluginManifest,
 ): PluginDiagnostic[] {
-  const pages = new Set(draftsOf(manifest).map(({ page }) => page));
+  const pages = new Set(draftPages(manifest.contributes.drafts).map(({ page }) => page));
 
   if (!pages.size) return [];
 

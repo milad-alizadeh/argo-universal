@@ -52,7 +52,10 @@ const comments = [
 ];
 
 // An Agent's Session that draws the dev Plugin `dev`, and the App that chooses.
-async function drawing(watchPlugins = true): Promise<{
+async function drawing(
+  watchPlugins = true,
+  declared: typeof drafts = drafts,
+): Promise<{
   host: Awaited<ReturnType<typeof delegationJourney>>['host'];
   sessionId: string;
   agent: (id: string, params: Json) => ReturnType<Run>;
@@ -60,7 +63,7 @@ async function drawing(watchPlugins = true): Promise<{
   const journey = await delegationJourney({
     agent: { watchPlugins },
     installPlugins: (home) =>
-      writeHookPlugins(home, [{ id: dev, source, drafts }]),
+      writeHookPlugins(home, [{ id: dev, source, drafts: declared }]),
   });
 
   const { host, caller } = journey;
@@ -189,6 +192,25 @@ it('refuses a pick for a region or Variant the Draft does not declare', async ()
   expect(await host.caller.plugin.draft.pick({ pluginId: dev })).toEqual({
     choice: null,
   });
+}, 60_000);
+
+it('accepts a pick for a region another Draft page also declares, with its own Variants', async () => {
+  const other = {
+    page: '/other',
+    states: ['populated' as const],
+    regions: [{ id: 'header', variants: [{ id: 'grid', name: 'Grid' }] }],
+  };
+
+  const { host, agent } = await drawing(true, [...drafts, other]);
+
+  await agent(show, { pluginId: dev });
+  await host.caller.plugin.draft.choose({
+    pluginId: dev,
+    picks: [{ region: 'header', variant: 'grid' }],
+  });
+  expect(
+    (await host.caller.plugin.draft.pick({ pluginId: dev })).choice?.picks,
+  ).toEqual([{ region: 'header', variant: 'grid' }]);
 }, 60_000);
 
 it('does not read the last Session’s choice back once another Session draws', async () => {

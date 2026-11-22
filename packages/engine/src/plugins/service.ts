@@ -25,6 +25,7 @@ import type {
   PluginBadge,
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
+import { draftChoiceRefusal } from '@repo/contracts/plugins/drafts';
 import {
   type SlotItems,
   type SlotItemsInput,
@@ -32,10 +33,6 @@ import {
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { startsWithServer } from './discovery/plugin-contributions';
-import {
-  undeclaredCommentPlace,
-  undeclaredPick,
-} from './drafts/draft-picks-check';
 import { draftPrompt } from './drafts/draft-prompt';
 import type { ChosenDraft, DraftStore } from './drafts/plugin-drafts';
 import { callerOf } from './hooks/hook-rules';
@@ -145,9 +142,11 @@ export class PluginService {
     if (this.deps.dev !== true)
       throw new Error(`${pluginId} is not a dev Plugin, so it has no Draft`);
 
-    const refusal =
-      undeclaredPick(chosen.picks, contributes.drafts) ??
-      undeclaredCommentPlace(chosen.comments, contributes.drafts);
+    const refusal = draftChoiceRefusal(
+      contributes.drafts,
+      chosen.picks,
+      chosen.comments,
+    );
 
     if (refusal) throw new Error(refusal);
 

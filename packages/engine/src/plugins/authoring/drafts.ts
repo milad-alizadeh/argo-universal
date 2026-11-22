@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginManifest } from '@repo/contracts/plugins';
-import { missingDraftStates } from '@repo/contracts/plugins/drafts';
+import { draftPages, missingDraftStates } from '@repo/contracts/plugins/drafts';
 import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import {
   sourceDiagnostic,
@@ -11,11 +11,6 @@ import {
 
 // `argo plugin validate` on Drafts (ADR-0057): each Draft page declares the minimum states, and no Variant ships.
 
-type Draft = NonNullable<PluginManifest['contributes']['drafts']>[number];
-
-export const draftsOf = (manifest: PluginManifest): Draft[] =>
-  manifest.contributes.drafts ?? [];
-
 // The minimum states each Draft page leaves out, one diagnostic per page at its `states` in plugin.json.
 export function missingStateDiagnostics(
   manifest: SourceFile,
@@ -23,7 +18,7 @@ export function missingStateDiagnostics(
 ): PluginDiagnostic[] {
   const tree = parseTree(manifest.source, [], { disallowComments: true });
 
-  return draftsOf(parsed).flatMap(({ page, states }, index) => {
+  return draftPages(parsed.contributes.drafts).flatMap(({ page, states }, index) => {
     const missing = missingDraftStates(states);
 
     if (!missing.length) return [];
@@ -58,7 +53,7 @@ export function shipBlockerDiagnostics(
 ): PluginDiagnostic[] {
   const tree = parseTree(manifest.source, [], { disallowComments: true });
 
-  return draftsOf(parsed).flatMap(({ page, regions }, pageIndex) =>
+  return draftPages(parsed.contributes.drafts).flatMap(({ page, regions }, pageIndex) =>
     (regions ?? []).map(({ id, variants }, regionIndex) => {
       const node =
         tree &&
@@ -89,7 +84,7 @@ export async function draftManifestDiagnostics(
   diagnostics: PluginDiagnostic[];
   shipBlockers: PluginDiagnostic[];
 }> {
-  if (!draftsOf(manifest).length) return { diagnostics: [], shipBlockers: [] };
+  if (!draftPages(manifest.contributes.drafts).length) return { diagnostics: [], shipBlockers: [] };
 
   const file = join(directory, 'plugin.json');
   const source = await readFile(file, 'utf8').catch(() => '');
