@@ -8,7 +8,7 @@ import {
 
 /*
  * The one size of a window's chrome controls: the band's sidebar toggle, Back and Forward, and every Screen heading's
- * buttons and Back, in a page or a list column, so a header's buttons match the band above them.
+ * buttons, in a page or a list column, so a header's buttons match the band above them.
  */
 export const chromeControlSize: IconButtonSize = 'md';
 

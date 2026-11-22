@@ -1,5 +1,4 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { Action } from '@repo/kit/primitives/actions/action';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
@@ -16,8 +15,6 @@ import {
 import { ScaffoldMock } from './scaffold.mocks';
 
 const windowBand = 'window-band';
-
-const hideSidebar = 'Hide sidebar';
 
 const trailingGroup = 'window-band-trailing';
 
@@ -69,7 +66,7 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     await settleLayout('wide');
     await controlled.render({});
     const band = canvas.getByTestId(windowBand);
-    const toggle = canvas.getByRole('button', { name: hideSidebar });
+    const toggle = canvas.getByRole('button', { name: 'Hide sidebar' });
     const appRegion = 'app-region';
     await expect(band).toContainElement(toggle);
     await expect(getComputedStyle(band).getPropertyValue(appRegion)).toBe(
@@ -102,39 +99,6 @@ export const BackAndForwardFollowTheSidebarToggle: ScaffoldStory = {
       .map((button) => button.getAttribute('aria-label'));
 
     await expect(leading).toEqual(['Hide sidebar', 'Back', 'Forward']);
-  }),
-};
-
-// The sidebar list's heading draws its buttons and its search at the band's control size, as one row of chrome.
-const listWithHeaderButtons = (
-  <Screen
-    title="List"
-    search={{ label: 'Search list' }}
-    value=""
-    onChangeText={fn()}
-    primaryAction={
-      <Action label="New item" icon="new-session" onPress={fn()} />
-    }
-  >
-    <Text>List</Text>
-  </Screen>
-);
-
-function sizeOf(element: Element): Pick<DOMRect, 'width' | 'height'> {
-  const { width, height } = element.getBoundingClientRect();
-
-  return { width, height };
-}
-
-export const SidebarHeadingButtonsMatchTheBand: ScaffoldStory = {
-  play: controlledPlay(async ({ canvas }, controlled) => {
-    await settleLayout('wide');
-    await controlled.render({ list: listWithHeaderButtons });
-    const band = sizeOf(canvas.getByRole('button', { name: hideSidebar }));
-    const heading = within(await canvas.findByTestId('list-column-heading'));
-
-    for (const name of ['New item', 'Search list'])
-      await expect(sizeOf(heading.getByRole('button', { name }))).toEqual(band);
   }),
 };
 

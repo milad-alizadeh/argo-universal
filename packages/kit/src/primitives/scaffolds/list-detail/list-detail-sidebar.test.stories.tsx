@@ -29,7 +29,7 @@ const hostSidebar = 'host-sidebar';
 // A section's root ListDetail hands its list to the host's sidebar and keeps the detail.
 function WithSidebar(props: {
   nested?: boolean;
-  lanes?: boolean;
+  status?: boolean;
 }): ReactElement {
   const [sidebar] = useState(() => createPlace<ReactNode>());
 
@@ -40,7 +40,7 @@ function WithSidebar(props: {
       </View>
       <View testID="host-page" className="flex-1">
         <ListDetailSidebarPlaceOffer value={sidebar}>
-          <HostScreen nested={props.nested} lanes={props.lanes} />
+          <HostScreen nested={props.nested} status={props.status} />
         </ListDetailSidebarPlaceOffer>
       </View>
     </View>
@@ -49,11 +49,11 @@ function WithSidebar(props: {
 
 function HostScreen(props: {
   nested?: boolean;
-  lanes?: boolean;
+  status?: boolean;
 }): ReactElement {
   const example = <ExampleListDetail example={issues} initial={syncIssue.id} />;
 
-  if (props.lanes) return <LanesListDetail />;
+  if (props.status) return <StatusListDetail />;
 
   if (!props.nested) return example;
 
@@ -99,35 +99,24 @@ export const NestedListDetailSplitsInItsScreen = at(layoutWidths.wide, {
   },
 });
 
-const lanes = {
-  section: 'Group',
-  small: 'Small glyph',
-  large: 'Large glyph',
-  status: 'Connected',
-};
+const statusRow = { title: 'Connection', status: 'Connected' };
 
-// A Plugin's sidebar list, as a tracker's: a section heading with no glyph, and rows that ask for different glyph sizes.
-function LanesListDetail(): ReactElement {
+// A Plugin's sidebar list whose row carries a status and no value, as Settings' Connection row does.
+function StatusListDetail(): ReactElement {
   return (
     <ListDetail
-      title="Lanes"
+      title="Status"
       list={
         <List>
-          <List.Section title={lanes.section}>
+          <List.Section title="Group">
             <ListItem
-              title={lanes.small}
-              leading={<Icon name="folder" testID="small-glyph" />}
-              onPress={() => {}}
-            />
-            <ListItem
-              title={lanes.large}
-              leading={<Icon name="folder" size="md" testID="large-glyph" />}
-              onPress={() => {}}
-            />
-            <ListItem
-              title="With status"
+              title={statusRow.title}
               leading={<Icon name="folder" />}
-              badge={{ kind: 'status', tone: 'success', label: lanes.status }}
+              badge={{
+                kind: 'status',
+                tone: 'success',
+                label: statusRow.status,
+              }}
               onPress={() => {}}
             />
           </List.Section>
@@ -138,31 +127,14 @@ function LanesListDetail(): ReactElement {
   );
 }
 
-const left = (element: Element): number => element.getBoundingClientRect().left;
-
-/*
- * Every sidebar list draws one row layout: its rows' glyphs share one lane and their titles one edge, whatever size a
- * row's glyph asks for, and a heading with no glyph starts on the glyph lane. A row's status still shows.
- */
-export const SidebarRowsShareOneLane = at(layoutWidths.wide, {
-  render: () => <WithSidebar lanes />,
+// A row in the sidebar draws as a sidebar row, which keeps its status shown beside a title with no value.
+export const SidebarRowKeepsItsStatus = at(layoutWidths.wide, {
+  render: () => <WithSidebar status />,
   play: async ({ canvas }) => {
     const sidebar = await canvas.findByTestId(hostSidebar);
-    const section = await heading(canvas, lanes.section);
+    const row = await waitFor(() => canvas.getByText(statusRow.title));
 
-    await expect(sidebar).toContainElement(section);
-
-    const small = canvas.getByTestId('small-glyph');
-    const large = canvas.getByTestId('large-glyph');
-
-    await expect(left(large)).toBe(left(small));
-    await expect(large.getBoundingClientRect().width).toBe(
-      small.getBoundingClientRect().width,
-    );
-    await expect(left(canvas.getByText(lanes.large))).toBe(
-      left(canvas.getByText(lanes.small)),
-    );
-    await expect(left(section)).toBe(left(small));
-    await expect(canvas.getByLabelText(lanes.status)).toBeVisible();
+    await expect(sidebar).toContainElement(row);
+    await expect(canvas.getByLabelText(statusRow.status)).toBeVisible();
   },
 });

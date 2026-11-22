@@ -72,6 +72,14 @@ export function useListLook(): ListLook {
 
 export const useSectionDrawing = (): SectionDrawing => useListLook().section;
 
+/*
+ * Whether a row or section header in this List draws the desktop sidebar's drawing when it does not say: in the
+ * sidebar, but not in a popover opened from it, which keeps its menu rows.
+ */
+export const drawsSidebar = (
+  look: Pick<ListLook, 'sidebar' | 'menu'>,
+): boolean => look.sidebar && !look.menu;
+
 // A row that asks for the sidebar's drawing is one line at every width.
 export function useCompactRows(sidebar?: boolean): boolean {
   const { compact, compactSidebarRows } = useListLook();

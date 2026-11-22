@@ -61,7 +61,8 @@ export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
   );
 }
 
-const startsOnRowText = 'pl-6';
+// A web list column holds its rows' glyphs 20 in, as a sidebar row draws them, so its title starts on that lane.
+const startsOnRowText = 'pl-6 web:pl-5';
 
 /*
  * The Frame's sidebar holds its rows 8 in and draws a sidebar row's glyph 12 inside it, so the title starts 20 in, on

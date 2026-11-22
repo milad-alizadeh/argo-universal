@@ -43,6 +43,9 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
 const titleLineEnd = (props: ListItemProps): ReactNode =>
   props.titleEnd ?? (trailsTitle(props) ? props.trailing : undefined);
 
+const hasStatusBadge = (badge: ListItemProps['badge']): boolean =>
+  typeof badge === 'object' && badge?.kind === 'status';
+
 /*
  * Trailing accessories keep the trailing lane, so a row with them never moves its trailing item onto the title line;
  * so does a status badge, whose dot the trailing lane draws.
@@ -58,9 +61,6 @@ export const trailsTitle = (
     (part) => part === undefined,
   ) &&
   !hasStatusBadge(props.badge);
-
-const hasStatusBadge = (badge: ListItemProps['badge']): boolean =>
-  typeof badge === 'object' && badge?.kind === 'status';
 
 // A row's subtitle shows every line when a description, Android's placed value or the caller asks for it.
 const subtitleWraps = (props: PlacedContentProps): boolean =>

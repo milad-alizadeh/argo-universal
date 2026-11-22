@@ -19,12 +19,12 @@ import {
 } from '../frame/frame-list-detail';
 import type { SectionLists } from '../frame/section-lists';
 import { sectionScaffold } from '../frame/section-scaffold';
-import { wideScaffold } from './scaffold-fixtures';
-import { ScaffoldMock } from './scaffold.mocks';
+import { wideScaffold } from '../scaffold/scaffold-fixtures';
+import { ScaffoldMock } from '../scaffold/scaffold.mocks';
 
 // The Frame's sidebar holding each section's real list, so every sidebar's heading, section headings and rows are seen side by side.
 const meta = {
-  title: 'Frame/Scaffold/Sidebars',
+  title: 'Frame/Sidebars',
   component: ScaffoldMock,
   // The stories draw fixed sections; the Scaffold's own props table is on Frame/Scaffold.
   tags: ['!autodocs'],

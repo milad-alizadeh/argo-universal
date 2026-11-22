@@ -4,7 +4,11 @@ import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { ListTileContext, RowPositionContext } from '../../../list-context';
-import { useCompactRows, useListLook } from '../../../list-look-context';
+import {
+  drawsSidebar,
+  useCompactRows,
+  useListLook,
+} from '../../../list-look-context';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { drawsMovePicker } from '../list/list-move-picker-drawing';
@@ -125,13 +129,12 @@ interface RowParts {
 
 /*
  * A row in the desktop sidebar draws as a sidebar row (Paper "SessionsList") unless it says otherwise, so every sidebar
- * list (Sessions, Scheduled, Settings, a Plugin's) shares one icon lane and one text edge. A sidebar's popover keeps
- * its menu rows.
+ * list (Sessions, Scheduled, Settings, a Plugin's) shares one icon lane and one text edge.
  */
-const sidebarRow = (
+const resolvedSidebar = (
   props: Pick<ListItemProps, 'sidebar'>,
-  look: { sidebar: boolean; menu: boolean },
-): boolean | undefined => props.sidebar ?? (look.sidebar && !look.menu);
+  look: Parameters<typeof drawsSidebar>[0],
+): boolean => props.sidebar ?? drawsSidebar(look);
 
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem({
@@ -139,7 +142,7 @@ function ChoosingItem({
   ...declared
 }: ListItemProps): ReactElement {
   const look = useListLook();
-  const props = { ...declared, sidebar: sidebarRow(declared, look) };
+  const props = { ...declared, sidebar: resolvedSidebar(declared, look) };
   const selected = useItemSelection(props);
   const { menu } = look;
 
