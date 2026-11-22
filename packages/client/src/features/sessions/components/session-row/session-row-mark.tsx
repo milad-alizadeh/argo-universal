@@ -3,15 +3,16 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { SessionLogo } from './session-row-logo';
 import type { SessionRowProps } from './session-row-props';
-import { sidebarRows } from './session-row-sidebar';
+import { useSidebarRows } from './session-row-sidebar';
 
 type SessionMarkProps = Pick<SessionRowProps, 'session' | 'logo'>;
 
 // The Agent's logo alone; the Session's status dot ends the row. A sidebar row draws the bare logo, a phone's sits on the row's leading mark plate, the size of a Settings row's icon.
 export function SessionMark(props: SessionMarkProps): React.JSX.Element {
   const status = props.session.status;
+  const sidebar = useSidebarRows();
 
-  if (sidebarRows)
+  if (sidebar)
     return <SessionLogo logo={props.logo} status={status} size="sm" />;
 
   return (

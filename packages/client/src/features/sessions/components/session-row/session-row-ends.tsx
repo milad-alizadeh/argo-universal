@@ -8,7 +8,6 @@ import {
   type SessionRowCall,
 } from './session-row-call';
 import { quietAge, type SessionRowProps } from './session-row-props';
-import { sidebarRows } from './session-row-sidebar';
 import { rowStatusDot } from './session-row-status';
 
 type RegularEnds = Pick<ListItemProps, 'trailing' | 'titleEnd'>;
@@ -36,21 +35,23 @@ const sidebarTimeOf = (age: string | undefined): React.ReactNode =>
   );
 
 // A row ends its title line on the time, while the Session is quiet, then the status dot.
-const statusEnds = (props: SessionRowProps): RegularEnds => {
+const statusEnds = (props: SessionRowProps, sidebar: boolean): RegularEnds => {
   const dot = rowStatusDot(props.session.status);
 
-  return sidebarRows
+  return sidebar
     ? { trailing: endParts(sidebarTimeOf(quietAge(props)), dot) }
     : { titleEnd: endParts(timeOf(quietAge(props)), dot) };
 };
 
 // While a Conversation is attached, its mark ends the title line in place of the status dot and the time.
-const callEnds = (call: SessionRowCall): RegularEnds => {
+const callEnds = (call: SessionRowCall, sidebar: boolean): RegularEnds => {
   const mark = <SessionRowCallMark call={call} />;
 
-  return sidebarRows ? { trailing: mark } : { titleEnd: mark };
+  return sidebar ? { trailing: mark } : { titleEnd: mark };
 };
 
 export const regularEnds = (
   props: SessionRowProps & CalledRowProps,
-): RegularEnds => (props.call ? callEnds(props.call) : statusEnds(props));
+  sidebar: boolean,
+): RegularEnds =>
+  props.call ? callEnds(props.call, sidebar) : statusEnds(props, sidebar);

@@ -20,7 +20,7 @@ import type {
   OpenPluginItemPage,
   SessionRowPluginItem,
 } from './session-row-props';
-import { sidebarRows } from './session-row-sidebar';
+import { useSidebarRows } from './session-row-sidebar';
 
 // One part of the row as "+N" lists it: its glyph, what it reads, and the page it opens.
 export interface MoreEntry {
@@ -75,7 +75,7 @@ function MoreTrigger({ count }: { count: number }): React.JSX.Element {
 
 // How "+N" reads on the line; a row measures it alone, without the popover it opens.
 export function MoreCount({ count }: { count: number }): React.JSX.Element {
-  return <Label text={`+${count}`} sidebar={sidebarRows} />;
+  return <Label text={`+${count}`} sidebar={useSidebarRows()} />;
 }
 
 function MoreList(props: SessionRowMoreProps): React.JSX.Element {

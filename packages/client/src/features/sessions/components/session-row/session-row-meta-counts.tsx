@@ -3,7 +3,7 @@ import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
-import { sidebarRows } from './session-row-sidebar';
+import { useSidebarRows } from './session-row-sidebar';
 
 interface RunningWorkCountProps {
   count: number;
@@ -27,16 +27,14 @@ function RunningStatus({
  * edge, as the row's meta line clips at its sides.
  */
 function RunningWorkCount(props: RunningWorkCountProps): React.ReactNode {
+  const sidebar = useSidebarRows();
+
   return props.count > 0 ? (
     <View
       accessibilityLabel={`${props.label}: ${props.count} running`}
       className="relative shrink-0 pr-2.75"
     >
-      <Label
-        icon={props.icon}
-        text={String(props.count)}
-        sidebar={sidebarRows}
-      />
+      <Label icon={props.icon} text={String(props.count)} sidebar={sidebar} />
       <RunningStatus testID={props.testID} />
     </View>
   ) : null;
