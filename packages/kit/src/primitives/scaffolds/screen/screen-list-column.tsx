@@ -44,7 +44,7 @@ export interface ScreenListColumnProps {
 /*
  * Kit-only. A list beside its page, such as the Frame's sidebar or a ListDetail's own pane. The Screen around the list
  * declares its header as any Screen does, and is drawn here in the column's top row in the list's looks, its title a
- * level down, its buttons small and its search the sidebar's; a column has no Screen header of its own to draw.
+ * level down, its buttons the band's and its search the sidebar's; a column has no Screen header of its own to draw.
  */
 export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
   const [heading] = useState(() => createPlace<ReactNode>());
@@ -63,7 +63,11 @@ export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
 
 const startsOnRowText = 'pl-6';
 
-const startsOnFrameRowText = 'pl-4';
+/*
+ * The Frame's sidebar holds its rows 8 in and draws a sidebar row's glyph 12 inside it, so the title starts 20 in, on
+ * the rows' icon lane, with the section headings below it.
+ */
+const startsOnFrameRowText = 'pl-5';
 
 const endsClearOfScrollbar = 'pr-3.5';
 

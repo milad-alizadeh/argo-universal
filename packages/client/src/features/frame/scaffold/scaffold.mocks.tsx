@@ -34,6 +34,8 @@ export type ScaffoldMockProps = Partial<ScaffoldState> & {
   band?: ScaffoldProps['band'];
   // The page; a stand-in page names the section when there is none.
   children?: ReactNode;
+  // The sidebar's list; a stand-in list names the section when there is none.
+  list?: ReactNode;
 };
 
 const ignore = (): void => {};
@@ -142,7 +144,7 @@ function mockPanes(props: ScaffoldMockProps, state: ScaffoldState): MockPanes {
 
   return {
     sidebar: <MockRail {...props} {...state} section={section} />,
-    list: mockList(title),
+    list: props.list ?? mockList(title),
     page: props.children ?? <MockPage title={title} />,
     inspector: (expanded) => (
       <MockInspector {...props} {...state} {...{ title, expanded }} />

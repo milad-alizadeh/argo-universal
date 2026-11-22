@@ -123,10 +123,25 @@ interface RowParts {
   tile: boolean;
 }
 
+/*
+ * A row in the desktop sidebar draws as a sidebar row (Paper "SessionsList") unless it says otherwise, so every sidebar
+ * list (Sessions, Scheduled, Settings, a Plugin's) shares one icon lane and one text edge. A sidebar's popover keeps
+ * its menu rows.
+ */
+const sidebarRow = (
+  props: Pick<ListItemProps, 'sidebar'>,
+  look: { sidebar: boolean; menu: boolean },
+): boolean | undefined => props.sidebar ?? (look.sidebar && !look.menu);
+
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
-function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
+function ChoosingItem({
+  disclosure,
+  ...declared
+}: ListItemProps): ReactElement {
+  const look = useListLook();
+  const props = { ...declared, sidebar: sidebarRow(declared, look) };
   const selected = useItemSelection(props);
-  const { menu } = useListLook();
+  const { menu } = look;
 
   const drawing = useContentItemDrawing({
     ...selected,

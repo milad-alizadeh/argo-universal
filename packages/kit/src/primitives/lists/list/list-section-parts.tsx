@@ -2,7 +2,7 @@ import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { useSectionDrawing } from '../../../list-look-context';
+import { useListLook, useSectionDrawing } from '../../../list-look-context';
 import type { SectionDrawing } from '../../../list-look-section';
 import { SizeClass } from '../../../size-class/size-class';
 import { cn } from '../../../utils';
@@ -108,11 +108,14 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
 }
 
 const headerClassName = (
-  props: HeaderProps,
+  props: HeaderProps & { spaced?: boolean },
   drawing: SectionDrawing,
 ): string =>
   props.sidebar
-    ? 'group min-h-6 flex-row items-center gap-1 px-3'
+    ? cn(
+        'group min-h-6 flex-row items-center gap-1 px-3',
+        props.spaced && drawing.gap,
+      )
     : cn(
         'group flex-row items-start gap-1',
         drawing.inset,
@@ -124,13 +127,17 @@ interface HeaderDrawing {
   className: string;
 }
 
-function useHeaderDrawing(props: HeaderProps): HeaderDrawing {
+function useHeaderDrawing(
+  props: HeaderProps & { spaced?: boolean },
+): HeaderDrawing {
   const drawing = useSectionDrawing();
 
   return { drawing, className: headerClassName(props, drawing) };
 }
 
-function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
+function HeaderRow(
+  props: HeaderProps & { wide: boolean; spaced?: boolean },
+): ReactElement {
   const { drawing, className } = useHeaderDrawing(props);
 
   return (
@@ -146,8 +153,25 @@ function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
   );
 }
 
+/*
+ * A section in the desktop sidebar draws the sidebar's header unless it says otherwise, so its glyph and title share
+ * the rows' icon lane and text edge, and a heading with no glyph starts on the icon lane. A sidebar's popover keeps its
+ * menu heading. A section that only follows its List spaces itself from its rows; a sidebar caller spaces its own.
+ */
+function useSidebarHeader(props: HeaderProps): HeaderProps & {
+  spaced: boolean;
+} {
+  const look = useListLook();
+
+  if (props.sidebar !== undefined) return { ...props, spaced: false };
+
+  return { ...props, sidebar: look.sidebar && !look.menu, spaced: true };
+}
+
 // A wide header draws its Actions as buttons; below it, a long press or a right-click opens them, under the section's title.
-export function SectionHeader(props: HeaderProps): ReactNode {
+export function SectionHeader(declared: HeaderProps): ReactNode {
+  const props = useSidebarHeader(declared);
+
   return (
     <SizeClass
       wide={<HeaderRow {...props} wide />}

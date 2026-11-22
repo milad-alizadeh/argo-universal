@@ -46,7 +46,7 @@ export type ListItemProps = KitProps<'ListItem'> & {
   /*
    * A desktop sidebar row (Paper "SessionsList"): 10 by 12 inside, 10 between lanes, a 16 leading slot and a medium
    * title. It ends its title line with the trailing item and insets the progress bar under the content; in a compact
-   * List it is one 36-tall line.
+   * List it is one 36-tall line. A row in the sidebar list place is one unless it passes false.
    */
   sidebar?: boolean;
   // A sidebar row that holds news for its reader, such as an unread Session: its title is semibold.

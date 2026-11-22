@@ -1,7 +1,7 @@
 import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { useWide } from '#kit/use-wide/use-wide';
-import { IconButton } from '#primitives/actions/icon-button';
+import { chromeControlSize, IconButton } from '#primitives/actions/icon-button';
 import {
   ScreenBackInBand,
   ScreenBesideList,
@@ -60,7 +60,7 @@ function BackButton({ onBack }: { onBack: () => void }): ReactElement {
   return (
     <IconButton
       icon="back"
-      size="sm"
+      size={chromeControlSize}
       variant="ghost"
       accessibilityLabel="Back"
       onPress={onBack}
