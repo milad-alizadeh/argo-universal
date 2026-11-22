@@ -19,8 +19,10 @@ import {
 
 const graceMs = 3000;
 
-// Login shells may close inherited descriptors. This helper holds the file even if the PTY leader dies.
-// Session cleanup stops the helper alongside the shell and its jobs.
+/*
+ * Login shells may close inherited descriptors. This helper holds the file even if the PTY leader dies.
+ * Session cleanup stops the helper alongside the shell and its jobs.
+ */
 const checkoutShell = `
   exec ${ptyOwnerDescriptor}<"$2" || exit 1
   (trap '' HUP; exec /bin/sleep 2147483647) </dev/null >/dev/null 2>&1 &
