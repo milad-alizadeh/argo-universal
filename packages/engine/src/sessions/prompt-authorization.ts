@@ -2,7 +2,7 @@ import type { ContentBlock, PromptSender } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
-import { allowsResult } from './orchestration/result-store';
+import { allowsDelegation } from './orchestration/result-store';
 import { requireConfirmedSkill } from './orchestration/skill';
 
 type SubmitHook = CoreHooks['prompt.submit'];
@@ -71,9 +71,12 @@ function allowsPromptDelivery(
   { sessionId, database }: Destination,
   sender: PromptSender | undefined,
 ): boolean {
-  const result = delegatedResultOf(sender);
+  const ids =
+    sender?.type === 'session' && sender.delegatedInput
+      ? [sender.delegatedInput]
+      : delegatedResultOf(sender);
 
-  return !result || allowsResult(database, sessionId, result);
+  return !ids || allowsDelegation(database, sessionId, ids);
 }
 
 // Skill invocations and delegated results must run in their own Turn.

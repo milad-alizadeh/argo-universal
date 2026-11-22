@@ -2,7 +2,10 @@ import { steerAcpSession, type AcpSessionLease } from '../../agents';
 import { promptStorage } from '../acp-operations';
 import { readAcpPromptContent } from '../acp/prompts/prompt-content';
 import { withConversationContext } from '../conversation-prompt-context';
-import { requireNativeCommandAuthority } from '../prompt-authorization';
+import {
+  requireCommittedPromptDispatch,
+  requireNativeCommandAuthority,
+} from '../prompt-authorization';
 import { sendSessionCommand } from '../session-command';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
@@ -65,6 +68,10 @@ async function inject(
     { sessionId: context.sessionId, sender: steering.sender, prompt: blocks },
   );
 
+  requireCommittedPromptDispatch(
+    { sessionId: context.sessionId, database },
+    steering.sender,
+  );
   await steerAcpSession(lease, prompt);
 }
 

@@ -4,12 +4,13 @@ import type { OpenSessions } from './open-sessions';
 import { changePromptQueue, queueWrite } from './prompt-queue';
 import type { AppendCommand } from './queued-prompt-append';
 import { sendQueueCommand } from './sent-prompt/queue';
+import { steerOrWait } from './sent-prompt/steering';
 
 export type PromptDelivery = {
   command: Omit<AppendCommand, 'sender'>;
   sender: SentPromptSender;
   queuedId: string;
-  commitWith: WriterJob;
+  commitWith?: WriterJob;
 };
 
 export type PromptDeliverySessions = Pick<
@@ -41,7 +42,11 @@ export async function deliverQueuedPrompt(
 
   if (!live.getSnapshot().hasTag('ready')) return 'not-ready';
 
+  const { sender, queuedId } = target.delivery;
   await sendQueueCommand(live, target.delivery);
+
+  if (sender.type === 'session' && sender.delegatedInput)
+    void steerOrWait(live, { sender, id: queuedId });
 
   return 'queued';
 }

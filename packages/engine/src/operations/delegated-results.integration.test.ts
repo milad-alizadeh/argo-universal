@@ -1,10 +1,12 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { SessionNewOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
+import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { permissionSteps, steeringScenario } from '#mocks/conversation-agent';
 import { questionSteps } from '#mocks/elicitation-steps';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney } from '#mocks/session-delegation';
@@ -25,15 +27,22 @@ type GatedDelegation = {
   sourceGate: PromiseWithResolvers<void>;
 };
 
-function gatedDelegation(
-  question?: string,
-  requests?: PromptRequest[],
-): GatedDelegation {
+type GatedDelegationOptions = Pick<
+  NonNullable<Parameters<typeof delegationJourney>[0]>,
+  'agent' | 'requests'
+> & { inputSteps?: ScriptedStep[] };
+
+function gatedDelegation({
+  requests,
+  agent,
+  inputSteps = [],
+}: GatedDelegationOptions = {}): GatedDelegation {
   const starterGate = Promise.withResolvers<void>();
   const sourceGate = Promise.withResolvers<void>();
 
   const journey = delegationJourney({
     requests,
+    agent,
     replies: [
       {
         prompt: starterText,
@@ -42,7 +51,7 @@ function gatedDelegation(
       {
         prompt: sourceText,
         steps: [
-          ...questionSteps(question),
+          ...inputSteps,
           { type: 'gate', waitFor: sourceGate.promise },
           {
             type: 'update',
@@ -218,10 +227,7 @@ function closeDuringFeedCommit(
 it('does not dispatch a result revoked during its Feed commit', async () => {
   const requests: PromptRequest[] = [];
 
-  const { journey, starterGate, sourceGate } = gatedDelegation(
-    undefined,
-    requests,
-  );
+  const { journey, starterGate, sourceGate } = gatedDelegation({ requests });
 
   const opened = await journey;
   const { host, caller } = opened;
@@ -251,8 +257,11 @@ it('does not dispatch a result revoked during its Feed commit', async () => {
   }
 }, 30_000);
 
-it('surfaces a source Elicitation on the starter and clears it after a source answer', async () => {
-  const { journey, starterGate, sourceGate } = gatedDelegation('Which option?');
+it('delivers the source result after the starter answers a delegated Elicitation', async () => {
+  const { journey, starterGate, sourceGate } = gatedDelegation({
+    inputSteps: questionSteps('Which option?'),
+  });
+
   const opened = await journey;
   const { host, caller } = opened;
   const reader = new AbortController();
@@ -269,16 +278,31 @@ it('surfaces a source Elicitation on the starter and clears it after a source an
     const pending = (await stream.next()).value?.requests[0];
     expect(pending).toMatchObject({ sessionId, kind: 'elicitation' });
 
-    if (!pending)
-      throw new Error('The starter did not see the source Elicitation');
-
-    await host.caller.session.answerElicitation({
-      sessionId,
-      requestId: pending.requestId,
-      action: 'accept',
-      content: { answer: 'First' },
+    await runOperation(caller.caller.operations, {
+      id: 'session.prompt',
+      params: {
+        sessionId,
+        prompt: [{ type: 'text', text: 'Review the first option.' }],
+      },
     });
     expect((await stream.next()).value?.requests).toEqual([]);
+
+    sourceGate.resolve();
+    await expect
+      .poll(async () => {
+        const { promptQueue } = await host.caller.session.get({
+          sessionId: caller.sessionId,
+        });
+
+        return promptQueue.items;
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          sender: expect.objectContaining({
+            resultPreview: expect.objectContaining({ excerpt: sourceExcerpt }),
+          }),
+        }),
+      );
   } finally {
     reader.abort();
     await stream.return?.();
@@ -334,6 +358,102 @@ it('keeps a closed starter’s result queued and paused through a Server restart
     expect(
       page.rows.filter((row) => row.sessionUpdate === 'prompt_message'),
     ).toHaveLength(1);
+  } finally {
+    starterGate.resolve();
+    sourceGate.resolve();
+  }
+}, 30_000);
+
+it('steers a source Elicitation once into the starter’s running Turn', async () => {
+  const steered = Promise.withResolvers<unknown>();
+  const question = 'Which option should I review?';
+
+  const { journey, starterGate, sourceGate } = gatedDelegation({
+    inputSteps: questionSteps(question),
+    agent: steeringScenario(steered, true),
+  });
+
+  const opened = await journey;
+
+  try {
+    const sessionId = await delegate(opened, true);
+    let received: unknown;
+    void steered.promise.then((request) => (received = request));
+    await expect
+      .poll(() => JSON.stringify(received ?? null))
+      .toContain(question);
+    expect(JSON.stringify(received ?? null)).toContain(sessionId);
+    expect(JSON.stringify(received ?? null)).toContain('elicitation');
+
+    const { host, caller } = opened;
+    await expect
+      .poll(async () => {
+        const feed = await host.caller.feed.page({
+          sessionId: caller.sessionId,
+          direction: 'tail',
+        });
+
+        return feed.rows.filter(
+          (row) =>
+            row.sessionUpdate === 'prompt_message' &&
+            JSON.stringify(row.content).includes(question),
+        );
+      })
+      .toHaveLength(1);
+  } finally {
+    starterGate.resolve();
+    sourceGate.resolve();
+  }
+}, 30_000);
+
+it('queues each pending request when the starter’s Agent cannot steer', async () => {
+  const title = 'Publish the reviewed report';
+  const question = 'Which recipient should receive the report?';
+
+  const { journey, starterGate, sourceGate } = gatedDelegation({
+    inputSteps: [
+      {
+        type: 'parallel',
+        steps: [...permissionSteps(title), ...questionSteps(question)],
+      },
+    ],
+  });
+
+  const opened = await journey;
+  const { host, caller } = opened;
+
+  try {
+    const sessionId = await delegate(opened, true);
+
+    const queued = async (): Promise<string[]> => {
+      const { promptQueue } = await host.caller.session.get({
+        sessionId: caller.sessionId,
+      });
+
+      return promptQueue.items.flatMap(({ prompt }) =>
+        prompt.flatMap((block) => (block.type === 'text' ? [block.text] : [])),
+      );
+    };
+
+    await expect.poll(queued).toHaveLength(2);
+    expect(await queued()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          JSON.stringify({
+            sourceSessionId: sessionId,
+            kind: 'permission',
+            detail: title,
+          }),
+        ),
+        expect.stringContaining(
+          JSON.stringify({
+            sourceSessionId: sessionId,
+            kind: 'elicitation',
+            detail: question,
+          }),
+        ),
+      ]),
+    );
   } finally {
     starterGate.resolve();
     sourceGate.resolve();
