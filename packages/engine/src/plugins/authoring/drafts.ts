@@ -11,29 +11,36 @@ import {
 
 // `argo plugin validate` on Drafts (ADR-0057): each Draft page declares the minimum states, and no Variant ships.
 
+// Where `path` under `contributes.drafts` starts in plugin.json, or 0 when the file has no such node.
+function draftOffset(
+  manifest: SourceFile,
+  path: readonly (string | number)[],
+): number {
+  const tree = parseTree(manifest.source, [], { disallowComments: true });
+
+  const node =
+    tree && findNodeAtLocation(tree, ['contributes', 'drafts', ...path]);
+
+  return node?.offset ?? 0;
+}
+
 // The minimum states each Draft page leaves out, one diagnostic per page at its `states` in plugin.json.
 export function missingStateDiagnostics(
   manifest: SourceFile,
   parsed: PluginManifest,
 ): PluginDiagnostic[] {
-  const tree = parseTree(manifest.source, [], { disallowComments: true });
-
   return draftPages(parsed.contributes.drafts).flatMap(
     ({ page, states }, index) => {
       const missing = missingDraftStates(states);
 
       if (!missing.length) return [];
 
-      const node =
-        tree &&
-        findNodeAtLocation(tree, ['contributes', 'drafts', index, 'states']);
-
       const names = missing.join(', ');
 
       return [
         sourceDiagnostic(
           manifest,
-          node?.offset ?? 0,
+          draftOffset(manifest, [index, 'states']),
           `Draft page ${page} is missing states: ${names}`,
         ),
       ];
@@ -53,27 +60,19 @@ export function shipBlockerDiagnostics(
   manifest: SourceFile,
   parsed: PluginManifest,
 ): PluginDiagnostic[] {
-  const tree = parseTree(manifest.source, [], { disallowComments: true });
-
   return draftPages(parsed.contributes.drafts).flatMap(
     ({ page, regions }, pageIndex) =>
       (regions ?? []).map(({ id, variants }, regionIndex) => {
-        const node =
-          tree &&
-          findNodeAtLocation(tree, [
-            'contributes',
-            'drafts',
-            pageIndex,
-            'regions',
-            regionIndex,
-            'variants',
-          ]);
-
         const names = variants.map((variant) => variant.id).join(', ');
 
         return sourceDiagnostic(
           manifest,
-          node?.offset ?? 0,
+          draftOffset(manifest, [
+            pageIndex,
+            'regions',
+            regionIndex,
+            'variants',
+          ]),
           `Draft page ${page} region ${id} still declares ${plural(variants.length, 'Variant')}: ${names}; build the real page from the chosen ones, then delete the declarations`,
         );
       }),

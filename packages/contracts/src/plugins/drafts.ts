@@ -118,6 +118,11 @@ export const draftRegions = (page: DraftPage | null): readonly DraftRegion[] =>
 export const draftRegionLabel = (regionId: string): string =>
   `${regionId.charAt(0).toUpperCase()}${regionId.slice(1)}`;
 
+export interface ShownVariant {
+  id: string;
+  index: number;
+}
+
 /*
  * The Variant a region draws for a Page state: the picked one, or the first when nothing is picked or the pick is
  * one the Draft no longer declares, as after its Variant was removed. The Loader still gets the stale id, so a Draft
@@ -127,7 +132,7 @@ export const draftRegionLabel = (regionId: string): string =>
 export function shownVariant(
   region: DraftRegion,
   pageState: PageState,
-): { id: string; index: number } {
+): ShownVariant {
   const picked = pageState[draftVariantKey(region.id)];
   const found = region.variants.findIndex(({ id }) => id === picked);
   const index = Math.max(0, found);
@@ -165,8 +170,7 @@ export function steppedVariant(
 export function variantStep(
   page: DraftPage | null,
   pageState: PageState,
-  regionId: string,
-  direction: 1 | -1,
+  { regionId, direction }: { regionId: string; direction: 1 | -1 },
 ): PageState | null {
   const region = draftRegions(page).find(({ id }) => id === regionId);
 
@@ -209,7 +213,7 @@ export const draftDrawPath = (page: string): string =>
 
 // Every Variant of every region the Plugin declares, each to be drawn on its page as the App draws it once picked.
 export const draftVariantDraws = (
-  drafts: PluginDrafts | undefined,
+  drafts?: PluginDrafts,
 ): { page: string; region: string; variant: string }[] =>
   draftPages(drafts).flatMap(({ page, regions }) =>
     (regions ?? []).flatMap(({ id, variants }) =>

@@ -241,14 +241,22 @@ it('steps a region one Variant, wrapping at both ends', () => {
 it('changes the Page state key of the stepped region only, and refuses an undeclared region', () => {
   const page = issues[0] ?? null;
 
-  expect(variantStep(page, {}, 'header', 1)).toEqual({
+  expect(variantStep(page, {}, { regionId: 'header', direction: 1 })).toEqual({
     [draftVariantKey('header')]: 'search',
   });
   expect(
-    variantStep(page, { [draftVariantKey('list')]: 'cards' }, 'list', 1),
+    variantStep(
+      page,
+      { [draftVariantKey('list')]: 'cards' },
+      { regionId: 'list', direction: 1 },
+    ),
   ).toEqual({ [draftVariantKey('list')]: 'rows' });
-  expect(variantStep(page, {}, 'footer', 1)).toBeNull();
-  expect(variantStep(null, {}, 'header', 1)).toBeNull();
+  expect(
+    variantStep(page, {}, { regionId: 'footer', direction: 1 }),
+  ).toBeNull();
+  expect(
+    variantStep(null, {}, { regionId: 'header', direction: 1 }),
+  ).toBeNull();
 });
 
 it('draws the chosen state, then populated, then the first declared state', () => {
@@ -279,7 +287,7 @@ it('lists every Variant of every region to draw on its page', () => {
     region: 'header',
     variant: 'compact',
   });
-  expect(draftVariantDraws(undefined)).toEqual([]);
+  expect(draftVariantDraws()).toEqual([]);
 });
 
 describe('refusing a choice the Drafts do not declare', () => {

@@ -129,7 +129,7 @@ function useDraftRegions(
   return {
     tags,
     onStep: (regionId, direction) => {
-      const change = variantStep(declared, pageState, regionId, direction);
+      const change = variantStep(declared, pageState, { regionId, direction });
 
       if (change) void addresses.change(opening, change);
     },

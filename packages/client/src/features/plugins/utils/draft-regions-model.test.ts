@@ -90,7 +90,7 @@ it.each([
   expect(draftRegionsOf(listed, path, {})).toBeNull();
 });
 
-it('labels a region as its id capitalised, dashes kept, ', () => {
+it('labels a region as its id capitalised, dashes kept', () => {
   const tags = draftRegionsOf(
     entry(true, [
       {
