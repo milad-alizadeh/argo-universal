@@ -1,8 +1,9 @@
 import { drawnRadius, isDrawnWhole, isInvisible } from './skeleton-classify';
 import { isSkipped } from './skeleton-marks';
-import type {
-  SkeletonMeasure,
-  SkeletonPlaceholder,
+import {
+  placeholderKey,
+  type SkeletonMeasure,
+  type SkeletonPlaceholder,
 } from './skeleton-placeholder';
 import { skeletonRules as rules } from './skeleton-rules.gen';
 
@@ -115,6 +116,23 @@ function walkElement(element: Element, scene: Scene): void {
 }
 
 /*
+ * Content stacked on one spot (a cross-fading icon, a badge over its avatar) draws one placeholder, not a darker
+ * one: the first drawn, which is the one beneath.
+ */
+function onePerBox(placeholders: SkeletonPlaceholder[]): SkeletonPlaceholder[] {
+  const seen = new Set<string>();
+
+  return placeholders.filter((placeholder) => {
+    const key = placeholderKey(placeholder);
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+
+    return true;
+  });
+}
+
+/*
  * What a loading Skeleton draws. It reads the page as the browser laid it out: a text node gives one rect per
  * rendered line, and an image, svg, field or small control gives its own box and corner radius. Cards, rows and
  * separators give none, so they stay as drawn; an ignore element's subtree is skipped whole.
@@ -127,5 +145,5 @@ export function measureSkeleton(root: Element): SkeletonMeasure {
 
   walkChildren(root, scene);
 
-  return scene.found;
+  return { ...scene.found, placeholders: onePerBox(scene.found.placeholders) };
 }
