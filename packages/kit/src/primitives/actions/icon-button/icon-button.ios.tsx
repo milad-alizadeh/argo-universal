@@ -20,6 +20,7 @@ import { useFixedSizeChrome } from './fixed-size-chrome';
 import type { IconButtonProps } from './icon-button';
 import { sizeOf, variantOf } from './icon-button-defaults';
 import { iconButtonGlyph } from './icon-button-glyph';
+import { pressOf } from './icon-button-press';
 
 type SwiftProps = ComponentProps<typeof SwiftButton>;
 
@@ -72,7 +73,7 @@ export function IconButton(props: IconButtonProps): ReactElement {
           label={props.accessibilityLabel}
           systemImage={glyph.name}
           modifiers={swiftButtonModifiers(props, fixed)}
-          onPress={props.onPress}
+          onPress={pressOf(props)}
         />
       ) : (
         <SwiftButton
@@ -80,7 +81,7 @@ export function IconButton(props: IconButtonProps): ReactElement {
             ...swiftButtonModifiers(props, fixed),
             accessibilityLabel(props.accessibilityLabel),
           ]}
-          onPress={props.onPress}
+          onPress={pressOf(props)}
         >
           {glyph.kind === 'asset' ? (
             <Image assetName={glyph.name} />

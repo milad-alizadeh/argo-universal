@@ -10,6 +10,7 @@ import {
 import { Icon } from '#primitives/content/icon';
 import type { IconButtonProps } from './icon-button';
 import { sizeOf, variantOf } from './icon-button-defaults';
+import { pressOf } from './icon-button-press';
 import { webBoxOf, webGlyphOf } from './icon-button-web-size';
 
 type Variant = NonNullable<IconButtonProps['variant']>;
@@ -28,6 +29,7 @@ const owned = new Set([
   'accessibilityLabel',
   'disabled',
   'onPress',
+  'onPressSelected',
   'testID',
   'children',
 ]);
@@ -60,7 +62,7 @@ function pressableProps(
     accessibilityRole: 'button',
     accessibilityLabel: props.accessibilityLabel,
     disabled: props.disabled ?? false,
-    onPress: props.onPress,
+    onPress: pressOf(props),
     testID: props.testID,
     className: cn(webClass, webBox(props), ghostClass(props)),
     style: (state) => webLook(props, state),

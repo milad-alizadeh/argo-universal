@@ -27,13 +27,13 @@ function windowed(): Windowed {
     },
   };
 
-  const changes = new ChangeWindow(
+  const changes = new ChangeWindow({
     clock,
-    async (pluginId): Promise<void> => {
+    settle: async (pluginId): Promise<void> => {
       settled.push(pluginId);
     },
-    (): null => null,
-  );
+    log: (): null => null,
+  });
 
   const elapse = (): void => {
     for (const timer of timers.values().toArray()) {

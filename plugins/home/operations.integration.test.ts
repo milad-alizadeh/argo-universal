@@ -305,7 +305,17 @@ it(
     try {
       await run(home, 'recallScene', { id: relax });
       await home.test.clock.advance(250);
-      expect((await stale.next()).value).toMatchObject({
+
+      // The sign-in page, which holds no Query, is marked at once; Home once its Household is read again (ADR-0060).
+      const marked = [];
+
+      for await (const mark of stale) {
+        marked.push(mark);
+
+        if (mark.addresses?.some(({ path }) => path === '/')) break;
+      }
+
+      expect(marked.at(-1)).toMatchObject({
         pluginId: 'home',
         addresses: expect.arrayContaining([
           expect.objectContaining({ path: '/' }),

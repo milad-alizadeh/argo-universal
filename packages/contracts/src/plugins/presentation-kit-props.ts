@@ -57,6 +57,11 @@ export const iconButtonProps = z.object({
   accessibilityLabel: z.string().describe('Spoken action name.'),
   disabled: z.boolean().nullable().optional().describe('Disable activation.'),
   onPress: handler('onPress').optional().describe('Action run on activation.'),
+  onPressSelected: handler('onPressSelected')
+    .optional()
+    .describe(
+      'Run instead of `onPress` when the button is pressed while drawn selected, so a toggle switches back before the page draws again.',
+    ),
   selected: z
     .boolean()
     .nullable()
