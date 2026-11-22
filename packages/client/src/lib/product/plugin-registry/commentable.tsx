@@ -56,6 +56,7 @@ function webBox(view: Holder | null): Box {
   const nodes = [...view.children].filter(
     (child) => getComputedStyle(child).position !== 'fixed',
   );
+
   const rects = nodes.map((child) => child.getBoundingClientRect());
 
   if (rects.length === 0) return nowhere;

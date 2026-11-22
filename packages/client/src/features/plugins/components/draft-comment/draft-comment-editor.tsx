@@ -21,6 +21,7 @@ export function DraftCommentEditor(
 ): React.JSX.Element {
   const { title, nodeName, note, longPressed, onNoteChange, onSave, onCancel } =
     props;
+
   const size = longPressed ? 'md' : 'sm';
 
   return (

@@ -132,6 +132,7 @@ export const PhoneBarFitsTheWindowWithComments: Story = {
     await settleLayout('phone');
 
     const bar = await canvas.findByRole('toolbar', { name: 'Draft' });
+
     const choose = await canvas.findByRole('button', {
       name: 'Choose · 12 comments',
     });

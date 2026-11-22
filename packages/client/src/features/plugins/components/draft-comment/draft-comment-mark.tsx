@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { Text, View, type ViewStyle } from 'react-native';
+import { Text, type ViewStyle } from 'react-native';
 import type { Box } from '../../../../lib/product/plugin-registry/draft-commenting';
-import { useWindowPlaced } from '../../hooks/use-window-placed';
+import { WindowPlacedView } from './window-placed-view';
 
 const pinSize = 22;
 
@@ -51,13 +51,10 @@ export function DraftCommentMark({
 }
 
 function Outline({ style }: { style?: ViewStyle }): React.JSX.Element {
-  const placed = useWindowPlaced(style);
-
   return (
-    <View
-      ref={placed.ref}
+    <WindowPlacedView
       pointerEvents="none"
-      style={placed.style}
+      style={style}
       className={`${style ? 'fixed' : 'absolute inset-0 rounded-lg'} border border-border`}
     />
   );
@@ -71,18 +68,15 @@ export function DraftCommentPin({
   count: number;
   style?: ViewStyle;
 }): React.JSX.Element {
-  const placed = useWindowPlaced(style);
-
   return (
-    <View
-      ref={placed.ref}
+    <WindowPlacedView
       pointerEvents="none"
       role="img"
       aria-label={count === 1 ? '1 comment' : `${count} comments`}
-      style={placed.style}
+      style={style}
       className={`${style ? 'fixed' : 'absolute right-1 top-1'} size-5.5 items-center justify-center rounded-full rounded-bl-grouped-inner bg-warning shadow-control`}
     >
       <Text className="type-badge text-primary-foreground">{count}</Text>
-    </View>
+    </WindowPlacedView>
   );
 }
