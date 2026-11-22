@@ -121,3 +121,12 @@ export function agentAccessRow(props: SettingsListViewProps): SettingsRow {
     disabled: serverDisabled(props),
   };
 }
+
+export function composerRow(props: SettingsListViewProps): SettingsRow {
+  return {
+    label: 'Composer',
+    icon: 'message',
+    href: '/settings/composer',
+    disabled: serverDisabled(props),
+  };
+}
