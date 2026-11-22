@@ -29,6 +29,25 @@ export function processGroupOf(pid: number): number | undefined {
   }
 }
 
+// The leader's command line, while the group still has its original leader.
+export function commandOfProcessGroupLeader(pid: number): string | undefined {
+  try {
+    const result = execFileSync(
+      '/bin/ps',
+      ['-p', String(pid), '-ww', '-o', 'pgid=,stat=,command='],
+      { encoding: 'utf8' },
+    );
+
+    const [group, state, ...command] = result.trim().split(/\s+/);
+
+    return Number(group) === pid && state && !state.startsWith('Z')
+      ? command.join(' ')
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 const goneGroupCodes = new Set<unknown>(['ESRCH', 'EPERM']);
 
 // The group is already gone, or holds only zombies, which a kill cannot reach.

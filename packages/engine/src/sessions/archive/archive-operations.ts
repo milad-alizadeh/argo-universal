@@ -6,6 +6,7 @@ import {
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
 import type { SessionContext } from '../session-machine';
+import { ownsStoredWorktree } from '../session-record';
 import { readBorrowerIds } from './archive-borrowers';
 import { SessionArchiveJob } from './archive-storage';
 import {
@@ -51,17 +52,6 @@ const archivedSessionIds = (
   ...borrowerIds(context, archivedAt),
 ];
 
-const archiveJob = (
-  context: SessionContext,
-  archivedAt: number | null,
-): SessionArchiveJob =>
-  new SessionArchiveJob(
-    archivedSessionIds(context, archivedAt),
-    archivedAt,
-    archivedAt !== null &&
-      projectKeepsCheckout(context.input.database, context.projectId),
-  );
-
 // The parent's archive and its borrowed Checkouts share one Writer commit.
 export async function saveSessionArchive(
   context: SessionContext,
@@ -70,11 +60,38 @@ export async function saveSessionArchive(
 ): Promise<void> {
   if (!writer) throw new Error('Database Writer is unavailable');
 
+  const { database } = context.input;
+  const sessionIds = archivedSessionIds(context, archivedAt);
+
+  const keep =
+    archivedAt !== null && projectKeepsCheckout(database, context.projectId);
+
   await writeDatabaseJobAndWaitForCommit(
     writer,
-    archiveJob(context, archivedAt),
+    new SessionArchiveJob(sessionIds, archivedAt, keep),
     true,
   );
+
+  if (archivedAt !== null) await closeArchivedTerminals(context, sessionIds);
+}
+
+async function closeArchivedTerminals(
+  { archiveTerminals, input, sessionId, projectId, checkout }: SessionContext,
+  sessionIds: readonly string[],
+): Promise<void> {
+  const owned = ownsStoredWorktree(input.database, sessionId);
+
+  await archiveTerminals
+    ?.close({
+      sessionIds,
+      checkout: owned ? { projectId, checkoutPath: checkout.path } : undefined,
+    })
+    .catch((error: Error) => {
+      console.error(
+        `Session ${sessionId}: could not close its Terminals`,
+        error,
+      );
+    });
 }
 
 type ArchivedCheckout = Pick<

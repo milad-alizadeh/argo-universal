@@ -1,5 +1,6 @@
 import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -18,6 +19,7 @@ import {
 } from './session-detail-view-bar.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
+import { openWorkbench } from './session-workbench-sheet.test.mocks';
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Bar',
@@ -84,13 +86,13 @@ export const AttachedIssuesShareOneCard: Story = {
 
     const card = within(
       await workbench.findByRole('group', {
-        name: 'Issue tracker',
+        name: issue.pluginName,
         exact: true,
       }),
     );
 
     await expect(
-      workbench.getAllByRole('group', { name: 'Issue tracker', exact: true }),
+      workbench.getAllByRole('group', { name: issue.pluginName, exact: true }),
     ).toHaveLength(1);
 
     for (const line of [issue, secondIssueLine]) {
@@ -205,5 +207,35 @@ export const PhoneKeepsTheStrip: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(issue.text)).toBeVisible();
     await expect(canvas.getByRole('button', { name: moreLines })).toBeVisible();
+  },
+};
+
+export const PhoneOpensAnAttachedIssueFromTheWorkbench: Story = {
+  decorators: [withStack()],
+  args: {
+    view: {
+      state: 'open',
+      ...idleSession,
+      bar: { ...attachedIssuesBar, onOpen: fn() },
+    },
+  },
+  beforeEach: (): Promise<void> => settleLayout(layoutWidths.phone),
+  play: async ({ args, canvas, userEvent }) => {
+    const sheet = await openWorkbench({ canvas, userEvent });
+    const first = await sheet.findByRole('link', { name: '#412, In review' });
+    const second = sheet.getByRole('link', { name: '#413, Open' });
+
+    await expect(sheet.getByText(issue.pluginName)).toBeVisible();
+    await expect(first).toBeVisible();
+    const [number = ''] = secondIssueLine.text.split(' · ');
+    const label = within(second).getByText(number).getBoundingClientRect();
+    const value = within(second).getByText('Open').getBoundingClientRect();
+
+    await expect(label.right).toBeLessThanOrEqual(value.left);
+    await expect(label.top).toBeLessThan(value.bottom);
+    await expect(value.top).toBeLessThan(label.bottom);
+    await settleOverlays(second);
+    await userEvent.click(second);
+    await expect(onOpenOf(args.view)).toHaveBeenCalledWith(secondIssueLine);
   },
 };

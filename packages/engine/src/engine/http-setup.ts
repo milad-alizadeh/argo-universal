@@ -9,6 +9,7 @@ import { ensureControlToken } from '../operations';
 import { PairingRegistrations } from '../pairing/registrations';
 import { PairingTickets } from '../pairing/tickets';
 import { Plugins } from '../plugins';
+import { createRuns, launchTerminal } from '../runs';
 import { readServerId } from '../system';
 import { discoveryNameOf } from './announce-server';
 import { httpRouterInput } from './http-router-input';
@@ -134,6 +135,14 @@ async function prepareHttpSetup(
     plugins: new Plugins(options),
     appNavigation: new AppNavigation({ serverId }),
     localNetworkAccess: networkAccessOf(options),
+    runs: createRuns({
+      database: options.database,
+      writer: options.databaseWriter,
+      home: options.home,
+      spawn: options.terminalSpawner ?? launchTerminal,
+      now: options.now ?? Date.now,
+      createId: options.createId,
+    }),
   };
 }
 

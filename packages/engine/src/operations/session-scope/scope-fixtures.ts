@@ -53,7 +53,12 @@ const directory = memorySessionDirectory({
 });
 
 export const newScope = (chains = new PromptChains()): SessionScope =>
-  new SessionScope({ directory, createId: () => 'new-session', chains });
+  new SessionScope({
+    directory,
+    createId: () => 'new-session',
+    chains,
+    canReadShell: (callerId, targetId) => callerId === targetId,
+  });
 
 export const sessionCaller = (sessionId: string): SessionCaller => ({
   kind: 'session',

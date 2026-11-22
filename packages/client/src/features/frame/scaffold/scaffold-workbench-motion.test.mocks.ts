@@ -1,6 +1,54 @@
 import { waitFor } from 'storybook/test';
 import { vi } from 'vitest';
 
+const animationClock = {
+  toFake: ['performance', 'requestAnimationFrame', 'cancelAnimationFrame'],
+} satisfies NonNullable<Parameters<typeof vi.useFakeTimers>[0]>;
+
+// Step the JavaScript clock as the alternate Session settles, in case it starts a JavaScript animation.
+export async function sampleMotionFrames(
+  action: () => void,
+  measure: () => number,
+  frames: number,
+): Promise<number[]> {
+  const requestPaint = requestAnimationFrame;
+
+  vi.useFakeTimers(animationClock);
+
+  try {
+    action();
+
+    return await collectFrames(measure, frames, {
+      requestPaint,
+      step: () => vi.advanceTimersToNextFrame(),
+    });
+  } finally {
+    vi.useRealTimers();
+  }
+}
+
+// How a sample waits for the browser's paint, and what it advances after it.
+interface Paint {
+  requestPaint: typeof requestAnimationFrame;
+  step: () => void;
+}
+
+async function collectFrames(
+  measure: () => number,
+  frames: number,
+  { requestPaint, step }: Paint,
+): Promise<number[]> {
+  const samples: number[] = [];
+
+  for (const frame of Array.from({ length: frames }).keys()) {
+    await new Promise<void>((resolve) => requestPaint(() => resolve()));
+    step();
+    samples[frame] = measure();
+  }
+
+  return samples;
+}
+
 interface CapturedSlide {
   animation: Animation;
   startTime: Animation['startTime'];

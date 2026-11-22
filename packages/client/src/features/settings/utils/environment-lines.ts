@@ -1,9 +1,9 @@
-import type { AgentServerEnvironment } from '@repo/contracts';
+type Environment = Record<string, string>;
 
 type Variable = readonly [name: string, value: string];
 
 export type LineChange =
-  | { saved: true; env: AgentServerEnvironment }
+  | { saved: true; env: Environment }
   | { saved: false; error: string };
 
 export const environmentLine = (name: string, value: string): string =>
@@ -30,17 +30,15 @@ const duplicate = (name: string): LineChange => ({
   error: `${name} is already set; change its own line.`,
 });
 
-const without = (
-  env: AgentServerEnvironment,
-  name: string | undefined,
-): Variable[] => Object.entries(env).filter(([key]) => key !== name);
+const without = (env: Environment, name: string | undefined): Variable[] =>
+  Object.entries(env).filter(([key]) => key !== name);
 
 // The environment with `edited` written in the place of the line it replaces; a new line goes last.
 function withLine(
-  env: AgentServerEnvironment,
+  env: Environment,
   current: string | undefined,
   edited: Variable,
-): AgentServerEnvironment {
+): Environment {
   const entries = Object.entries(env).map((entry): Variable =>
     entry[0] === current ? edited : entry,
   );
@@ -55,7 +53,7 @@ function withLine(
  * showed, or undefined for the empty last line. An emptied line removes its variable.
  */
 export function changeLine(
-  env: AgentServerEnvironment,
+  env: Environment,
   current: string | undefined,
   text: string,
 ): LineChange {
@@ -68,7 +66,7 @@ export function changeLine(
 }
 
 function editedLine(
-  env: AgentServerEnvironment,
+  env: Environment,
   current: string | undefined,
   edited: Variable,
 ): LineChange {

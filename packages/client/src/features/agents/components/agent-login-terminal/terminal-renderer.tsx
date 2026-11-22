@@ -7,11 +7,11 @@ import type {
 import type { DOMProps } from 'expo/dom';
 import '@xterm/xterm/css/xterm.css';
 import { createElement, type RefObject, type CSSProperties } from 'react';
+import { TerminalKeys } from '../../../../lib/terminal/terminal-keys';
 import {
   terminalKeyboardHeight,
   type TerminalAppearance,
 } from './terminal-appearance';
-import { TerminalKeys } from './terminal-keys';
 import { useDOMKeyboard } from './use-terminal-keyboard';
 import { useTerminalRenderer } from './use-terminal-renderer';
 

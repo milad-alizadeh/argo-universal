@@ -22,6 +22,7 @@ import {
   type OAuthOptions,
   type PluginClock,
 } from '../plugins';
+import type { TerminalSpawner } from '../runs';
 import {
   type OpenSessionsInput,
   openSessionsMachine,
@@ -103,6 +104,8 @@ export interface EngineInput extends Pick<
   notificationOptions?: NotificationOptions;
   // What an App lists this Server by; the computer's name unless a test says otherwise.
   discoveryName?: string;
+  // How a Run's terminal starts; the real one unless a test says otherwise.
+  terminalSpawner?: TerminalSpawner;
 }
 
 export interface EngineContext extends EngineInput {

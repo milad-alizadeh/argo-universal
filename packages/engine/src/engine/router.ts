@@ -12,6 +12,7 @@ import { createOperationProcedures } from '../operations';
 import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
+import { createRunRouter } from '../runs/router';
 import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
@@ -53,9 +54,28 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
+function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
+  void deps.runs.autoStart(sessionId).catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+
+    deps.logSessionResult?.(
+      `Could not auto-start Runs for Session ${sessionId}: ${message}`,
+    );
+  });
+}
+
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
-  const sessions = new Sessions(deps);
+  const sessions = new Sessions({
+    ...deps,
+    archiveTerminals: {
+      close: (target): Promise<void> =>
+        deps.runs.terminalLifecycle.endArchived(target),
+      removeCheckout: (checkout, remove): Promise<void> =>
+        deps.runs.terminalLifecycle.removeCheckout(checkout, remove),
+    },
+    autoStartRuns: (sessionId): void => autoStartRuns(deps, sessionId),
+  });
 
   if (deps.sessionCommandSignal)
     sessions.startDelegatedResults(
@@ -71,6 +91,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   return router({
     ...operations,
     session: mergeRouters(sessions.router, operations.session),
+    run: mergeRouters(createRunRouter(deps), operations.run),
     shell: mergeRouters(createShellRouter(deps), operations.shell),
     conversation: mergeRouters(
       createConversationRouter(deps),

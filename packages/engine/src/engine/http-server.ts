@@ -15,6 +15,8 @@ import type { PairingRegistrations } from '../pairing/registrations';
 import type { PairingTickets } from '../pairing/tickets';
 import type { Keypair } from '../pairing/x25519';
 import type { HookPort, PluginServerOptions, Plugins } from '../plugins';
+import type { Runs } from '../runs';
+import type { TerminalSpawner } from '../runs';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { announceServer } from './announce-server';
@@ -50,6 +52,8 @@ export interface HttpServerOptions extends PluginServerOptions {
   hookPort?: HookPort;
   // What an App lists this Server by; the computer's name unless a test says otherwise.
   discoveryName?: string;
+  // How a Run's terminal starts; tests substitute one that runs nothing.
+  terminalSpawner?: TerminalSpawner;
 }
 
 export interface HttpServer {
@@ -73,6 +77,7 @@ export type HttpSetup = {
   notifications: Notifications;
   localNetworkAccess: LocalNetworkAccess;
   appNavigation: AppNavigation;
+  runs: Runs;
 };
 
 export type RoutedSetup = HttpSetup & {

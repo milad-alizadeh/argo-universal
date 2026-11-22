@@ -3,7 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { vi } from 'vitest';
 import { SessionSwitchScaffold } from './scaffold-session-switch.mocks';
-import { sampleWorkbenchSlide } from './scaffold-workbench-motion.test.mocks';
+import {
+  sampleMotionFrames,
+  sampleWorkbenchSlide,
+} from './scaffold-workbench-motion.test.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
@@ -23,6 +26,8 @@ const workbenchId = 'desktop-workbench';
 const hideInspector = 'Hide Inspector';
 
 const showInspector = 'Show Inspector';
+
+const motionFrames = 24;
 
 // Time a heavy Inspector commit can spend on the main thread before paint.
 const heavyCommit = 240;
@@ -116,8 +121,17 @@ export const WorkbenchTakesItsPlaceAtOnceOnASessionSwitch: Story = {
     const animate = vi.spyOn(workbench, 'animate');
 
     try {
-      button.click();
-      await waitFor(() => expect(left()).not.toBe(start));
+      const positions = await sampleMotionFrames(
+        () => button.click(),
+        left,
+        motionFrames,
+      );
+
+      const end = positions.at(-1);
+      const between = positions.filter((at) => at !== start && at !== end);
+
+      await expect(end).not.toBe(start);
+      await expect(between).toEqual([]);
       await expect(canvas.getByTestId(workbenchId)).toBe(workbench);
       await expect(animate).not.toHaveBeenCalled();
     } finally {

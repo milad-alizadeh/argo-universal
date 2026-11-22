@@ -44,6 +44,16 @@ const defaults: Defaults = {
   'session.setTodoStep': callerSessionParam,
   'plugin.new': callerSessionParam,
   'conversation.end': callerSessionParam,
+  'run.start': callerSessionParam,
+  'run.stop': callerSessionParam,
+  'run.restart': callerSessionParam,
+  'run.startGroup': callerSessionParam,
+  'run.stopGroup': callerSessionParam,
+  'run.status': callerSessionParam,
+  'run.logs': callerSessionParam,
+  'run.draft': callerSessionParam,
+  'terminal.read': callerSessionParam,
+  'terminal.send': callerSessionParam,
   'conversation.hangUp': ownSessionOnly,
 };
 

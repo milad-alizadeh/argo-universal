@@ -7,7 +7,7 @@ import {
   maxBlobUploadBytes,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { blob, blobRef } from '@repo/db/schema';
+import { blob, blobRef, run } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq, lt, notExists } from 'drizzle-orm';
 import type { z } from 'zod';
@@ -135,6 +135,7 @@ const deleteUnusedBlobRows = (
       and(
         lt(blob.createdAt, cutoff),
         noReference(database),
+        noRunReference(database),
         noQueuedBlobReference(),
       ),
     )
@@ -147,6 +148,14 @@ const noReference = (database: Database): ReturnType<typeof notExists> =>
       .select({ blobId: blobRef.blobId })
       .from(blobRef)
       .where(eq(blobRef.blobId, blob.id)),
+  );
+
+const noRunReference = (database: Database): ReturnType<typeof notExists> =>
+  notExists(
+    database
+      .select({ blobId: run.outputBlobId })
+      .from(run)
+      .where(eq(run.outputBlobId, blob.id)),
   );
 
 const removeUnstoredFiles = async (

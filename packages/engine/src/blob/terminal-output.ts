@@ -5,9 +5,12 @@ import { join } from 'node:path';
 import type { blob } from '@repo/db/schema';
 import { z } from 'zod';
 
-type ShellBlob = Pick<typeof blob.$inferInsert, 'id' | 'mime' | 'bytes'>;
+export type OutputBlobMetadata = Pick<
+  typeof blob.$inferInsert,
+  'id' | 'mime' | 'bytes'
+>;
 
-export type ShellOutputBlob = { path: string; metadata: ShellBlob };
+export type TerminalOutputBlob = { path: string; metadata: OutputBlobMetadata };
 
 const hashChunkBytes = 1_048_576;
 
@@ -22,15 +25,15 @@ const retainFile = async (source: string, target: string): Promise<void> => {
   }
 };
 
-const metadataFor = (id: string, bytes: number): ShellBlob => ({
+const metadataFor = (id: string, bytes: number): OutputBlobMetadata => ({
   id,
   mime: 'text/plain; charset=utf-8',
   bytes,
 });
 
-export const shellOutputBlob = async (
+export const terminalOutputBlob = async (
   path: string,
-): Promise<ShellOutputBlob> => {
+): Promise<TerminalOutputBlob> => {
   const hash = createHash('sha256');
   let bytes = 0;
 
@@ -44,9 +47,9 @@ export const shellOutputBlob = async (
   return { path, metadata: metadataFor(hash.digest('hex'), bytes) };
 };
 
-export const writeShellBlob = async (
+export const writeTerminalOutputBlob = async (
   folder: string,
-  output: ShellOutputBlob,
+  output: TerminalOutputBlob,
 ): Promise<void> => {
   await mkdir(folder, { recursive: true });
   const path = join(folder, output.metadata.id);

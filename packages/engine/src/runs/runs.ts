@@ -1,0 +1,349 @@
+import { resolve } from 'node:path';
+import type {
+  RunStartResult,
+  RunStopResult,
+  ShellTerminal,
+} from '@repo/contracts';
+import type { OutputBlobMetadata } from '../blob';
+import { CheckoutTerminals } from './checkout-terminals';
+import { LiveRun } from './live-run';
+import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
+import type { RunConfiguration } from './run-configurations';
+import { requireRunConfiguration } from './run-file';
+import { RunGroups } from './run-groups';
+import { RunLifecycle } from './run-lifecycle';
+import {
+  logRecordingFailure,
+  removeRunOutput,
+  runOutputPath,
+} from './run-output';
+import { bindable } from './run-ports';
+import { awaitReady, watchReadiness } from './run-ready';
+import { newRunRecord } from './run-record';
+import { configurationFingerprint, RunSettingsStore } from './run-settings';
+import { latestRun, storeRun, type RunRecord } from './run-store';
+import { RunTerminals } from './run-terminals';
+import { RunView, statusOf } from './run-view';
+import type { RunCheckout, RunRequest, RunsInput } from './runs-input';
+import { ShellTerminals } from './shell-terminals';
+import { TerminalLifecycle } from './terminal-lifecycle';
+import { TerminalRecording } from './terminal-recording';
+import { TerminalSessions } from './terminal-sessions';
+
+export type {
+  RunCheckout,
+  RunRequest,
+  RunStarter,
+  RunsInput,
+} from './runs-input';
+
+const defaultStartMs = 60_000;
+
+const keyOf = (
+  { projectId, checkoutPath }: RunCheckout,
+  name: string,
+): string => JSON.stringify([projectId, checkoutPath, name]);
+
+/*
+ * The Runs of every Checkout on this Server (ADR-0063): each is a terminal the Server owns, recorded to a file of its own and
+ * in its own table, apart from Background Tasks.
+ */
+export class Runs {
+  private readonly live = new Map<string, LiveRun>();
+  // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
+  private readonly latest = new Map<string, RunRecord>();
+  private readonly lifecycle = new RunLifecycle(this.live);
+  public readonly groups: RunGroups;
+  public readonly settings: RunSettingsStore;
+  public readonly view: RunView;
+  private readonly shells: ShellTerminals;
+  public readonly terminals: CheckoutTerminals;
+  public readonly terminalLifecycle: TerminalLifecycle;
+  public readonly sessions: TerminalSessions;
+  private readonly blocks: RunBlocks;
+  public constructor(private readonly input: RunsInput) {
+    this.view = new RunView({
+      home: input.home,
+      shells: (checkout): ShellTerminal[] => this.shells.rows(checkout),
+      active: (checkout): RunRecord[] => this.lifecycle.activeRecords(checkout),
+      live: (checkout, name): LiveRun | undefined =>
+        this.live.get(keyOf(checkout, name)),
+      record: (checkout, name): RunRecord | undefined =>
+        this.record(checkout, name),
+    });
+    this.sessions = new TerminalSessions(input.database);
+    this.settings = new RunSettingsStore(input.database, input.writer);
+    this.groups = new RunGroups({
+      start: this.startConfiguration.bind(this),
+      stop: this.stopOne.bind(this),
+    });
+    this.blocks = new RunBlocks(
+      (): RunPortHolding[] => [
+        ...this.live.values(),
+        ...this.shells.holdings(),
+      ],
+      input.portFree ?? bindable,
+    );
+    this.shells = new ShellTerminals(input, {
+      lifecycle: this.lifecycle,
+      blocks: this.blocks,
+      changed: (checkout): void => this.view.checkoutChanged(checkout),
+    });
+    this.terminals = new CheckoutTerminals(
+      new RunTerminals(this.view),
+      this.shells,
+    );
+    this.terminalLifecycle = new TerminalLifecycle(
+      this.lifecycle,
+      this.shells,
+      this.sessions,
+    );
+  }
+
+  public async start(
+    checkout: RunRequest,
+    name: string,
+    timeoutMs?: number,
+  ): Promise<RunStartResult> {
+    const configuration = await requireRunConfiguration(
+      checkout.checkoutPath,
+      name,
+    );
+
+    return this.startConfiguration(checkout, configuration, timeoutMs);
+  }
+
+  public stop(checkout: RunCheckout, name: string): Promise<RunStopResult> {
+    const active = this.live.has(keyOf(checkout, name));
+
+    return this.groups.stopMember(checkout, name, active);
+  }
+
+  private async stopOne(
+    checkout: RunCheckout,
+    name: string,
+  ): Promise<RunStopResult> {
+    await this.lifecycle.stop(keyOf(checkout, name));
+
+    return { name, status: statusOf(this.record(checkout, name)) };
+  }
+
+  public async restart(
+    checkout: RunRequest,
+    name: string,
+    timeoutMs?: number,
+  ): Promise<RunStartResult> {
+    const configuration = await requireRunConfiguration(
+      checkout.checkoutPath,
+      name,
+    );
+
+    await this.lifecycle.stop(keyOf(checkout, name));
+
+    return this.startConfiguration(checkout, configuration, timeoutMs);
+  }
+
+  public async autoStart(sessionId: string): Promise<void> {
+    const checkout = this.sessions.forAutoStart(sessionId);
+
+    if (!checkout) return;
+
+    const configurations = await this.settings.autoStarts(checkout);
+
+    await Promise.all(
+      configurations.map((configuration) =>
+        this.running({ ...checkout, automatic: true }, configuration),
+      ),
+    );
+  }
+
+  private record(checkout: RunCheckout, name: string): RunRecord | undefined {
+    return (
+      this.latest.get(keyOf(checkout, name)) ??
+      latestRun(this.input.database, checkout, name)
+    );
+  }
+
+  private async startConfiguration(
+    checkout: RunRequest,
+    configuration: RunConfiguration,
+    timeoutMs = defaultStartMs,
+  ): Promise<RunStartResult> {
+    const run = await this.running(checkout, configuration);
+
+    if (
+      checkout.manual &&
+      run.fingerprint === configurationFingerprint(configuration)
+    )
+      await this.settings.recordManual(checkout.projectId, configuration);
+
+    return awaitReady(run, timeoutMs);
+  }
+
+  // The Run of this Run Configuration that already lives, or a new one; two starts at once make one.
+  private running(
+    checkout: RunRequest,
+    configuration: RunConfiguration,
+  ): Promise<LiveRun> {
+    checkout.requireOpenSession?.();
+
+    return this.lifecycle.start(
+      keyOf(checkout, configuration.name),
+      checkout,
+      () => {
+        checkout.requireOpenSession?.();
+
+        return this.launch(checkout, configuration);
+      },
+    );
+  }
+
+  private async launch(
+    checkout: RunRequest,
+    checkedIn: RunConfiguration,
+  ): Promise<LiveRun> {
+    const configuration = this.settings.effective(
+      checkout.projectId,
+      checkedIn,
+    );
+
+    const previous = this.record(checkout, configuration.name);
+    const ports = await this.blocks.reserve(checkout, configuration, previous);
+
+    const record = newRunRecord(checkout, configuration, {
+      id: this.input.createId(),
+      port: ports.port,
+      startedAt: this.input.now(),
+    });
+
+    const fingerprint = configurationFingerprint(checkedIn);
+
+    const recording = await this.spawn(checkout, configuration, {
+      record,
+      env: ports.env,
+      fingerprint,
+    });
+
+    const run = new LiveRun({
+      record,
+      recording,
+      home: this.input.home,
+      configuration,
+      fingerprint,
+      block: ports.block,
+      starter: starterName(checkout.starter),
+    });
+
+    return this.attach(checkout, run, previous);
+  }
+
+  private async spawn(
+    checkout: RunRequest,
+    configuration: RunConfiguration,
+    {
+      record,
+      env,
+      fingerprint,
+    }: { record: RunRecord; env: Record<string, string>; fingerprint: string },
+  ): Promise<TerminalRecording> {
+    const outputPath = runOutputPath(this.input.home, record.id);
+
+    return TerminalRecording.start(
+      outputPath,
+      () => {
+        if (checkout.automatic)
+          this.settings.requireAutoStart(
+            { projectId: checkout.projectId, name: configuration.name },
+            fingerprint,
+          );
+
+        return this.input.spawn({
+          id: record.id,
+          command: configuration.command,
+          cwd: resolve(checkout.checkoutPath, configuration.cwd),
+          env: { ...configuration.env, ...env },
+          port: record.port,
+        });
+      },
+      (error) =>
+        logRecordingFailure(
+          this.input.home,
+          `Could not record Run ${record.id}`,
+          error,
+        ),
+    );
+  }
+
+  // Listens to the terminal before anything awaits, so no output or exit is missed.
+  private async attach(
+    checkout: RunCheckout,
+    run: LiveRun,
+    previous: RunRecord | undefined,
+  ): Promise<LiveRun> {
+    const key = keyOf(checkout, run.record.name);
+    this.live.set(key, run);
+    this.latest.set(key, run.record);
+    const stored = this.store(run.record, previous ? [previous.id] : []);
+
+    run.watchOutput(() => this.view.outputChanged(run.record));
+    run.terminal.onExit(({ exitCode }) => void this.exited(key, run, exitCode));
+    void watchReadiness(
+      run,
+      () => this.live.get(key) === run,
+      () => this.markReady(key, run),
+    ).catch((error: Error) =>
+      logRecordingFailure(
+        this.input.home,
+        `Could not store readiness for Run ${run.record.id}`,
+        error,
+      ),
+    );
+    await stored;
+
+    if (previous)
+      await removeRunOutput(runOutputPath(this.input.home, previous.id));
+
+    return run;
+  }
+
+  private exited(key: string, run: LiveRun, exitCode: number): Promise<void> {
+    return run.finish(exitCode, this.input.now, {
+      save: (record, output) => this.update(key, record, output),
+      released: () => this.live.delete(key),
+      failed: (error) =>
+        logRecordingFailure(
+          this.input.home,
+          `Could not finish storing Run ${run.record.id}`,
+          error,
+        ),
+    });
+  }
+
+  private markReady(key: string, run: LiveRun): Promise<void> {
+    return run.markReady(this.input.now(), (record) =>
+      this.update(key, record),
+    );
+  }
+
+  private update(
+    key: string,
+    record: RunRecord,
+    output?: OutputBlobMetadata,
+  ): Promise<void> {
+    if (this.latest.get(key)?.id === record.id) this.latest.set(key, record);
+
+    return this.store(record, undefined, output);
+  }
+
+  private async store(
+    record: RunRecord,
+    replaced?: readonly string[],
+    output?: OutputBlobMetadata,
+  ): Promise<void> {
+    try {
+      await storeRun(this.input.writer, record, { replaced, output });
+    } finally {
+      this.view.changed(record);
+    }
+  }
+}

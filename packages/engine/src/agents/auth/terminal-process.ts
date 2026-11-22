@@ -74,7 +74,7 @@ const spawnHelperPath = (): string =>
     'spawn-helper',
   );
 
-const ensureSpawnHelper = (): void => {
+export const ensureSpawnHelper = (): void => {
   if (helperReady) return;
 
   const helper = spawnHelperPath();

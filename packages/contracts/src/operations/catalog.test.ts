@@ -28,6 +28,7 @@ it('names each param, marking the ones an Agent may leave out', () => {
     /^- session\.new\(.*projectId\?.*agent\?.*prompt\?.*\)/,
   );
   expect(lineOf('project.list')).toContain('project.list()');
+  expect(lineOf('run.start')).toContain('(name, sessionId?, timeoutMs?)');
 });
 
 it('gives each Operation the first sentence of its description', () => {
@@ -56,7 +57,7 @@ it('shows a configuration override accepted by the Session creation schema', () 
   });
 });
 
-// About 2,000 tokens, including examples for common nested params.
-it('stays under 9,000 characters', () => {
-  expect(operationCatalog().length).toBeLessThan(9000);
+// About 2,500 tokens, including examples for common nested params.
+it('stays under 10,000 characters', () => {
+  expect(operationCatalog().length).toBeLessThan(10_000);
 });

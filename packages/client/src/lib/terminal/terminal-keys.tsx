@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import type { TerminalAppearance } from './terminal-appearance';
+
+type TerminalAppearance = { background: string; buttonForeground: string };
 
 export type TerminalKeyProps = {
   appearance?: TerminalAppearance;

@@ -21,6 +21,7 @@ export type ScopePorts = {
   directory: SessionDirectory;
   createId: () => string;
   chains: PromptChains;
+  canReadShell: (callerId: string, targetId: string) => boolean;
 };
 
 // Each native start's own delegation rule, keyed by the one list of native starts.

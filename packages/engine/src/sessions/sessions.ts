@@ -94,6 +94,7 @@ export class Sessions {
   // Opens a Session from storage, or waits for its open, without a Turn.
   public async open(sessionId: string): Promise<void> {
     await this.sources.open.ready(sessionId, 'session.open');
+    this.sources.autoStartRuns?.(sessionId);
   }
   // Starts a new Session; the request's signal also stops its admission.
   public create(

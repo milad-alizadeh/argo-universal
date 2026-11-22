@@ -11,7 +11,7 @@ type Schedules = ScheduleControls;
 
 type Schedule = Schedules['items'][number];
 
-const scheduleTitle = (schedule: Schedule): string =>
+export const scheduleTitle = (schedule: Schedule): string =>
   schedule.prompt.find((block) => block.type === 'text')?.text ??
   'Scheduled Prompt';
 
@@ -25,11 +25,17 @@ function scheduleInterval(seconds: number | null): string {
     : `Every ${seconds} s`;
 }
 
+// The Workbench card previews this many Follow-ups; the rest wait in the full list.
+export const schedulePreviewLimit = 2;
+
+// A previewed Follow-up's line under its prompt: its cadence while active, else where it stands.
+export const schedulePreviewValue = (item: Schedule): string =>
+  item.state === 'active'
+    ? scheduleInterval(item.intervalSeconds)
+    : timing(item);
+
 function previewRow(item: Schedule): React.JSX.Element {
-  const label =
-    item.state === 'active'
-      ? scheduleInterval(item.intervalSeconds)
-      : timing(item);
+  const label = schedulePreviewValue(item);
 
   return (
     <View key={item.id} className="flex-row items-center gap-2 px-1 py-2">
@@ -53,7 +59,11 @@ export function SchedulePreview({
 }: {
   schedules?: Schedules;
 }): React.JSX.Element {
-  return <View>{schedules?.items.slice(0, 2).map(previewRow)}</View>;
+  return (
+    <View>
+      {schedules?.items.slice(0, schedulePreviewLimit).map(previewRow)}
+    </View>
+  );
 }
 
 const time = (stamp: number): string =>

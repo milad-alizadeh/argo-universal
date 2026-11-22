@@ -14,6 +14,7 @@ import { LocalNetworkAccess } from '../src/network-access';
 import { PairingRegistrations } from '../src/pairing/registrations';
 import { PairingTickets } from '../src/pairing/tickets';
 import { Plugins } from '../src/plugins';
+import { createRuns, launchTerminal } from '../src/runs';
 import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
 import { openFeedForModule } from './feed-module-actor';
@@ -115,6 +116,13 @@ const feedModuleRouterInput = (
   sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
   notifications: host.notifications,
+  runs: createRuns({
+    database: host.database,
+    writer: host.databaseWriter,
+    home: host.home,
+    spawn: launchTerminal,
+    now: Date.now,
+  }),
   ...routerRuntime(host, signal),
 });
 

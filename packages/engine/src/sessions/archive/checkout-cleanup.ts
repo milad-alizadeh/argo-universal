@@ -10,11 +10,16 @@ import { readProjectPath } from '../../projects';
 import type { WriterActorRef } from '../../storage';
 import type { SessionData } from '../session-data';
 import { ownsStoredWorktree } from '../session-record';
+import type { ArchiveTerminals } from './archive-terminals';
 import { keepArchivedCheckout } from './checkout-retention';
 
 type Target = Pick<SessionData, 'projectId' | 'sessionId' | 'checkout'>;
 
-type CleanupOptions = { signal?: AbortSignal; writer?: WriterActorRef };
+type CleanupOptions = {
+  signal?: AbortSignal;
+  writer?: WriterActorRef;
+  terminals?: ArchiveTerminals;
+};
 
 // Approval is bound to the running Engine and the inspected work.
 const approvals = new WeakMap<Database, Map<string, string>>();
@@ -97,10 +102,19 @@ async function attemptCleanup(
 
   if (risk.kind === 'absent') return;
 
-  const removal = { signal: options.signal, force: risk.kind === 'loss' };
+  if (canRemove(risk, approval)) {
+    const removal = { signal: options.signal, force: risk.kind === 'loss' };
 
-  if (canRemove(risk, approval))
-    return removeArchivedCheckout(projectPath, data.checkout, removal);
+    const remove = (): Promise<void> =>
+      removeArchivedCheckout(projectPath, data.checkout, removal);
+
+    return options.terminals
+      ? options.terminals.removeCheckout(
+          { projectId: data.projectId, checkoutPath: data.checkout.path },
+          remove,
+        )
+      : remove();
+  }
 
   const target = { sessionId: data.sessionId, reason: keepReason(risk) };
 

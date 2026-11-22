@@ -23,7 +23,6 @@ import {
 } from '../rpc';
 import { agentOptionsUpdates } from './configuration';
 import type { SessionList } from './list/session-list';
-import type { OpenSessions } from './open-sessions';
 import { delegatedAttention } from './orchestration/input-requests';
 import {
   answerSessionElicitation,
@@ -67,10 +66,11 @@ const createSeenRouter = routerFactory((sources: SessionHandlerSources) =>
 
 // Opens a Session, or waits for its open, without a Turn: Retry after a failed open never resends one.
 const openSession = async (
-  open: Pick<OpenSessions, 'ready'>,
+  sources: Pick<SessionHandlerSources, 'open' | 'autoStartRuns'>,
   { sessionId }: SessionOpenInput,
 ): Promise<SessionOpenOutput> => {
-  await open.ready(sessionId, 'session.open');
+  await sources.open.ready(sessionId, 'session.open');
+  sources.autoStartRuns?.(sessionId);
 
   return {};
 };
@@ -90,7 +90,7 @@ const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
     open: publicProcedure
       .input(SessionOpenInput)
       .output(SessionOpenOutput)
-      .mutation(({ input }) => openSession(sources.open, input)),
+      .mutation(({ input }) => openSession(sources, input)),
     agentOptions: publicProcedure
       .input(SessionAgentOptionsInput)
       .output(zAsyncIterable({ yield: AgentOptionsUpdate }))

@@ -20,6 +20,7 @@ import {
 } from './sections/session-sections';
 import type { SessionInspectorContent } from './session-inspector-content';
 import { RetainedInspectorPages } from './session-inspector-pages';
+import { endTerminalTab, terminalTabOf } from './session-terminal-tabs';
 
 export type { SessionInspectorContent } from './session-inspector-content';
 
@@ -32,10 +33,19 @@ type SessionInspectorProps = SessionInspectorContent & {
   phoneVisible?: boolean;
 };
 
+function closeTab({ panels, runs }: SessionInspectorProps, key: string): void {
+  endTerminalTab(runs, terminalTabOf(runs, key));
+  panels.close(key);
+}
+
 const tabOf = (
   props: SessionInspectorProps,
   section: SessionSection,
-): SectionTab => section.tab(props, sectionTab(props.panels, section.key));
+): SectionTab =>
+  section.tab(
+    props,
+    sectionTab(props.panels, section.key, () => closeTab(props, section.key)),
+  );
 
 function tabItem(props: SessionInspectorProps, key: string): InspectorTab[] {
   const section = sectionOf(props, key);
@@ -54,7 +64,7 @@ function inspectorTabs(props: SessionInspectorProps): InspectorProps['tabs'] {
     items: panels.state.tabs.flatMap((key) => tabItem(props, key)),
     selected: panels.state.shown ?? '',
     onSelect: panels.select,
-    onClose: panels.close,
+    onClose: (key) => closeTab(props, key),
   };
 }
 
@@ -133,6 +143,10 @@ function wideInspector(props: SessionInspectorProps): JSX.Element {
   return createElement(
     Inspector,
     { ...inspector, toolbar: undefined, contentScrolls: true },
-    <RetainedInspectorPages {...props} inspector={inspector} />,
+    <RetainedInspectorPages
+      {...props}
+      inspector={inspector}
+      onCloseTab={(key) => closeTab(props, key)}
+    />,
   );
 }

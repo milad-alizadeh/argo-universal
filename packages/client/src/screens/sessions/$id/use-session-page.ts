@@ -19,6 +19,7 @@ import { useSessionCallout } from './use-session-callout';
 import { useChangedSession } from './use-session-changes';
 import { useSessionLink } from './use-session-link';
 import { useSessionReadOptions } from './use-session-read-options';
+import { useSessionRuns } from './use-session-runs';
 import { useWithSessionBar } from './use-with-session-bar';
 import { useWithSessionPullRequests } from './use-with-session-pull-requests';
 import {
@@ -151,15 +152,29 @@ function usePageProps(
   cards: readonly SessionPluginCard[],
   sources: ConnectedFeed,
 ): SessionDetailViewProps {
-  const { sessionId } = page;
+  const { sessionId, preview } = page;
+  const shown = use(RetainedPageVisibility);
+
+  const runs = useSessionRuns(
+    sessionId,
+    shown && !preview && sources.feed.ready,
+  );
+
+  const runNames = runs.runs.map(({ name }) => name);
+  const terminalIds = runs.shells?.map(({ id }) => id);
 
   const surroundings = useSessionSurroundings(
     page,
-    offeredWith(cards, hasFollowUps(sources.schedules)),
+    offeredWith(cards, hasFollowUps(sources.schedules), {
+      runNames,
+      terminalIds,
+    }),
     sources,
   );
 
   const reads = usePageCallout(sessionId, sources, surroundings.agents);
 
-  return pageProps(sessionId, sources, { ...surroundings, ...reads });
+  const props = pageProps(sessionId, sources, { ...surroundings, ...reads });
+
+  return props.state === 'open' ? { ...props, runs } : props;
 }

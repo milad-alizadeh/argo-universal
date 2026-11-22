@@ -1,4 +1,8 @@
-import { defaultMinSize } from '@expo/ui/jetpack-compose/modifiers';
+import { Box } from '@expo/ui/jetpack-compose';
+import {
+  defaultMinSize,
+  fillMaxWidth,
+} from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import type { FieldGroupKitProps } from '../../kit-props';
@@ -11,7 +15,7 @@ import type { FieldLinkRowProps } from './field-link-props';
 import { linkTone } from './field-link-tone';
 
 /*
- * A pressable ListItem with what the page holds as its supporting line, as Android Settings' Preference summary.
+ * A pressable ListItem puts its value in the trailing slot and its optional subtitle in the supporting slot.
  * Android's Settings draws no disclosure chevron on a row that opens a page.
  */
 export function FieldLink(props: FieldLinkRowProps): ReactElement {
@@ -19,8 +23,8 @@ export function FieldLink(props: FieldLinkRowProps): ReactElement {
     <RowListItem
       {...rowListItemProps(props)}
       tone={linkTone(props)}
-      supporting={summary(props)}
-      trailing={trailingValue(props)}
+      supporting={subtitleOf(props)}
+      trailing={trailingValue(props.value)}
       leadingContent={leadingMark(props.leadingMark)}
       onPress={props.onPress}
       modifiers={props.roomy ? roomyRowModifiers : undefined}
@@ -36,31 +40,26 @@ const leadingMark = (
 ): ReactElement | undefined =>
   mark ? <FieldLinkMark mark={mark} /> : undefined;
 
-const summary = (
-  props: FieldGroupKitProps<'FieldGroup.Link'>,
-): ReactElement | undefined => {
-  const text = props.subtitle ?? props.value;
-
-  return text ? (
-    <NativeText
-      role={summaryRole(props.subtitle)}
-      tone={supportTone(props.subtitleTone)}
-    >
-      {text}
+const subtitleOf = ({
+  subtitle,
+  subtitleTone,
+}: FieldGroupKitProps<'FieldGroup.Link'>): ReactElement | undefined =>
+  subtitle ? (
+    <NativeText role="secondary" tone={subtitleTone ?? 'muted'}>
+      {subtitle}
     </NativeText>
   ) : undefined;
-};
 
-const supportTone = (
-  tone: 'muted' | 'danger' | undefined,
-): 'muted' | 'danger' => tone ?? 'muted';
+// Like FieldGroup.Value, leave room for the title when the trailing value is long.
+const valueShare = 0.6;
 
-const trailingValue = (
-  props: FieldGroupKitProps<'FieldGroup.Link'>,
-): ReactElement | undefined =>
-  props.subtitle && props.value ? (
-    <NativeText tone="muted">{props.value}</NativeText>
+const valueModifiers = [fillMaxWidth(valueShare)];
+
+const trailingValue = (value?: string): ReactElement | undefined =>
+  value ? (
+    <Box contentAlignment="centerEnd" modifiers={valueModifiers}>
+      <NativeText tone="muted" numberOfLines={1}>
+        {value}
+      </NativeText>
+    </Box>
   ) : undefined;
-
-const summaryRole = (subtitle: string | undefined): 'secondary' | undefined =>
-  subtitle ? 'secondary' : undefined;
