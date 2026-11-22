@@ -94,7 +94,7 @@ export const LastStepInProgress: Story = {
         canvas.getByTestId('session-todos-step-started'),
       ).toBeVisible();
       // A running Session's step underway glints.
-      await expect(canvas.getByTestId(sweep)).toBeInTheDocument();
+      await expect(await canvas.findByTestId(sweep)).toBeInTheDocument();
     }
   },
 };
