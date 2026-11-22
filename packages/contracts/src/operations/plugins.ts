@@ -164,7 +164,7 @@ export const pluginOperations = {
     label: 'New Plugin',
     icon: 'plugins',
     description:
-      'Write a working Plugin into a Session Checkout: one page, one Operation and one passing test. Run plugin.guide first.',
+      'Scaffold a Plugin in a Session Checkout. It has one page, one Operation and one passing test. Run plugin.guide first.',
     params: PluginNewInput,
     result: PluginNewOutput,
     tier: 'act',
