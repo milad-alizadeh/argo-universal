@@ -141,6 +141,7 @@ export type RunDefaultGroup = z.infer<typeof RunDefaultGroup>;
 
 export const RunStatusResult = z.strictObject({
   configurations: z.array(RunConfigurationRow),
+  configurationMissing: z.literal(true).optional(),
   configurationError: z.string().optional(),
   shells: z.array(ShellTerminal).optional(),
   defaultGroup: RunDefaultGroup.optional(),
@@ -156,6 +157,17 @@ export const RunLogsResult = z.strictObject({
 });
 
 export type RunLogsResult = z.infer<typeof RunLogsResult>;
+
+export const RunGuideParams = z.strictObject({}).default({});
+
+export const RunGuide = z.strictObject({
+  path: z.string().describe('Where to save the file relative to the Checkout.'),
+  template: z.string().describe('A complete example to save as the file.'),
+  schema: z.record(z.string(), z.json()).describe('JSON Schema for the file.'),
+  instructions: z.array(z.string()),
+});
+
+export type RunGuide = z.infer<typeof RunGuide>;
 
 export const RunDraftParams = z.strictObject({
   sessionId,

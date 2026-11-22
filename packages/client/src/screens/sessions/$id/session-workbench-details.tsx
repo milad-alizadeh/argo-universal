@@ -6,14 +6,17 @@ import { ScrollView } from 'react-native';
 import { ChangesFiles } from '#features/changes';
 import {
   ChangeRows,
+  resolveChangeStage,
   ShellOutput,
   type SessionPullRequest,
   shellTitle,
   shellStopAction,
   shellSupporting,
+  shellRowMark,
   subagentStateLabel,
   workbenchPreviewLimit,
 } from '#features/sessions';
+import { subagentMarkDescriptor } from '../../../lib/product/subagents/subagent-role';
 import { pullRequestsOf, summaryOf } from './sections/changes-facts';
 import { withCheckoutFiles } from './sections/checkout-files';
 import { openPullRequest } from './sections/open-pull-request';
@@ -26,6 +29,8 @@ import {
 } from './session-workbench-sheet-rows';
 
 const filesPage = 'checkout-files';
+
+const filesTitle = 'Changed files';
 
 export function changeRows(
   content: SessionInspectorContent,
@@ -65,10 +70,16 @@ const moreChanges = (
 
 const filesRow = (content: SessionInspectorContent): WorkbenchRow => ({
   key: filesPage,
-  label: 'Changed files',
+  label: filesTitle,
+  leadingMark: {
+    icon: 'diff',
+    tone: 'neutral',
+    label: filesTitle,
+    plain: true,
+  },
   value: summaryOf(content)?.files.toString(),
   page: {
-    title: 'Changed files',
+    title: filesTitle,
     children: content.changes ? (
       <ChangesFiles {...content.changes} />
     ) : (
@@ -82,14 +93,20 @@ type Changes = SessionInspectorContent['changes'];
 const changeRow = (
   change: SessionPullRequest,
   changes: Changes,
-): WorkbenchRow => ({
-  key: `change:${change.id ?? change.number}`,
-  label: `#${change.number} ${change.title}`,
-  page: {
-    title: `Change #${change.number}`,
-    children: <ChangeDetail change={change} changes={changes} />,
-  },
-});
+): WorkbenchRow => {
+  const mark = resolveChangeStage(change);
+
+  return {
+    key: `change:${change.id ?? change.number}`,
+    label: `#${change.number} ${change.title}`,
+    leadingMark: mark,
+    status: { label: mark.label },
+    page: {
+      title: `Change #${change.number}`,
+      children: <ChangeDetail change={change} changes={changes} />,
+    },
+  };
+};
 
 type PullRequestDetail = { change: SessionPullRequest; changes: Changes };
 
@@ -113,7 +130,8 @@ export const agentRow = (
 ): WorkbenchRow => ({
   key: `agent:${agent.sessionId}`,
   label: agent.title,
-  value: subagentStateLabel(agent),
+  leadingMark: subagentMarkDescriptor(agent),
+  status: { label: subagentStateLabel(agent) },
   onPress: () => content.subagents?.onSelect?.(agent),
   page: {
     title: agent.title,
@@ -144,18 +162,24 @@ export type Tasks = NonNullable<SessionInspectorContent['shells']>;
 export const taskRow = (
   shell: Tasks['shells'][number],
   props: Tasks,
-): WorkbenchRow => ({
-  key: `task:${shell.id}`,
-  label: shellTitle(shell),
-  value: shellSupporting(shell),
-  onPress: () => (props.onSelectFromWorkbench ?? props.onSelect)?.(shell),
-  page: {
-    title: shellTitle(shell),
-    action: shellStopAction(shell, props.onStop),
-    onExit: props.onDeselect,
-    children: taskOutput(shell, props),
-  },
-});
+): WorkbenchRow => {
+  const mark = shellRowMark(shell);
+
+  return {
+    key: `task:${shell.id}`,
+    label: shellTitle(shell),
+    leadingMark: mark,
+    status: { label: mark.status?.label ?? mark.label },
+    value: shell.status === 'running' ? shellSupporting(shell) : undefined,
+    onPress: () => (props.onSelectFromWorkbench ?? props.onSelect)?.(shell),
+    page: {
+      title: shellTitle(shell),
+      action: shellStopAction(shell, props.onStop),
+      onExit: props.onDeselect,
+      children: taskOutput(shell, props),
+    },
+  };
+};
 
 const taskOutput = (
   shell: Tasks['shells'][number],

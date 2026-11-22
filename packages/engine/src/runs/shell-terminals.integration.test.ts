@@ -51,6 +51,7 @@ it('opens a plain shell in the Session Checkout and lists it until Close stops t
   });
   await expect(caller.run.status({ sessionId })).resolves.toEqual({
     configurations: [],
+    configurationMissing: true,
     shells: [shell],
   });
 
@@ -59,6 +60,7 @@ it('opens a plain shell in the Session Checkout and lists it until Close stops t
   expect(terminal.stopped).toBe(true);
   await expect(caller.run.status({ sessionId })).resolves.toEqual({
     configurations: [],
+    configurationMissing: true,
   });
 });
 
@@ -193,6 +195,7 @@ it('runs commands in a real interactive shell in the Checkout', async () => {
       .poll(() => caller.run.status({ sessionId }))
       .toEqual({
         configurations: [],
+        configurationMissing: true,
       });
   } finally {
     await caller.terminal.close(target);
@@ -284,5 +287,6 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
   ).resolves.toContain(`Shell Terminal ${id} marked lost after Engine exit`);
   await expect(restarted.caller.run.status({ sessionId })).resolves.toEqual({
     configurations: [],
+    configurationMissing: true,
   });
 }, 30_000);

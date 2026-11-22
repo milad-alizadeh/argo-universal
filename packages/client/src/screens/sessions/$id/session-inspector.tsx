@@ -1,3 +1,4 @@
+import { Action } from '@repo/kit/primitives/actions/action';
 import {
   Inspector,
   type InspectorProps,
@@ -6,6 +7,7 @@ import {
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { createElement, type JSX } from 'react';
 import type { SessionPanels } from '#features/sessions';
+import { openNewShell } from './sections/runs-section';
 import {
   itemsOf,
   type SectionPhonePage,
@@ -139,10 +141,18 @@ function phoneInspector(props: SessionInspectorProps): JSX.Element | null {
 // Open tabs retain their actual content trees, including virtualised detail scroll and local selection.
 function wideInspector(props: SessionInspectorProps): JSX.Element {
   const inspector = inspectorProps(props);
+  const openTerminal = openNewShell(props.runs, props.panels);
 
   return createElement(
     Inspector,
-    { ...inspector, toolbar: undefined, contentScrolls: true },
+    {
+      ...inspector,
+      toolbar: undefined,
+      contentScrolls: true,
+      actions: openTerminal && (
+        <Action label="Add Terminal tab" icon="add" onPress={openTerminal} />
+      ),
+    },
     <RetainedInspectorPages
       {...props}
       inspector={inspector}

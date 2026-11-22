@@ -148,11 +148,16 @@ it('refuses a default that is no group', () => {
   expect(result.ok ? '' : result.error.message).toMatch(/dev/);
 });
 
-it('refuses a ready pattern that is not a regular expression', () => {
-  const result = read(
-    '{ "configurations": [{ "name": "web", "command": "a", "ready": { "pattern": "(" } }] }',
-  );
+it.each(['(', String.raw`\a`])(
+  'refuses an invalid ready pattern %s',
+  (pattern) => {
+    const result = read(
+      JSON.stringify({
+        configurations: [{ name: 'web', command: 'a', ready: { pattern } }],
+      }),
+    );
 
-  expect(result).toMatchObject({ ok: false });
-  expect(result.ok ? '' : result.error.message).toMatch(/pattern/);
-});
+    expect(result).toMatchObject({ ok: false });
+    expect(result.ok ? '' : result.error.message).toMatch(/pattern/);
+  },
+);

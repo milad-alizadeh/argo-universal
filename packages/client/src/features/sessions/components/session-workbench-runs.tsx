@@ -10,7 +10,12 @@ import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
-import { runIsActive, runStatusLabel, runStatusTone } from './run-status';
+import {
+  runGroupState,
+  runIsActive,
+  runStatusLabel,
+  runStatusTone,
+} from './run-status';
 
 type RunGroupControls = {
   status: RunDefaultGroup;
@@ -36,6 +41,7 @@ type WorkbenchShells = {
 };
 
 export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen' | 'shells'> & {
+  draft?: { pending: boolean; onPress: () => void };
   shells?: readonly ShellTerminal[];
   openShell?: (opened: (shell: ShellTerminal) => void) => void;
   closeShell?: (id: string) => void;
@@ -126,7 +132,7 @@ function RunAction({
 }
 
 function GroupRow({
-  status: { name, members, readyCount, url },
+  status,
   runs,
   compact,
   onStart,
@@ -135,12 +141,9 @@ function GroupRow({
   runs: readonly RunConfigurationRow[];
   compact?: boolean;
 }): ReactElement {
-  const active = runs.some(
-    (run) => members.includes(run.name) && runIsActive(run),
-  );
+  const { name, members, readyCount, url } = status;
 
-  const runningState = active ? 'starting' : 'stopped';
-  const state = readyCount === members.length ? 'ready' : runningState;
+  const { active, status: state } = runGroupState(status, runs);
 
   return (
     <View className="flex-row items-center gap-1">
@@ -189,15 +192,12 @@ function ShellRows({ rows, onOpen, onNew }: WorkbenchShells): ReactElement {
         </Pressable>
       ))}
       {onNew && (
-        <Pressable
-          role="button"
+        <IconButton
+          accessibilityLabel="New Terminal"
+          icon="terminal"
           onPress={onNew}
-          className="rounded-control px-1 py-2 web:hover:bg-hover"
-        >
-          <Text role="secondary" tone="muted">
-            New Terminal
-          </Text>
-        </Pressable>
+          variant="ghost"
+        />
       )}
     </>
   );

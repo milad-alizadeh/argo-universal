@@ -3,6 +3,7 @@ import type { Database } from '@repo/db';
 import { readProjectPath } from '../projects';
 import {
   draftRunConfigurations,
+  runGuide,
   type RunCheckout,
   type RunRequest,
   type Runs,
@@ -76,6 +77,7 @@ export function createRunOperations(
       ),
     'run.status': async ({ sessionId }) =>
       runs.view.status(runs.sessions.checkout(sessionId)),
+    'run.guide': async () => runGuide(),
     'run.draft': async ({ sessionId, overwrite }) => {
       const drafted = await draftRunConfigurations(
         runs.sessions.checkout(sessionId).checkoutPath,

@@ -26,3 +26,9 @@ export const glyphForegroundClass = 'text-foreground';
 export type GlyphLane = 'row';
 
 export const rowGlyphSize: IconSize = 'md';
+
+export const rowGlyphSizing = {
+  size: rowGlyphSize,
+  fixed: true,
+  lane: 'row',
+} as const;

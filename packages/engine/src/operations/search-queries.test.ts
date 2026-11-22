@@ -45,6 +45,7 @@ const asked = {
   'run.restart': ['restart the dev server'],
   'run.status': ['which dev servers are running'],
   'run.logs': ['read the dev server output'],
+  'run.guide': ['run.json schema', 'write a Run Configuration template'],
   'run.draft': [
     'draft run configurations',
     'import launch.json into run configurations',

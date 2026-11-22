@@ -227,13 +227,8 @@ export const PhoneOpensAnAttachedIssueFromTheWorkbench: Story = {
 
     await expect(sheet.getByText(issue.pluginName)).toBeVisible();
     await expect(first).toBeVisible();
-    const [number = ''] = secondIssueLine.text.split(' · ');
-    const label = within(second).getByText(number).getBoundingClientRect();
-    const value = within(second).getByText('Open').getBoundingClientRect();
-
-    await expect(label.right).toBeLessThanOrEqual(value.left);
-    await expect(label.top).toBeLessThan(value.bottom);
-    await expect(value.top).toBeLessThan(label.bottom);
+    await expect(within(first).queryByText('In review')).toBeNull();
+    await expect(within(second).queryByText('Open')).toBeNull();
     await settleOverlays(second);
     await userEvent.click(second);
     await expect(onOpenOf(args.view)).toHaveBeenCalledWith(secondIssueLine);

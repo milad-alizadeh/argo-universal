@@ -1,7 +1,6 @@
-import { isStockIconName } from '@repo/contracts/kit-symbols';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List } from '@repo/kit/primitives/lists/list';
-import type { ComponentProps, JSX } from 'react';
+import type { JSX } from 'react';
 import { workListSections } from '../work-list-sections';
 import {
   shellElapsed,
@@ -10,38 +9,7 @@ import {
   shellTitle,
 } from './shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list-types';
-
-type Mark = NonNullable<ComponentProps<typeof FieldGroup.Link>['leadingMark']>;
-
-const runningMark: Mark = {
-  icon: 'terminal',
-  tone: 'neutral',
-  label: 'Background Task',
-  status: { tone: 'success', label: 'Running' },
-};
-
-function endedTone(tone: string): Mark['tone'] {
-  if (tone === 'danger') return 'danger';
-
-  if (tone === 'warning') return 'warning';
-
-  return 'neutral';
-}
-
-function endedMark(shell: ShellEntry): Mark {
-  const outcome = shellOutcome(shell);
-  const icon = outcome.icon ?? 'terminal';
-
-  return {
-    icon: isStockIconName(icon) ? icon : 'terminal',
-    tone: endedTone(outcome.tone),
-    label: outcome.label,
-    plain: true,
-  };
-}
-
-const mark = (shell: ShellEntry): Mark =>
-  shell.status === 'running' ? runningMark : endedMark(shell);
+import { shellRowMark } from './shell-mark';
 
 type PhoneProps = ShellListProps & { now: number };
 
@@ -58,7 +26,7 @@ const row = (shell: ShellEntry, props: PhoneProps): JSX.Element => (
     subtitle={`${shellSupporting(shell)} · ${shellElapsed(shell, props.now)}`}
     subtitleTone={shellOutcome(shell).tone === 'danger' ? 'danger' : 'muted'}
     roomy
-    leadingMark={mark(shell)}
+    leadingMark={shellRowMark(shell)}
     disabled={!props.onSelect}
     onPress={() => props.onSelect?.(shell)}
   />

@@ -1,10 +1,11 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, IconSizeContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { leadingMarkClass } from './leading-mark';
 import type { IconName } from './symbols/icon-names';
 import type { IconSizeValue } from './symbols/icon-size';
+import { rowGlyphSizing } from './symbols/row-glyph';
 
 // Foundations / ChangeStage uses the same tone pairing on desktop and phone.
 const palettes = {
@@ -93,7 +94,7 @@ function glyph(props: ToneMarkProps): ReactElement {
   );
 }
 
-export function ToneMark(props: ToneMarkProps): ReactElement {
+function ToneMarkFace(props: ToneMarkProps): ReactElement {
   if (props.form !== 'disc') return glyph(props);
 
   return (
@@ -102,6 +103,16 @@ export function ToneMark(props: ToneMarkProps): ReactElement {
     >
       {glyph(props)}
     </View>
+  );
+}
+
+export function ToneMark(props: ToneMarkProps): ReactElement {
+  const face = <ToneMarkFace {...props} />;
+
+  return props.disc === 'leading' ? (
+    <IconSizeContext value={rowGlyphSizing}>{face}</IconSizeContext>
+  ) : (
+    face
   );
 }
 

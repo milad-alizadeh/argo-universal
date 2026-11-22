@@ -157,7 +157,10 @@ function usePageProps(
 
   const runs = useSessionRuns(
     sessionId,
-    shown && !preview && sources.feed.ready,
+    shown &&
+      !preview &&
+      sources.feed.ready &&
+      sources.feed.snapshot?.archivedAt === null,
   );
 
   const runNames = runs.runs.map(({ name }) => name);

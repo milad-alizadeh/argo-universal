@@ -80,7 +80,7 @@ const pullRequest = pullRequestMocks.checksRunning;
 
 export const OpensPullRequest: Story = {
   ...opensDetail(
-    new RegExp(`^#${pullRequest.number} ${pullRequest.title}$`),
+    new RegExp(`^#${pullRequest.number} ${pullRequest.title}, Open$`),
     `Change #${pullRequest.number}`,
   ),
   args: {

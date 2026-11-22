@@ -40,7 +40,8 @@ const refuse = (code: 'BAD_REQUEST' | 'CONFLICT', message: string): never => {
 
 const nothingFound = (skipped: SkippedDraft[]): string =>
   [
-    `Nothing to draft Run Configurations from: ${runConfigurationsFile} is drafted from package.json scripts, a Procfile, .vscode/launch.json or .claude/launch.json, and none of them starts anything. Write ${runConfigurationsFile} by hand.`,
+    `Nothing to draft Run Configurations from. Use the template from run.guide to write ${runConfigurationsFile}, or ask an Agent to do it.`,
+    'Argo looked for package.json scripts, a Procfile, .vscode/launch.json and .claude/launch.json.',
     ...skipped.map(
       ({ source, name, reason }) => `${source} ${name}: ${reason}`,
     ),

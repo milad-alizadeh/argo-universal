@@ -40,14 +40,14 @@ async function readCheckoutConfiguration(
 // The Checkout's Run Configurations; none when it has no file, and a refusal that says where a bad file is wrong.
 export async function readRunFile(
   checkoutPath: string,
-): Promise<RunConfigurations> {
+): Promise<RunConfigurations & { missing?: true }> {
   let source: string;
 
   try {
     source = await readCheckoutConfiguration(checkoutPath);
   } catch (error) {
     if (error instanceof Error && missing(error))
-      return { configurations: [], groups: {} };
+      return { configurations: [], groups: {}, missing: true };
     throw error;
   }
 

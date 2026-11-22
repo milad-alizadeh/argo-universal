@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, IconSizeContext } from '#primitives/content/icon';
 import { StatusDot } from '#primitives/status/status-dot';
 import { leadingMarkClass } from './leading-mark';
 import type { IconName } from './symbols/icon-names';
 import { useIconBox } from './symbols/icon-size';
+import { rowGlyphSizing } from './symbols/row-glyph';
 import { toneDisc, type MarkTone } from './tone-mark';
 import { cn } from './utils';
 
@@ -52,7 +53,7 @@ function AvatarGlyph({
   return size === 'inline' ? (
     <View style={styles.inlineGlyph}>{glyph}</View>
   ) : (
-    glyph
+    <IconSizeContext value={rowGlyphSizing}>{glyph}</IconSizeContext>
   );
 }
 

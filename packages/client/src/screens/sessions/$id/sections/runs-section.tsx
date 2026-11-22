@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import {
   WorkbenchRuns,
   type SessionRuns,
@@ -50,25 +51,36 @@ export function openNewShell(
   return () => open(({ id }) => panels.select(shellTabKey(id)));
 }
 
+export const createRunFileLabel = 'Create .argo/run.json';
+
 export function runsCard(
   controls: SessionRuns | undefined,
   panels: SessionPanels,
 ): WorkbenchSection[] {
-  if (!controls || (!controls.runs.length && !controls.shells?.length))
+  if (
+    !controls ||
+    (!controls.draft && !controls.runs.length && !controls.shells?.length)
+  )
     return [];
 
   return [
     {
       key: 'runs',
       title: 'Runs',
-      summary: (
+      summary: controls.draft ? (
+        <Button
+          label={createRunFileLabel}
+          onPress={controls.draft.onPress}
+          disabled={controls.draft.pending}
+          size="sm"
+        />
+      ) : (
         <WorkbenchRuns
           {...controls}
           onOpen={(name) => panels.select(runTabKey(name))}
           shells={{
             rows: controls.shells ?? [],
             onOpen: ({ id }) => panels.select(shellTabKey(id)),
-            onNew: openNewShell(controls, panels),
           }}
         />
       ),
