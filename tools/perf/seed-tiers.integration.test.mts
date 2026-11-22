@@ -106,9 +106,10 @@ describe('the recorded Feed with its messages emptied of text', () => {
   } as const;
 
   let server: Awaited<ReturnType<typeof startSeededServer>>;
-  let directory: string;
+  let directory: string | undefined;
   let rows: SessionUpdate[];
 
+  // This setup starts two Servers and reads back the 1,000 seeded rows.
   beforeAll(async () => {
     directory = await mkdtemp(path.join(os.tmpdir(), 'argo-blank-regression-'));
     server = await startSeededServer(directory, options);
@@ -121,11 +122,14 @@ describe('the recorded Feed with its messages emptied of text', () => {
     if (!long)
       throw new Error('The seeded long Session must be publicly listed');
     rows = await history(server.serverUrl, long.sessionId);
-  });
+  }, 30_000);
 
   afterAll(async () => {
-    await server.stop();
-    await rm(directory, { recursive: true, force: true });
+    try {
+      await server?.stop();
+    } finally {
+      if (directory) await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it('serves the requested rows and records the request', () => {
