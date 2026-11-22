@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
@@ -127,7 +127,7 @@ it('archiving one Session closes only its shells on a shared Checkout', async ()
   });
 });
 
-const backgroundJob = 'nohup sleep 60 >/dev/null 2>&1 & echo ArgoJob:$!\r';
+const backgroundJob = 'nohup sleep 60 9<&- >/dev/null 2>&1 & echo ArgoJob:$!\r';
 
 async function jobPid(read: () => string | Promise<string>): Promise<number> {
   let pid = 0;
@@ -188,6 +188,12 @@ it('runs commands in a real interactive shell in the Checkout', async () => {
     await expect
       .poll(async () => (await caller.terminal.read(target)).screen)
       .toContain(`ArgoShell:${checkout.path}`);
+    await caller.terminal.send({ ...target, input: 'exit\r' });
+    await expect
+      .poll(() => caller.run.status({ sessionId }))
+      .toEqual({
+        configurations: [],
+      });
   } finally {
     await caller.terminal.close(target);
   }
@@ -196,6 +202,7 @@ it('runs commands in a real interactive shell in the Checkout', async () => {
 async function expectRecoveryToRefuseStaleOwner(
   host: TestShells['host'],
   pid: number,
+  survivor = pid,
 ): Promise<void> {
   const forgetStaleOwner = await recordCheckoutTerminalOwner(
     host.home,
@@ -207,13 +214,15 @@ async function expectRecoveryToRefuseStaleOwner(
     await expect(
       startEngineTestHost({ home: host.home, acp: host.agent }),
     ).rejects.toThrow('Actor terminated');
-    expect(processIsRunning(pid)).toBe(true);
+    expect(processIsRunning(survivor)).toBe(true);
   } finally {
     await forgetStaleOwner();
   }
 }
 
 it('recovery marks an interrupted shell Terminal lost and clears its process and output', async () => {
+  vi.stubEnv('SHELL', '/bin/bash');
+  onTestFinished(() => void vi.unstubAllEnvs());
   const host = await startAcpEngine({ steps: [] });
 
   const { sessionId } = await host.caller.session.new({
@@ -246,7 +255,6 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
   if (pid === undefined) throw new Error('Missing Terminal process ID');
 
   await expectRecoveryToRefuseStaleOwner(host, pid);
-  await recordCheckoutTerminalOwner(host.home, pid, id);
   let screen = '';
   terminal.onData((text) => {
     screen += text;
@@ -255,11 +263,11 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
   const job = await jobPid(() => screen);
 
   await writeFile(outputPath, 'interrupted output');
-  expect(processIsRunning(pid)).toBe(true);
-
   process.kill(pid, 'SIGKILL');
   await expect.poll(() => processIsRunning(pid)).toBe(false);
-  expect(processIsRunning(job)).toBe(true);
+
+  await expectRecoveryToRefuseStaleOwner(host, pid, job);
+  await recordCheckoutTerminalOwner(host.home, pid, id);
 
   const restarted = await startEngineTestHost({
     home: host.home,

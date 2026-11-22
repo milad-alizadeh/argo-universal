@@ -19,6 +19,15 @@ import {
 
 const graceMs = 3000;
 
+// Login shells may close inherited descriptors. This helper holds the file even if the PTY leader dies.
+// Session cleanup stops the helper alongside the shell and its jobs.
+const checkoutShell = `
+  exec ${ptyOwnerDescriptor}<"$2" || exit 1
+  (trap '' HUP; exec /bin/sleep 2147483647) </dev/null >/dev/null 2>&1 &
+  "$1" -il
+  exit $?
+`;
+
 type TerminalLifetime =
   | { port: number }
   | { token: string; outputPath: string };
@@ -100,13 +109,7 @@ export const launchTerminal: TerminalSpawner = async (
   const child = spawn(
     '/bin/sh',
     launch.shell
-      ? [
-          '-c',
-          `exec ${ptyOwnerDescriptor}<"$2"; "$1" -il; exit $?`,
-          token,
-          shell,
-          launch.shell.outputPath,
-        ]
+      ? ['-c', checkoutShell, token, shell, launch.shell.outputPath]
       : ['-c', '"$1" -l -c "$2" "$0"; exit $?', token, shell, launch.command],
     {
       cwd: launch.cwd,
