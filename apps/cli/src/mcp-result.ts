@@ -1,4 +1,5 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { ChartPreviewCapturedResult } from '@repo/contracts/operations/chart';
 import type {
   OperationInputRow,
   OperationRunResponse,
@@ -33,6 +34,27 @@ const capturedText = JSON.stringify({
 
 // A captured screen reaches the Agent as an image it can look at, not as base64 text in its context.
 export function result(value: Answer): CallToolResult {
+  if (!Array.isArray(value) && value.kind === 'result') {
+    const preview = ChartPreviewCapturedResult.safeParse(value.result);
+
+    if (preview.success) {
+      const { image, valid, status, platform, width, theme } = preview.data;
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              kind: 'result',
+              result: { valid, status, platform, width, theme },
+            }),
+          },
+          { type: 'image', ...image },
+        ],
+      };
+    }
+  }
+
   const picture = capturedImage(value);
 
   if (!picture)

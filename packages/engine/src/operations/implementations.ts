@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { NativeStartRequest, SessionOperationCall } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { createAppOperations } from './app';
+import { createChartOperations } from './chart';
 import { createConversationOperations } from './conversation';
 import { createDiagramOperations } from './diagram';
 import type { NativeStartId, StartedWork } from './native-start';
@@ -77,6 +78,7 @@ export function createImplementations(
     ...createAgentAccessOperations(deps),
     ...createAppOperations(deps),
     ...createDiagramOperations(),
+    ...createChartOperations(deps.chartPreview),
     ...sessionImplementations(deps.sessions),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),

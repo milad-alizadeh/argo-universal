@@ -1,6 +1,7 @@
 import { createAgentsRouter } from '../agents';
 import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
+import { createChartPreviewRouter } from '../chart-preview/router';
 import { createConversationRouter } from '../conversation';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
@@ -32,6 +33,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     pairing: createPairingRouter(deps),
     navigation: createAppNavigationRouter(deps),
     screenSight: createScreenSightRouter(deps),
+    chartPreview: createChartPreviewRouter(deps),
   }),
 );
 
