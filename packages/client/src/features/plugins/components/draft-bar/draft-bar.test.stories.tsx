@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
+import { DraftChooseButton } from './draft-choose-button';
 import { populatedDraft } from './draft-bar-fixtures';
 
 const meta = {
@@ -119,5 +120,27 @@ export const PhoneStateMenuChecksTheCurrentState: Story = {
     await expect(
       await menu().findByRole('menuitemradio', { name: 'Populated' }),
     ).toBeChecked();
+  },
+};
+
+export const PhoneBarFitsTheWindowWithComments: Story = {
+  args: {
+    form: 'menu',
+    choose: <DraftChooseButton comments={12} onPress={fn()} />,
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+
+    const bar = await canvas.findByRole('toolbar', { name: 'Draft' });
+    const choose = await canvas.findByRole('button', {
+      name: 'Choose · 12 comments',
+    });
+
+    await expect(bar.getBoundingClientRect().right).toBeLessThanOrEqual(
+      window.innerWidth,
+    );
+    await expect(choose.getBoundingClientRect().right).toBeLessThanOrEqual(
+      bar.getBoundingClientRect().right,
+    );
   },
 };

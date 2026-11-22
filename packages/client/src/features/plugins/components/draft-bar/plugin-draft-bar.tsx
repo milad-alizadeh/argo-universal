@@ -1,9 +1,9 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import type { DraftBarState } from '../../hooks/use-draft-bar';
 import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
+import { DraftChooseButton } from './draft-choose-button';
 
 export function PluginDraftBar({
   bar,
@@ -20,7 +20,7 @@ export function PluginDraftBar({
           <IconButton
             icon="message"
             accessibilityLabel="Comments"
-            control
+            size="md"
             variant="secondary"
             selected={bar.commenting}
             aria-pressed={bar.commenting}
@@ -29,9 +29,8 @@ export function PluginDraftBar({
         }
         choose={
           bar.onChoose && (
-            <Button
-              label={chooseLabel(bar.commentCount)}
-              size="sm"
+            <DraftChooseButton
+              comments={bar.commentCount}
               onPress={bar.onChoose}
             />
           )
@@ -39,10 +38,4 @@ export function PluginDraftBar({
       />
     </DraftBarDock>
   );
-}
-
-function chooseLabel(comments: number): string {
-  if (comments === 0) return 'Choose';
-
-  return `Choose · ${comments} ${comments === 1 ? 'comment' : 'comments'}`;
 }

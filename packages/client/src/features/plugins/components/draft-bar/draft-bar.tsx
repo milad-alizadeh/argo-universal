@@ -33,10 +33,12 @@ export function DraftBar(props: DraftBarProps): React.JSX.Element {
     <View
       role="toolbar"
       aria-label="Draft"
-      className="flex-row items-center gap-2 rounded-xl border border-hairline bg-tray p-1.5 shadow-raised"
+      className="flex-row items-center gap-2 max-w-full rounded-xl border border-hairline bg-tray p-1.5 shadow-raised"
     >
       <DraftBadge />
-      <States {...props} />
+      <View className="min-w-0 shrink">
+        <States {...props} />
+      </View>
       {commentToggle}
       {choose}
     </View>
@@ -45,7 +47,7 @@ export function DraftBar(props: DraftBarProps): React.JSX.Element {
 
 function DraftBadge(): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-1.5 rounded-lg bg-warning/18 px-2.5 py-1">
+    <View className="flex-row items-center gap-1.5 min-h-8 rounded-lg bg-warning/18 px-2.5">
       <StatusDot tone="warning" size="sm" />
       <Text role="badge" tone="neutral">
         Draft

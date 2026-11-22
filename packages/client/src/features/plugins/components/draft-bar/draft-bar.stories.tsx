@@ -1,4 +1,3 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -7,6 +6,7 @@ import { action } from 'storybook/actions';
 import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
 import { populatedDraft } from './draft-bar-fixtures';
+import { DraftChooseButton } from './draft-choose-button';
 
 const meta = {
   title: 'Plugins/DraftBar',
@@ -31,7 +31,7 @@ const meta = {
   args: {
     ...populatedDraft,
     onStateChange: action('state change'),
-    choose: <Button label="Choose" size="sm" onPress={action('choose')} />,
+    choose: <DraftChooseButton comments={0} onPress={action('choose')} />,
   },
 } satisfies Meta<typeof DraftBar>;
 
@@ -47,14 +47,14 @@ const commentToggle = (
   <IconButton
     icon="message"
     accessibilityLabel="Comments"
-    control
+    size="md"
     variant="secondary"
     onPress={action('toggle comments')}
   />
 );
 
 const chooseWithComments = (
-  <Button label="Choose · 2 comments" size="sm" onPress={action('choose')} />
+  <DraftChooseButton comments={2} onPress={action('choose')} />
 );
 
 export const TabsWithComments: Story = {
