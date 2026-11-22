@@ -44,7 +44,9 @@ export const APointerPressPicksTheNodeUnderIt: Story = {
 
     const note = await editor().findByRole('textbox', { name: 'Comment' });
 
-    await expect(await editor().findByText('List · rows')).toBeVisible();
+    const heading = await editor().findByText('List · rows');
+
+    await waitFor(() => expect(heading).toBeVisible());
     await expect(
       editor().getByRole('group', { name: 'List · A · row-409' }),
     ).toBeVisible();
