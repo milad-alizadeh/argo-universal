@@ -8,8 +8,7 @@ const sidebarPressLayouts = {
 };
 
 /*
- * Rows keep 16 from their edge and 20 on wide. A sidebar List's row (Paper's SettingsList) is a 52-high tile whose
- * content starts 8 in, on the sidebar title's edge. A tree's lanes follow the row, compact and sidebar layouts
+ * Rows keep 16 from their edge and 20 on wide. A tree's lanes follow the row, compact and sidebar layouts
  * (list-item-tree-lanes.ts).
  */
 export const pressLayouts = {
@@ -18,7 +17,6 @@ export const pressLayouts = {
   compact: 'w-full min-h-9 flex-row items-center gap-2 px-2.5',
   tray: 'w-full min-h-composer-tray-row flex-row items-center gap-1.5 px-1.5',
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
-  'sidebar-tile': 'w-full min-h-13 flex-row items-center gap-3.5 px-2 py-1.5',
   ...sidebarPressLayouts,
 };
 
@@ -32,7 +30,6 @@ export const controlLines = {
   compact: controlLine,
   tray: controlLine,
   menu: 'flex-wrap gap-y-3',
-  'sidebar-tile': controlLine,
   sidebar: controlLine,
   'sidebar-compact': controlLine,
 } satisfies Record<PressLayout, string>;

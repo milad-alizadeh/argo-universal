@@ -1,4 +1,4 @@
-export { ChromeIconButton } from './chrome-icon-button';
+export { ChromeIconButton, chromeControlSize } from './chrome-icon-button';
 
 export { FixedSizeChrome } from './fixed-size-chrome';
 

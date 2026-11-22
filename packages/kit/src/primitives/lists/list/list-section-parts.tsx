@@ -2,7 +2,11 @@ import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { Text, TextClassContext } from '#primitives/content/text';
-import { useSectionDrawing } from '../../../list-look-context';
+import {
+  drawsSidebar,
+  useListLook,
+  useSectionDrawing,
+} from '../../../list-look-context';
 import type { SectionDrawing } from '../../../list-look-section';
 import { SizeClass } from '../../../size-class/size-class';
 import { cn } from '../../../utils';
@@ -19,6 +23,9 @@ export type HeaderProps = Omit<ListSectionProps, 'children'> & {
 };
 
 type DrawnHeaderProps = HeaderProps & { drawing: SectionDrawing };
+
+// A header that took the sidebar's drawing from its List rather than its caller spaces itself from its rows.
+type ResolvedHeaderProps = HeaderProps & { spacedFromRows?: boolean };
 
 // The drawing's title colour, or a sidebar section's muted title.
 const titleLook = (
@@ -108,11 +115,14 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
 }
 
 const headerClassName = (
-  props: HeaderProps,
+  props: ResolvedHeaderProps,
   drawing: SectionDrawing,
 ): string =>
   props.sidebar
-    ? 'group min-h-6 flex-row items-center gap-1 px-3'
+    ? cn(
+        'group min-h-6 flex-row items-center gap-1 px-3',
+        props.spacedFromRows && drawing.gap,
+      )
     : cn(
         'group flex-row items-start gap-1',
         drawing.inset,
@@ -124,13 +134,15 @@ interface HeaderDrawing {
   className: string;
 }
 
-function useHeaderDrawing(props: HeaderProps): HeaderDrawing {
+function useHeaderDrawing(props: ResolvedHeaderProps): HeaderDrawing {
   const drawing = useSectionDrawing();
 
   return { drawing, className: headerClassName(props, drawing) };
 }
 
-function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
+function HeaderRow(
+  props: ResolvedHeaderProps & { wide: boolean },
+): ReactElement {
   const { drawing, className } = useHeaderDrawing(props);
 
   return (
@@ -146,8 +158,23 @@ function HeaderRow(props: HeaderProps & { wide: boolean }): ReactElement {
   );
 }
 
+/*
+ * A section in the desktop sidebar draws the sidebar's header unless it says otherwise, so its glyph and title share
+ * the rows' icon lane and text edge, and a heading with no glyph starts on the icon lane. A sidebar's popover keeps its
+ * menu heading. A section that only follows its List spaces itself from its rows; a sidebar caller spaces its own.
+ */
+function useResolvedHeader(props: HeaderProps): ResolvedHeaderProps {
+  const look = useListLook();
+
+  if (props.sidebar !== undefined) return props;
+
+  return { ...props, sidebar: drawsSidebar(look), spacedFromRows: true };
+}
+
 // A wide header draws its Actions as buttons; below it, a long press or a right-click opens them, under the section's title.
-export function SectionHeader(props: HeaderProps): ReactNode {
+export function SectionHeader(declared: HeaderProps): ReactNode {
+  const props = useResolvedHeader(declared);
+
   return (
     <SizeClass
       wide={<HeaderRow {...props} wide />}

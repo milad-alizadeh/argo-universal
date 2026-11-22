@@ -24,7 +24,7 @@ import { submenuLabel } from './submenu-badge';
 
 // How a header draws its buttons: their size, and what each one's spoken name says it acts on.
 export interface HeaderButtonLook {
-  // A list column's heading and a section's header draw smaller buttons than a page's.
+  // A section's header draws smaller buttons than a Screen's heading, which draws the window band's size.
   size?: IconButtonSize;
   /*
    * The name of what the Actions act on, such as a section's title, spoken after each button's label so repeated
