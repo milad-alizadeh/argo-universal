@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import type { DraftRegionTag as Tag } from '../../utils/draft-regions-model';
 import { DraftRegionTag } from './draft-region-tag';
 
@@ -20,12 +20,16 @@ export function DraftRegionFrame(
   const { children, tagged = true } = props;
   const active = props.active && tagged;
 
+  // A nested Pressable can take hover from its parent on web, hiding the chevron under the pointer.
   return (
-    <Pressable
-      accessible={false}
-      focusable={false}
-      onHoverIn={tagged ? props.onActivate : undefined}
-      onHoverOut={props.onDeactivate}
+    <View
+      onPointerEnter={(event) => {
+        if (tagged && event.nativeEvent.pointerType !== 'touch')
+          props.onActivate();
+      }}
+      onPointerLeave={(event) => {
+        if (event.nativeEvent.pointerType !== 'touch') props.onDeactivate();
+      }}
       className="relative"
     >
       {children}
@@ -40,6 +44,6 @@ export function DraftRegionFrame(
           <DraftRegionTag {...props} />
         </View>
       )}
-    </Pressable>
+    </View>
   );
 }

@@ -31,8 +31,10 @@ Then(
   'the {string} region tag reads {string}',
   async ({ page }, region: string, text: string): Promise<void> => {
     await expect(
-      page.getByRole('group', { name: `${region} Variant` }),
-    ).toHaveText(text);
+      page
+        .getByRole('group', { name: `${region} Variant` })
+        .getByText(text, { exact: true }),
+    ).toBeVisible();
   },
 );
 
