@@ -115,17 +115,22 @@ function walkElement(element: Element, scene: Scene): void {
   if (!isInvisible(style)) walkVisible(element, style, scene);
 }
 
-// Content stacked on one spot (a cross-fading icon, a badge over its avatar) draws one placeholder, not a darker one.
-const onePerBox = (
-  placeholders: SkeletonPlaceholder[],
-): SkeletonPlaceholder[] => [
-  ...new Map(
-    placeholders.map((placeholder) => [
-      placeholderKey(placeholder),
-      placeholder,
-    ]),
-  ).values(),
-];
+/*
+ * Content stacked on one spot (a cross-fading icon, a badge over its avatar) draws one placeholder, not a darker
+ * one: the first drawn, which is the one beneath.
+ */
+function onePerBox(placeholders: SkeletonPlaceholder[]): SkeletonPlaceholder[] {
+  const seen = new Set<string>();
+
+  return placeholders.filter((placeholder) => {
+    const key = placeholderKey(placeholder);
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+
+    return true;
+  });
+}
 
 /*
  * What a loading Skeleton draws. It reads the page as the browser laid it out: a text node gives one rect per

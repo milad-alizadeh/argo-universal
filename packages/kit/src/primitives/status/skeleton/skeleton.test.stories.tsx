@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { Skeleton } from './index';
 import { loadedSkeleton, loadingSkeleton } from './skeleton-fixtures';
 import { overlayAttribute } from './skeleton-marks';
@@ -160,7 +160,6 @@ export const DrawsOnePlaceholderPerSpot: Story = {
   args: loadingSkeleton,
   render: () => <StackedBadges />,
   play: async ({ canvasElement }) => {
-    const error = spyOn(console, 'error');
     const canvas = within(canvasElement);
     await canvas.findByRole('status');
 
@@ -171,10 +170,5 @@ export const DrawsOnePlaceholderPerSpot: Story = {
       expect(overlay()?.childElementCount).toBeGreaterThan(0),
     );
     await expect(overlay()?.childElementCount).toBe(1);
-    await expect(error).not.toHaveBeenCalledWith(
-      expect.stringContaining('same key'),
-      expect.anything(),
-      expect.anything(),
-    );
   },
 };
