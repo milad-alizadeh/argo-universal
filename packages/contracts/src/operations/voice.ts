@@ -48,7 +48,7 @@ export const voiceOperations = {
     icon: 'voice',
     label: 'Save custom voice',
     description:
-      'Add a custom voice, or change the one `id` names: a name, a built-in voice to speak with, and a description of how it speaks. A running Conversation keeps its voice; the next Conversation uses the change.',
+      'Add or change a custom voice: a name, a built-in voice to speak with, and how it speaks. A running Conversation keeps its voice; the next Conversation uses the change.',
     params: CustomVoiceInput,
     result: CustomVoice,
     tier: 'confirm',

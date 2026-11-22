@@ -61,7 +61,7 @@ export const pluginOperations = {
     label: 'Show Draft',
     icon: 'plug',
     description:
-      'Rebuild the Draft now, mid-Turn. Call it after finishing a Draft region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only when the build passes. A broken build keeps the current worker, so the Draft on screen never blanks, and the build error is returned as the refusal. Every other source change still waits for the Turn to end. Needs a Server running with --watch.',
+      'Rebuild the Draft mid-Turn. Call it after finishing a Draft region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only when the build passes. A broken build keeps the current worker, so the Draft on screen never blanks, and the build error is returned as the refusal. Every other source change still waits for the Turn to end. Needs a Server running with --watch.',
     params: z.strictObject({
       pluginId: PluginIdentifier,
       // The region the Agent is writing next, which Apps frame until it lands; optional.
@@ -94,7 +94,7 @@ export const pluginOperations = {
     label: 'Read Draft pick',
     icon: 'plug',
     description:
-      'Read the author’s last choice for a Plugin’s Draft. Returns one Variant per region and the comments sent with it, or null before a choice. Read it to resume after a restart, then write the chosen-variant file into the Plugin folder.',
+      'Read the author’s last Draft choice. Returns one Variant per region and the comments sent with it, or null before a choice. Read it to resume after a restart, then write the chosen-variant file into the Plugin folder.',
     params: DraftPickInput,
     result: DraftPickOutput,
     tier: 'read',

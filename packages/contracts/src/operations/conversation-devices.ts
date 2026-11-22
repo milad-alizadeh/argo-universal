@@ -31,7 +31,7 @@ export const conversationDeviceOperations = {
     icon: 'voice',
     label: 'Choose Conversation devices',
     description:
-      'Choose the microphone or speaker, by id from conversation.listDevices, on the App a Conversation uses; null follows the system. A running Conversation moves to them at once. Refused when no App is connected or it has no such device.',
+      'Choose the Conversation App’s microphone or speaker by id from conversation.listDevices; null follows the system. A running Conversation moves to them at once. Refused when no App is connected or it has no such device.',
     params: ConversationDeviceChange,
     result: ConversationDeviceList,
     tier: 'confirm',
