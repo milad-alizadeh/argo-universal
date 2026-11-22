@@ -5,9 +5,11 @@ import { isKitElement, kitChildrenOf, kitElementType } from './typed-children';
 import { wrappingComponent } from './wrapped-component';
 
 const Row = markedComponent('test-row', (_props: { id?: string }) => null);
+
 const Cell = markedComponent('test-cell', (_props: { id?: string }) => null);
 
 const WrappedRow = wrappingComponent(() => null, Row);
+
 const WrappedTwice = wrappingComponent(() => null, WrappedRow);
 
 const ids = (children: readonly { props: { id?: string } }[]): unknown[] =>

@@ -1,9 +1,4 @@
-import {
-  useContext,
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { useContext, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { TextClassContext } from '#primitives/content/text';
 import { Svg } from '#primitives/visual';

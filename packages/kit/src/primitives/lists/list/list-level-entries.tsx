@@ -1,4 +1,4 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import { listPosition } from '../../../list-context';
 import { isKitElement } from '../../../typed-children';

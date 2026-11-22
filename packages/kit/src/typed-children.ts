@@ -28,7 +28,7 @@ export function kitChildrenOf<Props = unknown>(
   children: ReactNode,
   type: KitType,
 ): ReactElement<Props>[] {
-  return flattenedChildren(children).filter((child) =>
-    isKitElement<Props>(child, type),
-  ) as ReactElement<Props>[];
+  return flattenedChildren(children).filter(
+    (child): child is ReactElement<Props> => isKitElement<Props>(child, type),
+  );
 }
