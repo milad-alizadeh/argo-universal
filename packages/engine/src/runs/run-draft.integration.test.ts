@@ -424,7 +424,7 @@ it('refuses, and writes nothing, when no source has anything to run', async () =
   });
 
   await expect(draftRunConfigurations(checkout, false)).rejects.toThrow(
-    /package\.json scripts, a Procfile/u,
+    /^No sources in Checkout\.\n.*package\.json scripts, a Procfile/su,
   );
   await expect(written(checkout)).rejects.toThrow('ENOENT');
 });
