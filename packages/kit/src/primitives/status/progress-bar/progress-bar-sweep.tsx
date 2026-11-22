@@ -4,10 +4,10 @@ import Animated, {
   type FrameInfo,
   type SharedValue,
   useFrameCallback,
+  useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
 import { useAnimatedStyle } from '../../../animated-hooks';
-import { useReducedMotionNow } from '../../../use-reduced-motion-now';
 
 /*
  * Every pass takes the same time on any bar, as in shimmer-android (Shimmer.java, github.com/facebookarchive/shimmer-android),
@@ -94,5 +94,5 @@ function Glint(props: GlintProps): React.JSX.Element {
 
 // A soft glint that runs along the filled part, left to right, then pauses; reduced motion keeps the bar still.
 export function ProgressSweep(props: GlintProps): React.JSX.Element | null {
-  return useReducedMotionNow() || !props.active ? null : <Glint {...props} />;
+  return useReducedMotion() || !props.active ? null : <Glint {...props} />;
 }
