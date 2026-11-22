@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { innermostAt, titleOf, type Placed } from './draft-comment-hit';
+import { innermostAt, keyOf, titleOf, type Placed } from './draft-comment-hit';
 
 const page: Placed = { address: 'page', x: 0, y: 0, width: 400, height: 600 };
 
@@ -50,9 +50,18 @@ it('breaks a tie by the node drawn later, which sits over the earlier', () => {
   );
 });
 
-it('names a node by its region, the Variant letter and its key, or its key alone outside a region', () => {
+it('titles a node by its region and Variant, or the first line it shows outside a region', () => {
+  const place = { label: 'List', variant: 'rows', letter: 'A' };
+
+  expect(titleOf({ place, text: 'Pairing code expires' })).toBe('List · rows');
+  expect(titleOf({ place: null, text: ' Issues ' })).toBe('Issues');
+  expect(titleOf({ place: null, text: '' })).toBeNull();
+  expect(titleOf({ place: null, text: 'x'.repeat(90) })).toHaveLength(61);
+});
+
+it('keeps the key and the Variant letter for a screen reader', () => {
   expect(
-    titleOf({ nodeKey: 'row-409', place: { label: 'List', letter: 'A' } }),
+    keyOf({ nodeKey: 'row-409', place: { label: 'List', letter: 'A' } }),
   ).toBe('List · A · row-409');
-  expect(titleOf({ nodeKey: 'title', place: null })).toBe('title');
+  expect(keyOf({ nodeKey: 'title', place: null })).toBe('title');
 });

@@ -5,7 +5,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 
 export interface DraftCommentEditorProps {
-  title: string;
+  // What the node is, in words; none where it shows no text outside a region.
+  title: string | null;
+  // The node's key and region, for a screen reader; the header leaves the key out.
+  nodeName: string;
   note: string;
   longPressed: boolean;
   onNoteChange: (note: string) => void;
@@ -16,14 +19,16 @@ export interface DraftCommentEditorProps {
 export function DraftCommentEditor(
   props: DraftCommentEditorProps,
 ): React.JSX.Element {
-  const { title, note, longPressed, onNoteChange, onSave, onCancel } = props;
+  const { title, nodeName, note, longPressed, onNoteChange, onSave, onCancel } = props;
   const size = longPressed ? 'md' : 'sm';
 
   return (
-    <View className="gap-2.5">
-      <Text role="badge" tone="muted">
-        {longPressed ? `Long-pressed · ${title}` : title}
-      </Text>
+    <View className="gap-2.5" role="group" aria-label={nodeName}>
+      {title && (
+        <Text role="badge" tone="muted" numberOfLines={1}>
+          {title}
+        </Text>
+      )}
       <TextArea
         label="Comment"
         placeholder="Leave a note for the Agent"

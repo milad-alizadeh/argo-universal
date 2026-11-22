@@ -11,7 +11,7 @@ import {
 import { useCommentPicking } from '../../hooks/use-comment-picking';
 import { useMeasuredBox } from '../../hooks/use-measured-box';
 import { useDraftComments } from '../../stores/draft-comments';
-import { titleOf } from '../../utils/draft-comment-hit';
+import { keyOf, titleOf } from '../../utils/draft-comment-hit';
 import { pinKey, pinKeyOf } from '../../utils/draft-pin-key';
 import type { PageOpening } from '../../utils/page-addresses';
 import { DraftCommentMark } from './draft-comment-mark';
@@ -111,9 +111,10 @@ function DraftPage(props: LayerProps): React.JSX.Element {
           anchor={picked.anchor}
           longPressed={press === 'long'}
           title={titleOf({
-            nodeKey: picked.target.nodeKey,
             place: picked.target.place,
+            text: picked.target.text(),
           })}
+          nodeName={keyOf(picked.target)}
           note={picking.note}
           onNoteChange={picking.setNote}
           onSave={picking.save}

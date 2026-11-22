@@ -61,6 +61,17 @@ function webBox(view: Holder | null): Box {
   };
 }
 
+// What the node shows on its first line: the web reads it off the page; native has no such reader.
+function firstLine(view: Holder | null): string {
+  if (Platform.OS !== 'web' || !(view instanceof Element)) return '';
+
+  const shown = view.firstElementChild;
+
+  if (!(shown instanceof HTMLElement)) return '';
+
+  return shown.innerText.split('\n').find((line) => line.trim() !== '') ?? '';
+}
+
 function measureBox(view: Holder | null, done: (box: Box) => void): void {
   if (!view) return done(nowhere);
 
@@ -121,8 +132,10 @@ function CommentTarget({
   const measure = (done: (box: Box) => void): void =>
     measureBox(ref.current, done);
 
+  const text = (): string => firstLine(ref.current);
+
   useLayoutEffect(
-    () => commenting?.register({ address, nodeKey, place, measure }),
+    () => commenting?.register({ address, nodeKey, place, measure, text }),
     // The measure reads the ref, which never changes.
     [commenting, address, nodeKey, place],
   );

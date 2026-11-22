@@ -25,6 +25,8 @@ export const boxOf = ([x, y, width, height]: readonly [
 export interface CommentTarget extends NodeIdentity {
   place: DraftPlace | null;
   measure: (done: (box: Box) => void) => void;
+  // The first line of text the node shows, where the window can read it; empty where it cannot.
+  text: () => string;
 }
 
 /*

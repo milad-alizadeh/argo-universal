@@ -44,7 +44,10 @@ export const APointerPressPicksTheNodeUnderIt: Story = {
 
     const note = await editor().findByRole('textbox', { name: 'Comment' });
 
-    await expect(await editor().findByText('List · A · row-409')).toBeVisible();
+    await expect(await editor().findByText('List · rows')).toBeVisible();
+    await expect(
+      editor().getByRole('group', { name: 'List · A · row-409' }),
+    ).toBeVisible();
     await userEvent.type(note, 'Use a coloured chip');
     await userEvent.click(editor().getByRole('button', { name: 'Comment' }));
 
@@ -72,7 +75,7 @@ export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
     await settleOverlays();
 
     await waitFor(async () =>
-      expect(await editor().findByText('title')).toBeVisible(),
+      expect(await editor().findByText('Issues')).toBeVisible(),
     );
     await userEvent.type(
       await editor().findByRole('textbox', { name: 'Comment' }),
@@ -257,9 +260,8 @@ export const APhonePicksOnALongPress: Story = {
     ).toBeNull();
 
     await holdOn(row, 120);
-    await expect(
-      await editor().findByText('Long-pressed · List · A · row-409'),
-    ).toBeVisible();
+    await expect(await editor().findByText('List · rows')).toBeVisible();
+    await expect(editor().queryByText(/Long-pressed/)).toBeNull();
     await expect(
       await editor().findByRole('textbox', { name: 'Comment' }),
     ).toBeVisible();

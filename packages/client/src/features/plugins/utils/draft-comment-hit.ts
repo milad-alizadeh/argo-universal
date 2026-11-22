@@ -26,7 +26,30 @@ export function innermostAt(
   }, null);
 }
 
+const longest = 60;
+
+/*
+ * What the editor's header says a node is: its region and the Variant it is drawn in, else the first line of text it
+ * shows, cut short. A node that shows no text outside a region has no header.
+ */
 export function titleOf({
+  place,
+  text,
+}: {
+  place: { label: string; variant: string } | null;
+  text: string;
+}): string | null {
+  if (place) return `${place.label} · ${place.variant}`;
+
+  const line = text.trim();
+
+  if (line === '') return null;
+
+  return line.length > longest ? `${line.slice(0, longest).trimEnd()}…` : line;
+}
+
+// What a screen reader hears for the editor: the node's key and region, which the header leaves out.
+export function keyOf({
   nodeKey,
   place,
 }: {
