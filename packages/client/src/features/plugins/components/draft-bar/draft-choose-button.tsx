@@ -6,14 +6,14 @@ const plural = (comments: number): string =>
   `${comments} ${comments === 1 ? 'comment' : 'comments'}`;
 
 // What a screen reader hears, and a wide window reads: the count in words.
-export function chooseLabel(comments: number): string {
+function chooseLabel(comments: number): string {
   if (comments === 0) return 'Choose';
 
   return `Choose · ${plural(comments)}`;
 }
 
 // A phone's bar has no room for the word, so it keeps the count alone.
-export function chooseCompactLabel(comments: number): string {
+function chooseCompactLabel(comments: number): string {
   if (comments === 0) return 'Choose';
 
   return `Choose · ${comments}`;

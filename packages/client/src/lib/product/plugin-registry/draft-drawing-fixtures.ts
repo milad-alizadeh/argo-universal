@@ -53,10 +53,10 @@ const headerLanded = (): WireNode =>
     text('count', 'ARGO · 24 open'),
   ]);
 
-export const skeletonPage = (): WireNode =>
+const skeletonPage = (): WireNode =>
   stack('page', [headerSkeleton(), list(placeholders())]);
 
-export const headerLandedPage = (): WireNode =>
+const headerLandedPage = (): WireNode =>
   stack('page', [headerLanded(), list(placeholders())]);
 
 export const listLandedPage = (): WireNode =>

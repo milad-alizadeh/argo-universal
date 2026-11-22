@@ -13,7 +13,7 @@ import type { PageOpening } from '../utils/page-addresses';
 
 type Holder = React.ComponentRef<typeof View>;
 
-export type Picked = { target: CommentTarget; anchor: Anchor };
+type Picked = { target: CommentTarget; anchor: Anchor };
 
 function measured(
   targets: readonly CommentTarget[],

@@ -22,8 +22,3 @@ export const populatedDraft = {
   states,
   current: 'populated',
 } satisfies Pick<DraftBarProps, 'states' | 'current'>;
-
-export const loadingDraft = {
-  states,
-  current: 'loading',
-} satisfies Pick<DraftBarProps, 'states' | 'current'>;

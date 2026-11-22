@@ -61,7 +61,7 @@ function Outline({ style }: { style?: ViewStyle }): React.JSX.Element {
 }
 
 // A speech-bubble pin inside the node's top-right corner, its tail at the lower left. Inside, since the kit's lists clip a row to its own box.
-export function DraftCommentPin({
+function DraftCommentPin({
   count,
   style,
 }: {

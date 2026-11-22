@@ -12,7 +12,7 @@ import { DraftCommentsLayer } from '../draft-comment/draft-comments-layer';
 import { DraftRegionsProvider } from '../draft-region/draft-regions';
 
 // What a page hands its drawing while it is a Draft: the tree's draft prop, and a frame to draw in place of its tree.
-export type DraftDrawing = {
+type DraftDrawing = {
   tree: PluginTreeProps['draft'];
   frame: WireNode | null;
 };

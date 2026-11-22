@@ -85,7 +85,4 @@ export { type PluginEntry, usePluginEntries } from './hooks/use-plugin-entries';
 
 export { invalidatePluginState } from './utils/plugin-state-refresh';
 
-export {
-  DraftPage,
-  type DraftDrawing,
-} from './components/draft-page/draft-page';
+export { DraftPage } from './components/draft-page/draft-page';
