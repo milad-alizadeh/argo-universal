@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { Skeleton } from './index';
@@ -170,5 +170,72 @@ export const DrawsOnePlaceholderPerSpot: Story = {
       expect(overlay()?.childElementCount).toBeGreaterThan(0),
     );
     await expect(overlay()?.childElementCount).toBe(1);
+  },
+};
+
+const placeholdersOf = (canvasElement: HTMLElement): HTMLElement[] => [
+  ...(canvasElement.querySelector(`[${overlayAttribute}]`)?.children ?? []),
+] as HTMLElement[];
+
+const cardWidth = 240;
+
+// A card drawn as its shell: rounded and filled, holding only its own empty fill.
+function EmptyCard({ width }: { width: number }): ReactElement {
+  return (
+    <View className="h-30 overflow-hidden rounded-2xl bg-card" style={{ width }}>
+      <View className="absolute inset-0 bg-muted" />
+    </View>
+  );
+}
+
+// An empty card loads as one placeholder the size of the card, not a walk into its fill.
+export const DrawsAnEmptyCardAsOnePlaceholder: Story = {
+  args: loadingSkeleton,
+  render: () => (
+    <Skeleton {...loadingSkeleton}>
+      <EmptyCard width={cardWidth} />
+    </Skeleton>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(placeholdersOf(canvasElement)).toHaveLength(1),
+    );
+    await expect(
+      placeholdersOf(canvasElement)[0]?.getBoundingClientRect().width,
+    ).toBeCloseTo(cardWidth, 0);
+  },
+};
+
+const settleMs = 100;
+
+// A card whose width lands after the first draw, as a Grid's columns do once measured, inside a box that keeps its size.
+function SettlingCard(): ReactElement {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setWidth(cardWidth), settleMs);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Skeleton {...loadingSkeleton}>
+      <View className="h-40 w-80">
+        <EmptyCard width={width} />
+      </View>
+    </Skeleton>
+  );
+}
+
+// The placeholders follow layout that settles after the first measure, though nothing was added and the Skeleton kept its size.
+export const FollowsLayoutThatSettles: Story = {
+  args: loadingSkeleton,
+  render: () => <SettlingCard />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        placeholdersOf(canvasElement)[0]?.getBoundingClientRect().width,
+      ).toBeCloseTo(cardWidth, 0),
+    );
   },
 };

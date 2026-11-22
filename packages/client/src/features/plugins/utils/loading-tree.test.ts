@@ -66,4 +66,43 @@ describe('loadingTree', () => {
 
     expect(tree.props).toEqual({ ongoing: true });
   });
+
+  it('keeps a Fader as its empty shell, without its level, fill or what it holds', () => {
+    const tree = loadingTree(
+      node('Fader', 'light:desk', {
+        props: {
+          orientation: 'horizontal',
+          value: 40,
+          valueLabel: '40%',
+          fill: ['#ffd078', '#f0b040'],
+          minimumValue: 1,
+          maximumValue: 100,
+          onValueChange: { operation: 'setBrightness', args: {} },
+        },
+        children: [
+          node('Text', 'title', { props: { children: 'Desk lamp' } }),
+          node('IconButton', 'power', { props: { icon: 'power' } }),
+        ],
+      }),
+    );
+
+    expect(tree).toEqual(
+      node('Fader', 'light:desk', {
+        props: { orientation: 'horizontal', minimumValue: 1, maximumValue: 100 },
+      }),
+    );
+  });
+
+  it('leaves out an Inspector, open or not', () => {
+    const tree = loadingTree(
+      node('Stack', 'page', {
+        children: [
+          node('Text', 'title'),
+          node('Inspector', 'scenes', { props: { open: true, title: 'Scenes' } }),
+        ],
+      }),
+    );
+
+    expect(tree.children.map(({ type }) => type)).toEqual(['Text']);
+  });
 });
