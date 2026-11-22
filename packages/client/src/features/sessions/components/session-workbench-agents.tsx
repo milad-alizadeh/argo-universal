@@ -16,7 +16,8 @@ type Props = SubagentListProps & { onOpen: OpenAgent };
 
 type RowProps = { agent: Subagent; now: number; onOpen: OpenAgent };
 
-const isWorking = (agent: Subagent): boolean => agent.state !== 'idle';
+// An Agent the card draws as a row; the idle ones it counts in its footer.
+export const isWorking = (agent: Subagent): boolean => agent.state !== 'idle';
 
 export function WorkbenchAgents(props: Props): ReactElement {
   const { rows } = activePreview(props.subagents, isWorking);

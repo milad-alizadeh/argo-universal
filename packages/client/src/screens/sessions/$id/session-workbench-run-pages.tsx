@@ -1,4 +1,4 @@
-import type { RunConfigurationRow, ShellTerminal } from '@repo/contracts';
+import type { ShellTerminal } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { ReactElement } from 'react';
 import {
@@ -7,7 +7,6 @@ import {
   WorkbenchRuns,
 } from '#features/sessions';
 import { runTabKey } from './sections/runs-section';
-import type { WorkbenchGroup } from './session-workbench-sheet-rows';
 import { workbenchShellPage } from './session-workbench-shell-page';
 
 export const workbenchRunsKey = 'runs';
@@ -36,31 +35,21 @@ export function WorkbenchRunList({
   );
 }
 
-const active = ({ status }: RunConfigurationRow): boolean =>
-  status === 'ready' || status === 'starting';
-
-export function workbenchRunGroup(
+// The page that starts and stops the Runs and opens a Terminal, behind the Runs section's rows.
+export function workbenchRunsPage(
   runs: SessionRuns | undefined,
-): WorkbenchGroup[] {
-  if (!runs || (!runs.runs.length && !runs.shells?.length && !runs.openShell))
-    return [];
+): ReactElement[] {
+  if (!runs) return [];
 
   return [
-    {
-      key: workbenchRunsKey,
-      rows: [
-        {
-          key: workbenchRunsKey,
-          label: 'Runs',
-          value: String(runs.runs.filter(active).length),
-          page: {
-            title: 'Runs',
-            keepsHeaderInset: true,
-            children: <WorkbenchRunList runs={runs} />,
-          },
-        },
-      ],
-    },
+    <Sheet.Screen
+      key={workbenchRunsKey}
+      name={workbenchRunsKey}
+      title="Runs"
+      keepsHeaderInset
+    >
+      <WorkbenchRunList runs={runs} />
+    </Sheet.Screen>,
   ];
 }
 

@@ -15,7 +15,9 @@ type Props = Pick<ShellListProps, 'shells' | 'now'> & { onOpen: OpenTask };
 
 type RowProps = { shell: ShellEntry; now: number; onOpen: OpenTask };
 
-const isRunning = (shell: ShellEntry): boolean => shell.status === 'running';
+// A task the card draws as a row; the settled ones it counts in its footer.
+export const isRunning = (shell: ShellEntry): boolean =>
+  shell.status === 'running';
 
 // The Session's running Background Tasks, up to the preview's limit, each leading with its live dot.
 export function WorkbenchTasks(props: Props): ReactElement {

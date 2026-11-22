@@ -1,22 +1,23 @@
 import type { ShellTerminal } from '@repo/contracts';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import {
+  useCallback,
   useEffect,
   useState,
+  useSyncExternalStore,
   type ComponentProps,
   type ReactElement,
 } from 'react';
-import { agentsFacts } from './sections/agents-facts';
-import { changesFacts } from './sections/changes-facts';
-import { pluginCardKey } from './sections/plugin-card-section';
-import { shellsFacts } from './sections/shells-facts';
+import { pluginCardLines } from './sections/plugin-card-rows';
+import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { SessionInspectorContent } from './session-inspector-content';
-import { changeRows, agentRows, taskRows } from './session-workbench-details';
+import { type CardLines, workbenchGroups } from './session-workbench-groups';
 import {
-  workbenchRunGroup,
   workbenchRunPages,
   workbenchRunsKey,
+  workbenchRunsPage,
 } from './session-workbench-run-pages';
 import {
   WorkbenchOverview,
@@ -35,6 +36,8 @@ interface WorkbenchSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const noCards: readonly SessionPluginCard[] = [];
+
 const sheetFrame = {
   label: 'Workbench',
   detents: ['medium', 'large'],
@@ -50,8 +53,9 @@ export function SessionWorkbenchSheet({
   initialShell,
   ...presentation
 }: WorkbenchSheetProps): ReactElement {
-  const groups = workbenchGroups(content);
   const [visited, setVisited] = useState<WorkbenchRow>();
+  const cardLines = usePluginCardLines(content.pluginCards ?? noCards);
+  const groups = workbenchGroups(content, { cardLines, onVisit: setVisited });
 
   return (
     <WorkbenchShellRuntime value={content.runs}>
@@ -63,6 +67,7 @@ export function SessionWorkbenchSheet({
           )}
         </Sheet.Screen>
         {workbenchDetails(groups, visited)}
+        {workbenchRunsPage(content.runs)}
         {workbenchRunPages(content.runs)}
       </Sheet>
     </WorkbenchShellRuntime>
@@ -109,34 +114,47 @@ function unavailable(row: WorkbenchRow): WorkbenchRow {
 const detailScreen = ({ key, page }: WorkbenchRow): ReactElement[] =>
   page ? [<Sheet.Screen key={key} name={key} {...page} />] : [];
 
-function workbenchGroups(content: SessionInspectorContent): WorkbenchGroup[] {
-  const groups = [
-    { ...changesFacts, rows: changeRows(content) },
-    { ...agentsFacts, rows: agentRows(content) },
-    { ...shellsFacts, rows: taskRows(content) },
-    ...workbenchRunGroup(content.runs),
-  ];
+// Each held tree gets a number once, so the sheet's snapshot of its cards' trees is a string that changes only with them.
+const treeNumbers = new WeakMap<WireNode, number>();
 
-  return [...groups, ...(content.pluginCards ?? []).map(pluginGroup)].filter(
-    ({ rows }) => rows.length > 0,
-  );
+let nextTreeNumber = 0;
+
+function treeNumber(tree: WireNode | null): number {
+  if (!tree) return -1;
+
+  const known = treeNumbers.get(tree);
+
+  if (known !== undefined) return known;
+
+  treeNumbers.set(tree, nextTreeNumber);
+
+  return nextTreeNumber++;
 }
 
-type PluginCard = NonNullable<SessionInspectorContent['pluginCards']>[number];
+const readTree = (card: SessionPluginCard): WireNode | null =>
+  card.tree?.read() ?? null;
 
-function pluginGroup({
-  pluginId,
-  card,
-  page,
-  tab,
-}: PluginCard): WorkbenchGroup {
-  const key = pluginCardKey(pluginId, card.id);
+/*
+ * The lines each open Plugin card's page shows, current with the page. It reads the cards' trees outside React,
+ * so the compiler must not keep an earlier answer.
+ */
+function usePluginCardLines(cards: readonly SessionPluginCard[]): CardLines {
+  'use no memo';
 
-  const row = {
-    key,
-    label: `Open ${card.title}`,
-    page: { title: card.title, children: tab ?? page },
-  };
+  const subscribe = useCallback(
+    (listener: () => void): (() => void) => {
+      const stops = cards.flatMap((card) =>
+        card.tree ? [card.tree.subscribe(listener)] : [],
+      );
 
-  return { key, title: card.title, rows: [row] };
+      return () => stops.forEach((stop) => stop());
+    },
+    [cards],
+  );
+
+  useSyncExternalStore(subscribe, () =>
+    cards.map((card) => treeNumber(readTree(card))).join(','),
+  );
+
+  return (card) => pluginCardLines(readTree(card));
 }

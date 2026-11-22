@@ -80,10 +80,7 @@ function ChangeDetail({ change, changes }: PullRequestDetail): ReactNode {
   );
 }
 
-export const agentRows = (content: SessionInspectorContent): WorkbenchRow[] =>
-  (content.subagents?.subagents ?? []).map((agent) => agentRow(agent, content));
-
-const agentRow = (
+export const agentRow = (
   agent: Subagent,
   content: SessionInspectorContent,
 ): WorkbenchRow => ({
@@ -115,12 +112,9 @@ function AgentDetail({
   );
 }
 
-type Tasks = NonNullable<SessionInspectorContent['shells']>;
+export type Tasks = NonNullable<SessionInspectorContent['shells']>;
 
-export const taskRows = ({ shells }: SessionInspectorContent): WorkbenchRow[] =>
-  shells?.shells.map((shell) => taskRow(shell, shells)) ?? [];
-
-const taskRow = (
+export const taskRow = (
   shell: Tasks['shells'][number],
   props: Tasks,
 ): WorkbenchRow => ({

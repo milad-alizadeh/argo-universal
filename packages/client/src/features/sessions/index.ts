@@ -41,15 +41,21 @@ export {
 } from './components/session-workbench';
 
 export {
+  isWorking as subagentIsWorking,
   WorkbenchAgents,
   WorkbenchMoreAgents,
 } from './components/session-workbench-agents';
+
+export { activePreview } from './components/workbench-preview';
+
+export { showMoreLabel } from './components/workbench-show-more';
 
 export { ChangeRows } from './components/session-workbench-changes';
 
 export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
 
 export {
+  isRunning as backgroundTaskIsRunning,
   WorkbenchMoreTasks,
   WorkbenchTasks,
 } from './components/session-workbench-tasks';
@@ -265,7 +271,13 @@ export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
 
 export { FollowUpEditor } from './components/schedule-form';
 
-export { SchedulePreview, ScheduleList } from './components/schedule-list';
+export {
+  SchedulePreview,
+  ScheduleList,
+  schedulePreviewLimit,
+  schedulePreviewValue,
+  scheduleTitle,
+} from './components/schedule-list';
 
 export { sessionsListLook } from './components/sessions-list/sessions-list-look';
 
@@ -279,6 +291,8 @@ export { standardTopPadding as sessionsListTopPadding } from './components/sessi
 export { sidebarRows as sessionsListSidebarRows } from './components/session-row/session-row-sidebar';
 
 export { RunInspector } from './components/run-inspector';
+
+export { runStatusLabel } from './components/run-status';
 
 export { RunTerminal } from './components/run-terminal';
 

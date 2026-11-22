@@ -86,6 +86,38 @@ export const ControlsRunsAndOpensTheTerminalInTheSheet: Story = {
   },
 };
 
+const [webRun, docsRun] = workbenchRuns;
+
+if (webRun?.status !== 'ready' || docsRun?.status !== 'stopped')
+  throw new Error('Recorded catalog needs a ready Run and a stopped one.');
+
+// The Runs section names each Run with its state, not a count, and a Run's row opens its Terminal.
+export const ListsEachRunAndOpensItsTerminal: Story = {
+  play: async (context) => {
+    const sheet = await openWorkbench(context);
+
+    const web = sheet.getByRole('link', {
+      name: `${webRun.name}, Ready · :${webRun.port}`,
+    });
+
+    await expect(web).toBeVisible();
+    await expect(
+      sheet.getByRole('link', { name: `${docsRun.name}, Stopped` }),
+    ).toBeVisible();
+    await expect(sheet.queryByRole('link', { name: /^Runs\b/ })).toBeNull();
+
+    await settleOverlays(web);
+    await context.userEvent.click(web);
+
+    await expect(
+      await sheet.findByRole('heading', { name: webRun.name }),
+    ).toBeVisible();
+    await expect(
+      sheet.getByRole('button', { name: 'Back to Workbench' }),
+    ).toBeVisible();
+  },
+};
+
 const startGroup = fn<() => void>();
 
 const stopGroup = fn<() => void>();
@@ -144,7 +176,7 @@ async function openPhoneRuns(
   context: Parameters<NonNullable<Story['play']>>[0],
 ): Promise<Inside> {
   const sheet = await openWorkbench(context);
-  const row = sheet.getByRole('link', { name: /Runs.*1/ });
+  const row = sheet.getByRole('link', { name: /^Manage Runs/ });
 
   await settleOverlays(row);
   await context.userEvent.click(row);

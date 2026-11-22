@@ -149,7 +149,7 @@ export const OpensInThePhoneRunsSheet: Story = {
   args: { closed: fn() },
   play: async (context) => {
     const sheet = await openWorkbench(context);
-    const row = sheet.getByRole('link', { name: /Runs.*1/ });
+    const row = sheet.getByRole('link', { name: /^Manage Runs/ });
 
     await settleOverlays(row);
     await context.userEvent.click(row);

@@ -154,6 +154,10 @@ const drawnCard = (
   tab: card.item.tab && (
     <PluginTabPage pluginId={card.pluginId} path={card.item.tab} {...session} />
   ),
+  tree: {
+    subscribe: store.subscribe,
+    read: () => store.page(keyOf(card))?.root ?? null,
+  },
 });
 
 // What a header action does to a card on a phone, where there is no column: its sheet is the card's Inspector tab.
