@@ -9,7 +9,7 @@ import { leadingMarkClass } from '../../../leading-mark';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { hasBadge, ItemBadge, useLeadingBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
-import { rowGlyphSize } from '../../../symbols/row-glyph';
+import { rowGlyphSizing } from '../../../symbols/row-glyph';
 import { cn } from '../../../utils';
 import { useInertLane } from './list-item-pass-through';
 import type { ListItemProps } from './list-item-props';
@@ -40,7 +40,7 @@ type LeadingLane = keyof typeof leadingClasses;
  * narrower lane takes the size that fits it. An avatar is not a glyph and sizes itself with its own lane.
  */
 const leadingIconSizes = {
-  row: { size: rowGlyphSize, fixed: true, lane: 'row' },
+  row: rowGlyphSizing,
   menu: { size: 'md', fixed: true },
   sidebar: { size: 'sm', fixed: true },
 } as const satisfies Record<LeadingLane, IconSizing>;

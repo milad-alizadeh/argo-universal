@@ -9,9 +9,10 @@ import {
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { leadingMarkClass } from '../../../leading-mark';
+import { leadingMarkPixels } from '../../../leading-mark';
 import { iosImage } from '../../../symbols/ios-image';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { ToneMark } from '../../../tone-mark';
 import {
   markLabel,
@@ -22,11 +23,17 @@ import {
 
 type MarkProps = { mark: Mark };
 
+const markFrame = frame({
+  width: leadingMarkPixels,
+  height: leadingMarkPixels,
+});
+
 export function FieldLinkMark({ mark }: MarkProps): ReactElement {
   return (
     <ZStack
       alignment="topTrailing"
       modifiers={[
+        markFrame,
         accessibilityLabel(markLabel(mark)),
         opacity(markOpacity(mark)),
       ]}
@@ -68,29 +75,24 @@ function HostedFace({ mark }: MarkProps): ReactElement {
 
 function SymbolFace({ mark }: MarkProps): ReactElement {
   const { fill, ink } = useMarkColors(mark);
-  const size = Number(useResolveClassNames(leadingMarkClass).width);
 
   return (
     <ZStack>
-      <MarkDisc mark={mark} fill={String(fill ?? 'clear')} size={size} />
-      <NativeSymbol name={mark.icon} size="sm" color={ink} />
+      <MarkDisc mark={mark} fill={String(fill ?? 'clear')} />
+      <NativeSymbol
+        name={mark.icon}
+        size={rowGlyphSize}
+        lane="row"
+        color={ink}
+      />
     </ZStack>
   );
 }
 
-function MarkDisc(
-  props: MarkProps & { fill: string; size: number },
-): ReactElement | null {
+function MarkDisc(props: MarkProps & { fill: string }): ReactElement | null {
   if (props.mark.plain) return null;
 
-  return (
-    <Circle
-      modifiers={[
-        frame({ width: props.size, height: props.size }),
-        foregroundStyle(props.fill),
-      ]}
-    />
-  );
+  return <Circle modifiers={[markFrame, foregroundStyle(props.fill)]} />;
 }
 
 function MarkStatus({ mark }: MarkProps): ReactElement | null {
