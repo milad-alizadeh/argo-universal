@@ -100,6 +100,7 @@
     "./kit-tokens": "./src/kit-tokens.ts",
     "./kit-diagram": "./src/diagram/index.ts",
     "./kit-moves": "./src/kit-moves.ts",
+    "./kit-presses": "./src/kit-presses.ts",
     "./plugins/wire-node-key": "./src/plugins/wire-node-key.ts",
     "./kit-props": "./src/kit-props.ts",
     "./kit-symbols": "./src/kit-symbols/index.ts",

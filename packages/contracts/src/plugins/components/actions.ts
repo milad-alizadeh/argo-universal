@@ -40,7 +40,7 @@ export const actionsComponents = {
   ),
   IconButton: defineKitComponent('An icon-only button.', iconButtonProps, {
     group: 'actions',
-    events: { onPress: z.undefined() },
+    events: { onPress: z.undefined(), onPressSelected: z.undefined() },
     label: 'The required `accessibilityLabel` is the button name.',
   }),
   Button: defineKitComponent(

@@ -107,3 +107,40 @@ it.each([
     expect(open.marks).toEqual([[address]]);
   },
 );
+
+it('settles a window only once the Plugin has no writing run in flight, so a refresh never reads between two presses', async () => {
+  const open = await opened();
+
+  await open.ran('act');
+  const second = await open.running('act');
+
+  open.elapse();
+  expect(open.reads()).toHaveLength(1);
+  expect(open.windows).toBe(1);
+
+  await second();
+  open.elapse();
+  await vi.waitFor(() => expect(open.reads()).toHaveLength(2));
+});
+
+it('holds back a mark whose answer was read while a second writing run was in flight, and marks it once that run has settled', async () => {
+  const open = await opened();
+
+  await open.ran('act');
+  open.elapse();
+  await vi.waitFor(() => expect(open.reads()).toHaveLength(2));
+
+  const second = await open.running('act');
+
+  await open.answer(2);
+  await open.resources.changesSettled();
+  expect(open.marks).toEqual([]);
+
+  await second();
+  open.elapse();
+  await vi.waitFor(() => expect(open.reads()).toHaveLength(3));
+  await open.answer(2);
+  await open.resources.changesSettled();
+
+  expect(open.marks).toEqual([[address]]);
+});

@@ -71,6 +71,8 @@ const unheard = ({ tier, caller }: Request): boolean =>
 export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;
   private readonly ranListeners = new Set<(pluginId: string) => void>();
+  // The runs each Plugin has in flight that will be heard when they end.
+  private readonly inFlight = new Map<string, number>();
 
   public constructor(
     workers: WorkerCalls,
@@ -88,13 +90,30 @@ export class PluginOperations {
    * scrubbed of them before any caller reads it (ADR-0051).
    */
   public async run(pluginId: string, request: Request): Promise<Answer> {
-    const answer = await this.secrets.during(request.secrets ?? [], async () =>
-      this.scrubbed(await this.calls.call(pluginId, request)),
-    );
+    const writes = !unheard(request);
 
-    this.heard(pluginId, request);
+    if (writes) this.counted(pluginId, 1);
 
-    return answer;
+    try {
+      return await this.secrets.during(request.secrets ?? [], async () =>
+        this.scrubbed(await this.calls.call(pluginId, request)),
+      );
+    } finally {
+      if (writes) this.counted(pluginId, -1);
+      this.heard(pluginId, request);
+    }
+  }
+
+  // Whether a run that will be heard is still in flight, so a refresh now would read before it writes (ADR-0060).
+  public writing(pluginId: string): boolean {
+    return (this.inFlight.get(pluginId) ?? 0) > 0;
+  }
+
+  private counted(pluginId: string, change: 1 | -1): void {
+    const count = (this.inFlight.get(pluginId) ?? 0) + change;
+
+    if (count > 0) this.inFlight.set(pluginId, count);
+    else this.inFlight.delete(pluginId);
   }
 
   /*

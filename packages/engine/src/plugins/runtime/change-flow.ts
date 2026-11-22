@@ -1,6 +1,7 @@
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { realClock, type PluginClock } from '../clock';
 import type { PluginData } from '../data/plugin-data';
+import type { PluginOperations } from '../operations';
 import type { PluginDraws } from '../pages';
 import { PageChanges } from '../pages';
 import { ChangeWindow } from '../pages/change-window';
@@ -14,6 +15,7 @@ type Resources = {
   data: PluginData;
   items: PluginSlotItems;
   draws: PluginDraws;
+  operations: Pick<PluginOperations, 'writing'>;
 };
 
 /*
@@ -32,24 +34,49 @@ type Services = { changeClock?: PluginClock; log: (line: string) => void };
 export class ChangeFlow {
   readonly changes: PageChanges;
   private readonly window: ChangeWindow;
+  private readonly writing: (pluginId: string) => boolean;
+  // The addresses a changed answer named while the Plugin had a writing run in flight, by Plugin and address key.
+  private readonly heldBack = new Map<string, Map<string, PageAddress>>();
 
   constructor(
     { changeClock = realClock, log }: Services,
     resources: Resources,
   ) {
-    const { workers, data } = resources;
+    const { workers, data, operations } = resources;
 
-    this.window = new ChangeWindow(
-      changeClock,
-      (pluginId) => this.settle(resources, pluginId),
+    this.writing = (pluginId): boolean => operations.writing(pluginId);
+    this.window = new ChangeWindow({
+      clock: changeClock,
+      settle: (pluginId): Promise<void> => this.settle(resources, pluginId),
       log,
-    );
+      writing: this.writing,
+    });
 
     this.changes = new PageChanges(
       workers,
       (pluginId): void => data.written(pluginId),
       (pluginId): void => this.said(resources, pluginId),
     );
+  }
+
+  /*
+   * A Query answer changed for these addresses. While one of the Plugin's writing runs is in flight the answer was
+   * read before that write lands, so the mark is held back for the settle after the run, which marks it then; drawn
+   * now, it would replace the run's optimistic props with the state before the write (ADR-0060).
+   */
+  answerChanged(pluginId: string, addresses: PageAddress[]): void {
+    if (addresses.length === 0) return;
+
+    if (!this.writing(pluginId)) {
+      this.changes.heldChanged(pluginId, addresses);
+
+      return;
+    }
+
+    const held = this.heldBack.get(pluginId) ?? new Map<string, PageAddress>();
+
+    for (const at of addresses) held.set(addressKey(at), at);
+    this.heldBack.set(pluginId, held);
   }
 
   // A Plugin's own change: its answers are due at once, what core cannot compare is marked, and the rest waits for the window.
@@ -107,8 +134,20 @@ export class ChangeFlow {
     } finally {
       unlisten();
       // A refresh that failed still marks them, as they were marked before.
-      this.markRemaining(pluginId, hostReadHeld, marked);
+      this.markRemaining(
+        pluginId,
+        [...hostReadHeld, ...this.takeHeldBack(pluginId)],
+        marked,
+      );
     }
+  }
+
+  private takeHeldBack(pluginId: string): PageAddress[] {
+    const held = this.heldBack.get(pluginId);
+
+    this.heldBack.delete(pluginId);
+
+    return held ? [...held.values()] : [];
   }
 
   private markRemaining(
@@ -116,9 +155,13 @@ export class ChangeFlow {
     addresses: PageAddress[],
     marked: ReadonlySet<string>,
   ): void {
-    const unmarked = addresses.filter((at) => !marked.has(addressKey(at)));
+    const remaining = new Map(
+      addresses.flatMap((at) =>
+        marked.has(addressKey(at)) ? [] : [[addressKey(at), at] as const],
+      ),
+    );
 
-    if (unmarked.length > 0) this.changes.heldChanged(pluginId, unmarked);
+    this.answerChanged(pluginId, [...remaining.values()]);
   }
 
   // Resolves once every window of changes has been settled: its Queries read and its pages marked.
