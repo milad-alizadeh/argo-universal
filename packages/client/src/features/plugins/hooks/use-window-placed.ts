@@ -11,9 +11,10 @@ const none = { x: 0, y: 0 };
  * list row does) fixed lays against that part instead. The mark is measured where it landed and shifted by what it
  * missed by, so it sits where the window says whichever box holds it.
  */
-export function useWindowPlaced(
-  style: ViewStyle | undefined,
-): { ref: React.RefObject<Holder | null>; style: ViewStyle | undefined } {
+export function useWindowPlaced(style: ViewStyle | undefined): {
+  ref: React.RefObject<Holder | null>;
+  style: ViewStyle | undefined;
+} {
   const ref = useRef<Holder>(null);
   const [shift, setShift] = useState(none);
 

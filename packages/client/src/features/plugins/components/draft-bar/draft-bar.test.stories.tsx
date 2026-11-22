@@ -4,8 +4,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
-import { DraftChooseButton } from './draft-choose-button';
 import { populatedDraft } from './draft-bar-fixtures';
+import { DraftChooseButton } from './draft-choose-button';
 
 const meta = {
   title: 'Tests/Plugins/DraftBar',

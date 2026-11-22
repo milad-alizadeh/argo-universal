@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
-import { useWindowPlaced } from '../../hooks/use-window-placed';
 import type { Box } from '../../../../lib/product/plugin-registry/draft-commenting';
+import { useWindowPlaced } from '../../hooks/use-window-placed';
 
 const pinSize = 22;
 

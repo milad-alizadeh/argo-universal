@@ -44,7 +44,9 @@ const boxless: ViewStyle | undefined =
 function cornerOf(nodes: readonly Element[]): number {
   const [first] = nodes;
 
-  return first ? Number.parseFloat(getComputedStyle(first).borderTopLeftRadius) || 0 : 0;
+  return first
+    ? Number.parseFloat(getComputedStyle(first).borderTopLeftRadius) || 0
+    : 0;
 }
 
 // A boxless wrapper has no size, so its box is its children's. The marks the App lays over the node are fixed and are no part of it; counting them grew the box a frame at a time.
