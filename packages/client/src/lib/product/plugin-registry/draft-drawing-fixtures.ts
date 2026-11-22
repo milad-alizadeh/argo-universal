@@ -34,7 +34,7 @@ const list = (children: WireNode[]): WireNode => ({
 });
 
 const placeholders = (): WireNode[] =>
-  ['one', 'two', 'three'].map((key) => row(key, 'Loading', 'Loading'));
+  ['one', 'two', 'three'].map((key) => row(key, 'Issue title goes here', 'Status'));
 
 const loadedRows = (): WireNode[] => [
   row('ARGO-412', 'Workbench card loses its tab after a reload', 'In progress'),
@@ -43,7 +43,7 @@ const loadedRows = (): WireNode[] => [
 ];
 
 const headerSkeleton = (): WireNode =>
-  stack('header', [text('placeholder', 'Loading', 'heading')]);
+  stack('header', [text('placeholder', 'Page title', 'heading')]);
 
 const headerLanded = (): WireNode =>
   stack('header', [
