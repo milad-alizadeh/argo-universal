@@ -33,7 +33,7 @@ export function DraftBar(props: DraftBarProps): React.JSX.Element {
     <View
       role="toolbar"
       aria-label="Draft"
-      className="flex-row items-center gap-1 max-w-full web:w-max rounded-xl border border-hairline bg-tray p-1 shadow-raised"
+      className="flex-row flex-wrap items-center justify-center gap-0.5 max-w-full web:w-max rounded-xl border border-hairline bg-tray px-0.5 py-1 shadow-raised wide:gap-1 wide:px-1"
     >
       <DraftBadge />
       <View className="shrink-0">

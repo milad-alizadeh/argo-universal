@@ -1,6 +1,7 @@
+import type { ScheduleDrawingSelection } from '@repo/kit/wrapped-component';
 import { useCallback, useRef, useState } from 'react';
 import type * as React from 'react';
-import type { View } from 'react-native';
+import { Platform, type View } from 'react-native';
 import {
   boxOf,
   type Box,
@@ -40,16 +41,32 @@ type OpenComment = (target: CommentTarget, anchor: Anchor) => void;
 function pickAddressOf(
   holder: Holder,
   target: CommentTarget | undefined,
-  open: OpenComment,
+  {
+    open,
+    schedule,
+  }: { open: OpenComment; schedule?: ScheduleDrawingSelection },
 ): void {
   if (!target) return;
 
-  holder.measureInWindow((x, y) => {
+  const anchorAt = (x: number, y: number): void =>
     target.measure((box) => {
-      if (box.width > 0 && box.height > 0)
+      if (box.width <= 0 || box.height <= 0) return;
+
+      const select = (): void =>
         open(target, { ...box, x: box.x - x, y: box.y - y });
+
+      if (schedule) schedule(select);
+      else select();
     });
-  });
+
+  if (Platform.OS === 'web' && holder instanceof Element) {
+    const { left, top } = holder.getBoundingClientRect();
+    anchorAt(left, top);
+
+    return;
+  }
+
+  holder.measureInWindow(anchorAt);
 }
 
 export interface CommentPicking {
@@ -58,7 +75,11 @@ export interface CommentPicking {
   setNote: (note: string) => void;
   register: (target: CommentTarget) => () => void;
   pickAt: (holder: Holder, point: { x: number; y: number }) => void;
-  pickAddress: (holder: Holder, address: string) => void;
+  pickAddress: (
+    holder: Holder,
+    address: string,
+    schedule?: ScheduleDrawingSelection,
+  ) => void;
   save: () => void;
   close: () => void;
 }
@@ -115,8 +136,8 @@ export function useCommentPicking(opening: PageOpening): CommentPicking {
     setNote,
     register,
     pickAt,
-    pickAddress: (holder, address): void =>
-      pickAddressOf(holder, targets.current.get(address), open),
+    pickAddress: (holder, address, schedule): void =>
+      pickAddressOf(holder, targets.current.get(address), { open, schedule }),
     save,
     close: (): void => setPicked(null),
   };

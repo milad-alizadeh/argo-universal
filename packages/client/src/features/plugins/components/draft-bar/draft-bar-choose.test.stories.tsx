@@ -16,6 +16,8 @@ const note: DraftNote = {
   note: 'Use a coloured chip',
 };
 
+const pressed = 'aria-pressed';
+
 const chooseWithTwoComments = 'Choose · 2 comments';
 
 const chooseCalls = (calls: ChooseCall[]): ChooseCall[] =>
@@ -167,12 +169,36 @@ export const DarkCommentsUseANeutralToggleAndSolidPins: Story = {
   args: { calls: [], commenting: true, showPage: true, notes: leftNotes },
   play: async ({ canvas, userEvent }) => {
     const toggle = await canvas.findByRole('button', { name: 'Comments' });
-    const pin = (await canvas.findAllByRole('img', { name: '1 comment' }))[0];
+    const pin = await canvas.findByRole('img', { name: 'Comment 1' });
 
-    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle).toHaveAttribute(pressed, 'true');
     await expect(toggle.getBoundingClientRect().width).toBe(34);
-    await expect(pin?.getBoundingClientRect().width).toBe(23);
+    await expect(pin.getBoundingClientRect().width).toBe(23);
+    await expect(canvas.getByRole('img', { name: 'Comment 2' })).toBeVisible();
     await userEvent.click(toggle);
-    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(toggle).toHaveAttribute(pressed, 'false');
+  },
+};
+
+export const ARefusalShowsSavedPinsWithCommentsOff: Story = {
+  args: { calls: [], showPage: true, notes: leftNotes, reply: 'unavailable' },
+  play: async ({ canvas, userEvent }) => {
+    const toggle = await canvas.findByRole('button', { name: 'Comments' });
+
+    await expect(toggle).toHaveAttribute(pressed, 'false');
+    await userEvent.click(
+      await canvas.findByRole('button', { name: chooseWithTwoComments }),
+    );
+    await canvas.findByRole('alert');
+    await expect(
+      await canvas.findByRole('img', { name: 'Comment 1' }),
+    ).toBeVisible();
+    await expect(
+      await canvas.findByRole('img', { name: 'Comment 2' }),
+    ).toBeVisible();
+    await expect(toggle).toHaveAttribute(pressed, 'false');
+    await expect(
+      canvas.queryByRole('button', { name: /Comment on/ }),
+    ).toBeNull();
   },
 };

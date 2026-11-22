@@ -69,7 +69,7 @@ export const APointerPressPicksTheNodeUnderIt: Story = {
       ]),
     );
     await expect(
-      await canvas.findByRole('img', { name: '1 comment' }),
+      await canvas.findByRole('img', { name: 'Comment 1' }),
     ).toBeVisible();
   },
 };
@@ -424,6 +424,25 @@ export const AnOverflowActionKeepsItsOwnCommentTarget: Story = {
     await waitFor(() =>
       expect(editor().getByRole('group', { name: 'share-link' })).toBeVisible(),
     );
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const KeyboardSelectsAnOverflowActionWithoutRunningIt: Story = {
+  args: { root: exactTargetTree, regions: false, onPageCall: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout('wide');
+    await pointer.click(
+      await canvas.findByRole('button', { name: 'More actions' }),
+    );
+    const share = await editor().findByRole('menuitem', { name: 'Share link' });
+
+    share.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(editor().getByRole('group', { name: 'share-link' })).toBeVisible(),
+    );
+    await expect(editor().queryByRole('menu')).toBeNull();
     await expect(args.onPageCall).not.toHaveBeenCalled();
   },
 };

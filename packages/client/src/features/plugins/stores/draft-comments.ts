@@ -26,6 +26,19 @@ const keyOf = ({ pluginId, path }: Page): string => `${pluginId}\n${path}`;
 export const draftCommentsOf = (notes: readonly DraftNote[]): DraftComment[] =>
   notes.map(({ address: _address, ...comment }) => comment);
 
+function saveNote(
+  notes: readonly DraftNote[],
+  note: DraftNote,
+): readonly DraftNote[] {
+  const at = notes.findIndex(({ address }) => address === note.address);
+
+  if (note.note.trim() === '') return notes.filter((_, index) => index !== at);
+
+  if (at === -1) return [...notes, note];
+
+  return notes.with(at, note);
+}
+
 export class DraftComments {
   private readonly pages = new Map<string, DraftPageComments>();
   private readonly listeners = listenerSet();
@@ -36,12 +49,7 @@ export class DraftComments {
 
   public save(page: Page, note: DraftNote): void {
     const { notes, commenting } = this.of(page);
-    const others = notes.filter(({ address }) => address !== note.address);
-
-    this.set(page, {
-      commenting,
-      notes: note.note.trim() === '' ? others : [...others, note],
-    });
+    this.set(page, { commenting, notes: saveNote(notes, note) });
   }
 
   public setCommenting(page: Page, commenting: boolean): void {

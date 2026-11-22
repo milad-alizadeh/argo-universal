@@ -147,7 +147,7 @@ export const PhoneBarFitsTheWindowWithComments: Story = {
     choose: <DraftChooseButton comments={12} onPress={fn()} />,
   },
   play: async ({ canvas }) => {
-    await settleLayout('phone');
+    await settleLayout(390);
 
     const bar = await canvas.findByRole('toolbar', { name: 'Draft' });
 
@@ -165,5 +165,14 @@ export const PhoneBarFitsTheWindowWithComments: Story = {
     await expect(choose.getBoundingClientRect().right).toBeLessThan(
       bar.getBoundingClientRect().right,
     );
+    await expect(choose.getBoundingClientRect().top).toBeLessThan(
+      state.getBoundingClientRect().bottom,
+    );
+
+    await settleLayout(378);
+    await expect(choose.getBoundingClientRect().right).toBeLessThan(
+      bar.getBoundingClientRect().right,
+    );
+    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
   },
 };

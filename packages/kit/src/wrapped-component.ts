@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { createContext, type ReactElement } from 'react';
 
 type Component = Exclude<ReactElement['type'], string>;
 
@@ -9,6 +9,16 @@ export type KitDrawingWrapper = (
   drawing: ReactElement,
   hit?: KitDrawingHit,
 ) => ReactElement;
+
+export type ScheduleDrawingSelection = (select: () => void) => void;
+
+export type KitDrawingSelection = (
+  schedule: ScheduleDrawingSelection,
+) => boolean;
+
+// A menu item gives its wrapper the close lifecycle before selecting its drawing.
+export const KitDrawingSelectionContext =
+  createContext<KitDrawingSelection | null>(null);
 
 const drawings = new WeakMap<Component, KitDrawingWrapper>();
 

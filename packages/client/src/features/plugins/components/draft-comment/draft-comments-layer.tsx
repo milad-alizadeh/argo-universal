@@ -13,7 +13,7 @@ import {
   type CommentPicking,
 } from '../../hooks/use-comment-picking';
 import { useMeasuredBox } from '../../hooks/use-measured-box';
-import { useDraftComments } from '../../stores/draft-comments';
+import { useDraftComments, type DraftNote } from '../../stores/draft-comments';
 import { keyOf, titleOf } from '../../utils/draft-comment-hit';
 import { pinKey, pinKeyOf } from '../../utils/draft-pin-key';
 import type { PageOpening } from '../../utils/page-addresses';
@@ -23,9 +23,12 @@ import { PressHolder, type Press } from './press-holder';
 
 const defaultLongPress = 450;
 
-type Marks = { counts: ReadonlyMap<string, number>; picked: string | null };
+type Marks = { pinNumbers: ReadonlyMap<string, number>; picked: string | null };
 
-const MarksContext = createContext<Marks>({ counts: new Map(), picked: null });
+const MarksContext = createContext<Marks>({
+  pinNumbers: new Map(),
+  picked: null,
+});
 
 function Mark({
   address,
@@ -38,35 +41,34 @@ function Mark({
   place: DraftPlace | null;
   measure: (done: (box: Box) => void) => void;
 }): React.JSX.Element {
-  const { counts, picked } = useContext(MarksContext);
-  const count = counts.get(pinKey(address, place)) ?? 0;
+  const { pinNumbers, picked } = useContext(MarksContext);
+  const pinNumber = pinNumbers.get(pinKey(address, place));
   const selected = picked === address || focused;
 
   const box = useMeasuredBox(
     measure,
-    Platform.OS === 'web' && (selected || count > 0),
+    Platform.OS === 'web' && (selected || pinNumber !== undefined),
   );
 
   return (
     <DraftCommentMark
-      count={count}
+      pinNumber={pinNumber}
       selected={selected}
       box={Platform.OS === 'web' ? box : undefined}
     />
   );
 }
 
-function countsOf(keys: readonly string[]): Map<string, number> {
-  const counts = new Map<string, number>();
-
-  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
-
-  return counts;
+function pinNumbersOf(
+  notes: readonly DraftNote[],
+): ReadonlyMap<string, number> {
+  return new Map(notes.map((note, index) => [pinKeyOf(note), index + 1]));
 }
 
 type LayerProps = {
   opening: PageOpening;
   commenting: boolean;
+  showSavedPins?: boolean;
   // How long a phone's press is before it picks; a test shortens it.
   longPressMilliseconds?: number;
   children: React.ReactNode;
@@ -83,17 +85,21 @@ export function DraftCommentsLayer(
 }
 
 function DraftPage(props: LayerProps): React.JSX.Element {
-  const { opening, commenting, children } = props;
+  const { opening, commenting, showSavedPins, children } = props;
   const picking = useCommentPicking(opening);
   const { notes } = useDraftComments(opening);
   const { picked } = picking;
   const holderRef = useRef<React.ComponentRef<typeof View>>(null);
 
-  const seam = useDraftCommenting(commenting, holderRef, picking);
+  const seam = useDraftCommenting(
+    { commenting, showSavedPins: showSavedPins === true },
+    holderRef,
+    picking,
+  );
 
   const marks = useMemo<Marks>(
     () => ({
-      counts: countsOf(notes.map(pinKeyOf)),
+      pinNumbers: pinNumbersOf(notes),
       picked: picked?.target.address ?? null,
     }),
     [notes, picked],
@@ -124,29 +130,33 @@ function DraftPage(props: LayerProps): React.JSX.Element {
 }
 
 function useDraftCommenting(
-  commenting: boolean,
+  {
+    commenting,
+    showSavedPins,
+  }: { commenting: boolean; showSavedPins: boolean },
   holderRef: React.RefObject<React.ComponentRef<typeof View> | null>,
   { register, pickAddress }: CommentPicking,
 ): DraftCommenting | null {
   return useMemo<DraftCommenting | null>(
     () =>
-      commenting
+      commenting || showSavedPins
         ? {
+            active: commenting,
             register,
             Mark,
-            pickOutside: (element, address): boolean => {
+            pickOutside: (element, address, schedule): boolean => {
               const holder = holderRef.current;
 
               if (!(holder instanceof Element) || holder.contains(element))
                 return false;
 
-              pickAddress(holder, address);
+              pickAddress(holder, address, schedule);
 
               return true;
             },
           }
         : null,
-    [commenting, holderRef, register, pickAddress],
+    [commenting, showSavedPins, holderRef, register, pickAddress],
   );
 }
 

@@ -11,7 +11,7 @@ const darkPinSize = 23;
 const pinInset = 4;
 
 export interface DraftCommentMarkProps {
-  count: number;
+  pinNumber?: number;
   selected: boolean;
   // Where a node that draws no box of its own is, so its marks are laid over the window instead of inside it.
   box?: Box | null;
@@ -22,14 +22,14 @@ export interface DraftCommentMarkProps {
  * on a node that has notes. Neither takes a touch, so the node under them stays what a press picks.
  */
 export function DraftCommentMark({
-  count,
+  pinNumber,
   selected,
   box,
 }: DraftCommentMarkProps): React.JSX.Element | null {
   const { theme } = useUniwind();
   const width = theme === 'dark' ? darkPinSize : pinSize;
 
-  if (!selected && count === 0) return null;
+  if (!selected && pinNumber === undefined) return null;
 
   if (box === null) return null;
 
@@ -51,7 +51,9 @@ export function DraftCommentMark({
   return (
     <>
       {selected && <Outline style={laid?.outline} />}
-      {count > 0 && <DraftCommentPin count={count} style={laid?.pin} />}
+      {pinNumber !== undefined && (
+        <DraftCommentPin pinNumber={pinNumber} style={laid?.pin} />
+      )}
     </>
   );
 }
@@ -68,22 +70,22 @@ function Outline({ style }: { style?: ViewStyle }): React.JSX.Element {
 
 // A speech-bubble pin inside the node's top-right corner, its tail at the lower left. Inside, since the kit's lists clip a row to its own box.
 function DraftCommentPin({
-  count,
+  pinNumber,
   style,
 }: {
-  count: number;
+  pinNumber: number;
   style?: ViewStyle;
 }): React.JSX.Element {
   return (
     <WindowPlacedView
       pointerEvents="none"
       role="img"
-      aria-label={count === 1 ? '1 comment' : `${count} comments`}
+      aria-label={`Comment ${pinNumber}`}
       style={style}
       className={`${style ? 'fixed' : 'absolute right-1 top-1'} size-5.5 items-center justify-center rounded-full rounded-bl-grouped-inner bg-warning shadow-control dark:size-draft-comment-pin dark:rounded-bl-draft-comment-pin-tail dark:border dark:border-draft-comment-pin dark:bg-draft-comment-pin`}
     >
       <Text className="type-badge text-primary-foreground dark:font-bold dark:text-draft-comment-pin-foreground">
-        {count}
+        {pinNumber}
       </Text>
     </WindowPlacedView>
   );

@@ -83,3 +83,15 @@ it('keeps a note left while a Choose was in flight, and drops those that went wi
 
   expect(comments.of(page).notes).toEqual([later]);
 });
+
+it('keeps the order of notes when an earlier note is edited', () => {
+  const comments = new DraftComments();
+  const later = { ...note, address: 'title', nodeKey: 'title', note: 'Bigger' };
+  const edited = { ...note, note: 'Use a bright chip' };
+
+  comments.save(page, note);
+  comments.save(page, later);
+  comments.save(page, edited);
+
+  expect(comments.of(page).notes).toEqual([edited, later]);
+});

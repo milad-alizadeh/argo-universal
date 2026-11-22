@@ -63,6 +63,18 @@ function useBlockedActivation(
   }, [holder, on, pick]);
 }
 
+// A portaled menu item handles its own selection.
+function isInsideHolder(
+  holder: Holder | null,
+  event: GestureResponderEvent,
+): boolean {
+  if (Platform.OS !== 'web' || !(holder instanceof Element)) return true;
+
+  const target: unknown = event.target;
+
+  return !(target instanceof Element) || holder.contains(target);
+}
+
 export function PressHolder(props: {
   holder: React.RefObject<Holder | null>;
   press: Press;
@@ -90,7 +102,9 @@ export function PressHolder(props: {
     <View
       ref={holder}
       className="min-h-0 flex-1"
-      onStartShouldSetResponderCapture={() => commenting}
+      onStartShouldSetResponderCapture={(event) =>
+        commenting && isInsideHolder(holder.current, event)
+      }
       onResponderGrant={(event) => {
         started.current = {
           at: event.nativeEvent.timestamp,

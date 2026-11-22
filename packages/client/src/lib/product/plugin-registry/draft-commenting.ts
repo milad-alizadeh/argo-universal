@@ -1,4 +1,7 @@
-import type { KitDrawingHit } from '@repo/kit/wrapped-component';
+import type {
+  KitDrawingHit,
+  ScheduleDrawingSelection,
+} from '@repo/kit/wrapped-component';
 import { createContext, type ComponentType } from 'react';
 
 export type NodeIdentity = {
@@ -44,7 +47,12 @@ export interface CommentTarget extends NodeIdentity {
  * wire is never changed. Left unset, as for every shipped Plugin, a node draws as its kit element alone.
  */
 export interface DraftCommenting {
-  pickOutside: (element: Element, address: string) => boolean;
+  active: boolean;
+  pickOutside: (
+    element: Element,
+    address: string,
+    schedule?: ScheduleDrawingSelection,
+  ) => boolean;
   register: (target: CommentTarget) => () => void;
   Mark: ComponentType<{
     focused: boolean;

@@ -71,6 +71,9 @@ export function DraftPage({
 }): React.JSX.Element {
   const { bar, regions, tree, frame } = usePluginDraft(opening, error);
 
+  const declined =
+    bar?.feedback?.kind === 'refused' || bar?.feedback?.kind === 'no-session';
+
   return (
     <>
       <DraftRegionsProvider regions={regions} commenting={bar?.commenting}>
@@ -78,6 +81,7 @@ export function DraftPage({
           opening={opening}
           draft={bar !== null}
           commenting={bar?.commenting ?? false}
+          showSavedPins={declined}
         >
           {children({ tree, frame })}
         </DraftCommentsLayer>

@@ -1,4 +1,8 @@
-import type { KitDrawingHit } from '@repo/kit/wrapped-component';
+import {
+  KitDrawingSelectionContext,
+  type KitDrawingHit,
+  type KitDrawingSelection,
+} from '@repo/kit/wrapped-component';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
@@ -86,7 +90,7 @@ function useOutsidePick(
   ref: React.RefObject<Holder | null>,
   address: string,
   commenting: DraftCommenting | null,
-): void {
+): KitDrawingSelection | null {
   useLayoutEffect(() => {
     const element = ref.current;
 
@@ -98,6 +102,8 @@ function useOutsidePick(
         return;
 
       if (!(event.target instanceof Element)) return;
+
+      if (event.target.closest('[data-kit-drawing-selection]')) return;
 
       const target = event.target.closest('[data-draft-comment-node]');
 
@@ -116,6 +122,17 @@ function useOutsidePick(
       element.removeEventListener('keydown', pick, true);
     };
   }, [ref, address, commenting]);
+
+  if (!commenting || Platform.OS !== 'web') return null;
+
+  return (schedule): boolean => {
+    const element = ref.current;
+
+    return (
+      element instanceof Element &&
+      commenting.pickOutside(element, address, schedule)
+    );
+  };
 }
 
 function CommentFocus(props: {
@@ -139,6 +156,14 @@ function CommentFocus(props: {
   );
 }
 
+const drawingAddress = (
+  active: DraftCommenting | null,
+  address: string,
+): { dataSet?: { draftCommentNode: string } } =>
+  active && Platform.OS === 'web'
+    ? { dataSet: { draftCommentNode: address } }
+    : {};
+
 interface CommentTargetProps {
   identity: NodeIdentity;
   fills: boolean;
@@ -158,6 +183,7 @@ export function CommentTarget({
   children,
 }: CommentTargetProps): React.JSX.Element {
   const commenting = useContext(DraftCommentingContext);
+  const active = commenting?.active ? commenting : null;
   const place = useContext(DraftPlaceContext);
   const ref = useRef<Holder>(null);
   const [focused, setFocused] = useState(false);
@@ -168,25 +194,24 @@ export function CommentTarget({
   const text = (): string => firstLine(ref.current);
 
   useLayoutEffect(
-    () => commenting?.register({ ...identity, place, measure, text, hit }),
+    () => active?.register({ ...identity, place, measure, text, hit }),
     // The measure reads the ref, which never changes.
-    [commenting, identity, place, hit],
+    [active, identity, place, hit],
   );
 
-  useOutsidePick(ref, identity.address, commenting);
+  const select = useOutsidePick(ref, identity.address, active);
 
   return (
     <View
       ref={ref}
-      {...(commenting &&
-        Platform.OS === 'web' && {
-          dataSet: { draftCommentNode: identity.address },
-        })}
+      {...drawingAddress(active, identity.address)}
       style={boxless}
       className={fills ? 'min-h-0 min-w-0 flex-1' : 'relative min-w-0 shrink'}
     >
-      {children}
-      {commenting && Platform.OS === 'web' && (
+      <KitDrawingSelectionContext value={select}>
+        {children}
+      </KitDrawingSelectionContext>
+      {active && Platform.OS === 'web' && (
         <CommentFocus
           identity={identity}
           place={place}
@@ -198,7 +223,7 @@ export function CommentTarget({
           address={identity.address}
           place={place}
           measure={measure}
-          focused={focused}
+          focused={Boolean(active) && focused}
         />
       )}
     </View>
