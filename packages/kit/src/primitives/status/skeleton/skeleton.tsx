@@ -2,7 +2,10 @@ import { type ComponentRef, type ReactElement, useRef } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { SkeletonLoadingContext } from './skeleton-loading';
 import { overlayAttribute } from './skeleton-marks';
-import type { SkeletonPlaceholder } from './skeleton-placeholder';
+import {
+  placeholderKey,
+  type SkeletonPlaceholder,
+} from './skeleton-placeholder';
 import type { SkeletonProps } from './skeleton-props';
 import { useSkeletonPlaceholders } from './skeleton-web-measure';
 
@@ -29,9 +32,6 @@ const rootProps = (props: SkeletonProps): ViewProps => ({
   testID: props.testID,
   ...busyProps(props),
 });
-
-const keyOf = (placeholder: SkeletonPlaceholder): string =>
-  `${placeholder.left},${placeholder.top},${placeholder.width},${placeholder.height}`;
 
 const frameOf = (placeholder: SkeletonPlaceholder): ViewStyle => ({
   left: placeholder.left,
@@ -69,7 +69,10 @@ function Placeholders(props: PlaceholdersProps): ReactElement {
       className={`absolute inset-0 ${pulseOf(props.animation)}`}
     >
       {props.placeholders.map((placeholder) => (
-        <Placeholder key={keyOf(placeholder)} placeholder={placeholder} />
+        <Placeholder
+          key={placeholderKey(placeholder)}
+          placeholder={placeholder}
+        />
       ))}
     </View>
   );
