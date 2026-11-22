@@ -1,5 +1,6 @@
 import { Button, HStack, Image, Spacer } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel,
   buttonStyle,
   contentShape,
   disabled,
@@ -13,9 +14,10 @@ import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
+import { FieldStatusDot } from '../field-row/field-status-dot.ios';
 import { FieldLinkMark } from './field-link-mark';
 import type { FieldLinkRowProps } from './field-link-props';
-import { linkTone } from './field-link-tone';
+import { linkLabel, linkTone } from './field-link-tone';
 
 // Settings' disclosure: chevron.forward at footnote size, semibold, in the tertiary label colour.
 const disclosureStyle = [
@@ -37,11 +39,12 @@ const roomyRowModifiers = [padding({ vertical: 6 }), pressArea];
  */
 export function FieldLink(props: FieldLinkRowProps): ReactElement {
   return (
-    <Button onPress={props.onPress} modifiers={pressing(props.disabled)}>
+    <Button onPress={props.onPress} modifiers={pressing(props)}>
       <HStack modifiers={props.roomy ? roomyRowModifiers : rowModifiers}>
         {props.leadingMark ? <FieldLinkMark mark={props.leadingMark} /> : null}
         <LinkTitle {...props} />
         <Spacer />
+        {props.status?.tone && <FieldStatusDot tone={props.status.tone} />}
         <LinkValue value={props.value} />
         <Disclosure action={props.action} />
       </HStack>
@@ -74,7 +77,8 @@ const LinkValue = (props: { value?: string }): ReactElement | null =>
     </NativeText>
   ) : null;
 
-const pressing = (off: boolean | undefined): ModifierConfig[] => [
+const pressing = (props: FieldLinkRowProps): ModifierConfig[] => [
   buttonStyle('plain'),
-  disabled(off ?? false),
+  disabled(props.disabled ?? false),
+  ...(props.status ? [accessibilityLabel(linkLabel(props))] : []),
 ];

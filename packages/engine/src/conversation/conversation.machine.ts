@@ -294,6 +294,11 @@ const conversationSetup = setup({
 
       return { failure: event.message };
     }),
+    reattachApp: assign(({ context, event }): Partial<ConversationContext> => {
+      assertEvent(event, 'call.appReattached');
+
+      return { call: { ...runningCall(context), connection: event.signal } };
+    }),
     recordProviderFailure: assign({ failure: providerFailure }),
     foldProvider: assign(
       ({ context, event }): Partial<ConversationContext> => ({
@@ -470,6 +475,7 @@ export const conversationMachine = conversationSetup.createMachine({
           }),
         },
         {
+          id: 'appConnection',
           src: 'watchConnection',
           input: ({ context }): ConnectionWatchInput => ({
             signal: runningCall(context).connection,
@@ -497,6 +503,10 @@ export const conversationMachine = conversationSetup.createMachine({
             return { reason: event.reason };
           }),
         },
+        'call.appReconnect': {
+          actions: sendTo('appConnection', ({ event }) => event),
+        },
+        'call.appReattached': { actions: 'reattachApp' },
         'call.appDisconnected': {
           target: idleTarget,
           actions: endsWith('app-disconnected'),

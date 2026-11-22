@@ -53,7 +53,7 @@ export type ConversationEvent =
       // The voice the call speaks with and what it is told; the provider's own when left out.
       setup?: ConversationSetup;
       conduct?: CallConduct;
-      // The App Connection that started the call; the call ends when it closes.
+      // The App Connection that started the call.
       connection?: AbortSignal;
     }
   | { type: 'call.end'; reason: ConversationEnd; sessionId?: string }
@@ -64,6 +64,8 @@ export type ConversationEvent =
   // The Session's Turn started or stopped running.
   | { type: 'session.turn'; running: boolean }
   | { type: 'call.appDisconnected' }
+  | { type: 'call.appReconnect'; signal: AbortSignal }
+  | { type: 'call.appReattached'; signal: AbortSignal }
   // Whether a Turn the call started is running.
   | { type: 'call.turns'; running: boolean }
   | { type: 'provider.event'; event: ConversationProviderEvent }

@@ -7,16 +7,12 @@ export interface SessionMenu {
   // An archived Session offers neither action.
   archived: boolean;
   status: SessionStatus;
-  changes?: { files: number; onPress: () => void };
   handoff?: { pending: boolean; onPress: () => void };
-  onNewTerminal?: () => void;
   onRename?: () => void;
   onArchive?: () => void;
 }
 
 interface SessionActionOptions {
-  // A phone's header draws stock symbols, so changed files take a system symbol there instead of the git glyph.
-  changesIcon?: 'diff' | 'changed-files';
   // A row answers Enter with Rename and ⌘⌫ with Archive while it has focus.
   shortcuts?: boolean;
 }
@@ -29,19 +25,6 @@ const archiveShortcut = { modifiers: ['meta'], key: 'Backspace' } as const;
 const isTurnActive = (status: SessionStatus): boolean =>
   status === 'running' || status === 'needs_input';
 
-const changesAction = (
-  { changes }: SessionMenu,
-  { changesIcon = 'diff' }: SessionActionOptions,
-): ReactElement | undefined =>
-  changes && (
-    <Action
-      key="changes"
-      label={`Changed files · ${changes.files}`}
-      icon={changesIcon}
-      onPress={changes.onPress}
-    />
-  );
-
 const renameAction = (
   { onRename }: SessionMenu,
   { shortcuts }: SessionActionOptions,
@@ -53,18 +36,6 @@ const renameAction = (
       icon="rename"
       onPress={onRename}
       shortcut={shortcuts ? renameShortcut : undefined}
-    />
-  );
-
-const newTerminalAction = ({
-  onNewTerminal,
-}: SessionMenu): ReactElement | undefined =>
-  onNewTerminal && (
-    <Action
-      key="terminal"
-      label="New Terminal"
-      icon="terminal"
-      onPress={onNewTerminal}
     />
   );
 
@@ -104,20 +75,15 @@ function handoffAction({
 const isAction = (action: ReactElement | undefined): action is ReactElement =>
   action !== undefined;
 
-// The header can offer changed files before Rename and Archive; archived Sessions keep only changed files.
 export function sessionActions(
   menu: SessionMenu,
   options: SessionActionOptions = {},
 ): ReactElement[] {
-  const actions = menu.archived
-    ? [changesAction(menu, options)]
-    : [
-        changesAction(menu, options),
-        handoffAction(menu),
-        newTerminalAction(menu),
-        renameAction(menu, options),
-        archiveAction(menu, options),
-      ];
+  if (menu.archived) return [];
 
-  return actions.filter(isAction);
+  return [
+    handoffAction(menu),
+    renameAction(menu, options),
+    archiveAction(menu, options),
+  ].filter(isAction);
 }

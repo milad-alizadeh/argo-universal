@@ -8,12 +8,11 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
-import { toneClass } from '#primitives/content/text';
-import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import {
   RowListItem,
   rowListItemProps,
 } from '../field-row/field-row-list-item.android';
+import { FieldStatusDot } from '../field-row/field-status-dot.android';
 import type { FieldValueProps } from './field-value-props';
 
 type Props = FieldValueProps;
@@ -44,7 +43,7 @@ const trailing = ({ value, dot }: Props): ReactElement | undefined =>
         verticalAlignment="center"
         horizontalArrangement={{ spacedBy: dotGap }}
       >
-        {dot && <Dot tone={dot} />}
+        {dot && <FieldStatusDot tone={dot} />}
         <NativeText tone="muted" numberOfLines={1}>
           {value}
         </NativeText>
@@ -53,23 +52,6 @@ const trailing = ({ value, dot }: Props): ReactElement | undefined =>
   ) : undefined;
 
 const dotGap = 6;
-
-const dotSize = 8;
-
-// A circle the size of a status dot, in the tone's colour.
-function Dot(props: { tone: NonNullable<Props['dot']> }): ReactElement {
-  const color = usePrimitiveColor(toneClass(props.tone) ?? 'text-foreground');
-
-  return (
-    <Box
-      modifiers={[
-        size(dotSize, dotSize),
-        clip({ type: 'roundedCorner', radius: dotSize / 2 }),
-        background(color ?? 'transparent'),
-      ]}
-    />
-  );
-}
 
 // The width a title's letter takes, which sets how long the bar standing in for it is.
 const barPerCharacter = 8;

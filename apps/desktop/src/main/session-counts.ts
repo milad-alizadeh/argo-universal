@@ -1,4 +1,5 @@
 import type { ServerAddress, SessionCounts } from '@repo/contracts';
+import { observedAppSocket } from '@repo/contracts/app-web-socket';
 import type { AppRouter } from '@repo/engine/router';
 import { readControlToken } from '@repo/engine/server-runtime';
 import { once } from '@repo/process';
@@ -64,7 +65,7 @@ function openSocket(
       connectionProof(home),
     onClose: released(report),
     onError: disconnect(report),
-    keepAlive: { enabled: true, intervalMs: 5000, pongTimeoutMs: 1000 },
+    WebSocket: observedAppSocket(WebSocket),
   });
 }
 

@@ -2,10 +2,12 @@ import type { IncomingMessage, Server } from 'node:http';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import {
   WebSocketServer,
+  type WebSocket,
   type PerMessageDeflateOptions,
   type VerifyClientCallbackAsync,
 } from 'ws';
 import { createRpcContext, type RpcContext } from '../rpc';
+import { AppSocketDiagnostics } from './app-web-socket';
 import type { ServerListener } from './network-listener';
 import { provenIdentity } from './proven-caller';
 import { bearerToken, type RequestGuard } from './request-guard';
@@ -25,6 +27,7 @@ export interface HttpConnectionsInput {
   readonly router: AppRouter;
   readonly guard: RequestGuard;
   readonly listener: ServerListener;
+  readonly log: (line: string) => void;
 }
 
 export function connectWebSockets(
@@ -33,38 +36,45 @@ export function connectWebSockets(
   // Attached after listen: ws re-emits the server's 'error', so a failed listen would throw from it.
   const webSocketServer = createWebSocketServer(input);
 
-  const handler = applyWSSHandler({
+  const shutdown = new WeakMap<WebSocket, AppSocketDiagnostics>();
+  webSocketServer.on('connection', (socket) => {
+    shutdown.set(socket, new AppSocketDiagnostics(socket, input.log));
+  });
+
+  applyWSSHandler({
     wss: webSocketServer,
     router: input.router,
     createContext: ({ req, info }) =>
       connectionContext(input.guard, req, info.connectionParams),
-    keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 
-  return closeConnections({ handler, webSocketServer, input });
+  return closeConnections({ webSocketServer, input, shutdown });
 }
 
 type HttpConnections = {
-  handler: ReturnType<typeof applyWSSHandler>;
   webSocketServer: WebSocketServer;
   input: HttpConnectionsInput;
+  shutdown: WeakMap<WebSocket, AppSocketDiagnostics>;
 };
 
 function closeConnections({
-  handler,
   webSocketServer,
   input,
+  shutdown,
 }: HttpConnections): () => Promise<void> {
   // The front door waits for upgraded sockets, so the WebSocket clients go first.
   return async (): Promise<void> => {
-    handler.broadcastReconnectNotification();
+    // The close frame carries the reason, and tRPC reconnects when it sees the socket close.
+    for (const client of webSocketServer.clients) shutdown.get(client)?.stop();
 
-    for (const client of webSocketServer.clients) client.terminate();
-    webSocketServer.close();
+    const socketsClosed = new Promise<void>((resolve) =>
+      webSocketServer.close(() => resolve()),
+    );
+
     const closed = input.listener.close();
     // The close would otherwise wait out the keep-alive timeout of an HTTP socket that turns idle later.
     input.requests.closeAllConnections();
-    await closed;
+    await Promise.all([closed, socketsClosed]);
   };
 }
 

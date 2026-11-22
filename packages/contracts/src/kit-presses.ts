@@ -1,3 +1,8 @@
+// The events a press on an IconButton can make.
+const pressEvents = ['onPress', 'onPressSelected'] as const;
+
+type PressEvent = (typeof pressEvents)[number];
+
 // What a toggle's press reads: whether it is drawn selected, and whether it has a press for switching back.
 export interface TogglePress {
   selected?: boolean | null;
@@ -12,7 +17,22 @@ export interface TogglePress {
 export const pressEventOf = ({
   selected,
   onPressSelected,
-}: TogglePress): 'onPress' | 'onPressSelected' =>
+}: TogglePress): PressEvent =>
   selected === true && onPressSelected !== undefined
     ? 'onPressSelected'
     : 'onPress';
+
+const isPressEvent = (event: string): event is PressEvent =>
+  pressEvents.some((press) => press === event);
+
+/*
+ * Whether an event holds its control disabled while the Plugin answers. A toggle's presses, on a node that has a
+ * press for switching back, never do: a second press before the first is answered is the person switching back,
+ * which runs after the first, so holding it back would drop it.
+ */
+export const pressBlocks = (
+  props: TogglePress,
+  event: string,
+  blocks: boolean,
+): boolean =>
+  blocks && !(props.onPressSelected !== undefined && isPressEvent(event));

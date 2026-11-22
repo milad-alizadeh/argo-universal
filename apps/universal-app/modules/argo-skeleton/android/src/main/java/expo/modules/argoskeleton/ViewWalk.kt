@@ -161,7 +161,7 @@ class ViewWalk(private val root: ViewGroup) {
     if (view.width <= 0 || view.height <= 0) return null
     if (view !is EditText) textLayout(view)?.let { return lines(view, it) }
     if (isDecoration(view)) return null
-    if (!isAtomic(view) && !isSmallControl(view) && !isEmptyFill(view)) return null
+    if (!isAtomic(view) && !isSmallControl(view) && !isEmptyFill(view) && !isEmptyCard(view)) return null
     return listOf(SkeletonPlaceholder(rectInRoot(view), radiusOf(view)))
   }
 
@@ -210,6 +210,29 @@ class ViewWalk(private val root: ViewGroup) {
   private fun isEmptyFill(view: View): Boolean {
     val empty = view !is ViewGroup || view.childCount == 0
     return hasFill(view) && empty && fitsSmallControl(view) && min(view.width, view.height) > SkeletonRules.HAIRLINE * density
+  }
+
+  /*
+   * A rounded box, filled or outlined, of any size, that holds no text and no media: a card drawn as its shell, as a
+   * loading page keeps its cards. One placeholder covers it whole, so the shell itself is what loads.
+   */
+  private fun isEmptyCard(view: View): Boolean =
+    (hasFill(view) || hasBorder(view)) && ownRadius(view) > 0f &&
+      min(view.width, view.height) > SkeletonRules.HAIRLINE * density && !holdsDrawnContent(view)
+
+  // True when a visible view beneath this one draws text, media or a control, or is a Compose tree, which draws its own.
+  private fun holdsDrawnContent(view: View): Boolean {
+    if (view !is ViewGroup) return false
+    return childrenOf(view).any { child ->
+      child.visibility == View.VISIBLE &&
+        (child is ViewRootForTest || isAtomic(child) || hasText(child) || holdsDrawnContent(child))
+    }
+  }
+
+  private fun hasText(view: View): Boolean {
+    if (view is TextView) return view.text.isNotBlank()
+    if (view.javaClass.name != PREPARED_TEXT_VIEW) return false
+    return preparedLayout(view)?.layout?.text?.isNotBlank() ?: true
   }
 
   // The view's own corner radius, or the one a clipping parent of the same size gives it (an avatar's image).

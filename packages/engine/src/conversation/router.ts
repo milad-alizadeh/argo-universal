@@ -18,12 +18,18 @@ export const createConversationRouter = routerFactory(
       watch: publicProcedure
         .output(zAsyncIterable({ yield: ConversationStatus }))
         .subscription(({ ctx, signal }) =>
-          deps.conversation.watch(signal ?? ctx.connection.signal),
+          deps.conversation.watch(
+            signal ?? ctx.connection.signal,
+            ctx.connection,
+          ),
         ),
       updates: publicProcedure
         .output(zAsyncIterable({ yield: ConversationUpdate }))
         .subscription(({ ctx, signal }) =>
-          deps.conversation.updates(signal ?? ctx.connection.signal),
+          deps.conversation.updates(
+            signal ?? ctx.connection.signal,
+            ctx.connection,
+          ),
         ),
       // App plumbing: the App reports its microphones and speakers and hears which to use; it subscribes again when they change.
       devices: publicProcedure

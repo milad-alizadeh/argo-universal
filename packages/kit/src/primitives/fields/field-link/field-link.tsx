@@ -9,10 +9,11 @@ import {
   rowPressTargetClassName,
   useRowPressable,
 } from '#primitives/fields/field-row';
+import { StatusDot } from '#primitives/status/status-dot';
 import { NativeIcon } from '../../../symbols/native-icon';
 import { FieldLinkMark } from './field-link-mark';
 import type { FieldLinkRowProps } from './field-link-props';
-import { linkTone } from './field-link-tone';
+import { linkLabel, linkTone } from './field-link-tone';
 
 // Radix's Trigger hands its child the anchor ref and popup state, as a Drill's popover opens beside the row.
 type Anchor = Pick<
@@ -49,7 +50,7 @@ const linkProps = (props: FieldLinkProps): Attributes => ({
   'aria-expanded': props['aria-expanded'],
   'aria-controls': props['aria-controls'],
   role: props.action ? 'button' : 'link',
-  'aria-label': spokenLabel(props),
+  'aria-label': linkLabel(props),
   disabled: props.disabled,
   onPress: props.onPress,
   onKeyDown: (event) => followOnEnter(event, props),
@@ -73,6 +74,7 @@ const LinkRow = (props: FieldLinkProps): ReactElement => (
       <RowTitle {...props} tone={linkTone(props)} />
     </View>
     <Spacer flexible />
+    {props.status?.tone && <StatusDot tone={props.status.tone} />}
     {props.value ? <LinkValue value={props.value} /> : null}
     <LinkDisclosure action={props.action} />
   </Row>
@@ -109,9 +111,6 @@ function followOnEnter(
 ): void {
   if (event.nativeEvent.key === 'Enter' && !props.disabled) props.onPress();
 }
-
-const spokenLabel = (props: FieldLinkProps): string =>
-  [props.title, props.subtitle, props.value].filter(Boolean).join(', ');
 
 function Chevron(): ReactElement {
   const color = useNativeTheme().colors.tertiary;

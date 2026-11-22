@@ -28,19 +28,46 @@ const drawnSlots = (slots: WireNode['slots']): WireNode['slots'] =>
 const firstChildren = (node: WireNode): WireNode[] =>
   rowHolders.has(node.type) ? node.children.slice(0, keptRows) : node.children;
 
+// Kinds that open over the page: a loading page shows none of them, open or not.
+const overlays = new Set(['Inspector', 'Sheet', 'Dialog', 'Alert']);
+
+// Kinds that load as their card alone, with nothing inside and no level, so the Skeleton covers each shell whole.
+const shells = new Set(['Fader']);
+
+// What a shell keeps: its shape, not its level or what it holds.
+const shellProps = new Set(['orientation', 'minimumValue', 'maximumValue']);
+
+const shellOf = (node: WireNode): WireNode => ({
+  type: node.type,
+  key: node.key,
+  props: Object.fromEntries(
+    Object.entries(node.props).filter(([name]) => shellProps.has(name)),
+  ),
+  slots: {},
+  children: [],
+});
+
+const drawnChildren = (node: WireNode): WireNode[] =>
+  firstChildren(node)
+    .filter(({ type }) => !overlays.has(type))
+    .map(stillOf);
+
 // The node as it draws, without what it does.
 function stillOf(node: WireNode): WireNode {
+  if (shells.has(node.type)) return shellOf(node);
+
   return {
     type: node.type,
     key: node.key,
     props: drawnProps(node.props),
     slots: drawnSlots(node.slots),
-    children: firstChildren(node).map(stillOf),
+    children: drawnChildren(node),
   };
 }
 
 /*
  * What a Skeleton draws while a page loads next time: the page's tree as last drawn with only its first rows, so the
- * loading page has the rows' own marks, lines and Pills, and nothing they did when pressed.
+ * loading page has the rows' own marks, lines and Pills, and nothing they did when pressed. A card that holds a
+ * level and controls, a Fader, loads as its empty shell, and nothing that opens over the page loads at all.
  */
 export const loadingTree = (root: WireNode): WireNode => stillOf(root);

@@ -8,9 +8,9 @@ import {
   semantics,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
-import { useResolveClassNames } from 'uniwind';
-import { leadingMarkClass } from '../../../leading-mark';
+import { leadingMarkPixels } from '../../../leading-mark';
 import { useIconPixels } from '../../../symbols/icon-size';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { leadingSource } from '../field-row/field-row-leading-source.android';
 import {
   markLabel,
@@ -52,10 +52,9 @@ const markSemantics = (mark: Mark): ReturnType<typeof alpha>[] => [
 function MarkFace({ mark }: MarkProps): ReactElement {
   const color = useMarkColors(mark);
   const source = leadingSource(mark.icon);
-  const box = Number(useResolveClassNames(leadingMarkClass).width);
-  const glyph = useIconPixels('sm');
+  const glyph = useIconPixels(rowGlyphSize);
 
-  const modifiers = markModifiers(mark, box, color.fill);
+  const modifiers = markModifiers(mark, color.fill);
 
   return (
     <Box contentAlignment="center" modifiers={modifiers}>
@@ -66,11 +65,10 @@ function MarkFace({ mark }: MarkProps): ReactElement {
 
 function markModifiers(
   mark: Mark,
-  box: number,
   fill: ReturnType<typeof useMarkColors>['fill'],
 ): ReturnType<typeof size>[] {
   return [
-    size(box, box),
+    size(leadingMarkPixels, leadingMarkPixels),
     clip(Shapes.Circle),
     ...(mark.plain ? [] : [background(fill ?? 'transparent')]),
   ];

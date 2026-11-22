@@ -109,6 +109,29 @@ const isDecoration = (element: Element, rect: DOMRect): boolean =>
 const isDrawnMedia = (element: Element, rect: DOMRect): boolean =>
   isMedia(element) && !isDecoration(element, rect);
 
+const mediaSelector = [
+  ...[...rules.atomicTags].map((tag) => tag.toLowerCase()),
+  ...[...rules.atomicRoles].map((role) => `[role="${role}"]`),
+].join(',');
+
+const holdsNothingDrawn = (element: Element): boolean =>
+  (element.textContent ?? '').trim() === '' &&
+  element.querySelector(mediaSelector) === null;
+
+/*
+ * A rounded box, filled or outlined, of any size, that holds no text and no media: a card drawn as its shell, as a
+ * loading page keeps its cards. One placeholder covers it whole, so the shell itself is what loads.
+ */
+const isEmptyCard = (
+  element: Element,
+  style: CSSStyleDeclaration,
+  rect: DOMRect,
+): boolean =>
+  isFilledOrOutlined(style) &&
+  radiusOf(style, rect) > 0 &&
+  Math.min(rect.width, rect.height) > rules.hairline &&
+  holdsNothingDrawn(element);
+
 // True for what one placeholder covers whole instead of being walked into.
 export const isDrawnWhole = (
   element: Element,
@@ -117,4 +140,5 @@ export const isDrawnWhole = (
 ): boolean =>
   isDrawnMedia(element, rect) ||
   isSmallControl(style, rect) ||
-  isEmptyFill(element, style, rect);
+  isEmptyFill(element, style, rect) ||
+  isEmptyCard(element, style, rect);

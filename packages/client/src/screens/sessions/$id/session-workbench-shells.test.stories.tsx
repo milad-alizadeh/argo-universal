@@ -15,23 +15,35 @@ import { openWorkbench } from './session-workbench-sheet.test.mocks';
 
 type Props = {
   closed: (id: string) => void;
+  draft?: () => void;
 };
 
-function ShellPreview({ closed }: Props): ReactElement {
+function ShellPreview({ closed, draft }: Props): ReactElement {
   const [shells, setShells] = useState<ShellTerminal[]>([]);
 
   return (
     <FramedSessionPreview
       state="open"
       {...idleSession}
-      runs={{
-        runs: workbenchRuns,
-        shells,
-        defaultGroup: {
-          status: partiallyReadyGroup,
-          onStart: fn(),
-          onStop: fn(),
+      header={{
+        ...idleSession.header,
+        changes: {
+          summary: { files: 4, additions: 16, deletions: 2 },
+          open: false,
+          onOpenChange: () => {},
         },
+      }}
+      runs={{
+        runs: draft ? [] : workbenchRuns,
+        shells,
+        draft: draft && { pending: false, onPress: draft },
+        defaultGroup: draft
+          ? undefined
+          : {
+              status: partiallyReadyGroup,
+              onStart: fn(),
+              onStop: fn(),
+            },
         onStart: fn(),
         onStop: fn(),
         onRestart: fn(),
@@ -78,46 +90,61 @@ const firstShell = 'Shell 1';
 
 const reopenFirstShell = 'Open Shell 1 shell';
 
-export const OpensFromCardAndMoreAndClosesEachShellIndependently: Story = {
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: newTerminal }),
-    );
-    await expect(
-      await canvas.findByRole('tabpanel', { name: firstShell }),
-    ).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Hide Inspector' }),
-    );
-    await expect(args.closed).not.toHaveBeenCalled();
-    await userEvent.click(
-      canvas.getByRole('button', { name: reopenFirstShell }),
-    );
-    await expect(
-      await canvas.findByRole('tabpanel', { name: firstShell }),
-    ).toBeVisible();
+export const OpensFromHeaderAndInspectorAndClosesEachShellIndependently: Story =
+  {
+    play: async ({ args, canvas, userEvent }) => {
+      await userEvent.click(
+        await canvas.findByRole('button', { name: newTerminal }),
+      );
+      await expect(
+        await canvas.findByRole('tabpanel', { name: firstShell }),
+      ).toBeVisible();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Hide Inspector' }),
+      );
+      await expect(args.closed).not.toHaveBeenCalled();
+      await userEvent.click(
+        canvas.getByRole('button', { name: reopenFirstShell }),
+      );
+      await expect(
+        await canvas.findByRole('tabpanel', { name: firstShell }),
+      ).toBeVisible();
 
-    await userEvent.click(canvas.getByRole('button', { name: 'More' }));
-    const menu = within(document.body);
-    const item = await menu.findByRole('menuitem', { name: newTerminal });
-    await settleOverlays(item);
-    await userEvent.click(item);
-    await expect(
-      await canvas.findByRole('tabpanel', { name: 'Shell 2' }),
-    ).toBeVisible();
-    await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
+      await userEvent.click(canvas.getByRole('button', { name: 'More' }));
+      const menu = within(document.body);
+      await expect(
+        await menu.findByRole('menuitem', { name: 'Rename' }),
+      ).toBeVisible();
+      await expect(
+        menu.queryByRole('menuitem', { name: newTerminal }),
+      ).toBeNull();
+      await expect(
+        menu.queryByRole('menuitem', { name: /^Changed files/ }),
+      ).toBeNull();
+      await userEvent.keyboard('{Escape}');
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Shell 2' }),
-    );
-    await expect(args.closed).toHaveBeenCalledTimes(1);
-    await expect(args.closed).toHaveBeenCalledWith('shell-2');
-    await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Stop dev group' }),
-    ).toBeVisible();
-  },
-};
+      const add = await canvas.findByRole('button', {
+        name: 'Add Terminal tab',
+      });
+
+      await settleOverlays(add);
+      await userEvent.click(add);
+      await expect(
+        await canvas.findByRole('tabpanel', { name: 'Shell 2' }),
+      ).toBeVisible();
+      await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
+
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Close Shell 2' }),
+      );
+      await expect(args.closed).toHaveBeenCalledTimes(1);
+      await expect(args.closed).toHaveBeenCalledWith('shell-2');
+      await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: 'Stop dev group' }),
+      ).toBeVisible();
+    },
+  };
 
 export const ClosesDesktopShellFromTheHeader: Story = {
   args: { closed: fn() },
@@ -184,11 +211,10 @@ export const OpensInThePhoneRunsSheet: Story = {
   },
 };
 
-export const OpensThePhoneRunsSheetFromMore: Story = {
+export const OpensThePhoneTerminalFromTheHeader: Story = {
   ...phone,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('button', { name: 'More' }));
-    const item = await screen.findByRole('menuitem', { name: newTerminal });
+    const item = await canvas.findByRole('button', { name: newTerminal });
 
     await settleOverlays(item);
     await userEvent.click(item);
@@ -203,5 +229,31 @@ export const OpensThePhoneRunsSheetFromMore: Story = {
     await expect(
       sheet.getByRole('button', { name: 'Back to Runs' }),
     ).toBeVisible();
+  },
+};
+
+const createRunFile = 'Create .argo/run.json';
+
+export const OffersRunSetupInTheWorkbench: Story = {
+  args: { draft: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: createRunFile }),
+    );
+    await expect(args.draft).toHaveBeenCalledOnce();
+  },
+};
+
+export const OffersRunSetupInThePhoneWorkbench: Story = {
+  ...phone,
+  args: { draft: fn() },
+  play: async (context) => {
+    const sheet = await openWorkbench(context);
+    const setup = await sheet.findByRole('button', { name: createRunFile });
+
+    await expect(sheet.queryByRole('link', { name: 'Manage Runs' })).toBeNull();
+    await settleOverlays(setup);
+    await context.userEvent.click(setup);
+    await expect(context.args.draft).toHaveBeenCalledOnce();
   },
 };

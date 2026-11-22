@@ -1,6 +1,7 @@
 import type {
   RunConfigurationRow,
   RunConfigurationStatus,
+  RunDefaultGroup,
 } from '@repo/contracts';
 import { formatElapsed } from '@repo/kit/format-elapsed';
 import type { Tone } from '@repo/kit/primitives/content/text';
@@ -13,18 +14,37 @@ const labels: Record<RunConfigurationStatus, string> = {
   lost: 'Lost',
 };
 
-export const runStatusTone: Record<RunConfigurationStatus, Tone> = {
+export const runStatusTone = {
   stopped: 'muted',
   starting: 'warning',
   ready: 'success',
   crashed: 'danger',
   lost: 'muted',
-};
+} as const satisfies Record<RunConfigurationStatus, Tone>;
 
 export const runIsActive = ({
   status,
 }: Pick<RunConfigurationRow, 'status'>): boolean =>
   status === 'starting' || status === 'ready';
+
+type RunGroupState = {
+  active: boolean;
+  status: 'ready' | 'starting' | 'stopped';
+};
+
+export function runGroupState(
+  { members, readyCount }: RunDefaultGroup,
+  runs: readonly RunConfigurationRow[],
+): RunGroupState {
+  const active = runs.some(
+    (run) => members.includes(run.name) && runIsActive(run),
+  );
+
+  const incomplete = active ? 'starting' : 'stopped';
+  const status = readyCount === members.length ? 'ready' : incomplete;
+
+  return { active, status };
+}
 
 export function runStatusLabel(
   run: RunConfigurationRow,

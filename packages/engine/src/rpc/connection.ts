@@ -7,6 +7,8 @@ import { identityOf, type RpcIdentity, type RpcSocket } from './identity';
 
 const rejections = createRejectionCounter('Plugin surface header');
 
+const appInstanceRejections = createRejectionCounter('App instance');
+
 export type { RpcSocket } from './identity';
 
 export interface RpcConnection {
@@ -30,10 +32,32 @@ export function createRpcContext(
   params?: Record<string, string | undefined> | null,
   identity: RpcIdentity | undefined = identityOf(socket),
 ): RpcContext {
-  return {
-    connection: socketConnection(params, abortOnClose(socket), identity),
-  };
+  const signal = abortOnClose(socket);
+  const appInstance = parseAppInstance(params?.['appInstance']);
+
+  if (identity && appInstance)
+    appConnections.set(signal, JSON.stringify([identity, appInstance]));
+
+  return { connection: socketConnection(params, signal, identity) };
 }
+
+const appInstancePattern = /^[0-9a-f]{32}$/;
+
+function parseAppInstance(value: string | undefined): string | undefined {
+  if (value === undefined || appInstancePattern.test(value)) return value;
+  appInstanceRejections.report(
+    'Invalid App instance',
+    'Expected 32 hexadecimal digits',
+  );
+
+  return undefined;
+}
+
+const appConnections = new WeakMap<AbortSignal, string>();
+
+// The running App instance, scoped to the Device the socket proved.
+export const appOfConnection = (signal: AbortSignal): string | undefined =>
+  appConnections.get(signal);
 
 const aborters = new WeakMap<RpcSocket, AbortController>();
 

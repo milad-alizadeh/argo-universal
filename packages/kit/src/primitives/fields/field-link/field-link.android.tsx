@@ -1,18 +1,19 @@
-import { Box } from '@expo/ui/jetpack-compose';
+import { Box, Row } from '@expo/ui/jetpack-compose';
 import {
   defaultMinSize,
   fillMaxWidth,
+  semantics,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
-import type { FieldGroupKitProps } from '../../kit-props';
 import {
   RowListItem,
   rowListItemProps,
 } from '../field-row/field-row-list-item.android';
+import { FieldStatusDot } from '../field-row/field-status-dot.android';
 import { FieldLinkMark } from './field-link-mark';
 import type { FieldLinkRowProps } from './field-link-props';
-import { linkTone } from './field-link-tone';
+import { linkLabel, linkTone } from './field-link-tone';
 
 /*
  * A pressable ListItem puts its value in the trailing slot and its optional subtitle in the supporting slot.
@@ -24,10 +25,10 @@ export function FieldLink(props: FieldLinkRowProps): ReactElement {
       {...rowListItemProps(props)}
       tone={linkTone(props)}
       supporting={subtitleOf(props)}
-      trailing={trailingValue(props.value)}
+      trailing={trailingValue(props)}
       leadingContent={leadingMark(props.leadingMark)}
       onPress={props.onPress}
-      modifiers={props.roomy ? roomyRowModifiers : undefined}
+      modifiers={linkModifiers(props)}
     />
   );
 }
@@ -35,15 +36,24 @@ export function FieldLink(props: FieldLinkRowProps): ReactElement {
 // Material's two-line item is 72dp. Leave six more dp at each edge of a roomy row.
 const roomyRowModifiers = [defaultMinSize({ minHeight: 84 })];
 
+const linkModifiers = (props: FieldLinkRowProps): typeof roomyRowModifiers => [
+  ...(props.roomy ? roomyRowModifiers : []),
+  ...(props.status
+    ? [semantics({ contentDescription: linkLabel(props) })]
+    : []),
+];
+
 const leadingMark = (
-  mark: FieldGroupKitProps<'FieldGroup.Link'>['leadingMark'],
+  mark: FieldLinkRowProps['leadingMark'],
 ): ReactElement | undefined =>
   mark ? <FieldLinkMark mark={mark} /> : undefined;
 
 const subtitleOf = ({
   subtitle,
   subtitleTone,
-}: FieldGroupKitProps<'FieldGroup.Link'>): ReactElement | undefined =>
+}: Pick<FieldLinkRowProps, 'subtitle' | 'subtitleTone'>):
+  | ReactElement
+  | undefined =>
   subtitle ? (
     <NativeText role="secondary" tone={subtitleTone ?? 'muted'}>
       {subtitle}
@@ -55,11 +65,22 @@ const valueShare = 0.6;
 
 const valueModifiers = [fillMaxWidth(valueShare)];
 
-const trailingValue = (value?: string): ReactElement | undefined =>
-  value ? (
-    <Box contentAlignment="centerEnd" modifiers={valueModifiers}>
-      <NativeText tone="muted" numberOfLines={1}>
-        {value}
-      </NativeText>
+const trailingValue = ({
+  value,
+  status,
+}: FieldLinkRowProps): ReactElement | undefined =>
+  value || status?.tone ? (
+    <Box
+      contentAlignment="centerEnd"
+      modifiers={value ? valueModifiers : undefined}
+    >
+      <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 6 }}>
+        {status?.tone && <FieldStatusDot tone={status.tone} />}
+        {value && (
+          <NativeText tone="muted" numberOfLines={1}>
+            {value}
+          </NativeText>
+        )}
+      </Row>
     </Box>
   ) : undefined;

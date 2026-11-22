@@ -7,6 +7,7 @@ import type {
   ConversationStatus,
   ConversationUpdate,
 } from '@repo/contracts';
+import type { RpcConnection } from '../rpc';
 import type { ConversationDevices } from './conversation-devices';
 import type { ConversationSessions } from './session-link';
 import type { VoiceChoicesPort } from './voice-choices';
@@ -22,8 +23,14 @@ export interface ConversationsPort {
   end: (sessionId?: string) => ConversationEndOutput;
   // An Agent ends its Session's call; refused when the Session has no call.
   hangUp: (sessionId?: string) => ConversationEndOutput;
-  watch: (signal: AbortSignal) => AsyncGenerator<ConversationStatus>;
-  updates: (signal: AbortSignal) => AsyncGenerator<ConversationUpdate>;
+  watch: (
+    signal: AbortSignal,
+    connection?: Pick<RpcConnection, 'signal'>,
+  ) => AsyncGenerator<ConversationStatus>;
+  updates: (
+    signal: AbortSignal,
+    connection?: Pick<RpcConnection, 'signal'>,
+  ) => AsyncGenerator<ConversationUpdate>;
   // Gives the call the Sessions it sends Prompts to and listens to.
   attach: (sessions: ConversationSessions) => void;
   // Settings › Conversation: what the person chose and can choose from, and changing it; the next call uses it.

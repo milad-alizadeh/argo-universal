@@ -3,16 +3,11 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import {
-  type SessionMenu,
   type SessionPanels,
   type SessionPluginActions,
 } from '#features/sessions';
-import { summaryOf } from './sections/changes-facts';
 import { openNewShell } from './sections/runs-section';
-import {
-  type OpenSessionViewProps,
-  type SessionDetailViewProps,
-} from './session-detail-view';
+import type { SessionDetailViewProps } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
 import {
   type HeaderPlacement,
@@ -20,33 +15,6 @@ import {
   usePluginHeaderActions,
 } from './use-plugin-header-actions';
 import { type WorkbenchCards, toggleCardSheet } from './use-workbench-cards';
-
-function headerMenuOf(
-  props: SessionDetailViewProps,
-  compact: boolean,
-): SessionMenu | undefined {
-  if (props.state !== 'open' || !props.header.menu) return undefined;
-
-  return {
-    ...props.header.menu,
-    changes: menuChanges(props),
-    onNewTerminal: compact
-      ? props.onNewPhoneTerminal
-      : openNewShell(props.runs, props.inspectorPanels),
-  };
-}
-
-type MenuContent = Pick<OpenSessionViewProps, 'header' | 'changes'>;
-
-// The same reading of the Checkout the Workbench card summarises, so "…" never counts files the Inspector does not.
-function menuChanges(content: MenuContent): SessionMenu['changes'] {
-  const changes = content.header.changes;
-  const summary = summaryOf(content);
-
-  if (!changes || !summary) return undefined;
-
-  return { files: summary.files, onPress: () => changes.onOpenChange(true) };
-}
 
 const noPluginActions: SessionPluginActions = { beside: [], menu: [] };
 
@@ -65,18 +33,40 @@ export function SessionPageHeader(
   );
 }
 
-function workbenchAction(
+function directActions(
   props: SessionDetailViewProps,
-): React.JSX.Element | undefined {
-  if (props.state !== 'open' || !props.onOpenWorkbench) return undefined;
+  compact: boolean,
+): React.JSX.Element[] {
+  if (props.state !== 'open') return [];
 
-  return (
-    <Action
-      label="Workbench"
-      icon="workbench"
-      onPress={props.onOpenWorkbench}
-    />
-  );
+  const terminal = compact
+    ? props.onNewPhoneTerminal
+    : openNewShell(props.runs, props.inspectorPanels);
+
+  const workbench = compact ? props.onOpenWorkbench : undefined;
+
+  return [
+    ...(terminal
+      ? [
+          <Action
+            key="terminal"
+            label="New Terminal"
+            icon="terminal"
+            onPress={terminal}
+          />,
+        ]
+      : []),
+    ...(workbench
+      ? [
+          <Action
+            key="workbench"
+            label="Workbench"
+            icon="workbench"
+            onPress={workbench}
+          />,
+        ]
+      : []),
+  ];
 }
 
 function stackHeader(
@@ -87,9 +77,9 @@ function stackHeader(
     <ScreenStackHeader
       title={props.state === 'open' ? props.header.title : 'Session'}
       actions={sessionHeaderActions(
-        headerMenuOf(props, compact),
+        props.state === 'open' ? props.header.menu : undefined,
         pluginActionsOf(props),
-        compact ? workbenchAction(props) : undefined,
+        directActions(props, compact),
       )}
     />
   );

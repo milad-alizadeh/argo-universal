@@ -1,8 +1,4 @@
-import {
-  changeMarks,
-  type ChangeMarkName,
-  type StageMark,
-} from '@repo/kit/stage-marks';
+import { changeMarks, type ChangeMarkName } from '@repo/kit/stage-marks';
 
 // The stages a Change moves through, in order; a picker reads its options from here.
 export const changeStageNames = [
@@ -47,7 +43,9 @@ const markName = (state: ChangeState): ChangeMarkName => {
 };
 
 // Shared by every drawing, from the one table every surface marks a Change from.
-export function resolveChangeStage(state: ChangeState): StageMark {
+export function resolveChangeStage(
+  state: ChangeState,
+): (typeof changeMarks)[ChangeMarkName] {
   return changeMarks[markName(state)];
 }
 

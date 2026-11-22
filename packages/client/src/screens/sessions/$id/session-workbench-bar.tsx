@@ -23,8 +23,12 @@ function barRow(
   return {
     key: JSON.stringify([entry.pluginId, entry.path, entry.text]),
     label: hasIssueState ? entry.text.slice(0, statusAt) : entry.text,
-    value: hasIssueState
-      ? entry.text.slice(statusAt + issueStateSeparator.length)
+    leading: entry.icon,
+    status: hasIssueState
+      ? {
+          label: entry.text.slice(statusAt + issueStateSeparator.length),
+          tone: entry.tone ?? 'muted',
+        }
       : undefined,
     navigate: entry.path === undefined ? undefined : () => onOpen(entry),
   };

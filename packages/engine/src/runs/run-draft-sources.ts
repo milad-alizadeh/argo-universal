@@ -5,6 +5,7 @@ import { TRPCError } from '@trpc/server';
 import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { z } from 'zod';
 import { noFollow, stillAtPath } from './run-checkout-file';
+import { validReadyPattern } from './run-configurations';
 
 // A Run Configuration as drafted: the fields of `.argo/run.json` that a source can know.
 export type Draft = {
@@ -211,16 +212,6 @@ const inCheckout = (value: string): string =>
     .replaceAll(/\$\{workspace(?:Folder|Root)\}\/?/gu, '')
     .replace(/^$/u, '.');
 
-const validPattern = (source: string): boolean => {
-  try {
-    new RegExp(source);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 type Launch = { draft: Draft } | { reason: string };
 
 const commandWords = (launch: LaunchConfiguration): string[] =>
@@ -309,7 +300,7 @@ function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
         ),
       }),
       ...(port && { port }),
-      ...(pattern && validPattern(pattern) && { ready: { pattern } }),
+      ...(pattern && validReadyPattern(pattern) && { ready: { pattern } }),
     },
   };
 }

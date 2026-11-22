@@ -65,10 +65,14 @@ export type PageCallsPorts = TreePorts & {
  * `onChangeText`, waits for the edits to pause, while the kit component shows them at once, so the page does not
  * draw on every keystroke. A press that flushes, such as a Button's or a Form's Submit, first lands every waiting
  * change, and then makes the call the newly drawn tree holds for it, so an Operation's arguments read the latest
- * Page state; a press whose node the new tree no longer has is refused, never made on another node.
+ * Page state; a press whose node the new tree no longer has is refused, never made on another node. The tree's
+ * Operations run one at a time in the order they were called, each optimistic at once, so two quick presses of a
+ * toggle reach the Plugin, and the device behind it, in the order they were pressed.
  */
 export class PageCalls {
   private readonly pauses: EditPauses;
+  // The tree's last Operation run, which the next one waits for, however it ended.
+  private lastRun: Promise<void> = Promise.resolve();
 
   public constructor(
     private ports: PageCallsPorts,
@@ -176,12 +180,25 @@ export class PageCalls {
     const { scope, run, failed } = this.ports;
     const putBack = await showOptimistic(this.ports, optimistic);
 
+    const ran = this.afterLastRun(() =>
+      run({ operation, args, ...definedScope(scope) }),
+    );
+
     try {
-      await run({ operation, args, ...definedScope(scope) });
+      await ran;
     } catch (error) {
       putBack();
       failed(error instanceof Error ? error : new Error(String(error)));
     }
+  }
+
+  // Starts `next` once the run before it has ended, and makes it the run the following one waits for.
+  private afterLastRun(next: () => Promise<void>): Promise<void> {
+    const ran = this.lastRun.then(next);
+
+    this.lastRun = ran.catch(() => {});
+
+    return ran;
   }
 }
 

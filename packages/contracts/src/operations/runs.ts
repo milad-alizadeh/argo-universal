@@ -1,6 +1,8 @@
 import {
   RunDraftParams,
   RunDraftResult,
+  RunGuide,
+  RunGuideParams,
   RunGroupNameParams,
   RunGroupStartParams,
   RunGroupStartResult,
@@ -141,12 +143,24 @@ export const runOperations = {
     policy: 'allow',
     keywords: [appWords, 'errors', 'output', 'crash'],
   },
+  'run.guide': {
+    id: 'run.guide',
+    label: 'Guide to writing Run Configurations',
+    icon: 'terminal',
+    description:
+      'Get the .argo/run.json template and JSON Schema for manual setup.',
+    params: RunGuideParams,
+    result: RunGuide,
+    tier: 'read',
+    policy: 'allow',
+    keywords: ['create', 'manual', 'example', 'schema', 'template', 'setup'],
+  },
   'run.draft': {
     id: 'run.draft',
     label: 'Draft Run Configurations',
     icon: 'terminal',
     description:
-      'Write a first .argo/run.json from package.json scripts, a Procfile, .vscode/launch.json and .claude/launch.json. It never runs them, and refuses to replace an existing file unless overwrite is true.',
+      'Write a first .argo/run.json from package.json scripts, a Procfile, .vscode/launch.json and .claude/launch.json. It never runs them. To write the file by hand, use run.guide. To replace an existing file with a draft, pass overwrite: true.',
     params: RunDraftParams,
     result: RunDraftResult,
     tier: 'act',

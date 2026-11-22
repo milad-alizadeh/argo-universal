@@ -25,19 +25,16 @@ function ListPending(): ReactNode {
   );
 }
 
+// The Inspector is not the section's: the shown page's own claim opens it, a Plugin page's as a core one's.
 type SectionScaffold = Pick<ScaffoldProps, 'list'> &
-  Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
+  Partial<Pick<ScaffoldProps, 'sidebarShown'>>;
 
 // What the Frame's shown section is read from: which section, its core lists, and the window it is drawn in.
 export type SectionShown = Pick<FrameSections, 'section' | 'lists'> & {
   sizeClass: SizeClass;
 };
 
-const noList: SectionScaffold = {
-  list: null,
-  sidebarShown: false,
-  inspectorState: 'closed',
-};
+const noList: SectionScaffold = { list: null, sidebarShown: false };
 
 // A core section's own list; a Plugin section's only while its page's ListDetail holds the sidebar with its own.
 export function sectionScaffold(
@@ -59,8 +56,5 @@ function pluginSectionScaffold(
 ): SectionScaffold {
   if (!framed || !held) return noList;
 
-  return {
-    list: <ClaimedList sidebar={sidebar} kept={kept} />,
-    inspectorState: 'closed',
-  };
+  return { list: <ClaimedList sidebar={sidebar} kept={kept} /> };
 }

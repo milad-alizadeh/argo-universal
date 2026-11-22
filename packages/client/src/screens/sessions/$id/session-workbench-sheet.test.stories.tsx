@@ -2,6 +2,7 @@ import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, screen, within } from 'storybook/test';
+import { failedShell } from '../../../features/sessions/components/shell-list/shell-list.mocks';
 import { subagentStates } from '../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import {
   followUps,
@@ -145,14 +146,51 @@ export const PreviewsChangesAndOpensTheRest: Story = {
   },
 };
 
-export const PreviewsFollowUpsAndOpensTheirList: Story = {
+export const AnnouncesEndedBackgroundTasks: Story = {
+  args: { content: { ...populated, subagents: undefined } },
   play: async ({ userEvent }) => {
     const sheet = await openSheet();
 
-    for (const item of [shownFollowUp, secondFollowUp])
-      await expect(
-        sheet.getByRole('link', { name: `${promptOf(item)}, Every 5 min` }),
-      ).toBeVisible();
+    await press(sheet, userEvent, '2 done');
+
+    const failed = await sheet.findByRole('link', {
+      name: `${failedShell.command}, Exit 1`,
+    });
+
+    await expect(failed).toBeVisible();
+    await expect(within(failed).queryByText('Exit 1')).toBeNull();
+  },
+};
+
+export const PreviewsFollowUpsAndOpensTheirList: Story = {
+  args: {
+    content: {
+      ...populated,
+      schedules: {
+        ...followUps,
+        items: [
+          shownFollowUp,
+          { ...secondFollowUp, paused: true, state: 'paused' },
+          laterFollowUp,
+        ],
+      },
+    },
+  },
+  play: async ({ userEvent }) => {
+    const sheet = await openSheet();
+
+    await expect(
+      sheet.getByRole('link', {
+        name: `${promptOf(shownFollowUp)}, Every 5 min`,
+      }),
+    ).toBeVisible();
+
+    const paused = sheet.getByRole('link', {
+      name: `${promptOf(secondFollowUp)}, Paused`,
+    });
+
+    await expect(paused).toBeVisible();
+    await expect(within(paused).queryByText('Paused')).toBeNull();
 
     await expect(
       sheet.queryByRole('link', titled(promptOf(laterFollowUp))),

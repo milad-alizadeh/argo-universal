@@ -1119,6 +1119,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      guide: publicProcedure
+        .input(operations['run.guide'].params)
+        .output(operations['run.guide'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.guide',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       draft: authenticatedAppProcedure
         .input(operations['run.draft'].params)
         .output(operations['run.draft'].result)

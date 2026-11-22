@@ -22,7 +22,11 @@ const normalClosure = 1000;
 
 const abnormalClosure = 1006;
 
-type Listener = (event: { data?: string; code?: number }) => void;
+type Listener = (event: {
+  data?: string;
+  code?: number;
+  reason?: string;
+}) => void;
 
 export interface ChannelSocketDeps {
   readonly openChannel: () => Promise<OpenedChannel>;
@@ -31,8 +35,21 @@ export interface ChannelSocketDeps {
   readonly onRefused?: () => void;
 }
 
-const closeBody = (code: number): Uint8Array =>
-  Uint8Array.of(code >> byteShift, code & byteMask);
+const closeBody = (code: number, reason: string): Uint8Array =>
+  concatBytes(
+    Uint8Array.of(code >> byteShift, code & byteMask),
+    textBytes(reason),
+  );
+
+const noCloseFrame = 1005;
+
+function closeCode(payload: Uint8Array): number {
+  if (payload.length < 2) return noCloseFrame;
+
+  const [high = 0, low = 0] = payload;
+
+  return (high << byteShift) | low;
+}
 
 /*
  * The slice of the browser's WebSocket that tRPC's client uses, speaking RFC 6455 to the Server inside an open channel. tRPC runs over it exactly as it runs over `ws://`, so nothing on the Server or in tRPC knows the difference (ADR-0045).
@@ -50,7 +67,7 @@ class ChannelWebSocket {
   private readonly control = new Map<number, (payload: Uint8Array) => void>([
     [opcodes.ping, (payload): void => this.frame(opcodes.pong, payload)],
     [opcodes.pong, (): void => {}],
-    [opcodes.close, (): void => this.close()],
+    [opcodes.close, (payload): void => this.remoteClose(payload)],
   ]);
 
   public constructor(
@@ -79,19 +96,26 @@ class ChannelWebSocket {
     this.frame(opcodes.text, textBytes(text));
   }
 
-  public close(code = normalClosure): void {
+  public close(code = normalClosure, reason = ''): void {
     if (this.readyState >= WebSocket.CLOSING) return;
     this.readyState = WebSocket.CLOSING;
-    this.frame(opcodes.close, closeBody(code));
-    this.shutdown(code);
+    this.frame(opcodes.close, closeBody(code, reason));
+    this.shutdown(code, reason);
   }
 
-  private shutdown(code: number): void {
+  private remoteClose(payload: Uint8Array): void {
+    this.readyState = WebSocket.CLOSING;
+    this.frame(opcodes.close, payload);
+    this.shutdown(closeCode(payload), bytesText(payload.subarray(2)));
+  }
+
+  private shutdown(code: number, reason = ''): void {
+    this.finish(code, reason);
     this.channel?.stream.close();
-    this.finish(code);
   }
 
   private start(channel: OpenedChannel): void {
+    if (this.readyState !== WebSocket.CONNECTING) return channel.stream.close();
     const key = bytesBase64(this.deps.randomBytes(keyBytes));
 
     this.channel = channel;
@@ -105,7 +129,7 @@ class ChannelWebSocket {
 
   private receive(chunk: Uint8Array): void {
     if (this.readyState === WebSocket.OPEN) this.parse(chunk);
-    else this.awaitUpgrade(chunk);
+    else if (this.readyState === WebSocket.CONNECTING) this.awaitUpgrade(chunk);
   }
 
   private awaitUpgrade(chunk: Uint8Array): void {
@@ -158,10 +182,10 @@ class ChannelWebSocket {
     this.shutdown(abnormalClosure);
   }
 
-  private finish(code: number): void {
+  private finish(code: number, reason = ''): void {
     if (this.readyState === WebSocket.CLOSED) return;
     this.readyState = WebSocket.CLOSED;
-    this.emit('close', { code });
+    this.emit('close', { code, reason });
   }
 
   private emit(type: string, event: Parameters<Listener>[0]): void {

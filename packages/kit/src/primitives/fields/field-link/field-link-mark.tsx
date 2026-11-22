@@ -1,12 +1,11 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, IconSizeContext } from '#primitives/content/icon';
 import { leadingMarkClass } from '../../../leading-mark';
+import { rowGlyphSizing } from '../../../symbols/row-glyph';
 import { TintedAvatar } from '../../../tinted-avatar';
 import { toneDisc } from '../../../tone-mark';
-import type { FieldGroupKitProps } from '../../kit-props';
-
-type Mark = NonNullable<FieldGroupKitProps<'FieldGroup.Link'>['leadingMark']>;
+import type { FieldLinkMarkData as Mark } from './field-link-props';
 
 // Icon's tones name meanings only, so a plain mark in a hue takes the avatar's ink for it (ADR-0026, #2122).
 const plainColour = (
@@ -20,7 +19,9 @@ export function FieldLinkMark({ mark }: { mark: Mark }): ReactElement {
   if (mark.plain)
     return (
       <View className={`${leadingMarkClass} items-center justify-center`}>
-        <Icon name={mark.icon} {...plainColour(mark.tone)} />
+        <IconSizeContext value={rowGlyphSizing}>
+          <Icon name={mark.icon} {...plainColour(mark.tone)} />
+        </IconSizeContext>
       </View>
     );
 

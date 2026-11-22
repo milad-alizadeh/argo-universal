@@ -26,7 +26,7 @@ async function inspectPhoneSheet(page: Page): Promise<void> {
 
 async function expectNoExtraHeader(page: Page): Promise<void> {
   await expect(
-    page.getByRole('heading', { name: 'Changes', exact: true }),
+    page.getByRole('heading', { name: 'Changed files', exact: true }),
   ).toHaveCount(1);
   await expect(
     page.getByRole('button', { name: 'Close Inspector', exact: true }),
