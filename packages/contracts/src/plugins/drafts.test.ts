@@ -1,10 +1,22 @@
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
+  currentDraftState,
+  draftChoiceRefusal,
+  draftDrawPath,
+  draftPageAt,
+  draftRegionLabel,
+  draftRegions,
   draftStateIds,
   draftStateKey,
   draftStateLabels,
   draftVariantKey,
+  draftVariantDraws,
   missingDraftStates,
+  shownPicks,
+  shownVariant,
+  steppedVariant,
+  variantStep,
+  type PluginDrafts,
 } from './drafts';
 import { PluginList, PluginManifest } from './plugins';
 
@@ -150,4 +162,208 @@ it('names the Page state key a region pick travels under, one for each region', 
   expect(draftVariantKey('header')).toBe('draftVariant.header');
   expect(draftVariantKey('list')).not.toBe(draftVariantKey('header'));
   expect(draftVariantKey('header')).not.toBe(draftStateKey);
+});
+
+const header = {
+  id: 'header',
+  variants: [
+    { id: 'compact', name: 'Compact' },
+    { id: 'search', name: 'Search' },
+    { id: 'tabs', name: 'Tabs' },
+  ],
+};
+
+const list = {
+  id: 'list',
+  variants: [
+    { id: 'rows', name: 'Rows' },
+    { id: 'cards', name: 'Cards' },
+  ],
+};
+
+const issues: PluginDrafts = [
+  { page: '/', states: ['populated'], regions: [header, list] },
+  { page: '/issues/:id', states: ['loading', 'error'] },
+];
+
+it('finds the Draft page for a path, matching a pattern, and none for another path', () => {
+  expect(draftPageAt(issues, '/')?.page).toBe('/');
+  expect(draftPageAt(issues, '/issues/42')?.page).toBe('/issues/:id');
+  expect(draftPageAt(issues, '/other')).toBeNull();
+  expect(draftPageAt(undefined, '/')).toBeNull();
+});
+
+it('lists the regions a page declares, none for a page without or no page', () => {
+  expect(draftRegions(issues[0] ?? null).map(({ id }) => id)).toEqual([
+    'header',
+    'list',
+  ]);
+  expect(draftRegions(issues[1] ?? null)).toEqual([]);
+  expect(draftRegions(null)).toEqual([]);
+});
+
+it.each([
+  ['list', 'List'],
+  ['side-bar', 'Side-bar'],
+  ['issue_board', 'Issue_board'],
+])('labels region %s as its id capitalised, %s', (id, label) => {
+  expect(draftRegionLabel(id)).toBe(label);
+});
+
+it('shows the picked Variant, and the first when nothing or a stale Variant is picked', () => {
+  expect(shownVariant(header, {})).toEqual({ id: 'compact', index: 0 });
+  expect(shownVariant(header, { [draftVariantKey('header')]: 'tabs' })).toEqual(
+    { id: 'tabs', index: 2 },
+  );
+  expect(shownVariant(list, { [draftVariantKey('list')]: 'gone' })).toEqual({
+    id: 'rows',
+    index: 0,
+  });
+});
+
+it('sends each region with the Variant it draws, and nothing for a page without regions', () => {
+  expect(
+    shownPicks(issues[0] ?? null, { [draftVariantKey('header')]: 'tabs' }),
+  ).toEqual([
+    { region: 'header', variant: 'tabs' },
+    { region: 'list', variant: 'rows' },
+  ]);
+  expect(shownPicks(issues[1] ?? null, {})).toEqual([]);
+});
+
+it('steps a region one Variant, wrapping at both ends', () => {
+  expect(steppedVariant(header, 'compact', 1)).toBe('search');
+  expect(steppedVariant(header, 'tabs', 1)).toBe('compact');
+  expect(steppedVariant(header, 'compact', -1)).toBe('tabs');
+  expect(steppedVariant(header, 'gone', 1)).toBe('search');
+});
+
+it('changes the Page state key of the stepped region only, and refuses an undeclared region', () => {
+  const page = issues[0] ?? null;
+
+  expect(variantStep(page, {}, 'header', 1)).toEqual({
+    [draftVariantKey('header')]: 'search',
+  });
+  expect(
+    variantStep(page, { [draftVariantKey('list')]: 'cards' }, 'list', 1),
+  ).toEqual({ [draftVariantKey('list')]: 'rows' });
+  expect(variantStep(page, {}, 'footer', 1)).toBeNull();
+  expect(variantStep(null, {}, 'header', 1)).toBeNull();
+});
+
+it('draws the chosen state, then populated, then the first declared state', () => {
+  expect(
+    currentDraftState(['error', 'populated'], { draftState: 'error' }),
+  ).toBe('error');
+  expect(currentDraftState(['error', 'populated'], {})).toBe('populated');
+  expect(currentDraftState(['error', 'loading'], {})).toBe('loading');
+  expect(currentDraftState(['populated'], { draftState: 'sleepy' })).toBe(
+    'populated',
+  );
+  expect(currentDraftState(['populated'], { draftState: 'empty' })).toBe(
+    'empty',
+  );
+});
+
+it('draws a page pattern with a stand-in for its parameters', () => {
+  expect(draftDrawPath('/issues/:id/files/:name')).toBe(
+    '/issues/draft/files/draft',
+  );
+  expect(draftDrawPath('/')).toBe('/');
+});
+
+it('lists every Variant of every region to draw on its page', () => {
+  expect(draftVariantDraws(issues)).toHaveLength(5);
+  expect(draftVariantDraws(issues)[0]).toEqual({
+    page: '/',
+    region: 'header',
+    variant: 'compact',
+  });
+  expect(draftVariantDraws(undefined)).toEqual([]);
+});
+
+describe('refusing a choice the Drafts do not declare', () => {
+  it('accepts declared picks and comment places', () => {
+    expect(
+      draftChoiceRefusal(
+        issues,
+        [
+          { region: 'header', variant: 'tabs' },
+          { region: 'list', variant: 'cards' },
+        ],
+        [
+          { nodeKey: 'row', region: 'list', variant: 'cards' },
+          { nodeKey: 'title', region: 'list' },
+          { nodeKey: 'footer' },
+        ],
+      ),
+    ).toBeNull();
+  });
+
+  it('refuses a region or Variant the Drafts do not declare', () => {
+    expect(
+      draftChoiceRefusal(issues, [{ region: 'footer', variant: 'x' }], []),
+    ).toBe('The Draft declares no region footer');
+    expect(
+      draftChoiceRefusal(issues, [{ region: 'header', variant: 'x' }], []),
+    ).toBe('Region header declares no Variant x');
+    expect(
+      draftChoiceRefusal(
+        issues,
+        [],
+        [{ nodeKey: 'row', region: 'list', variant: 'x' }],
+      ),
+    ).toBe('Region list declares no Variant x');
+    expect(
+      draftChoiceRefusal(issues, [], [{ nodeKey: 'row', variant: 'cards' }]),
+    ).toBe('Comment on row names Variant cards without a region');
+  });
+
+  it('refuses every pick of a Plugin that declares no Drafts', () => {
+    expect(
+      draftChoiceRefusal(undefined, [{ region: 'header', variant: 'a' }], []),
+    ).toBe('The Draft declares no region header');
+    expect(draftChoiceRefusal(undefined, [], [])).toBeNull();
+  });
+
+  describe('when two Draft pages reuse a region id', () => {
+    const reused: PluginDrafts = [
+      {
+        page: '/',
+        states: ['populated'],
+        regions: [{ id: 'header', variants: [{ id: 'compact', name: 'C' }] }],
+      },
+      {
+        page: '/other',
+        states: ['populated'],
+        regions: [{ id: 'header', variants: [{ id: 'tabs', name: 'T' }] }],
+      },
+    ];
+
+    it('accepts a valid pick on either page', () => {
+      expect(
+        draftChoiceRefusal(reused, [{ region: 'header', variant: 'tabs' }], []),
+      ).toBeNull();
+      expect(
+        draftChoiceRefusal(
+          reused,
+          [{ region: 'header', variant: 'compact' }],
+          [],
+        ),
+      ).toBeNull();
+    });
+
+    it('accepts a comment on the second page, and refuses a Variant neither declares', () => {
+      expect(
+        draftChoiceRefusal(
+          reused,
+          [],
+          [{ nodeKey: 'row', region: 'header', variant: 'tabs' }],
+        ),
+      ).toBeNull();
+      expect(
+        draftChoiceRefusal(reused, [{ region: 'header', variant: 'x' }], []),
+      ).toBe('Region header declares no Variant x');
+    });
+  });
 });
