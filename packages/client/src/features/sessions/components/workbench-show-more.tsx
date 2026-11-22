@@ -15,7 +15,11 @@ interface Props {
   onOpen: () => void;
 }
 
-const label = ({ more, done }: Pick<Props, 'more' | 'done'>): string =>
+// What a card's footer says of the items it left out, such as “3 more · 2 done”.
+export const showMoreLabel = ({
+  more,
+  done,
+}: Pick<Props, 'more' | 'done'>): string =>
   [more > 0 && `${more} more`, done > 0 && `${done} done`]
     .filter(Boolean)
     .join(' · ');
@@ -23,7 +27,7 @@ const label = ({ more, done }: Pick<Props, 'more' | 'done'>): string =>
 const pressable = (props: Props) =>
   ({
     role: 'button',
-    accessibilityLabel: `Show ${label(props)}`,
+    accessibilityLabel: `Show ${showMoreLabel(props)}`,
     onPress: props.onOpen,
     className: `rounded-control ${props.icons?.length ? '' : 'px-1 py-2 '}web:hover:bg-hover`,
   }) as const;
@@ -40,8 +44,10 @@ export function WorkbenchShowMore(props: Props): ReactElement | null {
 }
 
 function ShowMoreLabel(props: Props): ReactElement {
-  if (props.icons?.length)
-    return <StackedSummary icons={props.icons} texts={[label(props)]} />;
+  const text = showMoreLabel(props);
 
-  return <Text numberOfLines={1}>{label(props)}</Text>;
+  if (props.icons?.length)
+    return <StackedSummary icons={props.icons} texts={[text]} />;
+
+  return <Text numberOfLines={1}>{text}</Text>;
 }

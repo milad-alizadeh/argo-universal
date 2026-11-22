@@ -149,6 +149,50 @@ it.each([
   timeoutMs,
 );
 
+it.each([
+  { title: 'Desk lamp', target: desk, kind: 'light', label: '80%' },
+  {
+    title: 'All lights',
+    target: office,
+    kind: 'grouped_light',
+    label: '2 lights · 60%',
+  },
+])(
+  'switches $title back with a second press before Hue replies to the first',
+  async ({ title, target, kind, label }) => {
+    const home = await startHome();
+    const page = await connected(home);
+
+    const power = (node: WireNode): boolean =>
+      node.props.accessibilityLabel === `${title} power`;
+
+    const pending = home.hue.holdNextPut();
+    const pressed = page.act(power, 'onPress');
+
+    await pending.requested;
+    const again = page.act(power, 'onPress');
+
+    try {
+      expect(page.find(power).props.selected).toBe(true);
+      expect(page.findText(label)).toBeDefined();
+    } finally {
+      pending.release();
+    }
+
+    await Promise.all([pressed, again]);
+
+    const path = `/route/clip/v2/resource/${kind}/${target}`;
+
+    expect(home.hue.puts().map((put) => [put.path, put.body])).toEqual(
+      expect.arrayContaining([
+        [path, { on: { on: false } }],
+        [path, { on: { on: true } }],
+      ]),
+    );
+  },
+  timeoutMs,
+);
+
 it(
   'dims a light with its Slider and every light in a room with the room’s card',
   async () => {

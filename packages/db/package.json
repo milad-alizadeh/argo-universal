@@ -30,6 +30,7 @@
     "#schema-feed": "./src/schema/feed.ts",
     "#schema-plugins": "./src/schema/plugins.ts",
     "#schema-projects": "./src/schema/projects.ts",
+    "#schema-runs": "./src/schema/runs.ts",
     "#schema-registry-cache": "./src/schema/registry-cache.ts",
     "#schema-server-identity": "./src/schema/server-identity.ts",
     "#schema-devices": "./src/schema/devices.ts",

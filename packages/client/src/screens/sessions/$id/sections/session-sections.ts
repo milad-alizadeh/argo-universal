@@ -6,6 +6,7 @@ import {
   type WorkbenchSection,
 } from '#features/sessions';
 import type { SessionInspectorContent } from '../session-inspector-content';
+import { runTabKey, shellTabKey } from '../session-terminal-tabs';
 import { agentsSection } from './agents-section';
 import { changesSection } from './changes-section';
 import {
@@ -13,6 +14,7 @@ import {
   pluginCardSection,
   type SessionPluginCard,
 } from './plugin-card-section';
+import { runsCard, terminalSection } from './runs-section';
 import { schedulesSection } from './schedules-section';
 import {
   drawsCard,
@@ -55,20 +57,26 @@ export const offeredSections = (
   cards: readonly SessionPluginCard[] = [],
 ): string[] => [
   ...offeredKeys(builtInSections, items),
+  ...(items.runNames ?? []).map(runTabKey),
+  ...(items.terminalIds ?? []).map(shellTabKey),
   ...cards.map((card) => pluginCardKey(card.pluginId, card.card.id)),
 ];
 
 export const sectionOf = (
-  content: SessionCards,
+  content: Pick<SessionInspectorContent, 'pluginCards' | 'runs'>,
   key: string,
 ): SessionSection | undefined =>
-  sessionSections(content).find((section) => section.key === key);
+  sessionSections(content).find((section) => section.key === key) ??
+  terminalSection(content.runs, key);
 
 export const sectionTab = (
   panels: SessionPanels,
   key: string,
+  close = (): void => panels.close(key),
 ): SectionTabHandle => ({
+  active: panels.state.shown === key,
   open: () => panels.select(key),
+  close,
   request: () => panels.request(key),
   requested: panels.state.requests?.[key],
 });
@@ -106,9 +114,10 @@ export const sessionWorkbench = (
   bar?: SessionBarProps,
 ): SessionWorkbench => ({
   sections: [
-    ...sessionSections(content).flatMap((section) =>
-      workbenchCard(content, panels, section),
-    ),
+    ...sessionSections(content).flatMap((section) => [
+      ...workbenchCard(content, panels, section),
+      ...(section === shellsSection ? runsCard(content.runs, panels) : []),
+    ]),
     ...sessionBarCards(bar),
   ],
   onOpenInspector: openInspector(content, panels),

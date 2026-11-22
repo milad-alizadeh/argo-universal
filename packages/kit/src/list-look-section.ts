@@ -25,12 +25,12 @@ const rowInset = {
   below: 'h-4',
 };
 
-// A sidebar's groups head their flat rows with a muted heading, inset as the rows' content.
+// A sidebar's groups head their flat rows with a muted heading on the rows' icon lane, 12 in, as their footers start.
 const sidebar = {
   heading: muted,
   title: muted,
   footer: muted,
-  inset: 'px-2',
+  inset: 'px-3',
   gap: 'pb-2',
   headingBelow: '',
   below: 'h-4',

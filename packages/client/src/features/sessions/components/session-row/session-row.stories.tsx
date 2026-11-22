@@ -32,6 +32,7 @@ import {
   crowdedMetaSession,
   pullRequestItemsSession,
 } from './session-row-pull-request-fixtures';
+import { SidebarRowsProvider } from './session-row-sidebar';
 import {
   backgroundWorkSession,
   todosLeftSession,
@@ -81,6 +82,20 @@ export const Running: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.unhover(canvas.getByRole('button'));
   },
+};
+
+// A phone draws the row's card look wherever it is shown: the Agent's logo on the leading mark plate, in the avatar lane.
+export const PhoneLook: Story = {
+  args: runningSession,
+  decorators: [
+    (Row) => (
+      <SidebarRowsProvider value={false}>
+        <List appearance="grouped">
+          <Row />
+        </List>
+      </SidebarRowsProvider>
+    ),
+  ],
 };
 
 // The last plan step underway: three solid segments and a pale one that glints, never a full bar.

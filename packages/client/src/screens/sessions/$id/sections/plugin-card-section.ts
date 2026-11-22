@@ -1,4 +1,5 @@
 import type { SessionWorkbenchCard } from '@repo/contracts/plugins/declared-slots';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
 import type { SessionSection } from './session-section';
@@ -12,6 +13,14 @@ export interface SessionPluginCard {
   card: SessionWorkbenchCard;
   page: ReactNode;
   tab?: ReactNode;
+  // The tree `page` draws from, which a phone's Workbench sheet reads as native rows; absent where none is held.
+  tree?: PluginCardTree;
+}
+
+// A card page's latest tree, and a way to hear when it changes.
+interface PluginCardTree {
+  subscribe: (listener: () => void) => () => void;
+  read: () => WireNode | null;
 }
 
 /*

@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
@@ -28,13 +29,20 @@ const cardRow = /^(Open (?!.*overview)|Show )/;
 
 const selected = ['aria-selected', 'true'] as const;
 
-// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; on a phone the Workbench sheet lists its Agents.
+// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; on a phone the Workbench sheet's Agents section previews the working ones, and its count row opens every Agent.
 async function openList(
   { canvas, userEvent }: Interaction,
   wide: boolean,
 ): Promise<void> {
   if (!wide) {
-    await openWorkbench({ canvas, userEvent });
+    const sheet = await openWorkbench({ canvas, userEvent });
+    const rest = sheet.queryByRole('link', { name: /^\d+ (more|done)/ });
+
+    if (rest) {
+      await settleOverlays(rest);
+      await userEvent.click(rest);
+      await sheet.findByRole('heading', { name: 'Agents' });
+    }
 
     return;
   }
@@ -136,8 +144,14 @@ function subagentsAt(width: number, state: State): Story {
 
       const page = await subagentsPage(canvas, wide);
 
+      // A phone's sheet keeps the Workbench under the Agents page, so its rows are found by role, which skips it.
+      const row = (title: string): HTMLElement =>
+        wide
+          ? page.getByText(title)
+          : page.getByRole('link', { name: new RegExp(`^${title}`) });
+
       for (const item of subagents) {
-        await waitFor(() => expect(page.getByText(item.title)).toBeVisible());
+        await waitFor(() => expect(row(item.title)).toBeVisible());
       }
 
       await assertPresentation({ canvas, userEvent }, wide, subagents.length);

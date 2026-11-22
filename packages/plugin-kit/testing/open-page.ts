@@ -1,3 +1,4 @@
+import { pressEventOf } from '@repo/contracts/kit-presses';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import {
   loadMoreAt,
@@ -153,13 +154,14 @@ export class OpenPage {
     value?: WireJson,
   ): Promise<OpenPage> {
     const { node, key } = findEntry(this.tree, match);
-    const handler = handlerOf(node, event);
+    const pressed = pressedEvent(node, event);
+    const handler = handlerOf(node, pressed);
 
-    if (!handler) throw new Error(`${node.type} ${key} has no ${event}`);
+    if (!handler) throw new Error(`${node.type} ${key} has no ${pressed}`);
 
     if ('action' in handler) return this.actOn(handler);
 
-    await this.call(handler, pageEventOf(node, { key, name: event, value }));
+    await this.call(handler, pageEventOf(node, { key, name: pressed, value }));
 
     return this;
   }
@@ -219,3 +221,9 @@ export class OpenPage {
     if (error !== undefined) throw new Error(error);
   }
 }
+
+// A press on an IconButton presses as the App does: its `onPressSelected` while it shows selected, if it has one.
+const pressedEvent = (node: WireNode, event: string): string =>
+  event === 'onPress' && node.type === 'IconButton'
+    ? pressEventOf(node.props)
+    : event;

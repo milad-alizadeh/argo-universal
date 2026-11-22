@@ -37,6 +37,7 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   composer: ComposerProps;
   inspectorPanels?: SessionPanels;
   onOpenWorkbench?: () => void;
+  onNewPhoneTerminal?: () => void;
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
@@ -100,11 +101,14 @@ function OpenSessionView(session: HeadedSession): React.JSX.Element {
   const { drawHeader, ...props } = session;
   const phone = usePhoneSheet(useInspectorPanels(props));
 
-  const workbench = useSessionWorkbench(props);
+  const workbench = useSessionWorkbench(
+    props,
+    props.preview ? undefined : props.bar,
+  );
 
   return (
     <>
-      {drawHeader(openHeader(props, phone.panels, workbench.open))}
+      {drawHeader(openHeader(props, phone.panels, workbench))}
       <OpenSessionBody {...props} phone={phone} />
       {workbench.sheet}
     </>
@@ -114,12 +118,15 @@ function OpenSessionView(session: HeadedSession): React.JSX.Element {
 const openHeader = (
   props: OpenSessionViewProps,
   inspectorPanels: SessionPanels,
-  onOpenWorkbench: () => void,
+  workbench: ReturnType<typeof useSessionWorkbench>,
 ): SessionDetailViewProps => ({
   ...props,
   state: 'open',
   inspectorPanels,
-  onOpenWorkbench,
+  onOpenWorkbench: workbench.open,
+  onNewPhoneTerminal: props.runs?.openShell
+    ? (): void => props.runs?.openShell?.(workbench.openShell)
+    : undefined,
 });
 
 type SessionBodyProps = OpenSessionViewProps & { phone: PhoneSheet };

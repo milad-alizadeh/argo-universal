@@ -13,6 +13,7 @@ import type { SessionInspectorContent } from './session-inspector-content';
 type Props = SessionInspectorContent & {
   panels: SessionPanels;
   inspector: InspectorProps;
+  onCloseTab: (key: string) => void;
 };
 
 type PageProps = Props & { section: SessionSection };
@@ -32,10 +33,14 @@ function RetainedPage(props: PageProps): ReactElement {
   );
 }
 
-function PageBody({ section, ...props }: PageProps): ReactElement {
+function PageBody({ section, onCloseTab, ...props }: PageProps): ReactElement {
+  const tab = sectionTab(props.panels, section.key, () =>
+    onCloseTab(section.key),
+  );
+
   return (
     <InspectorBody {...props.inspector} surface="bg-transparent" contentScrolls>
-      {section.tab(props, sectionTab(props.panels, section.key)).body}
+      {section.tab(props, tab).body}
     </InspectorBody>
   );
 }

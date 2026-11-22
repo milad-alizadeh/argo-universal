@@ -15,7 +15,7 @@ import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import { sessionMetaLine } from './session-row-meta-line';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
-import { sidebarDrawing } from './session-row-sidebar';
+import { sidebarDrawing, useSidebarRows } from './session-row-sidebar';
 import { sessionProgress } from './session-row-todos';
 
 export type { SessionRowProps } from './session-row-props';
@@ -42,14 +42,16 @@ function rowIdentity(props: CalledRow): RowIdentity {
 
 // Regular: the title line with the Session's status and time, then a meta line while it has anything to show.
 function RegularRow(props: CalledRow): React.JSX.Element {
+  const sidebar = useSidebarRows();
+
   return (
     <ListItem
       {...rowIdentity(props)}
       {...sessionRowMenu(props)}
-      {...sidebarDrawing(props.session.status)}
+      {...sidebarDrawing(props.session.status, sidebar)}
       leading={<SessionMark {...props} />}
-      {...regularEnds(props)}
-      metaAccessories={sessionMetaLine(props)}
+      {...regularEnds(props, sidebar)}
+      metaAccessories={sessionMetaLine(props, sidebar)}
       progress={sessionProgress(props.session)}
     />
   );

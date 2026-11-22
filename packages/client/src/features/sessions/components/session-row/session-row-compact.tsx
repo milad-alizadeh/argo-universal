@@ -26,7 +26,7 @@ import {
   type SessionRowProps,
   sessionRowLabel,
 } from './session-row-props';
-import { sidebarDrawing } from './session-row-sidebar';
+import { sidebarDrawing, useSidebarRows } from './session-row-sidebar';
 import { compactStatusDot } from './session-row-status';
 
 type CompactEndProps = Pick<
@@ -45,8 +45,12 @@ function compactDetail(props: CompactEndProps): React.ReactNode {
 // The status dot, or the Conversation's mark in its place while a call is attached.
 const compactStatus = (
   props: CompactEndProps & CalledRowProps,
+  sidebar: boolean,
 ): React.ReactNode =>
-  statusUnlessCalled(compactStatusDot(props.session.status), props.call);
+  statusUnlessCalled(
+    compactStatusDot(props.session.status, sidebar),
+    props.call,
+  );
 
 /*
  * A Compact row's end: its detail, then the status dot; a phone draws no dot while the Session is idle, a sidebar row
@@ -54,9 +58,10 @@ const compactStatus = (
  */
 function compactEnd(
   props: CompactEndProps & CalledRowProps,
+  sidebar: boolean,
 ): Pick<ListItemProps, 'trailing' | 'trailingAccessories'> {
   const detail = compactDetail(props);
-  const status = compactStatus(props);
+  const status = compactStatus(props, sidebar);
 
   if (!hasPluginItems(props.plugins))
     return { trailing: endParts(detail, status) };
@@ -111,15 +116,17 @@ const compactPresses = (
 
 // Compact: one line in its compact List, a row of its Project's grouped list on a phone.
 export function CompactSessionRow(props: CalledCompactRow): React.JSX.Element {
+  const sidebar = useSidebarRows();
+
   return (
     <ListItem
       {...compactPresses(props)}
       {...sessionRowMenu(props)}
       title={props.session.title}
-      {...sidebarDrawing(props.session.status)}
+      {...sidebarDrawing(props.session.status, sidebar)}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
-      {...compactEnd(props)}
+      {...compactEnd(props, sidebar)}
       selected={props.selected ?? false}
       finished={props.session.archivedAt !== null}
     />

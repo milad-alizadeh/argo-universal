@@ -4,6 +4,7 @@ import {
   removeOrphanAttachments,
   removeUnusedBlobs,
 } from '../blob';
+import { recoverTerminals } from '../runs';
 import {
   recoverAfterRestart,
   recoverArchivedCheckouts,
@@ -21,6 +22,7 @@ export async function recoverEngineAfterRestart(
   input: RecoveryInput,
 ): Promise<void> {
   await releaseShellGroups(input.home);
+  await recoverTerminals({ ...input, now: Date.now });
   await recoverShells(input);
   recoverAfterRestart(input.database);
   await recoverArchivedCheckouts(input.database);

@@ -1002,6 +1002,7 @@
                   "!@repo/contracts/kit-tokens",
                   "!@repo/contracts/kit-symbols",
                   "!@repo/contracts/kit-moves",
+                  "!@repo/contracts/kit-presses",
                   "!@repo/contracts/kit-diagram"
                 ],
                 "message": "The UI kit cannot import feature or domain packages (A2)."

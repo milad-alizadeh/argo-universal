@@ -9,15 +9,15 @@ import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { processIsRunning } from '#mocks/shell-process';
+import { terminalOwners } from '../../lib/terminal-owner-record';
 import { createShellOutput, shellOutputPath } from './files';
 import { launchShellCommand } from './shell-launch';
-import { ShellProcessRecord } from './shell-process-record';
 
 type InterruptedShell = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   created: { sessionId: string };
   recordPath: string;
-  record: ShellProcessRecord;
+  record: { pid: number; token: string };
   pid: number;
   folder: string;
 };
@@ -67,12 +67,12 @@ const startInterruptedShell = async (): Promise<InterruptedShell> => {
   await expect.poll(() => output).toMatch(/descendant:\d+/);
   const pid = Number(output.match(/descendant:(\d+)/)?.[1]);
   const folder = join(host.home, 'shell-processes');
-  const names = await readdir(folder);
-  const recordPath = join(folder, names[0] ?? 'missing');
+  const owner = await terminalOwners(host.home).next();
 
-  const record = ShellProcessRecord.parse(
-    JSON.parse(await readFile(recordPath, 'utf8')),
-  );
+  if (owner.done)
+    throw new Error('The Background Task did not record its owner');
+
+  const { path: recordPath, record } = owner.value;
 
   return { host, created, recordPath, record, pid, folder };
 };

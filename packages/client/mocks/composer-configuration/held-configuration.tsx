@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { View } from 'react-native';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
 import { updateComposerSettings } from '../composer-mock';
 import { configure, type Configure } from '../composer/configure.test.mocks';
@@ -100,7 +100,7 @@ async function testHeldConfiguration(
   const overlay = within(document.body);
   const picker = configure(context, scenario.width);
   await picker.open();
-  await waitFor(() => expect(overlay.getByText(heldNotice)).toBeVisible());
+  await expect(overlay.queryByText(heldNotice)).not.toBeInTheDocument();
   const effortSteps = await selectHeldEffort(scenario, picker);
   await picker.chooseModel(scenario.recorded.narrower.name);
   await assertHeldFallback(scenario, effortSteps);

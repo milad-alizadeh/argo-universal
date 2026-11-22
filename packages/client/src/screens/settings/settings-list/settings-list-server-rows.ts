@@ -121,3 +121,12 @@ export function agentAccessRow(props: SettingsListViewProps): SettingsRow {
     disabled: serverDisabled(props),
   };
 }
+
+// Never disabled: the Follow-up suggestions toggle is this Device's, so it works while the Server is away.
+export function composerRow(): SettingsRow {
+  return {
+    label: 'Composer',
+    icon: 'message',
+    href: '/settings/composer',
+  };
+}

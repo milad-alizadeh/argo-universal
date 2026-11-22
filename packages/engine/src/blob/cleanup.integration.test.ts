@@ -7,7 +7,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import type { Database } from '@repo/db';
-import { blob, blobRef } from '@repo/db/schema';
+import { blob, blobRef, run } from '@repo/db/schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { removeUnusedBlobs, unusedBlobAge } from './blob';
@@ -62,6 +62,34 @@ describe('removeUnusedBlobs', (): void => {
       newUnusedBlobId,
       'old-used',
     ]);
+  });
+
+  it('keeps a Blob owned by a Run until its Checkout recording is replaced', async () => {
+    const id = 'checkout-output';
+    storeBlob(id, now - 2 * unusedBlobAge);
+    database
+      .insert(run)
+      .values({
+        id: 'run-1',
+        projectId: 'project-1',
+        checkoutPath: '/project',
+        name: 'web',
+        command: 'pnpm dev',
+        cwd: '.',
+        url: 'http://localhost:4100',
+        port: 4100,
+        status: 'stopped',
+        startedAt: 0,
+        outputBlobId: id,
+      })
+      .run();
+
+    await removeUnusedBlobs({ database, blobsFolder, now });
+    expect(readdirSync(blobsFolder)).toEqual([id]);
+
+    database.delete(run).run();
+    await removeUnusedBlobs({ database, blobsFolder, now });
+    expect(readdirSync(blobsFolder)).toEqual([]);
   });
 
   it.each(['stray', 'partial'])(

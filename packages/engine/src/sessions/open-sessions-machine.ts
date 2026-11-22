@@ -10,6 +10,7 @@ import {
 } from 'xstate';
 import type { AcpResources, InstalledAgents } from '../agents';
 import type { WriterActorRef } from '../storage';
+import type { ArchiveTerminals } from './archive/archive-terminals';
 import { createSessionActorInput } from './session-actor-input';
 import { serverStoppingEvent } from './session-context';
 import type { SessionCreationInput } from './session-data';
@@ -85,6 +86,7 @@ export type OpenSessionsCommand =
   | ({ type: 'sessions.create'; sessionId: string } & SessionCreationInput)
   | {
       type: 'sessions.open' | 'sessions.archive';
+      terminals?: ArchiveTerminals;
       sessionId: string;
       agent: string;
     }

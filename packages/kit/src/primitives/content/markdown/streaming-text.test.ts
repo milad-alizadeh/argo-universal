@@ -1,8 +1,77 @@
 import { describe, expect, it } from 'vitest';
 import { lexMarkdown } from '#kit/lex-markdown';
-import { streamingText } from './streaming-text';
+import { drawnText } from './drawn-text';
+import { lexStreamingMarkdown, streamingText } from './streaming-text';
 
 describe('incomplete streaming Markdown', () => {
+  it.each([
+    ['[guide](https://example.com)', 'guide', 'link'],
+    ['[guide](https://example.com/a(b))', 'guide', 'link'],
+    ['[a \\] guide](https://example.com)', 'a ] guide', 'link'],
+    ['[Read `x]x` here](https://example.com)', 'Read x]x here', 'link'],
+    ['[guide](https://example.com "a ) title")', 'guide', 'link'],
+    ['`pnpm install`', 'pnpm install', 'codespan'],
+    ['<https://example.com>', 'https://example.com', 'link'],
+    ['~~old text~~', 'old text', 'del'],
+  ])('holds partial syntax until %s is complete', (syntax, label, type) => {
+    const prefix = 'See this: ';
+
+    for (let length = 1; length < syntax.length; length++) {
+      const block = lexStreamingMarkdown(prefix + syntax.slice(0, length)).at(
+        -1,
+      );
+
+      expect(block).toMatchObject({ tokens: [{ type: 'text', text: prefix }] });
+    }
+
+    const completed = lexStreamingMarkdown(prefix + syntax).at(-1);
+
+    expect(completed).toMatchObject({
+      tokens: [{ type: 'text' }, { type }],
+    });
+
+    if (!completed || !('tokens' in completed)) throw new Error('Missing text');
+
+    expect(drawnText(completed.tokens)).toBe(prefix + label);
+  });
+
+  it('keeps links and code already on screen while a new link streams', () => {
+    const before = 'Read [the guide](https://example.com) and run `pnpm`. ';
+
+    expect(lexStreamingMarkdown(before + '[another](https://ex')).toEqual(
+      lexMarkdown(before),
+    );
+  });
+
+  it('does not create a block for a held link on its own', () => {
+    expect(lexStreamingMarkdown('[guide](https://ex')).toEqual(lexMarkdown(''));
+  });
+
+  it.each([
+    'Show \\[literal syntax',
+    'Earlier [same\n\n\\[same',
+    'Earlier [same\n\n```text\n[same',
+    'Use [guide](two words) and keep reading.',
+    'Show `[literal syntax`',
+    'Use [this label] as text.',
+    'Say hello!',
+    'Use [this label](https://ex\n\nNext paragraph.',
+    '```text\n[inside a fence](https://ex',
+    '> ```text\n> [inside a fence](https://ex',
+    '[guide]: https://example.com\n\nRead [guide].',
+  ])('preserves parsed or settled content in %s', (text) => {
+    expect(lexStreamingMarkdown(text)).toEqual(lexMarkdown(text));
+  });
+
+  it.each(['- See ', '> See '])(
+    'holds a link inside partial container %s',
+    (prefix) => {
+      expect(lexStreamingMarkdown(prefix + '[guide](https://ex')).toEqual(
+        lexMarkdown(prefix),
+      );
+    },
+  );
+
   it.each(['*', '**', '-', '1.', '#', ' *', '  *', '   *', '  #'])(
     'holds an ambiguous trailing marker %s',
     (marker) => {

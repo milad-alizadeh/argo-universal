@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { NativeStartRequest, SessionOperationCall } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { createAppOperations } from './app';
+import { createChartOperations } from './chart';
 import { createConversationOperations } from './conversation';
 import { createDiagramOperations } from './diagram';
 import type { NativeStartId, StartedWork } from './native-start';
@@ -11,8 +12,10 @@ import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
 import { createProjectOperations } from './projects';
 import { createRegistryOperations } from './registry';
+import { createRunOperations } from './runs';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
+import { createTerminalOperations } from './terminals';
 import type { WorkExecution, UserAdmission } from './work';
 
 type ParamsById = {
@@ -77,10 +80,13 @@ export function createImplementations(
     ...createAgentAccessOperations(deps),
     ...createAppOperations(deps),
     ...createDiagramOperations(),
+    ...createChartOperations(deps.chartPreview),
     ...sessionImplementations(deps.sessions),
     ...createPluginOperations(deps.plugins, deps.sessions),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
+    ...createRunOperations(deps),
+    ...createTerminalOperations(deps),
     ...createConversationOperations(deps.conversation, deps.sessions),
   };
 }

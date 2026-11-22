@@ -17,3 +17,5 @@ export {
 } from './connection';
 
 export { serverDeviceIdentity } from './identity';
+
+export { Queue } from './queue';

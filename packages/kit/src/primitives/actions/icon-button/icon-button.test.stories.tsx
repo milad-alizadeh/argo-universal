@@ -32,3 +32,18 @@ export const Activation: Story = {
     await expect(args.onPress).toHaveBeenCalledOnce();
   },
 };
+
+export const SelectedPressSwitchesBack: Story = {
+  ...Primary,
+  args: {
+    ...Primary.args,
+    selected: true,
+    onPress: fn(),
+    onPressSelected: fn(),
+  },
+  play: async ({ canvas, userEvent, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name }));
+    await expect(args.onPressSelected).toHaveBeenCalledOnce();
+    await expect(args.onPress).not.toHaveBeenCalled();
+  },
+};

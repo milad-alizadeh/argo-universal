@@ -385,6 +385,7 @@ const sessionSetup = setup({
       removeSessionCheckout(input.input.database, input, {
         signal,
         writer: input.input.writer,
+        terminals: input.archiveTerminals,
       }),
     ),
     cancelAcp: fromPromise<void, SessionContext>(({ input }) =>
@@ -484,7 +485,15 @@ const sessionSetup = setup({
       return { shells: withShell(context.shells, event.shell) };
     }),
     cancelArchiveRequest: assign({ archiveRequested: false }),
-    requestArchive: assign({ archiveRequested: true, failure: null }),
+    requestArchive: assign(({ event }) => {
+      assertEvent(event, 'session.archive');
+
+      return {
+        archiveRequested: true,
+        archiveTerminals: event.terminals,
+        failure: null,
+      };
+    }),
     routeSubagentUpdate: assign(({ context, event, spawn, self }) => {
       assertEvent(event, acpUpdateEvent);
 

@@ -1,5 +1,6 @@
 import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { OperationCard } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
@@ -36,6 +37,11 @@ const parsed = <Id extends TargetedId>(
 const projectTarget = z.object({ projectId: z.string() });
 
 const sessionTarget = z.object({ sessionId: z.string() });
+
+const terminalTarget = z.object({
+  sessionId: z.string(),
+  shellId: z.string().optional(),
+});
 
 type Admission = {
   id: OperationId;
@@ -83,9 +89,27 @@ export class SessionScope {
     invoke: (params: OperationParams<Id>) => Promise<Result>,
   ): Promise<Result> {
     const scoped = scopedParams(id, params, context.caller);
+    this.admitTerminal(context.caller.sessionId, id, scoped);
     const policy = this.permission(context, id, scoped);
 
     return this.permitted(context, { id, policy }, () => invoke(scoped));
+  }
+  // An Agent may read a shell in its Checkout. An Agent never types into a person's shell (ADR-0063).
+  private admitTerminal(
+    callerId: string,
+    id: OperationId,
+    params: OperationParams,
+  ): void {
+    if (id !== 'terminal.send' && id !== 'terminal.read') return;
+    const { sessionId, shellId } = terminalTarget.parse(params);
+
+    if (shellId === undefined) return;
+
+    if (id === 'terminal.send' || !this.ports.canReadShell(callerId, sessionId))
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'The Session can only read shell Terminals in its Checkout.',
+      });
   }
   private permitted<Result>(
     context: ScopedRun,

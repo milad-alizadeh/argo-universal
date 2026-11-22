@@ -16,6 +16,7 @@ import {
   longPathProject,
   pluginItems,
 } from './project-detail-plugins-fixtures';
+import { projectRunSettings } from './project-detail-run-settings-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -381,3 +382,37 @@ function sectionOf(title: HTMLElement, titles: HTMLElement[]): HTMLElement {
 
   return section;
 }
+
+const runSettings = { entries: projectRunSettings, onSave: fn() };
+
+export const SavesPersonalRunSettings: Story = {
+  args: { runSettings },
+  play: async ({ canvas, userEvent }) => {
+    const port = canvas.getByDisplayValue('3100');
+
+    await userEvent.clear(port);
+    await userEvent.type(port, '3200');
+    port.blur();
+    await expect(runSettings.onSave).toHaveBeenCalledWith('web', {
+      port: 3200,
+    });
+
+    const variable = canvas.getByDisplayValue('API_URL=http://localhost:3101');
+
+    await userEvent.clear(variable);
+    await userEvent.type(variable, 'API_URL=http://localhost:3201');
+    variable.blur();
+    await expect(runSettings.onSave).toHaveBeenCalledWith('web', {
+      env: { API_URL: 'http://localhost:3201' },
+    });
+
+    const autoStart = { name: 'Auto-start when a Session opens' };
+    await userEvent.click(canvas.getByRole('switch', autoStart));
+    await expect(runSettings.onSave).toHaveBeenCalledWith('web', {
+      autoStart: true,
+    });
+
+    await chooseFrom({ canvas, userEvent }, /Run Configuration/, 'docs');
+    await expect(await canvas.findByRole('switch', autoStart)).toBeDisabled();
+  },
+};

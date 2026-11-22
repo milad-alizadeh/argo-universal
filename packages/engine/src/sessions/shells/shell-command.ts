@@ -5,13 +5,16 @@ import type {
 import { z } from 'zod';
 import type { AgentLaunch } from '../../agents';
 import {
+  forgetTerminalOwner as removeShellRecord,
+  recordTerminalOwner as recordShellGroup,
+} from '../../lib/terminal-owner-record';
+import {
   captureShellCommandOutput,
   endShellCommandOutput,
 } from './shell-command-output';
 import type { Serializable } from './shell-launch';
 import type { ShellChild } from './shell-launch';
 import { releaseShellGroup } from './shell-process-group';
-import { recordShellGroup, removeShellRecord } from './shell-record';
 import { shellLaunchMessage, sendShellLaunch, shellPid } from './shell-start';
 
 export type ShellCommand = {

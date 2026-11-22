@@ -2,14 +2,10 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { useInstalledAgents, useSuggestionModels } from '#features/agents';
+import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import { usePluginEntries } from '#features/plugins';
-import {
-  useProjects,
-  useThemeChoice,
-  useFollowUpSuggestionsPreference,
-} from '#features/settings';
+import { useProjects, useThemeChoice } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { type ServerScope, useServerScope } from '#lib/product/server-scope';
 import { sections } from '../../lib/product/navigation/sections';
@@ -56,7 +52,6 @@ function useSettingsList(query?: string): SettingsListViewProps {
     status: connectionStatus(useConnectionState()),
     theme: theme.choice,
     onThemeChange: theme.choose,
-    ...useComposerPreference(),
     ...lookedAtServer(useServerScope()),
   };
 }
@@ -96,33 +91,4 @@ export function SettingsListScreen(
       <SettingsListView {...useSettingsList(props.query)} />
     </Screen>
   );
-}
-
-function useComposerPreference(): Pick<
-  SettingsListViewProps,
-  | 'followUpSuggestions'
-  | 'onFollowUpSuggestionsChange'
-  | 'suggestionModels'
-  | 'onSuggestionModelChange'
-> {
-  const preference = useFollowUpSuggestionsPreference();
-
-  return {
-    followUpSuggestions: preference.enabled,
-    onFollowUpSuggestionsChange: preference.choose,
-    ...useSuggestionModelProps(),
-  };
-}
-
-// Each Installed Agent's suggestion model, which the Server keeps.
-function useSuggestionModelProps(): Pick<
-  SettingsListViewProps,
-  'suggestionModels' | 'onSuggestionModelChange'
-> {
-  const models = useSuggestionModels();
-
-  return {
-    suggestionModels: models.agents,
-    onSuggestionModelChange: models.choose,
-  };
 }

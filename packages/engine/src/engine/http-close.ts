@@ -27,5 +27,9 @@ async function closeHttpServices(
   closeConnections: () => Promise<void>,
 ): Promise<void> {
   setup.notifications.close();
-  await Promise.all([closeConnections(), setup.plugins.close()]);
+  await Promise.all([
+    closeConnections(),
+    setup.plugins.close(),
+    setup.runs.terminalLifecycle.close(),
+  ]);
 }

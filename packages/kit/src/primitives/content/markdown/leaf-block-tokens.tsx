@@ -1,4 +1,5 @@
 import type { Tokens } from 'marked';
+import { useContext } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Code } from '#primitives/content/code';
@@ -9,6 +10,7 @@ import {
 } from '#primitives/content/diagram';
 import { ClampedBlock } from './clamped-block';
 import { type BlockTokenProps, literal } from './markdown-tokens';
+import { MarkdownFenceRendering } from './markdown-tone';
 import { Prose } from './prose';
 
 export function HeadingToken({
@@ -84,10 +86,16 @@ function DiagramFence({ token, streaming }: FenceProps): React.JSX.Element {
 }
 
 function FencedBlock({ token, streaming }: FenceProps): React.JSX.Element {
+  const renderFence = useContext(MarkdownFenceRendering);
+
   if (isDiagramFence(token.lang))
     return <DiagramFence token={token} streaming={streaming} />;
 
-  return <Code code={token.text} language={token.lang || undefined} />;
+  const language = token.lang || undefined;
+
+  const fallback = <Code code={token.text} language={language} />;
+
+  return renderFence?.({ language, raw: token.raw, fallback }) ?? fallback;
 }
 
 // Unsupported blocks draw nothing.

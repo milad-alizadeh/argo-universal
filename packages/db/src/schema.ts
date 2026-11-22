@@ -20,6 +20,8 @@ export * from '#schema-registry-cache';
 
 export * from '#schema-shells';
 
+export * from '#schema-runs';
+
 export * from '#schema-server-identity';
 
 export * from '#schema-plugins';

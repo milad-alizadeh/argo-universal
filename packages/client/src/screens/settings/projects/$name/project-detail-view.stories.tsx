@@ -12,6 +12,7 @@ import {
   longPathProject,
   pluginItems,
 } from './project-detail-plugins-fixtures';
+import { projectRunSettings } from './project-detail-run-settings-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -24,6 +25,7 @@ const meta = {
     pluginItems: { control: false },
     accounts: { control: false },
     newSessions: { control: false },
+    runSettings: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
@@ -86,4 +88,8 @@ export const Loading: Story = { args: { project: { status: 'loading' } } };
 
 export const Missing: Story = {
   args: { name: 'old-api', project: { status: 'missing' } },
+};
+
+export const RunSettings: Story = {
+  args: { runSettings: { entries: projectRunSettings, onSave: fn() } },
 };

@@ -2,6 +2,7 @@ import type { CoreHooks } from '@repo/contracts/plugins';
 import type { Database } from '@repo/db';
 import type { InstalledAgents } from '../agents';
 import type { FeedDeps } from '../feed';
+import type { ArchiveTerminals } from './archive/archive-terminals';
 import type { OpenSessions } from './open-sessions';
 import type { OpenSessionsActorRef } from './open-sessions-machine';
 import type { createSessionReader } from './session-record';
@@ -16,6 +17,8 @@ export interface SessionSources extends Pick<
   installedAgents: InstalledAgents;
   readSession: ReturnType<typeof createSessionReader>;
   createId: () => string;
+  archiveTerminals?: ArchiveTerminals;
+  autoStartRuns?: (sessionId: string) => void;
   // Aborts when the Engine stops admitting Session commands.
   sessionCommandSignal?: AbortSignal;
   // Overrides how long New Session discovery waits for Slash commands (tests).

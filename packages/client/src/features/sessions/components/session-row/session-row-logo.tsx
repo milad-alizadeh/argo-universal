@@ -44,6 +44,7 @@ function useLogoRotation(
 
 interface SessionLogoProps {
   logo: string;
+  size: 'sm' | 'md';
   status: SessionInfo['status'];
 }
 
@@ -51,11 +52,11 @@ export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
   const logoStyle = useLogoRotation(props.status);
 
   return (
-    <Animated.View style={[useIconBox('sm'), logoStyle]}>
+    <Animated.View style={[useIconBox(props.size), logoStyle]}>
       <AgentLogo
         logo={props.logo}
         label="Agent"
-        size="sm"
+        size={props.size}
         testID="session-logo"
       />
     </Animated.View>

@@ -8,6 +8,7 @@ interface Props {
   // A new source, such as a new scene or new series, retries a drawing that failed.
   source: unknown;
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -29,11 +30,9 @@ export class CanvasBoundary extends Component<Props, State> {
       : { source: props.source, failed: false };
   }
   public override render(): ReactNode {
-    return this.state.failed ? (
-      <CanvasFallback label={this.props.label} />
-    ) : (
-      this.props.children
-    );
+    return this.state.failed
+      ? (this.props.fallback ?? <CanvasFallback label={this.props.label} />)
+      : this.props.children;
   }
 }
 

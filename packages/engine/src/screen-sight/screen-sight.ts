@@ -4,20 +4,11 @@ import type {
   ScreenSightReply,
   ScreenSightStreamEvent,
 } from '@repo/contracts/operations';
-import { isLocalDesktop } from '../app-navigation';
-import { Queue } from '../app-navigation/queue';
+import { LocalDesktopRequests, PendingReplies } from '../local-desktop';
 import type { RpcConnection } from '../rpc';
 import { noticeFor, type ScreenNotice } from './notices';
-import { PendingCaptures } from './pending-captures';
 
 export type NoticeWriter = (sessionId: string, notice: ScreenNotice) => void;
-
-interface Receiver {
-  connection: RpcConnection;
-  queue: Queue<ScreenSightStreamEvent>;
-}
-
-const live = ({ connection }: Receiver): boolean => !connection.signal.aborted;
 
 /*
  * Takes a picture of the person's whole screen by asking the one desktop App on the Server Device (ADR-0064's
@@ -25,8 +16,9 @@ const live = ({ connection }: Receiver): boolean => !connection.signal.aborted;
  * the Feed gets one Notice that a capture was taken, never the picture.
  */
 export class ScreenSight {
-  private readonly receivers = new Set<Receiver>();
-  private readonly pending = new PendingCaptures();
+  private readonly receivers =
+    new LocalDesktopRequests<ScreenSightStreamEvent>();
+  private readonly pending = new PendingReplies<AppScreenshotResult>('screen-');
 
   // `notify` writes a capture's Notice into the requesting Session's Feed.
   public constructor(private readonly notify: NoticeWriter = (): void => {}) {}
@@ -41,20 +33,17 @@ export class ScreenSight {
   }
 
   private take(requester: ScreenRequester): Promise<AppScreenshotResult> {
-    const receiver = [...this.receivers].findLast(live);
+    const receiver = this.receivers.latest();
 
     if (!receiver) return Promise.resolve({ status: 'not_opened' });
 
-    return this.ask(receiver, requester);
-  }
-
-  private ask(
-    { connection, queue }: Receiver,
-    requester: ScreenRequester,
-  ): Promise<AppScreenshotResult> {
-    return this.pending.ask(connection, (requestId) =>
-      queue.push({ type: 'capture', requestId, requester }),
-    );
+    return this.pending.ask({
+      connection: receiver.connection,
+      signal: receiver.signal,
+      disconnected: { status: 'not_opened' },
+      send: (requestId) =>
+        receiver.send({ type: 'capture', requestId, requester }),
+    });
   }
 
   private announce(
@@ -75,16 +64,6 @@ export class ScreenSight {
     connection: RpcConnection,
     signal: AbortSignal = connection.signal,
   ): AsyncGenerator<ScreenSightStreamEvent> {
-    const queue = new Queue<ScreenSightStreamEvent>();
-    const receiver: Receiver = { connection, queue };
-
-    if (isLocalDesktop(connection)) this.receivers.add(receiver);
-
-    try {
-      yield { type: 'ready' };
-      yield* queue.items(AbortSignal.any([signal, connection.signal]));
-    } finally {
-      this.receivers.delete(receiver);
-    }
+    yield* this.receivers.listen(connection, signal, { type: 'ready' });
   }
 }

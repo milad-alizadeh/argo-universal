@@ -42,6 +42,42 @@ const labelOf = ({ on, reachable, brightness }: Switch): string => {
   return on ? percent(brightness) : 'Off';
 };
 
+type PowerCall = ReturnType<PageTo<HomeState>['run']>;
+
+/*
+ * The press that switches the light to `on`, showing every part of its tile switched at once. The power button holds
+ * one for each way, so a press made before Hue replies, while the tile shows its first press, switches it back.
+ */
+function powerPress(
+  { light, statusPrefix = '' }: Pick<FaderTarget, 'light' | 'statusPrefix'>,
+  to: PageTo<HomeState>,
+  on: boolean,
+): PowerCall {
+  const label = labelOf({ ...light, on });
+
+  const optimistic: NonNullable<PowerCall['optimistic']> = [
+    {
+      key: `power:${tileKey(light)}`,
+      props: { selected: on, variant: 'primary' },
+    },
+    {
+      key: tileKey(light),
+      props: { value: on ? light.brightness : 0, valueLabel: label },
+    },
+    { key: statusKey(light), props: { children: statusPrefix + label } },
+    {
+      key: detailKey(light),
+      props: { children: detailOf({ ...light, on }) ?? '' },
+    },
+  ];
+
+  return to.run(
+    'setPower',
+    { kind: light.kind, id: light.id, on },
+    { optimistic },
+  );
+}
+
 function TileButtons(
   { light, title, editor, statusPrefix = '' }: FaderTarget,
   state: HomeState,
@@ -49,20 +85,6 @@ function TileButtons(
 ): JSX.Element {
   const selected = state.editorOpen && state.editor === editor;
   const powerKey = `power:${tileKey(light)}`;
-  const nextOn = !light.on;
-  const nextLabel = labelOf({ ...light, on: nextOn });
-
-  const optimistic: NonNullable<
-    ReturnType<PageTo<HomeState>['run']>['optimistic']
-  > = [
-    { key: powerKey, props: { selected: nextOn, variant: 'primary' } },
-    {
-      key: tileKey(light),
-      props: { value: nextOn ? light.brightness : 0, valueLabel: nextLabel },
-    },
-    { key: statusKey(light), props: { children: statusPrefix + nextLabel } },
-    { key: detailKey(light), props: { children: '' } },
-  ];
 
   return (
     <Stack direction="row" align="center" gap={2}>
@@ -83,11 +105,8 @@ function TileButtons(
         accessibilityLabel={`${title} power`}
         selected={light.on}
         disabled={!light.reachable}
-        onPress={to.run(
-          'setPower',
-          { kind: light.kind, id: light.id, on: nextOn },
-          { optimistic },
-        )}
+        onPress={powerPress({ light, statusPrefix }, to, true)}
+        onPressSelected={powerPress({ light, statusPrefix }, to, false)}
       />
     </Stack>
   );

@@ -11,6 +11,7 @@ import { NativeIcon } from '../../../symbols/native-icon';
 import type { IconButtonProps } from './icon-button';
 import { androidGlyphOf, androidModifiersOf } from './icon-button-android-size';
 import { sizeOf, variantOf } from './icon-button-defaults';
+import { pressOf } from './icon-button-press';
 
 type Variant = NonNullable<IconButtonProps['variant']>;
 
@@ -79,7 +80,7 @@ function useComposeProps(props: IconButtonProps): ComposeProps {
   const colors = useColors(variantOf(props));
 
   return {
-    onClick: props.onPress,
+    onClick: pressOf(props),
     enabled: !props.disabled,
     colors,
     modifiers: [

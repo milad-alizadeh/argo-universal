@@ -165,6 +165,19 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
+    chart: router({
+      preview: publicProcedure
+        .input(operations['chart.preview'].params)
+        .output(operations['chart.preview'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'chart.preview',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)
@@ -990,6 +1003,186 @@ export function generatedOperations(runner: OperationRunner) {
           runner.run({
             kind: 'app',
             id: 'project.scheduleRunNow',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
+    run: router({
+      start: authenticatedAppProcedure
+        .input(operations['run.start'].params)
+        .output(operations['run.start'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.start',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      stop: authenticatedAppProcedure
+        .input(operations['run.stop'].params)
+        .output(operations['run.stop'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.stop',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      restart: authenticatedAppProcedure
+        .input(operations['run.restart'].params)
+        .output(operations['run.restart'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.restart',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      startGroup: authenticatedAppProcedure
+        .input(operations['run.startGroup'].params)
+        .output(operations['run.startGroup'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.startGroup',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      stopGroup: authenticatedAppProcedure
+        .input(operations['run.stopGroup'].params)
+        .output(operations['run.stopGroup'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.stopGroup',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      getSettings: authenticatedAppProcedure
+        .input(operations['run.getSettings'].params)
+        .output(operations['run.getSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.getSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      listSettings: authenticatedAppProcedure
+        .input(operations['run.listSettings'].params)
+        .output(operations['run.listSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.listSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      updateSettings: authenticatedAppProcedure
+        .input(operations['run.updateSettings'].params)
+        .output(operations['run.updateSettings'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.updateSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      status: publicProcedure
+        .input(operations['run.status'].params)
+        .output(operations['run.status'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.status',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      logs: publicProcedure
+        .input(operations['run.logs'].params)
+        .output(operations['run.logs'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.logs',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      draft: authenticatedAppProcedure
+        .input(operations['run.draft'].params)
+        .output(operations['run.draft'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.draft',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
+    terminal: router({
+      close: authenticatedAppProcedure
+        .input(operations['terminal.close'].params)
+        .output(operations['terminal.close'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.close',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      open: authenticatedAppProcedure
+        .input(operations['terminal.open'].params)
+        .output(operations['terminal.open'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.open',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      read: publicProcedure
+        .input(operations['terminal.read'].params)
+        .output(operations['terminal.read'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.read',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      resize: authenticatedAppProcedure
+        .input(operations['terminal.resize'].params)
+        .output(operations['terminal.resize'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.resize',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      send: authenticatedAppProcedure
+        .input(operations['terminal.send'].params)
+        .output(operations['terminal.send'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.send',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),

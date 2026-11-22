@@ -4,7 +4,11 @@ import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { ListTileContext, RowPositionContext } from '../../../list-context';
-import { useCompactRows, useListLook } from '../../../list-look-context';
+import {
+  drawsSidebar,
+  useCompactRows,
+  useListLook,
+} from '../../../list-look-context';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { drawsMovePicker } from '../list/list-move-picker-drawing';
@@ -18,9 +22,10 @@ import {
   useSelectedSeparator,
 } from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
+import { leadingLaneOf } from './list-item-lane';
 import { RowMovePicker } from './list-item-move-picker';
 import { NestingItem } from './list-item-nesting';
-import { hasLeading, separatorClass } from './list-item-parts';
+import { hasLeading } from './list-item-parts';
 import { ItemPress, rowMenu, type DrawingProps } from './list-item-press';
 import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
@@ -56,12 +61,7 @@ function ItemSeparator({
 
   if ([highlighted, selected].some(Boolean)) return null;
 
-  return (
-    <View
-      className={separatorClass(separator, props.leadingSize)}
-      style={hairline}
-    />
-  );
+  return <View className={separator} style={hairline} />;
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
@@ -123,10 +123,24 @@ interface RowParts {
   tile: boolean;
 }
 
+/*
+ * A row in the desktop sidebar draws as a sidebar row (Paper "SessionsList") unless it says otherwise, so every sidebar
+ * list (Sessions, Scheduled, Settings, a Plugin's) shares one icon lane and one text edge.
+ */
+const resolvedSidebar = (
+  props: Pick<ListItemProps, 'sidebar'>,
+  look: Parameters<typeof drawsSidebar>[0],
+): boolean => props.sidebar ?? drawsSidebar(look);
+
 // A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
-function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
+function ChoosingItem({
+  disclosure,
+  ...declared
+}: ListItemProps): ReactElement {
+  const look = useListLook();
+  const props = { ...declared, sidebar: resolvedSidebar(declared, look) };
   const selected = useItemSelection(props);
-  const { menu } = useListLook();
+  const { menu } = look;
 
   const drawing = useContentItemDrawing({
     ...selected,
@@ -146,14 +160,21 @@ function RowDetails({ tile, props, drawing }: PressedProps): ReactNode {
     <>
       {rowSeparator(props, drawing)}
       {props.progress ? (
-        <ItemProgress progress={props.progress} sidebar={props.sidebar} />
+        <ItemProgress
+          progress={props.progress}
+          sidebar={props.sidebar}
+          inset={leadingLaneOf(props.leadingSize)}
+        />
       ) : null}
     </>
   );
 }
 
 function rowSeparator(props: DrawingProps, drawing: ItemDrawing): ReactNode {
-  const separator = itemSeparator(drawing, hasLeading(props));
+  const separator = itemSeparator(
+    drawing,
+    hasLeading(props) ? leadingLaneOf(props.leadingSize) : undefined,
+  );
 
   return separator === undefined ? null : (
     <ItemSeparator {...props} separator={separator} />

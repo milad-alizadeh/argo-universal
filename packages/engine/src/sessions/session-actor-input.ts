@@ -61,5 +61,7 @@ export const createSessionActorInput = ({
   writer: context.writer,
   archiveUndoMs: context.archiveUndoMs,
   sessionId: event.sessionId,
+  archiveTerminals:
+    event.type === 'sessions.archive' ? event.terminals : undefined,
   ...sessionInput(event),
 });

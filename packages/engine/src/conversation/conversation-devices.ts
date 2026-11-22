@@ -5,7 +5,7 @@ import type {
   ConversationDeviceReport,
   ConversationDeviceRequest,
 } from '@repo/contracts';
-import { Queue } from '../app-navigation/queue';
+import { Queue } from '../rpc';
 import { unavailable } from './unavailable';
 import { refuse } from './voice-choice-rules';
 

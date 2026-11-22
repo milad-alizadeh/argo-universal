@@ -47,6 +47,16 @@ const defaults: Defaults = {
     'A Session records only itself as the one drawing a Draft; an App names any Session',
   ),
   'conversation.end': callerSessionParam,
+  'run.start': callerSessionParam,
+  'run.stop': callerSessionParam,
+  'run.restart': callerSessionParam,
+  'run.startGroup': callerSessionParam,
+  'run.stopGroup': callerSessionParam,
+  'run.status': callerSessionParam,
+  'run.logs': callerSessionParam,
+  'run.draft': callerSessionParam,
+  'terminal.read': callerSessionParam,
+  'terminal.send': callerSessionParam,
   'conversation.hangUp': ownSessionOnly(),
 };
 

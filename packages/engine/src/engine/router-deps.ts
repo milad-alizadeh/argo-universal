@@ -5,6 +5,7 @@ import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { AppNavigationDeps } from '../app-navigation';
 import type { BlobUploadDeps } from '../blob';
+import { ChartPreview } from '../chart-preview';
 import {
   feedNotices,
   noConversations,
@@ -17,6 +18,7 @@ import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PairingDeps } from '../pairing/router';
 import type { PluginsRouterDeps } from '../plugins';
+import type { Runs } from '../runs';
 import { ScreenSight, type ScreenSightDeps } from '../screen-sight';
 import {
   createSessionConnections,
@@ -51,6 +53,8 @@ export type AppRouterDeps = SessionSources &
     controlToken: string;
     plugins: PluginsRouterDeps;
     conversation: ConversationsPort;
+    runs: Runs;
+    chartPreview: ChartPreview;
     operationWaitClock?: OperationWaitClock;
   };
 
@@ -61,6 +65,7 @@ type EngineSupplied =
   | 'userHome'
   | 'conversation'
   | 'screenSight'
+  | 'chartPreview'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents';
@@ -93,6 +98,7 @@ export function createAppRouterDeps(
     ...input,
     ...sources,
     ...setup,
+    chartPreview: new ChartPreview(),
     readSession,
     readStoredChangesSummary: createStoredChangesReader(input, readSession),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),

@@ -25,11 +25,6 @@ type PressDrawing = {
   compact: boolean;
 } & Pick<ListItemProps, 'sidebar'>;
 
-// A sidebar List (Paper's SettingsList) draws its rows as tiles; others draw them by their card.
-function listLayout(press: PressDrawing): PressLayout {
-  return press.look.sidebar ? 'sidebar-tile' : 'row';
-}
-
 // A compact List's row is one line: a sidebar's keeps the sidebar's insets (Paper "SessionsList"), others Paper "Issue row"'s.
 function compactLayout(press: PressDrawing): PressLayout {
   if (press.look.place === 'tray') return 'tray';
@@ -41,11 +36,11 @@ function sidebarCompactLayout(press: PressDrawing): PressLayout {
   return press.sidebar || press.look.sidebar ? 'sidebar-compact' : 'compact';
 }
 
-// A compact List's line comes first, then a row's own sidebar option (Paper "SessionsList"), then its List's drawing.
+// A compact List's line comes first, then a sidebar row (Paper "SessionsList"), which every row in the sidebar is.
 function rowLayout(press: PressDrawing): PressLayout {
   if (press.compact) return compactLayout(press);
 
-  return press.sidebar ? 'sidebar' : listLayout(press);
+  return press.sidebar ? 'sidebar' : 'row';
 }
 
 const layoutOf = (press: PressDrawing): PressLayout =>

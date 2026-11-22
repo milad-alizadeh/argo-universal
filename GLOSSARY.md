@@ -633,6 +633,9 @@ _Avoid_: Theme, style
 A ` ```mermaid ` fence in Markdown, drawn in Argo's colours instead of shown as code, with a switch to its code. Agents check one with `diagram.validate` before sending it (ADR-0058).
 _Avoid_: Chart (a Plugin's `Chart` draws data), graph
 
+**Chart**:
+A visual that plots named data series. A Chart has a label and a table that presents the plotted data to screen readers.
+
 **Density**:
 How tightly a List or a Card draws its content: `regular` or `compact`. A compact List draws each row as one line on a wide desktop or web window; phones and narrow windows always draw regular rows.
 _Avoid_: Size, dense, condensed

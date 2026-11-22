@@ -1,7 +1,6 @@
 import { type DrawMore, FittedRow } from '@repo/kit/fitted-row/fitted-row';
 import { useSpacing } from '@repo/kit/use-spacing';
 import type * as React from 'react';
-import { Platform } from 'react-native';
 import { SessionRowItem } from './session-row-item';
 import { argoMetaParts, type MetaPart } from './session-row-metadata';
 import {
@@ -62,12 +61,15 @@ const drawMore =
  * A Regular row's meta line: Argo's parts, then the Plugins' items, as many as fit whole; "+N" is always last and lists
  * every one that did not fit, wherever it came from. None when the row has nothing to show.
  */
-export function sessionMetaLine(props: SessionRowProps): React.ReactNode {
+export function sessionMetaLine(
+  props: SessionRowProps,
+  sidebar: boolean,
+): React.ReactNode {
   const line = metaLine(props);
 
   // Keep the web press layer in place when Plugin items arrive during a press.
   if (!line.parts.length && !line.held.length)
-    return Platform.OS === 'web' ? null : undefined;
+    return sidebar ? null : undefined;
 
   return <FittedMetaLine {...line} />;
 }

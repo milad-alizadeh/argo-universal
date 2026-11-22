@@ -34,6 +34,7 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'conversationProvider'
       | 'voiceIdleMs'
       | 'archiveUndoMs'
+      | 'terminalSpawner'
     >
   > &
   Pick<
@@ -134,6 +135,7 @@ const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   conversationProvider: conversationProviderOf(scenario),
   voiceIdleMs: scenario.voiceIdleMs,
   archiveUndoMs: scenario.archiveUndoMs,
+  terminalSpawner: scenario.terminalSpawner,
 });
 
 const fixtureAgents = (

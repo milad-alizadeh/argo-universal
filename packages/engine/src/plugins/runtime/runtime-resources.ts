@@ -79,7 +79,7 @@ export class RuntimeResources {
     return new PluginData(input, this.workers, (pluginId, addresses) => {
       this.items.changed(pluginId);
 
-      if (addresses.length) this.changes.heldChanged(pluginId, addresses);
+      this.flow.answerChanged(pluginId, addresses);
     });
   }
 

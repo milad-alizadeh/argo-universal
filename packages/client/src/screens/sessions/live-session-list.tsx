@@ -6,7 +6,11 @@ import {
   loadedAgents,
   useInstalledAgents,
 } from '#features/agents';
-import { useConnectionState, useTRPC } from '#features/connection';
+import {
+  useConnectionState,
+  useTRPC,
+  useTRPCClient,
+} from '#features/connection';
 import {
   MiniConversationBand,
   useListedConversation,
@@ -89,16 +93,21 @@ function useSessionsNavigation(): Pick<
   'onSelect' | 'onNewSession' | 'onNewSessionInProject' | 'onProjectSettings'
 > {
   const navigate = useNavigateFromShown();
+  const client = useTRPCClient();
 
   // Each keeps one identity, so a row redraws only when its own Session changes.
   return useMemo(
     () => ({
-      onSelect: (id) => navigate(sessionHref(id)),
+      onSelect: (id) => {
+        navigate(sessionHref(id));
+        // Selecting a row explicitly opens the Session and starts opted-in Runs.
+        void client.session.open.mutate({ sessionId: id }).catch(() => {});
+      },
       onNewSession: () => navigate(newSessionHref()),
       onNewSessionInProject: (projectId) => navigate(newSessionHref(projectId)),
       onProjectSettings: (name) => navigate(projectHref(name)),
     }),
-    [navigate],
+    [client, navigate],
   );
 }
 

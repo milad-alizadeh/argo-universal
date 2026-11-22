@@ -2,18 +2,22 @@ import { z } from 'zod';
 import type { IconName } from '../kit-symbols';
 import { agentAccessOperations } from './agent-access';
 import { appOperations } from './app';
+import { chartOperations } from './chart';
 import { conversationOperations } from './conversation';
 import { conversationDeviceOperations } from './conversation-devices';
 import { conversationSettingsOperations } from './conversation-settings';
 import { diagramOperations } from './diagram';
+import type { ImageVisibility } from './image-visibility';
 import type { OperationTier, OperationPolicy } from './metadata';
 import { pluginOperations } from './plugins';
 import { projectScheduleOperations } from './project-schedules';
 import { projectOperations } from './projects';
 import { readerOperations } from './readers';
 import { registryOperations } from './registry';
+import { runOperations } from './runs';
 import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
+import { terminalOperations } from './terminals';
 import { todoListOperations } from './todo-list';
 import { voiceOperations } from './voice';
 
@@ -63,6 +67,10 @@ export {
 
 export { ProjectAdded, projectOperations } from './projects';
 
+export { runOperations } from './runs';
+
+export { terminalOperations } from './terminals';
+
 export interface OperationDefinition {
   id: string;
   label: string;
@@ -73,12 +81,14 @@ export interface OperationDefinition {
   tier: OperationTier;
   policy: OperationPolicy;
   keywords: readonly string[];
+  imageVisibility?: ImageVisibility;
 }
 
 export const operations = {
   ...agentAccessOperations,
   ...appOperations,
   ...diagramOperations,
+  ...chartOperations,
   ...readerOperations,
   ...sessionOperations,
   ...todoListOperations,
@@ -90,6 +100,8 @@ export const operations = {
   ...registryOperations,
   ...projectOperations,
   ...projectScheduleOperations,
+  ...runOperations,
+  ...terminalOperations,
 } as const satisfies Record<string, OperationDefinition>;
 
 export const OperationId = z.enum(
@@ -100,15 +112,16 @@ export type OperationId = z.infer<typeof OperationId>;
 
 export type OperationDescription = Omit<
   OperationDefinition,
-  'params' | 'result'
+  'params' | 'result' | 'imageVisibility'
 > & {
   params: z.core.JSONSchema.JSONSchema;
   result: z.core.JSONSchema.JSONSchema;
 };
 
-export function describeOperation(
-  operation: OperationDefinition,
-): OperationDescription {
+export function describeOperation({
+  imageVisibility: _imageVisibility,
+  ...operation
+}: OperationDefinition): OperationDescription {
   return {
     ...operation,
     params: operationJsonSchema(operation.params),

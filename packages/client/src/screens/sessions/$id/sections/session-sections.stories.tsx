@@ -21,8 +21,14 @@ import {
   subagentStates,
 } from '../../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import { attachedIssuesBar } from '../session-detail-view-bar.mocks';
-import { SessionInspector } from '../session-inspector';
+import { offeredSessionPanels, SessionInspector } from '../session-inspector';
 import type { SessionInspectorContent } from '../session-inspector-content';
+import { runActions } from '../session-run-inspector-fixtures';
+import {
+  shellTerminal,
+  shellTerminalActions,
+} from '../session-shell-terminal-fixtures';
+import { runTabKey, shellTabKey } from '../session-terminal-tabs';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
@@ -102,6 +108,10 @@ type Story = StoryObj<typeof meta>;
 
 // Every Section a Session offers: Changes, Agents and Shells, each on its own card with only its title, chevron and handle on the title line.
 export const AllSections: Story = {};
+
+const includingRuns = { ...everySection, runs: runActions };
+
+export const Runs: Story = { args: { content: includingRuns } };
 
 // One pull request with a long title, 15 files and 10/23 checks: the number and diff total stay on the second line, the checks at its trailing edge.
 export const BusyPullRequest: Story = {
@@ -214,16 +224,18 @@ export const Schedules: Story = {
   },
 };
 
-function OpenSchedules({
+function OpenInspector({
   content,
+  tabs,
 }: {
   content: SessionInspectorContent;
+  tabs: readonly string[];
 }): ReactElement {
-  const panels = useSessionPanels(['schedules']);
+  const panels = useSessionPanels(offeredSessionPanels(content));
   const [opened, setOpened] = useState(false);
 
   if (!opened) {
-    panels.select('schedules');
+    for (const tab of tabs) panels.select(tab);
     setOpened(true);
   }
 
@@ -236,5 +248,33 @@ function OpenSchedules({
 
 export const SchedulesInspector: Story = {
   args: Schedules.args,
-  render: ({ content }) => <OpenSchedules content={content} />,
+  render: ({ content }) => (
+    <OpenInspector content={content} tabs={['schedules']} />
+  ),
+};
+
+export const RunInspector: Story = {
+  args: Runs.args,
+  render: ({ content }) => (
+    <OpenInspector content={content} tabs={['changes', runTabKey('web')]} />
+  ),
+};
+
+export const ShellTerminals: Story = {
+  args: {
+    content: {
+      ...everySection,
+      runs: { ...shellTerminalActions, runs: [] },
+    },
+  },
+};
+
+export const ShellTerminalInspector: Story = {
+  args: { content: { ...everySection, runs: shellTerminalActions } },
+  render: ({ content }) => (
+    <OpenInspector
+      content={content}
+      tabs={['changes', shellTabKey(shellTerminal.id)]}
+    />
+  ),
 };

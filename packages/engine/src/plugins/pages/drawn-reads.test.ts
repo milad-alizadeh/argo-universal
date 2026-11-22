@@ -15,20 +15,21 @@ it('lists the addresses no Query holds, and not the ones a Query holds', () => {
   reads.drew(at('/plain'));
 
   expect(
-    reads.uncomparable('tracker', new Set([addressKey(at('/queried'))])),
+    reads.unheld('tracker', new Set([addressKey(at('/queried'))])),
   ).toEqual([at('/plain')]);
 });
 
-it('lists an address whose draw read the host beside a Query, until it is drawn again', () => {
+it('lists an address whose draw read the host beside a Query apart from the unheld ones, until it is drawn again', () => {
   const reads = new DrawnReads();
   const held = new Set([addressKey(at('/gated'))]);
 
   reads.drew(at('/gated'));
   reads.hostRead(at('/gated'));
-  expect(reads.uncomparable('tracker', held)).toEqual([at('/gated')]);
+  expect(reads.heldWithHostRead('tracker', held)).toEqual([at('/gated')]);
+  expect(reads.unheld('tracker', held)).toEqual([]);
 
   reads.drew(at('/gated'));
-  expect(reads.uncomparable('tracker', held)).toEqual([]);
+  expect(reads.heldWithHostRead('tracker', held)).toEqual([]);
 });
 
 it('forgets a Plugin and keeps only the addresses drawn most recently', () => {
@@ -36,11 +37,11 @@ it('forgets a Plugin and keeps only the addresses drawn most recently', () => {
 
   for (let index = 0; index < 205; index += 1) reads.drew(at(`/${index}`));
 
-  const listed = reads.uncomparable('tracker', new Set());
+  const listed = reads.unheld('tracker', new Set());
 
   expect(listed).toHaveLength(200);
   expect(listed[0]).toEqual(at('/5'));
 
   reads.forget('tracker');
-  expect(reads.uncomparable('tracker', new Set())).toEqual([]);
+  expect(reads.unheld('tracker', new Set())).toEqual([]);
 });

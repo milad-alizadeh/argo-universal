@@ -167,6 +167,15 @@ export class Rig {
 
   // One Agent's run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.
   async ran(tier: 'read' | 'act'): Promise<void> {
+    const finish = await this.running(tier);
+
+    await finish();
+  }
+
+  // A run the worker has not answered yet; the answer finishes it.
+  async running(tier: 'read' | 'act'): Promise<() => Promise<void>> {
+    const before = this.sent.filter(({ type }) => type === 'operation').length;
+
     const running = this.resources.operations.run(pluginId, {
       name: 'discover',
       params: {},
@@ -174,11 +183,22 @@ export class Rig {
       tier,
     });
 
-    const id = await vi.waitFor(() => this.lastRun());
-    const result = { action: 'result', id, result: null } as const;
+    const id = await vi.waitFor(() => {
+      const runs = this.sent.filter(({ type }) => type === 'operation');
 
-    this.resources.operations.receive(caller, result);
-    await running;
+      if (runs.length === before) throw new Error('No run sent');
+
+      return this.lastRun();
+    });
+
+    return async (): Promise<void> => {
+      this.resources.operations.receive(caller, {
+        action: 'result',
+        id,
+        result: null,
+      });
+      await running;
+    };
   }
 
   private lastRun(): number {

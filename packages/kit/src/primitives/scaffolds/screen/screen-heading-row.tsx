@@ -4,6 +4,7 @@ import { useHeadingInset } from '#kit/content-column/content-column';
 import { useEnlargedText } from '#kit/enlarged-text';
 import type { ScreenHeader } from '#primitives/actions/action';
 import {
+  chromeControlSize,
   FixedSizeChrome,
   type IconButtonSize,
 } from '#primitives/actions/icon-button';
@@ -52,8 +53,8 @@ function HeadingCaption(props: ScreenHeaderInput): ReactNode {
 }
 
 /*
- * A page's heading sits in its own column; a list column's is denser, its title one level down, its buttons small and
- * its search the sidebar's, since it sits above a list beside its page. A List that is selecting replaces it with its
+ * A page's heading sits in its own column; a list column's is denser, its title one level down and its search the
+ * sidebar's, its buttons the window band's size, since it sits above a list beside its page. A List that is selecting replaces it with its
  * own header (ADR-0043).
  */
 type HeadingPlacement = 'page' | 'list';
@@ -89,7 +90,7 @@ function DeclaredHeading(props: DeclaredHeadingProps): ReactElement {
   );
 }
 
-type Look = { titleLevel: number; buttonSize?: IconButtonSize };
+type Look = { titleLevel: number; buttonSize: IconButtonSize };
 
 // The title, a menu button when it has a menu, and the header's buttons, in the placement's looks.
 const headingContent = (
@@ -122,10 +123,13 @@ const headingActions = (
   />
 );
 
-// A page's title is its heading; a list column's sits a level below it, under the window's own page title.
+/*
+ * A page's title is its heading; a list column's sits a level below it, under the window's own page title. Both draw
+ * the chrome's control size, so a list column's buttons match its search and the band above.
+ */
 const placements: Record<HeadingPlacement, Look & { sidebar: boolean }> = {
-  page: { titleLevel: 1, sidebar: false },
-  list: { titleLevel: 2, buttonSize: 'sm', sidebar: true },
+  page: { titleLevel: 1, buttonSize: chromeControlSize, sidebar: false },
+  list: { titleLevel: 2, buttonSize: chromeControlSize, sidebar: true },
 };
 
 function Heading(props: {

@@ -67,17 +67,16 @@ const reach = 8000;
 // How far a stuck header's row can sit from the list's top: the list's own top padding.
 const stuckWithin = 12;
 
-const changedFiles = (): HTMLElement => screen.getByTestId('changes-files');
+// A file header can mount before Legend List has measured enough content to scroll.
+const changesScroller = (): Promise<HTMLElement> =>
+  waitFor(() => {
+    const list = screen.getByRole('list', { name: 'Changed files' });
 
-function scrollerOf(list: HTMLElement): HTMLElement {
-  const scroller = [list, ...list.querySelectorAll<HTMLElement>('*')].find(
-    (element) => element.scrollHeight > element.clientHeight + 50,
-  );
+    if (list.scrollHeight <= list.clientHeight + 50)
+      throw new Error('Changed files do not scroll');
 
-  if (!scroller) throw new Error('Changed files do not scroll');
-
-  return scroller;
-}
+    return list;
+  });
 
 const headers = (): HTMLElement[] =>
   screen.queryAllByRole('button', { name: /^Diff for / });
@@ -149,7 +148,7 @@ const walkUp = (scroller: HTMLElement): Promise<number[]> =>
 export const HeaderStaysStuckBothWays: Story = {
   play: async () => {
     await findFileHeader('/repo/src/file-0.ts');
-    const scroller = scrollerOf(changedFiles());
+    const scroller = await changesScroller();
 
     await expect(await walkDown(scroller)).toEqual([]);
     await expect(await walkUp(scroller)).toEqual([]);
@@ -170,7 +169,7 @@ export const FarDiffLoadsWithItsHeader: Story = {
 
     await findFileHeader(lastFile);
     await spinnersGone();
-    const scroller = scrollerOf(changedFiles());
+    const scroller = await changesScroller();
 
     scroller.scrollTop = scroller.scrollHeight;
     await nextFrames();
@@ -243,7 +242,7 @@ async function overlapsDown(scroller: HTMLElement): Promise<string[]> {
 export const NextHeaderPushesTheStuckOne: Story = {
   play: async () => {
     await findFileHeader('/repo/src/file-0.ts');
-    const scroller = scrollerOf(changedFiles());
+    const scroller = await changesScroller();
 
     await expect(await overlapsDown(scroller)).toEqual([]);
   },
@@ -344,7 +343,7 @@ export const StuckHeaderSettlesWhenZoomed: Story = {
   },
   play: async () => {
     await findFileHeader('/repo/src/module-1/index.ts');
-    await trackpadDown(scrollerOf(changedFiles()));
+    await trackpadDown(await changesScroller());
 
     await expect(runaway?.tripped).toBe(false);
   },
