@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { populated } from './session-workbench-sheet-fixtures';
+import { populatedSheet } from './session-workbench-sheet-fixtures';
 import { WorkbenchSheetPreview } from './session-workbench-sheet.mocks';
 
 // The preview wraps the sheet to hold it open, so its props table would show only the wrapper's one arg.
@@ -9,7 +9,7 @@ const meta = {
   tags: ['!autodocs'],
   parameters: { screenPreview: true },
   globals: { viewport: { value: 'phone' } },
-  args: { content: populated },
+  args: populatedSheet,
 } satisfies Meta<typeof WorkbenchSheetPreview>;
 
 export default meta;

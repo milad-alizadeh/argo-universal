@@ -45,16 +45,12 @@ type RowProps = Handlers & { entry: SessionBarEntry };
 export const sessionBarCards = (
   bar: SessionBarProps | undefined,
 ): WorkbenchSection[] =>
-  bar
-    ? groupedLines([bar.shown, ...bar.hidden]).map((lines) =>
-        pluginCard(lines, bar),
-      )
-    : [];
+  bar ? sessionBarGroups(bar).map((lines) => pluginCard(lines, bar)) : [];
 
-function groupedLines(lines: SessionBarEntry[]): Lines[] {
+export function sessionBarGroups({ shown, hidden }: SessionBarProps): Lines[] {
   const grouped = new Map<string, Lines>();
 
-  for (const entry of lines) {
+  for (const entry of [shown, ...hidden]) {
     const entries = grouped.get(entry.pluginId);
 
     if (entries) entries.push(entry);

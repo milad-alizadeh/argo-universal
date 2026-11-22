@@ -64,6 +64,7 @@ async function press(sheet: Inside, user: User, title: string): Promise<void> {
 
   if (!row) throw new Error(`No row titled ${title}.`);
 
+  row.scrollIntoView({ block: 'nearest' });
   await settleOverlays(row);
   await user.click(row);
 }
@@ -119,6 +120,25 @@ export const PreviewsWorkingAgentsAndOpensEveryAgent: Story = {
     await press(sheet, userEvent, firstIdle.title);
     await expect(
       await sheet.findByRole('heading', { name: firstIdle.title }),
+    ).toBeVisible();
+  },
+};
+
+export const PreviewsChangesAndOpensTheRest: Story = {
+  play: async ({ userEvent }) => {
+    const sheet = await openSheet();
+    const later = { name: /^#46 / };
+
+    await expect(sheet.getByRole('link', { name: /^#45 / })).toBeVisible();
+    await expect(sheet.queryByRole('link', later)).toBeNull();
+    await press(sheet, userEvent, '3 more');
+
+    const row = await sheet.findByRole('link', later);
+    row.scrollIntoView({ block: 'nearest' });
+    await settleOverlays(row);
+    await userEvent.click(row);
+    await expect(
+      await sheet.findByRole('heading', { name: 'Change #46' }),
     ).toBeVisible();
   },
 };

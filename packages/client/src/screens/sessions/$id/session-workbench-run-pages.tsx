@@ -1,12 +1,12 @@
 import type { ShellTerminal } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { ReactElement } from 'react';
+import { type SessionRuns, WorkbenchRuns } from '#features/sessions';
 import {
-  RunInspector,
-  type SessionRuns,
-  WorkbenchRuns,
-} from '#features/sessions';
-import { runTabKey } from './sections/runs-section';
+  runTabKey,
+  runTerminalTab,
+  TerminalTabBody,
+} from './session-terminal-tabs';
 import { workbenchShellPage } from './session-workbench-shell-page';
 
 export const workbenchRunsKey = 'runs';
@@ -58,14 +58,14 @@ export function workbenchRunPages(
 ): ReactElement[] {
   if (!runs) return [];
 
-  return runs.runs.map((run) => (
+  return runs.runs.map(runTerminalTab).map((tab) => (
     <Sheet.Screen
-      key={runTabKey(run.name)}
-      name={runTabKey(run.name)}
-      title={run.name}
+      key={tab.key}
+      name={tab.key}
+      title={tab.title}
       keepsHeaderInset
     >
-      <RunInspector run={run} controls={runs} compact />
+      <TerminalTabBody tab={tab} controls={runs} visible compact />
     </Sheet.Screen>
   ));
 }

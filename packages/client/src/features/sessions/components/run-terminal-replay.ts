@@ -5,6 +5,70 @@ const capacity = 8;
 
 type Respond = (frame: RunOutput | null) => void;
 
+type AcceptedFrame = {
+  cursor: RunOutputCursor;
+  reset: boolean;
+  bytes: Uint8Array;
+};
+
+// The same recording can be supplied twice after reconnect. A new recording resets even at offset zero.
+export function terminalFrame(
+  previous: RunOutputCursor | undefined,
+  { cursor, data }: RunOutput,
+): AcceptedFrame | undefined {
+  const sameRun = previous?.runId === cursor.runId;
+
+  if (sameRun && cursor.offset <= previous.offset) return undefined;
+
+  const bytes = Uint8Array.from(atob(data), (byte) => byte.charCodeAt(0));
+  const overlap = sameRun
+    ? previous.offset - (cursor.offset - bytes.length)
+    : 0;
+
+  return {
+    cursor,
+    reset: !sameRun,
+    bytes: bytes.subarray(Math.max(0, overlap)),
+  };
+}
+
+type Read = (cursor: RunOutputCursor | null) => Promise<RunOutput | null>;
+
+const retryMs = 100;
+
+// Resume a pull transport after the last frame the Terminal actually accepted.
+export function readTerminalFrames(
+  read: Read,
+  cursor: RunOutputCursor | undefined,
+  receive: Parameters<RunOutputSource>[1],
+): () => void {
+  let active = true;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let next = cursor ?? null;
+
+  async function pump(): Promise<void> {
+    const frame = await read(next).catch(() => null);
+
+    if (!active) return;
+
+    if (!frame) {
+      retry = setTimeout(() => void pump(), retryMs);
+
+      return;
+    }
+
+    next = receive(frame) ?? next;
+    void pump();
+  }
+
+  void pump();
+
+  return (): void => {
+    active = false;
+    clearTimeout(retry);
+  };
+}
+
 // Keeps the DOM bridge bounded. If the reader falls behind, its next read resumes from the recording.
 export class RunTerminalReplay {
   private source?: RunOutputSource;

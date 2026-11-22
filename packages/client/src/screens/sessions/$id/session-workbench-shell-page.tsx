@@ -4,9 +4,14 @@ import {
   type SheetDestination,
 } from '@repo/kit/primitives/overlays/sheet';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
-import { createContext, use, useState, type ReactElement } from 'react';
-import { ShellTerminalInspector, type SessionRuns } from '#features/sessions';
-import { shellTabKey } from './sections/runs-section';
+import { createContext, use, type ReactElement } from 'react';
+import type { SessionRuns } from '#features/sessions';
+import {
+  endTerminalTab,
+  shellTabKey,
+  TerminalTabBody,
+  useOpenedShellTab,
+} from './session-terminal-tabs';
 
 export const WorkbenchShellRuntime = createContext<SessionRuns | undefined>(
   undefined,
@@ -28,23 +33,23 @@ function WorkbenchShellTerminal({
 }): ReactElement {
   const runs = use(WorkbenchShellRuntime);
   const { back } = useSheet();
-  const listed = runs?.shells?.some(({ id }) => id === shell.id);
-  const [wasListed, setWasListed] = useState(false);
+  const tab = useOpenedShellTab(runs, shell);
 
-  // The open response can arrive before the Runs subscription lists the new shell.
-  if (listed && !wasListed) setWasListed(true);
-
-  if (!runs || (wasListed && !listed))
+  if (!runs || !tab)
     return <EmptyState icon="terminal" title="This Terminal has closed" />;
 
   const close = (): void => {
     back();
-    runs.closeShell?.(shell.id);
+    endTerminalTab(runs, tab);
   };
 
   return (
-    <ShellTerminalInspector shell={shell} onClose={close}>
-      {runs.renderShell?.(shell, true, true)}
-    </ShellTerminalInspector>
+    <TerminalTabBody
+      tab={tab}
+      controls={runs}
+      visible
+      compact
+      onClose={close}
+    />
   );
 }

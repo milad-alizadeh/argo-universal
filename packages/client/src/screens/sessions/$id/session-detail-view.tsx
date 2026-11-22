@@ -101,7 +101,10 @@ function OpenSessionView(session: HeadedSession): React.JSX.Element {
   const { drawHeader, ...props } = session;
   const phone = usePhoneSheet(useInspectorPanels(props));
 
-  const workbench = useSessionWorkbench(props);
+  const workbench = useSessionWorkbench(
+    props,
+    props.preview ? undefined : props.bar,
+  );
 
   return (
     <>

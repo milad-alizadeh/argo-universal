@@ -1,7 +1,6 @@
 import {
   terminalColumns,
   terminalRows,
-  type RunOutput,
   type RunOutputCursor,
 } from '@repo/contracts';
 import { FitAddon } from '@xterm/addon-fit';
@@ -11,6 +10,7 @@ import { useEffect, useRef, type ReactElement, type RefObject } from 'react';
 import { TerminalKeys } from '../../../lib/terminal/terminal-keys';
 import { useControlModifier } from '../../../lib/terminal/use-control-modifier';
 import type { RunTerminalColors, RunTerminalProps } from './run-terminal-props';
+import { terminalFrame } from './run-terminal-replay';
 
 type MountedTerminal = {
   terminal: Terminal;
@@ -24,29 +24,6 @@ type Mounted = RefObject<MountedTerminal | null>;
 
 function applyOptions(terminal: Terminal, options: ITerminalOptions): void {
   terminal.options = options;
-}
-
-function receiveFrame(
-  terminal: Terminal,
-  previous: RunOutputCursor | undefined,
-  { cursor, data }: RunOutput,
-): RunOutputCursor {
-  const sameRun = previous?.runId === cursor.runId;
-
-  if (!sameRun) terminal.write('\u001bc');
-
-  if (sameRun && cursor.offset <= previous.offset) return previous;
-
-  // A delayed reconnect may replay data the previous subscription supplied.
-  const bytes = Uint8Array.from(atob(data), (byte) => byte.charCodeAt(0));
-
-  const repeated = sameRun
-    ? previous.offset - (cursor.offset - bytes.length)
-    : 0;
-
-  terminal.write(bytes.subarray(Math.max(0, repeated)));
-
-  return cursor;
 }
 
 function useMountedTerminal(viewport: Host): Mounted {
@@ -180,10 +157,19 @@ function useTerminalReplay(
     const stop = listen(emulator.cursor, (frame) => {
       if (!listening) return;
 
-      if (emulator.cursor?.runId !== frame.cursor.runId)
-        onResize(terminal.cols, terminal.rows);
+      const accepted = terminalFrame(emulator.cursor, frame);
 
-      emulator.cursor = receiveFrame(terminal, emulator.cursor, frame);
+      if (!accepted) return emulator.cursor;
+
+      if (accepted.reset) {
+        onResize(terminal.cols, terminal.rows);
+        terminal.write('\u001bc');
+      }
+
+      terminal.write(accepted.bytes);
+      emulator.cursor = accepted.cursor;
+
+      return accepted.cursor;
     });
 
     return (): void => {
@@ -193,8 +179,7 @@ function useTerminalReplay(
   }, [connected, listen, mounted, onResize]);
 }
 
-type Props = Omit<RunTerminalProps, 'run'> & {
-  name: string;
+type Props = Omit<RunTerminalProps, 'interactive'> & {
   enabled: boolean;
   colors: RunTerminalColors;
 };

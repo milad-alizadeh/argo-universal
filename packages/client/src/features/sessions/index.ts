@@ -46,7 +46,10 @@ export {
   WorkbenchMoreAgents,
 } from './components/session-workbench-agents';
 
-export { activePreview } from './components/workbench-preview';
+export {
+  activePreview,
+  previewLimit as workbenchPreviewLimit,
+} from './components/workbench-preview';
 
 export { showMoreLabel } from './components/workbench-show-more';
 
@@ -265,7 +268,10 @@ export {
   type SessionBarProps,
 } from './components/session-bar/session-bar';
 
-export { sessionBarCards } from './components/session-bar/session-bar-cards';
+export {
+  sessionBarCards,
+  sessionBarGroups,
+} from './components/session-bar/session-bar-cards';
 
 export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
 
@@ -292,7 +298,7 @@ export { sidebarRows as sessionsListSidebarRows } from './components/session-row
 
 export { RunInspector } from './components/run-inspector';
 
-export { runStatusLabel } from './components/run-status';
+export { runIsActive, runStatusLabel } from './components/run-status';
 
 export { RunTerminal } from './components/run-terminal';
 

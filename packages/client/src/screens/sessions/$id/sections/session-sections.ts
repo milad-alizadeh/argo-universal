@@ -6,6 +6,7 @@ import {
   type WorkbenchSection,
 } from '#features/sessions';
 import type { SessionInspectorContent } from '../session-inspector-content';
+import { runTabKey, shellTabKey } from '../session-terminal-tabs';
 import { agentsSection } from './agents-section';
 import { changesSection } from './changes-section';
 import {
@@ -13,13 +14,7 @@ import {
   pluginCardSection,
   type SessionPluginCard,
 } from './plugin-card-section';
-import {
-  runsCard,
-  runSection,
-  runTabKey,
-  shellTerminalSection,
-  shellTabKey,
-} from './runs-section';
+import { runsCard, terminalSection } from './runs-section';
 import { schedulesSection } from './schedules-section';
 import {
   drawsCard,
@@ -72,8 +67,7 @@ export const sectionOf = (
   key: string,
 ): SessionSection | undefined =>
   sessionSections(content).find((section) => section.key === key) ??
-  runSection(content.runs, key) ??
-  shellTerminalSection(content.runs, key);
+  terminalSection(content.runs, key);
 
 export const sectionTab = (
   panels: SessionPanels,

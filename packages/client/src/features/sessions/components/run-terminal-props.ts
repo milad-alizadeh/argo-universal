@@ -1,16 +1,13 @@
-import type {
-  RunConfigurationRow,
-  RunOutput,
-  RunOutputCursor,
-} from '@repo/contracts';
+import type { RunOutput, RunOutputCursor } from '@repo/contracts';
 
 export type RunOutputSource = (
   cursor: RunOutputCursor | undefined,
-  receive: (frame: RunOutput) => void,
+  receive: (frame: RunOutput) => RunOutputCursor | void,
 ) => () => void;
 
 export interface RunTerminalProps {
-  run: Pick<RunConfigurationRow, 'name' | 'status'>;
+  name: string;
+  interactive: boolean;
   connected: boolean;
   compact?: boolean;
   listen: RunOutputSource;

@@ -12,29 +12,55 @@ import {
   shellStopAction,
   shellSupporting,
   subagentStateLabel,
+  workbenchPreviewLimit,
 } from '#features/sessions';
 import { pullRequestsOf, summaryOf } from './sections/changes-facts';
 import { withCheckoutFiles } from './sections/checkout-files';
 import { openPullRequest } from './sections/open-pull-request';
 import type { AgentFeedSlot } from './session-agents-tab';
 import type { SessionInspectorContent } from './session-inspector-content';
-import type { WorkbenchRow } from './session-workbench-sheet-rows';
+import {
+  type Visit,
+  type WorkbenchRow,
+  WorkbenchRowList,
+} from './session-workbench-sheet-rows';
 
 const filesPage = 'checkout-files';
 
-export function changeRows(content: SessionInspectorContent): WorkbenchRow[] {
-  const rows = pullRequestsOf(content).map((change) =>
-    changeRow(change, content.changes),
-  );
+export function changeRows(
+  content: SessionInspectorContent,
+  onVisit: Visit,
+): WorkbenchRow[] {
+  const rows = pullRequestsOf(content).map((change, index) => ({
+    ...changeRow(change, content.changes),
+    hidden: index >= workbenchPreviewLimit,
+  }));
+  const more = rows.length - workbenchPreviewLimit;
 
   const action = content.createPullRequest;
 
   return [
     ...rows,
+    ...(more > 0 ? [moreChanges(more, rows, onVisit)] : []),
     filesRow(content),
     ...(action ? [{ key: 'create-pr', label: 'Create PR', ...action }] : []),
   ];
 }
+
+const moreChanges = (
+  more: number,
+  rows: readonly WorkbenchRow[],
+  onVisit: Visit,
+): WorkbenchRow => ({
+  key: 'changes:all',
+  label: `${more} more`,
+  page: {
+    title: 'Changes',
+    children: (
+      <WorkbenchRowList label="Changes" rows={rows} onVisit={onVisit} />
+    ),
+  },
+});
 
 const filesRow = (content: SessionInspectorContent): WorkbenchRow => ({
   key: filesPage,

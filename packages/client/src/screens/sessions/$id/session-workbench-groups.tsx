@@ -10,6 +10,7 @@ import {
   type SessionRuns,
   showMoreLabel,
   subagentIsWorking,
+  workbenchPreviewLimit,
 } from '#features/sessions';
 import { agentsFacts } from './sections/agents-facts';
 import { changesFacts } from './sections/changes-facts';
@@ -18,10 +19,10 @@ import {
   pluginCardKey,
   type SessionPluginCard,
 } from './sections/plugin-card-section';
-import { runTabKey, shellTabKey } from './sections/runs-section';
 import { schedulesSection } from './sections/schedules-section';
 import { shellsFacts } from './sections/shells-facts';
 import type { SessionInspectorContent } from './session-inspector-content';
+import { runTabKey, shellTabKey } from './session-terminal-tabs';
 import {
   agentRow,
   changeRows,
@@ -55,7 +56,7 @@ export function workbenchGroups(
   { cardLines, onVisit }: Building,
 ): WorkbenchGroup[] {
   const groups: WorkbenchGroup[] = [
-    { ...changesFacts, rows: changeRows(content) },
+    { ...changesFacts, rows: changeRows(content, onVisit) },
     agentsGroup(content, onVisit),
     tasksGroup(content, onVisit),
     ...runsGroup(content.runs),
@@ -255,9 +256,6 @@ function followUpsGroup({
   return [{ key: followUpsKey, title: schedulesSection.title, rows }];
 }
 
-// A card previews this many of its page's lines; the rest wait in the card's page.
-const pluginLineLimit = 3;
-
 const lineRow =
   (card: WorkbenchRow) =>
   ({ title, value }: PluginCardLine, at: number): WorkbenchRow => ({
@@ -276,7 +274,7 @@ function pluginGroup(
   lines: readonly PluginCardLine[],
 ): WorkbenchGroup {
   const key = pluginCardKey(pluginId, card.id);
-  const more = lines.length - pluginLineLimit;
+  const more = lines.length - workbenchPreviewLimit;
 
   const open: WorkbenchRow = {
     key,
@@ -287,7 +285,7 @@ function pluginGroup(
 
   const rows = [
     open,
-    ...lines.slice(0, pluginLineLimit).map(lineRow(open)),
+    ...lines.slice(0, workbenchPreviewLimit).map(lineRow(open)),
     ...(more > 0 ? [moreRow(key, more, open)] : []),
   ];
 

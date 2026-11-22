@@ -4,7 +4,7 @@ import { withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { RunTerminal } from '#features/sessions';
+import { runIsActive, RunTerminal } from '#features/sessions';
 import {
   partiallyReadyGroup,
   stoppedGroup,
@@ -31,7 +31,8 @@ const runs = {
   onRestart: fn(),
   renderTerminal: (run: (typeof workbenchRuns)[number]): ReactElement => (
     <RunTerminal
-      {...{ run }}
+      name={run.name}
+      interactive={runIsActive(run)}
       connected
       compact
       listen={recordRun}

@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   RunInspector,
+  runIsActive,
   RunTerminal,
   type RunOutputSource,
 } from '#features/sessions';
@@ -32,7 +33,8 @@ const meta = {
           ...runActions,
           renderTerminal: (run) => (
             <RunTerminal
-              run={run}
+              name={run.name}
+              interactive={runIsActive(run)}
               connected
               listen={recordRun}
               onInput={typeInRun}
@@ -121,7 +123,8 @@ function ReconnectTerminal(): ReactElement {
         onPress={() => setConnected(!connected)}
       />
       <RunTerminal
-        run={webRun}
+        name={webRun.name}
+        interactive={runIsActive(webRun)}
         connected={connected}
         listen={replay}
         onInput={typeInRun}

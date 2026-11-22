@@ -4,6 +4,7 @@ import type { RunOutput, RunOutputCursor } from '@repo/contracts';
 import type { DOMProps } from 'expo/dom';
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import type { RunOutputSource } from './run-terminal-props';
+import { readTerminalFrames } from './run-terminal-replay';
 import { RunTerminalSurface } from './run-terminal-surface';
 
 type Read = (cursor: RunOutputCursor | null) => Promise<RunOutput | null>;
@@ -19,48 +20,13 @@ type Props = Omit<
   dom?: DOMProps;
 };
 
-const retryMs = 100;
-
-function readFrames(
-  read: Read,
-  cursor: RunOutputCursor | undefined,
-  receive: Parameters<RunOutputSource>[1],
-): () => void {
-  let active = true;
-  let retry: ReturnType<typeof setTimeout> | undefined;
-  let next = cursor ?? null;
-
-  async function pump(): Promise<void> {
-    const frame = await read(next).catch(() => null);
-
-    if (!active) return;
-
-    if (!frame) {
-      retry = setTimeout(() => void pump(), retryMs);
-
-      return;
-    }
-
-    next = frame.cursor;
-    receive(frame);
-    void pump();
-  }
-
-  void pump();
-
-  return (): void => {
-    active = false;
-    clearTimeout(retry);
-  };
-}
-
 export default function RunTerminalDOM({
   onRead,
   containerHeight,
   ...props
 }: Props): ReactElement {
   const listen = useCallback<RunOutputSource>(
-    (cursor, receive) => readFrames(onRead, cursor, receive),
+    (cursor, receive) => readTerminalFrames(onRead, cursor, receive),
     [onRead],
   );
 

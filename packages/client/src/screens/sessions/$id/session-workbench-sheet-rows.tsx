@@ -13,6 +13,8 @@ export interface WorkbenchRow {
   value?: string;
   disabled?: boolean;
   onPress?: () => void;
+  // Opens a page outside the sheet, using the Session's existing navigation.
+  navigate?: () => void;
   // The row's own page, pushed under its key.
   page?: Omit<SheetScreenProps, 'name'>;
   // Another row whose page this row opens, as a card's lines all open the card's one page.
@@ -48,6 +50,7 @@ function useOpenRow(onVisit: Visit): (row: WorkbenchRow) => void {
     const visited = row.page ? row : row.visits;
 
     row.onPress?.();
+    row.navigate?.();
 
     if (visited) {
       onVisit(visited);
@@ -79,20 +82,35 @@ const fieldSection = (
   </FieldGroup.Section>
 );
 
-const fieldRow = (
+function fieldRow(
   row: WorkbenchRow,
   open: (row: WorkbenchRow) => void,
-): ReactElement => (
-  <FieldGroup.Link
-    key={row.key}
-    id={row.key}
-    title={row.label}
-    value={row.value}
-    disabled={row.disabled}
-    action={!row.page && !row.visits && !row.opens}
-    onPress={() => open(row)}
-  />
-);
+): ReactElement {
+  const opensPage = Boolean(
+    row.page ?? row.visits ?? row.opens ?? row.navigate,
+  );
+
+  if (!opensPage && !row.onPress)
+    return (
+      <FieldGroup.Value
+        key={row.key}
+        title={row.label}
+        value={row.value ?? ''}
+      />
+    );
+
+  return (
+    <FieldGroup.Link
+      key={row.key}
+      id={row.key}
+      title={row.label}
+      value={row.value}
+      disabled={row.disabled}
+      action={!opensPage}
+      onPress={() => open(row)}
+    />
+  );
+}
 
 interface RowListProps {
   label: string;

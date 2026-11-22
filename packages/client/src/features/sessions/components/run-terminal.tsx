@@ -2,7 +2,6 @@ import type { RunOutput, RunOutputCursor } from '@repo/contracts';
 import type { DOMProps } from 'expo/dom';
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
-import { runIsActive } from './run-status';
 import RunTerminalDOM from './run-terminal-dom';
 import type { RunTerminalProps } from './run-terminal-props';
 import { RunTerminalReplay } from './run-terminal-replay';
@@ -18,7 +17,8 @@ function terminalLayout(width: number, height: number): DOMProps {
 }
 
 export function RunTerminal({
-  run,
+  name,
+  interactive,
   connected,
   listen,
   onInput,
@@ -33,7 +33,7 @@ export function RunTerminal({
   const measure = ({ nativeEvent: { layout } }: LayoutChangeEvent): void =>
     setSize({ width: layout.width, height: layout.height });
 
-  const enabled = connected && runIsActive(run);
+  const enabled = connected && interactive;
 
   useEffect(() => {
     replay.connect(connected ? listen : undefined);
@@ -62,7 +62,7 @@ export function RunTerminal({
     <View className="min-h-0 flex-1 overflow-hidden" onLayout={measure}>
       {size.width > 0 && size.height > 0 && (
         <RunTerminalDOM
-          name={run.name}
+          name={name}
           {...{ colors, connected, enabled, compact, onRead }}
           containerHeight={size.height}
           dom={terminalLayout(size.width, size.height)}

@@ -1,8 +1,8 @@
-import type { RunConfigurationRow, RunStatusResult } from '@repo/contracts';
+import type { RunStatusResult } from '@repo/contracts';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { skipToken, useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { useCallback, useState, type ReactElement } from 'react';
+import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import {
   useConnectionState,
   useResubscribeOnReconnect,
@@ -11,10 +11,18 @@ import {
 } from '#features/connection';
 import {
   RunTerminal,
+  runIsActive,
   type RunOutputSource,
   type SessionRuns,
 } from '#features/sessions';
 import { LatestTerminalSize } from './latest-terminal-size';
+import {
+  runTabKey,
+  shellTabKey,
+  type TerminalKey,
+  type TerminalTarget,
+  terminalTarget,
+} from './session-terminal-tabs';
 
 function useRunStatus(sessionId: string, active: boolean): RunStatusResult {
   const trpc = useTRPC();
@@ -72,11 +80,13 @@ export function useSessionRuns(
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
     renderTerminal: (run, visible, compact) => (
-      <ConnectedRunTerminal
+      <ConnectedTerminal
         key={sessionId}
-        {...{ sessionId, run }}
+        {...{ sessionId, compact }}
+        tabKey={runTabKey(run.name)}
+        name={run.name}
+        interactive={runIsActive(run)}
         active={active && visible}
-        compact={compact}
       />
     ),
   };
@@ -108,11 +118,12 @@ function useShellControls(
         : undefined,
       closeShell: (shellId) => close.mutate({ sessionId, shellId }),
       renderShell: (shell, visible, compact) => (
-        <ConnectedRunTerminal
+        <ConnectedTerminal
           key={shell.id}
           sessionId={sessionId}
-          shellId={shell.id}
-          run={{ name: shell.name, status: 'ready' }}
+          tabKey={shellTabKey(shell.id)}
+          name={shell.name}
+          interactive
           active={active && visible}
           compact={compact}
         />
@@ -144,35 +155,30 @@ function useRunGroupControls(
   };
 }
 
-type TerminalRun = Pick<RunConfigurationRow, 'name' | 'status'>;
-
-type TerminalRef = { name: string } | { shellId: string };
-
-const terminalRef = (name: string, shellId?: string): TerminalRef =>
-  shellId ? { shellId } : { name };
-
-function ConnectedRunTerminal({
+function ConnectedTerminal({
   sessionId,
-  run,
-  shellId,
+  tabKey,
+  name,
+  interactive,
   active,
   compact,
 }: {
   sessionId: string;
-  run: TerminalRun;
-  shellId?: string;
+  tabKey: TerminalKey;
+  name: string;
+  interactive: boolean;
   active: boolean;
   compact?: boolean;
 }): ReactElement {
   const client = useTRPCClient();
   const connected = useConnectionState() === 'open' && active;
-  const { name } = run;
+  const target = useMemo(() => terminalTarget(tabKey), [tabKey]);
   const [failure, setFailure] = useState<string>();
 
   const listen = useCallback<RunOutputSource>(
     (cursor, receive) => {
       const subscription = client.run.output.subscribe(
-        { sessionId, ...terminalRef(name, shellId), cursor },
+        { sessionId, ...target, cursor },
         {
           onData: receive,
           onError: (error) => setFailure(error.message),
@@ -181,52 +187,49 @@ function ConnectedRunTerminal({
 
       return (): void => subscription.unsubscribe();
     },
-    [client, sessionId, name, shellId],
+    [client, sessionId, target],
   );
 
   const onInput = useCallback(
     async (input: string): Promise<void> => {
       await client.terminal.send
-        .mutate({ sessionId, ...terminalRef(name, shellId), input })
+        .mutate({ sessionId, ...target, input })
         .catch((error: Error) => setFailure(error.message));
     },
-    [client, sessionId, name, shellId],
+    [client, sessionId, target],
   );
 
-  const onResize = useRunResize({
+  const onResize = useTerminalResize({
     sessionId,
-    run,
-    shellId,
-    connected,
+    target,
+    enabled: connected && interactive,
     setFailure,
   });
 
   useErrorToast(failure ? { title: 'Terminal', message: failure } : undefined);
 
   return (
-    <RunTerminal {...{ run, connected, listen, onInput, onResize, compact }} />
+    <RunTerminal
+      {...{ name, interactive, connected, listen, onInput, onResize, compact }}
+    />
   );
 }
 
 type Resize = {
   sessionId: string;
-  run: TerminalRun;
-  shellId?: string;
-  connected: boolean;
+  target: TerminalTarget;
+  enabled: boolean;
   setFailure: (message: string) => void;
 };
 
-function useRunResize({
+function useTerminalResize({
   sessionId,
-  run,
-  shellId,
-  connected,
+  target,
+  enabled,
   setFailure,
 }: Resize): (columns: number, rows: number) => void {
   const client = useTRPCClient();
   const [pending] = useState(() => new LatestTerminalSize());
-  const { name, status } = run;
-  const enabled = connected && (status === 'ready' || status === 'starting');
 
   return useCallback(
     (columns, rows) => {
@@ -234,10 +237,10 @@ function useRunResize({
 
       pending.request({ columns, rows }, async (size) => {
         await client.terminal.resize
-          .mutate({ sessionId, ...terminalRef(name, shellId), ...size })
+          .mutate({ sessionId, ...target, ...size })
           .catch((error: Error) => setFailure(error.message));
       });
     },
-    [client, enabled, name, shellId, pending, sessionId, setFailure],
+    [client, enabled, target, pending, sessionId, setFailure],
   );
 }

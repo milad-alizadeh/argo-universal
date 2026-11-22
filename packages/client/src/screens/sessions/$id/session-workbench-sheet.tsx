@@ -10,9 +10,11 @@ import {
   type ComponentProps,
   type ReactElement,
 } from 'react';
+import type { SessionBarProps } from '#features/sessions';
 import { pluginCardLines } from './sections/plugin-card-rows';
 import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { SessionInspectorContent } from './session-inspector-content';
+import { workbenchBarGroups } from './session-workbench-bar';
 import { type CardLines, workbenchGroups } from './session-workbench-groups';
 import {
   workbenchRunPages,
@@ -31,6 +33,7 @@ import {
 
 interface WorkbenchSheetProps {
   content: SessionInspectorContent;
+  bar?: SessionBarProps;
   open: boolean;
   initialShell?: ShellTerminal;
   onOpenChange: (open: boolean) => void;
@@ -50,12 +53,16 @@ const sheetFrame = {
 
 export function SessionWorkbenchSheet({
   content,
+  bar,
   initialShell,
   ...presentation
 }: WorkbenchSheetProps): ReactElement {
   const [visited, setVisited] = useState<WorkbenchRow>();
   const cardLines = usePluginCardLines(content.pluginCards ?? noCards);
-  const groups = workbenchGroups(content, { cardLines, onVisit: setVisited });
+  const groups = [
+    ...workbenchGroups(content, { cardLines, onVisit: setVisited }),
+    ...workbenchBarGroups(bar, setVisited),
+  ];
 
   return (
     <WorkbenchShellRuntime value={content.runs}>

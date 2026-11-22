@@ -28,8 +28,8 @@ import {
   shellTerminal,
   shellTerminalActions,
 } from '../session-shell-terminal-fixtures';
+import { runTabKey, shellTabKey } from '../session-terminal-tabs';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
-import { runTabKey, shellTabKey } from './runs-section';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
 import {

@@ -1,6 +1,7 @@
 import type { ShellTerminal } from '@repo/contracts';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { useState, type ComponentProps, type ReactNode } from 'react';
+import type { SessionBarProps } from '#features/sessions';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { SessionInspectorContent } from './session-inspector-content';
 import { SessionWorkbenchSheet } from './session-workbench-sheet';
@@ -13,6 +14,7 @@ interface WorkbenchPresentation {
 
 export function useSessionWorkbench(
   content: SessionInspectorContent,
+  bar?: SessionBarProps,
 ): WorkbenchPresentation {
   const focused = useScreenFocused();
   const [request, setRequest] = useState<{ shell?: ShellTerminal }>();
@@ -24,6 +26,7 @@ export function useSessionWorkbench(
     openShell: (shell): void => setRequest({ shell }),
     sheet: compactSheet({
       content,
+      bar,
       open: focused && request !== undefined,
       initialShell: request?.shell,
       onOpenChange: (open) => setRequest(open ? {} : undefined),

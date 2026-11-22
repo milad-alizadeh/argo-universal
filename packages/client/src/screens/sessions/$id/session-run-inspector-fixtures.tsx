@@ -1,6 +1,10 @@
 import type { RunOutputCursor, RunOutput } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import { RunTerminal, type RunOutputSource } from '#features/sessions';
+import {
+  runIsActive,
+  RunTerminal,
+  type RunOutputSource,
+} from '#features/sessions';
 import type { SessionRuns } from '#features/sessions';
 import {
   webRun,
@@ -79,7 +83,8 @@ export const runActions = {
   onRestart: (): void => {},
   renderTerminal: (run): ReactElement => (
     <RunTerminal
-      run={run}
+      name={run.name}
+      interactive={runIsActive(run)}
       connected
       listen={recordRun}
       onInput={(): void => {}}

@@ -2,14 +2,14 @@ import type { RunConfigurationRow } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useEffect, useState, type ReactElement } from 'react';
-import { RunTerminal, type SessionRuns } from '#features/sessions';
+import { runIsActive, RunTerminal, type SessionRuns } from '#features/sessions';
 import { partiallyReadyGroup } from '../../../../mocks/run-configurations';
-import { runTabKey } from './sections/runs-section';
 import { idleSession } from './session-detail-view.mocks';
 import {
   createPhoneRunLog,
   runActions,
 } from './session-run-inspector-fixtures';
+import { runTabKey } from './session-terminal-tabs';
 import {
   WorkbenchRunList,
   workbenchRunPages,
@@ -29,7 +29,9 @@ function PhoneRunTerminal({
 
   return (
     <RunTerminal
-      {...{ run, connected, ...log }}
+      {...{ connected, ...log }}
+      name={run.name}
+      interactive={runIsActive(run)}
       compact
       onResize={(): void => {}}
     />

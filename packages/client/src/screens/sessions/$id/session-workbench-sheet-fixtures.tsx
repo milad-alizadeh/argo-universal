@@ -11,6 +11,7 @@ import {
   subagentStates,
 } from '../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import type { SessionPluginCard } from './sections/plugin-card-section';
+import { detachableIssuesBar } from './session-detail-view-bar.mocks';
 import type { SessionInspectorContent } from './session-inspector-content';
 import { runActions } from './session-run-inspector-fixtures';
 
@@ -97,4 +98,9 @@ export const populated: SessionInspectorContent = {
   runs: runActions,
   schedules: followUps,
   pluginCards: [issueCard],
+};
+
+export const populatedSheet = {
+  content: { ...populated, pluginCards: undefined },
+  bar: detachableIssuesBar,
 };

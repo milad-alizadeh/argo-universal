@@ -6,7 +6,6 @@ import {
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { createElement, type JSX } from 'react';
 import type { SessionPanels } from '#features/sessions';
-import { shellTabKey } from './sections/runs-section';
 import {
   itemsOf,
   type SectionPhonePage,
@@ -21,6 +20,7 @@ import {
 } from './sections/session-sections';
 import type { SessionInspectorContent } from './session-inspector-content';
 import { RetainedInspectorPages } from './session-inspector-pages';
+import { endTerminalTab, terminalTabOf } from './session-terminal-tabs';
 
 export type { SessionInspectorContent } from './session-inspector-content';
 
@@ -34,9 +34,7 @@ type SessionInspectorProps = SessionInspectorContent & {
 };
 
 function closeTab({ panels, runs }: SessionInspectorProps, key: string): void {
-  const shell = runs?.shells?.find(({ id }) => shellTabKey(id) === key);
-
-  if (shell) runs?.closeShell?.(shell.id);
+  endTerminalTab(runs, terminalTabOf(runs, key));
   panels.close(key);
 }
 
