@@ -18,7 +18,7 @@ export interface SessionPluginCard {
 }
 
 // A card page's latest tree, and a way to hear when it changes.
-export interface PluginCardTree {
+interface PluginCardTree {
   subscribe: (listener: () => void) => () => void;
   read: () => WireNode | null;
 }

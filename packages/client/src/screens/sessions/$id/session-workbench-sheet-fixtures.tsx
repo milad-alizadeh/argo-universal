@@ -63,7 +63,7 @@ const issueTree = wire('List', { appearance: 'grouped' }, [
 ]);
 
 // The Issue tracker's card with the tree its page drew, which a phone's Workbench sheet reads as rows.
-export const issueCard: SessionPluginCard = {
+const issueCard: SessionPluginCard = {
   pluginId: 'issue-tracker',
   card: {
     id: 'issue',
