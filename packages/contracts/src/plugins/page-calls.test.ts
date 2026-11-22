@@ -97,6 +97,39 @@ it('shows the optimistic props while the Operation runs, and puts them back and 
   expect(page.failures).toEqual(['GitHub refused the write']);
 });
 
+it('starts a second press’s Operation only once the first one’s has ended, so they run in the order pressed', async () => {
+  const page = new DraftPage();
+  const answer = page.holdRun();
+  const first = page.press();
+  const second = page.press();
+
+  await turns();
+  expect(page.runs).toHaveLength(1);
+
+  answer();
+  await Promise.all([first, second]);
+
+  expect(page.runs).toHaveLength(2);
+});
+
+it('still runs a second press after the first one’s Operation fails', async () => {
+  const page = new DraftPage();
+  const answer = page.holdRun();
+  const first = page.press();
+  const second = page.press();
+
+  await turns();
+  answer('GitHub refused the write');
+  await Promise.all([first, second]);
+
+  // The held answer ends both runs, so the second ran and failed after the first instead of never running.
+  expect(page.runs).toHaveLength(2);
+  expect(page.failures).toEqual([
+    'GitHub refused the write',
+    'GitHub refused the write',
+  ]);
+});
+
 it('refuses a Page state change on a tree that has no Page state', async () => {
   const page = new DraftPage(false);
 
