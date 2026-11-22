@@ -1,6 +1,6 @@
 import { SecondaryGlyphs } from '@repo/kit/primitives/content/icon';
 import { ToneCaption, ToneMark } from '@repo/kit/tone-mark';
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { View, type ViewProps } from 'react-native';
 import {
   changeDescription,
@@ -18,10 +18,17 @@ export type ChangeStageProps = ChangeState & {
 
 type GlyphProps = ChangeState & {
   form?: 'bare' | 'disc';
+  disc?: ComponentProps<typeof ToneMark>['disc'];
 };
 
 export function ChangeStageIcon(props: GlyphProps): ReactElement {
-  return <ToneMark {...resolveChangeStage(props)} form={props.form} />;
+  return (
+    <ToneMark
+      {...resolveChangeStage(props)}
+      form={props.form}
+      disc={props.disc}
+    />
+  );
 }
 
 function stageLabel(props: ChangeStageProps): string {

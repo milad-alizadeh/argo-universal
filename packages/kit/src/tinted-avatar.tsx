@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { StatusDot } from '#primitives/status/status-dot';
+import { leadingMarkClass } from './leading-mark';
 import type { IconName } from './symbols/icon-names';
 import { useIconBox } from './symbols/icon-size';
 import { cn } from './utils';
@@ -67,7 +68,7 @@ function AvatarGlyph({
 const avatarClass = ({ tone, size, dimmed }: TintedAvatarProps): string =>
   cn(
     'relative shrink-0 self-center items-center justify-center rounded-full',
-    size !== 'inline' && 'size-9 wide-type:size-7',
+    size !== 'inline' && leadingMarkClass,
     palettes[tone].fill,
     dimmed && 'opacity-50',
   );

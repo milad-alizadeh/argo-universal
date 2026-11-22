@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
+import { leadingMarkClass } from '../../../leading-mark';
 import { TintedAvatar } from '../../../tinted-avatar';
 import type { FieldGroupKitProps } from '../../kit-props';
 
@@ -20,7 +21,7 @@ const plainColour = (
 export function FieldLinkMark({ mark }: { mark: Mark }): ReactElement {
   if (mark.plain)
     return (
-      <View className="size-9 items-center justify-center">
+      <View className={`${leadingMarkClass} items-center justify-center`}>
         <Icon name={mark.icon} {...plainColour(mark.tone)} />
       </View>
     );

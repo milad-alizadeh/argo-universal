@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { leadingMarkClass } from './leading-mark';
 import type { IconName } from './symbols/icon-names';
 import type { IconSizeValue } from './symbols/icon-size';
 
@@ -66,7 +67,7 @@ interface ToneMarkProps {
 
 const discSizes = {
   inline: 'size-6 wide-type:size-5',
-  leading: 'size-9 wide-type:size-7',
+  leading: leadingMarkClass,
 } as const;
 
 function glyph(props: ToneMarkProps): ReactElement {

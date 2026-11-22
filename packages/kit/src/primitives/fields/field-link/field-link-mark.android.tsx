@@ -9,6 +9,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
 import { useResolveClassNames } from 'uniwind';
+import { leadingMarkClass } from '../../../leading-mark';
 import { useIconPixels } from '../../../symbols/icon-size';
 import { leadingSource } from '../field-row/field-row-leading-source.android';
 import {
@@ -51,7 +52,7 @@ const markSemantics = (mark: Mark): ReturnType<typeof alpha>[] => [
 function MarkFace({ mark }: MarkProps): ReactElement {
   const color = useMarkColors(mark);
   const source = leadingSource(mark.icon);
-  const box = Number(useResolveClassNames('size-9 wide-type:size-7').width);
+  const box = Number(useResolveClassNames(leadingMarkClass).width);
   const glyph = useIconPixels('sm');
 
   const modifiers = markModifiers(mark, box, color.fill);

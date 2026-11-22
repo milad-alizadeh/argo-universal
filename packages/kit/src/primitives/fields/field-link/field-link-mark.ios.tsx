@@ -7,6 +7,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useResolveClassNames } from 'uniwind';
+import { leadingMarkClass } from '../../../leading-mark';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import {
   markLabel,
@@ -34,7 +35,7 @@ export function FieldLinkMark({ mark }: MarkProps): ReactElement {
 
 function MarkFace({ mark }: MarkProps): ReactElement {
   const { fill, ink } = useMarkColors(mark);
-  const size = Number(useResolveClassNames('size-9 wide-type:size-7').width);
+  const size = Number(useResolveClassNames(leadingMarkClass).width);
 
   return (
     <ZStack>
