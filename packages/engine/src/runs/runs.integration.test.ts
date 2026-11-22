@@ -361,7 +361,10 @@ it('lists each Run Configuration with the state of its Run', async () => {
 it('lists no Run Configurations when the Checkout has no file', async () => {
   const { call } = await startRuns();
 
-  expect(await call(statusRun)).toEqual({ configurations: [] });
+  expect(await call(statusRun)).toEqual({
+    configurations: [],
+    configurationMissing: true,
+  });
 });
 
 it('refuses a bad file with the place it is wrong, rather than listing none', async () => {

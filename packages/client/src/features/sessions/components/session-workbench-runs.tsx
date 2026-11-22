@@ -41,6 +41,7 @@ type WorkbenchShells = {
 };
 
 export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen' | 'shells'> & {
+  draft?: { pending: boolean; onPress: () => void };
   shells?: readonly ShellTerminal[];
   openShell?: (opened: (shell: ShellTerminal) => void) => void;
   closeShell?: (id: string) => void;
@@ -191,15 +192,12 @@ function ShellRows({ rows, onOpen, onNew }: WorkbenchShells): ReactElement {
         </Pressable>
       ))}
       {onNew && (
-        <Pressable
-          role="button"
+        <IconButton
+          accessibilityLabel="New Terminal"
+          icon="terminal"
           onPress={onNew}
-          className="rounded-control px-1 py-2 web:hover:bg-hover"
-        >
-          <Text role="secondary" tone="muted">
-            New Terminal
-          </Text>
-        </Pressable>
+          variant="ghost"
+        />
       )}
     </>
   );

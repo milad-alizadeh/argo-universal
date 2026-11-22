@@ -60,21 +60,29 @@ export function useSessionRuns(
   const start = useMutation(trpc.run.start.mutationOptions());
   const stop = useMutation(trpc.run.stop.mutationOptions());
   const restart = useMutation(trpc.run.restart.mutationOptions());
+  const draft = useMutation(trpc.run.draft.mutationOptions());
   const shells = useShellControls(sessionId, active, status.shells);
 
   const message =
     start.error?.message ??
     stop.error?.message ??
     restart.error?.message ??
+    draft.error?.message ??
     shells.failure ??
     status.configurationError;
 
   useErrorToast(message ? { title: 'Runs', message } : undefined);
-  const defaultGroup = useRunGroupControls(sessionId, status.defaultGroup);
 
   return {
     runs: status.configurations,
-    defaultGroup,
+    draft:
+      active && status.configurationMissing
+        ? {
+            pending: draft.isPending,
+            onPress: () => draft.mutate({ sessionId }),
+          }
+        : undefined,
+    defaultGroup: useRunGroupControls(sessionId, status.defaultGroup),
     ...shells.controls,
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),

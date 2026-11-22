@@ -23,6 +23,7 @@ import {
   pluginCardKey,
   type SessionPluginCard,
 } from './sections/plugin-card-section';
+import { createRunFileLabel } from './sections/runs-section';
 import { schedulesSection } from './sections/schedules-section';
 import { shellsFacts } from './sections/shells-facts';
 import type { SessionInspectorContent } from './session-inspector-content';
@@ -186,12 +187,29 @@ const manageRuns: WorkbenchRow = {
 };
 
 /*
- * The Runs card: the default group, each named Run and each open Terminal, then the page that starts and stops them
- * and opens a new Terminal, which the column's card does with its buttons.
+ * The Runs section offers setup when the file is missing, or previews the group, Runs and Terminals.
  */
 function runsGroup(runs: SessionRuns | undefined): WorkbenchGroup[] {
-  if (!runs || (!runs.runs.length && !runs.shells?.length && !runs.openShell))
-    return [];
+  if (!runs) return [];
+
+  if (runs.draft)
+    return [
+      {
+        key: workbenchRunsKey,
+        title: 'Runs',
+        rows: [
+          {
+            key: 'draft-run-file',
+            label: createRunFileLabel,
+            leading: 'add',
+            disabled: runs.draft.pending,
+            onPress: runs.draft.onPress,
+          },
+        ],
+      },
+    ];
+
+  if (!runs.runs.length && !runs.shells?.length) return [];
 
   const rows = [
     ...defaultGroupRow(runs),

@@ -80,7 +80,7 @@ it('watches Run Configuration creation and recovers after an invalid edit', asyn
   const statuses = events[Symbol.asyncIterator]();
 
   await expect(statuses.next()).resolves.toMatchObject({
-    value: { configurations: [] },
+    value: { configurations: [], configurationMissing: true },
   });
   await configure(checkout.path);
   await expect(statuses.next()).resolves.toMatchObject({

@@ -27,9 +27,7 @@ function moreEntries(
   menu: SessionMenu | undefined,
   plugins: readonly SessionPluginAction[],
 ): React.JSX.Element[] {
-  const coreActions = menu
-    ? sessionActions(menu, { changesIcon: 'changed-files' })
-    : [];
+  const coreActions = menu ? sessionActions(menu) : [];
 
   if (!plugins.length) return coreActions;
 
@@ -39,7 +37,7 @@ function moreEntries(
   ];
 }
 
-// The Session's ⋯: one header Action whose menu holds changed files, Rename, Archive and the Plugins' menu actions, declared as a Plugin page declares its Screen's Actions.
+// The Session's ⋯ holds Session actions and the Plugins' menu actions.
 function moreAction(
   menu: SessionMenu | undefined,
   plugins: readonly SessionPluginAction[],
@@ -56,17 +54,16 @@ function moreAction(
 }
 
 /*
- * The Session header's Actions: the Plugins' header actions, then ⋯ and the compact Workbench button. On wide
- * windows ⋯ starts the Session's trailing band controls.
+ * The Session header's direct Actions precede the More menu.
  */
 export function sessionHeaderActions(
   menu: SessionMenu | undefined,
   plugins: SessionPluginActions,
-  workbench?: React.JSX.Element,
+  direct: readonly React.JSX.Element[] = [],
 ): React.JSX.Element[] {
   return [
     ...plugins.beside.map(pluginAction),
+    ...direct,
     ...moreAction(menu, plugins.menu),
-    ...(workbench ? [workbench] : []),
   ];
 }

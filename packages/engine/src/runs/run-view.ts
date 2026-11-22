@@ -75,7 +75,10 @@ function defaultGroupOf(
   };
 }
 
-type Configurations = { file: RunConfigurations; error?: string };
+type Configurations = {
+  file: Awaited<ReturnType<typeof readRunFile>>;
+  error?: string;
+};
 
 async function configurationsOf(
   checkout: RunCheckout,
@@ -115,6 +118,7 @@ export class RunView {
 
     return {
       configurations,
+      ...(file.missing && { configurationMissing: file.missing }),
       ...(configurationError && { configurationError }),
       ...(defaultGroup && { defaultGroup }),
       ...(shells.length > 0 && { shells }),
