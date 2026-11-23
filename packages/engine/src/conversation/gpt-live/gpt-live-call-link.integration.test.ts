@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { delegationCreated, delegationItem } from '#mocks/gpt-live-frames';
+import {
+  delegationCreated,
+  delegationItem,
+  voiceTurnId,
+  voiceTurnOpens,
+} from '#mocks/gpt-live-frames';
 import type { SentMessage } from '#mocks/gpt-live-link-message';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
 import type { ConversationProviderEvent } from '../provider';
@@ -65,6 +70,15 @@ describe('GPT-Live call losing its link', () => {
     const { endpoint, call } = await startConversation({ lostLinkMs: 300 });
     const events = heard(call);
 
+    endpoint.send(voiceTurnOpens);
+    await expect
+      .poll(() => events)
+      .toContainEqual({
+        type: 'voice.transcript',
+        id: voiceTurnId,
+        text: 'Okay',
+        final: false,
+      });
     endpoint.refuseLinks = true;
     endpoint.dropLink();
 
@@ -72,6 +86,12 @@ describe('GPT-Live call losing its link', () => {
       .poll(() => events.at(-1))
       .toMatchObject({ type: 'closed', reason: 'lost' });
     expect(events).toContainEqual({ type: 'status', status: 'disconnected' });
+    expect(events.at(-2)).toEqual({
+      type: 'voice.transcript',
+      id: voiceTurnId,
+      text: 'Okay',
+      final: true,
+    });
   });
 
   it('keeps the call when the control link comes back, and it still works on the new link', async () => {

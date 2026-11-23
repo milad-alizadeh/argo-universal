@@ -1,7 +1,7 @@
 import { withVoiceInstruction } from '../feed';
 import { AgentWords } from './agent-words';
 import type { RelayCall, VoiceSay } from './conversation-types';
-import type { PersonWords } from './person-turns';
+import { PersonTurns, type PersonWords } from './person-turns';
 import { relayWords } from './relay-words';
 import { SentPrompts, type SentPrompt } from './sent-prompts';
 import type {
@@ -10,6 +10,7 @@ import type {
   ConversationSessions,
 } from './session-link';
 import { SpokenConsent } from './spoken-consent';
+import { isStopRequest, stopWork } from './spoken-stop';
 import { isTold, speechOf } from './started-speech';
 import {
   isPermissionHappening,
@@ -20,6 +21,9 @@ import {
 type Speak = (say: VoiceSay) => void;
 
 type HandOver = 'delegated' | 'completed' | 'recovered';
+
+// GPT-Live often hands over work before the final transcript arrives (ADR-0064).
+const finalTranscriptWaitMs = 750;
 
 const shortAnswer = /^(?:yes|yeah|yep|yup|ok|okay)[.!]*$/iu;
 
@@ -64,6 +68,9 @@ export class AgentRelay {
   private readonly permission = new WaitingPermission();
   private readonly words: AgentWords;
   private readonly spoken: SpokenConsent;
+  private readonly turns = new PersonTurns();
+  private closed = false;
+  private workOrder: Promise<unknown> = Promise.resolve();
   private readonly handOvers = new Map<string, HandOver>();
 
   public constructor(
@@ -76,6 +83,7 @@ export class AgentRelay {
       sessions,
       sessionId: call.sessionId,
       permission: this.permission,
+      turns: this.turns,
     });
   }
 
@@ -88,37 +96,63 @@ export class AgentRelay {
     text: string,
     turnId?: string,
   ): Promise<void> {
-    if (turnId === undefined) this.words.takeQuestion();
-    else {
-      const prior = this.handOvers.get(turnId);
+    if (this.alreadyRecovered(turnId)) {
+      this.reports.speak({
+        kind: 'reply',
+        requestId,
+        text: 'Argo already handled this reply.',
+        delivery: 'background',
+      });
 
-      if (prior === 'recovered') {
-        this.reports.speak({
-          kind: 'reply',
-          requestId,
-          text: 'Argo already handled this reply.',
-          delivery: 'background',
-        });
-
-        return;
-      }
-
-      if (prior === undefined) this.words.takeQuestion();
-      this.handOvers.set(turnId, 'delegated');
+      return;
     }
 
     const control = this.spoken.answer(text, turnId);
 
-    this.reply(
-      requestId,
-      control
-        ? await control
-        : this.permission.answering(await this.work(text)),
-    );
+    if (control) return this.reply(requestId, await control);
+
+    const fullText = await this.orderedWorkText(text, turnId);
+
+    if (this.closed) return;
+
+    const outcome = isStopRequest(fullText)
+      ? await stopWork(this.sessions, this.call.sessionId)
+      : this.permission.answering(await this.work(fullText));
+
+    this.reply(requestId, outcome);
+  }
+
+  private alreadyRecovered(turnId: string | undefined): boolean {
+    const prior = turnId === undefined ? undefined : this.handOvers.get(turnId);
+
+    if (prior === 'recovered') return true;
+
+    if (prior === undefined) this.words.takeQuestion();
+
+    if (turnId !== undefined) this.handOvers.set(turnId, 'delegated');
+
+    return false;
+  }
+
+  // Match the full utterance before dispatching, in the order the provider handed requests over.
+  private orderedWorkText(
+    text: string,
+    turnId: string | undefined,
+  ): Promise<string> {
+    const heard =
+      turnId === undefined
+        ? null
+        : this.turns.workText(turnId, finalTranscriptWaitMs);
+
+    const ordered = this.workOrder.then(async () => (await heard) ?? text);
+
+    this.workOrder = ordered;
+
+    return ordered;
   }
 
   public personSaid(words: PersonWords): void {
-    this.spoken.heard(words);
+    this.turns.heard(words);
   }
 
   // GPT-Live sometimes transcribes a reply, then only acknowledges it locally.
@@ -129,6 +163,8 @@ export class AgentRelay {
     id: string;
     text: string;
   }): Promise<void> {
+    this.turns.completedTurn(id, text);
+
     if (this.handOvers.has(id)) return;
 
     this.handOvers.set(id, 'completed');
@@ -152,6 +188,7 @@ export class AgentRelay {
 
   // The call ended: nothing the person said applies any more.
   public close(): void {
+    this.closed = true;
     this.spoken.close();
   }
 

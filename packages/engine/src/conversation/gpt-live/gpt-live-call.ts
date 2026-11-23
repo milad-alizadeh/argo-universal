@@ -141,6 +141,10 @@ export class GptLiveCall implements ConversationProviderCall {
 
   private emit(event: ConversationProviderEvent): void {
     if (this.ended) return;
+
+    if (event.type === 'closed')
+      for (const transcript of this.reader.closing()) this.deliver(transcript);
+
     this.deliver(event);
 
     if (event.type === 'closed') this.finish();

@@ -1,4 +1,4 @@
-import { PersonTurns, type PersonWords } from './person-turns';
+import type { PersonTurns } from './person-turns';
 import { relayWords } from './relay-words';
 import type {
   ConversationSessions,
@@ -6,7 +6,6 @@ import type {
   SpokenPermissionAnswer,
 } from './session-link';
 import { readSpokenAnswer, type SpokenAnswer } from './spoken-answer';
-import { isStopRequest, stopWork } from './spoken-stop';
 import type { AnnouncedRequest, WaitingPermission } from './waiting-permission';
 
 // How long a hand-over waits for the final words of the person's turn it names; they arrive 41 to 434 ms after it (voice-mode.md §14).
@@ -45,6 +44,7 @@ type ConsentCall = {
   sessions: ConversationSessions;
   sessionId: string;
   permission: WaitingPermission;
+  turns: Pick<PersonTurns, 'announced' | 'finalSince'>;
 };
 
 /*
@@ -55,14 +55,9 @@ type ConsentCall = {
  * Argo applies it as a click would, and the voice is told what was applied; otherwise nothing is.
  */
 export class SpokenConsent {
-  private readonly turns = new PersonTurns();
   private ended = false;
 
   public constructor(private readonly call: ConsentCall) {}
-
-  public heard(words: PersonWords): void {
-    this.turns.heard(words);
-  }
 
   // The call ended: a spoken answer still waiting for the person's final words applies nothing.
   public close(): void {
@@ -71,21 +66,11 @@ export class SpokenConsent {
 
   // The voice announced a Permission request: only what the person says from now on can answer it.
   public announced(): void {
-    this.turns.announced();
+    this.call.turns.announced();
   }
 
-  // What the voice is told of a hand-over that stops the work or answers the announced request; null for a request for work.
+  // What the voice is told of a Spoken answer, or null for other speech.
   public answer(
-    text: string,
-    turnId: string | undefined,
-  ): Promise<string> | null {
-    if (isStopRequest(text))
-      return stopWork(this.call.sessions, this.call.sessionId);
-
-    return this.consented(text, turnId);
-  }
-
-  private consented(
     text: string,
     turnId: string | undefined,
   ): Promise<string> | null {
@@ -129,7 +114,7 @@ export class SpokenConsent {
     turnId: string | undefined,
   ): Promise<SpokenAnswer | null> {
     if (turnId === undefined) return null;
-    const words = await this.turns.finalSince(turnId, finalWordsWaitMs);
+    const words = await this.call.turns.finalSince(turnId, finalWordsWaitMs);
 
     return words === null ? null : readSpokenAnswer(words);
   }
