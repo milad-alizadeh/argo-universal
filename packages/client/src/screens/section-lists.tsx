@@ -77,8 +77,9 @@ function settingsList(search: SettingsListScreenProps): SectionList {
  * Each section's list under its Screen, which declares the header, with the Sessions view and the Settings search held
  * once for the Frame: the sidebar's list and a narrow root's list are the same element, so a width change keeps them.
  */
-export function useSectionLists(): SectionLists {
-  const path = usePathname();
+export function useSectionLists(backdropPath?: string): SectionLists {
+  const currentPath = usePathname();
+  const path = backdropPath ?? currentPath;
   const navigate = useNavigate();
   const scheduleContext = useScheduleContext(shownSessionId(path));
   const sessions = useSessionsViewState();

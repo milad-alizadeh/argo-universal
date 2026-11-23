@@ -5,6 +5,7 @@ import {
   FrameSidebar,
   SectionDrawer,
   sectionOf,
+  isCoreSection,
   sectionOrder,
   pluginPath,
   usePluginSections,
@@ -14,10 +15,13 @@ import {
   useSectionLists,
 } from '@repo/client';
 import { useSizeClass } from '@repo/client/size-class';
-import { usePathname } from 'expo-router';
+import { SectionModal } from '@repo/kit/primitives/scaffolds/section-modal';
+import { usePathname, useSegments } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
+import type { DrawerNavigationOptions } from 'expo-router/drawer';
+import { CommonActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import type { ComponentProps } from 'react';
+import { useLayoutEffect, useRef, type ComponentProps } from 'react';
 import { drawerScrimLabel } from './compose-drawer-options';
 import { useDrawerOptions } from './frame-drawer-options';
 import {
@@ -62,31 +66,113 @@ const contentAt = (framed: boolean, frame: FrameSections, pick: PickSection) =>
 
 type ScreenLayout = NonNullable<ComponentProps<typeof Drawer>['screenLayout']>;
 
-// Every section's pages sit in the Frame's page pane, which in the phone shell fills it.
-const inPage: ScreenLayout = ({ children }) => (
-  <FramePage>{children}</FramePage>
-);
-
 interface SectionsProps {
   framed: boolean;
   frame: FrameSections;
   plugins: readonly PluginSection[];
+  modal?: ModalSection;
+  opener: React.RefObject<HTMLElement | null>;
+}
+
+interface ModalSection {
+  name: string;
+  title: string;
+  list: React.ReactNode;
+  backdropRoute: string;
+  opener: React.RefObject<HTMLElement | null>;
 }
 
 function SectionsDrawer({
   framed,
   frame,
   plugins,
+  modal,
+  opener,
 }: SectionsProps): React.JSX.Element {
-  const options = frameDrawerOptions(framed, {
-    plugins,
-    path: usePathname(),
+  const path = usePathname();
+  const focused = (useSegments() as readonly string[])[1];
+  const options = frameDrawerOptions(framed, { plugins, path });
+  const pick = usePickSection(plugins, sectionOf(path));
+  const props = useSectionsDrawerProps(framed, frame, (drawer, section) => {
+    if (
+      framed &&
+      frame.items.some(
+        (item) => item.id === section && item.widePresentation === 'modal',
+      )
+    ) {
+      const focused =
+        typeof document === 'undefined' ? null : document.activeElement;
+      if (typeof HTMLElement !== 'undefined' && focused instanceof HTMLElement)
+        opener.current = focused;
+    }
+
+    pick(drawer, section);
   });
 
-  const pick = usePickSection(plugins, frame.section);
-  const props = useSectionsDrawerProps(framed, frame, pick);
+  const screenLayout: ScreenLayout = ({ children, route, navigation }) => {
+    if (!modal || route.name !== modal.name)
+      return <FramePage>{children}</FramePage>;
 
-  return <Drawer {...props}>{sectionScreens(options)}</Drawer>;
+    return (
+      <SectionModal
+        label={modal.title}
+        list={modal.list}
+        onClose={() => {
+          const state: DrawerContent['state'] = navigation.getState();
+          const backdrop = state.routes.find(
+            (item) => item.name === modal.backdropRoute,
+          );
+          if (backdrop)
+            navigation.dispatch({
+              ...CommonActions.navigate({
+                name: backdrop.name,
+                params: backdrop.params,
+              }),
+              target: state.key,
+            });
+        }}
+        onCloseAutoFocus={(event) => {
+          const opener = modal.opener.current;
+          if (!opener) return;
+          event.preventDefault();
+          requestAnimationFrame(() => opener.focus());
+        }}
+      >
+        {children}
+      </SectionModal>
+    );
+  };
+
+  return (
+    <Drawer
+      {...props}
+      detachInactiveScreens={!framed}
+      screenLayout={screenLayout}
+    >
+      {sectionScreens(({ route }) => ({
+        ...options({ route }),
+        ...wideScene(framed, route.name, focused, modal),
+      }))}
+    </Drawer>
+  );
+}
+
+function wideScene(
+  framed: boolean,
+  route: string,
+  focused: string | undefined,
+  modal: ModalSection | undefined,
+): DrawerNavigationOptions {
+  if (!framed) return {};
+
+  return {
+    keepVisibleOnBlur: route === modal?.backdropRoute,
+    sceneStyle: {
+      backgroundColor: 'transparent',
+      display:
+        route === focused || route === modal?.backdropRoute ? 'flex' : 'none',
+    },
+  };
 }
 
 // `+not-found` is the Frame's own page for an unknown path: left out, the drawer keeps no options for it and its sidebar never draws.
@@ -107,13 +193,9 @@ function useSectionsDrawerProps(
   framed: boolean,
   frame: FrameSections,
   pick: PickSection,
-): Pick<
-  ComponentProps<typeof Drawer>,
-  'screenOptions' | 'screenLayout' | 'drawerContent'
-> {
+): Pick<ComponentProps<typeof Drawer>, 'screenOptions' | 'drawerContent'> {
   return {
     screenOptions: useDrawerOptions(useSizeClass()),
-    screenLayout: inPage,
     drawerContent: contentAt(framed, frame, pick),
   };
 }
@@ -139,23 +221,52 @@ export function FrameNavigator(): React.JSX.Element {
   useShellListeners();
   const sizeClass = useSizeClass();
   const plugins = usePluginSections();
-  const frame = useNavigationSections(plugins);
   const framed = sizeClass === 'wide';
+  const path = usePathname();
+  const route = (useSegments() as readonly string[])[1];
+  const section = sectionOf(path);
+  const items = [...coreNavigationSections, ...plugins];
+  const modalItem = items.find(
+    (item) => item.id === section && item.widePresentation === 'modal',
+  );
+  const wideModal =
+    framed && modalItem && isCoreSection(modalItem.id) ? modalItem : undefined;
+  const previous = useRef({ path: '/sessions', route: 'sessions' });
+  const opener = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!modalItem) {
+      previous.current = { path, route: route ?? 'sessions' };
+    }
+  }, [modalItem, path, route]);
+
+  const lists = useSectionLists(wideModal ? previous.current.path : undefined);
+  const frame: FrameSections = {
+    section: wideModal ? sectionOf(previous.current.path) : section,
+    lists,
+    items,
+  };
+  const modal =
+    wideModal && isCoreSection(wideModal.id)
+      ? {
+          name: wideModal.id,
+          title: wideModal.title,
+          list: lists[wideModal.id].list,
+          backdropRoute: previous.current.route,
+          opener,
+        }
+      : undefined;
 
   return (
     <Frame sizeClass={sizeClass} {...frame}>
       <PluginErrorToasts />
-      <SectionsDrawer framed={framed} frame={frame} plugins={plugins} />
+      <SectionsDrawer
+        framed={framed}
+        frame={frame}
+        plugins={plugins}
+        modal={modal}
+        opener={opener}
+      />
     </Frame>
   );
-}
-
-function useNavigationSections(
-  plugins: readonly PluginSection[],
-): FrameSections {
-  return {
-    section: sectionOf(usePathname()),
-    lists: useSectionLists(),
-    items: [...coreNavigationSections, ...plugins],
-  };
 }

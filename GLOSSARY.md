@@ -686,6 +686,10 @@ _Avoid_: Container query, second measurement
 The one overlay a Dialog and a web Sheet both open in: a card centred over a dimmed backdrop that keeps focus inside, closes on Escape, a backdrop press or the back button unless its content holds unsaved input, and hands focus back to what opened it.
 _Avoid_: Dialog overlay, modal sheet (for the shared overlay)
 
+**Settings modal**:
+Settings on a wide window: a Centred modal over the whole dimmed window, holding Settings' list beside its open page, above the nav item the person left. A phone shows Settings as a nav item instead (ADR-0068).
+_Avoid_: Settings dialog, Settings sheet, preferences window
+
 **Actions**:
 The verbs a Screen, a row or a tile offers, in sections, declared once and drawn as each platform draws them: header controls for a Screen, a context menu for a row or tile. They hold verbs only; a choice is a Menu.
 _Avoid_: ActionList, action panel, action menu (for the declaration)
