@@ -74,24 +74,34 @@ it('edits the instructions of a paused task Schedule and keeps its Agent and Che
   ]);
 }, 30000);
 
-it('pauses a task Schedule whose Session is archived', async () => {
+it('pauses every Schedule of a Session when the Session is archived', async () => {
   const host = await startAcpEngine({ steps: [] });
   const { project, session } = host.caller;
 
   const saved = await project.scheduleCreate({
     ...input,
     checkout: { type: 'main' },
-    cadence: { type: 'interval', intervalSeconds: 1 },
+    cadence: { type: 'interval', intervalSeconds: 3600 },
   });
 
+  await session.schedulePrompt({
+    sessionId: saved.sessionId,
+    intervalSeconds: 3600,
+    prompt: [{ type: 'text', text: 'Check the deploy' }],
+  });
   await waitForAcpSessionIdle(host, saved.sessionId);
   await session.archive({ sessionId: saved.sessionId });
 
   await expect
-    .poll(async () => (await project.scheduleList({ projectId }))[0]?.paused, {
-      timeout: 8000,
-    })
-    .toBe(true);
+    .poll(async () =>
+      (await session.listSchedules({ sessionId: saved.sessionId })).map(
+        ({ paused }) => paused,
+      ),
+    )
+    .toEqual([true, true]);
+  expect(await project.scheduleList({ projectId })).toMatchObject([
+    { id: saved.id, paused: true },
+  ]);
 }, 30000);
 
 it('skips an occurrence missed by more than an hour once and starts no backlog after restart', async () => {

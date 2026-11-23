@@ -23,7 +23,11 @@ import {
   type LegacySchedule,
   type SavedSettings,
 } from './project-schedule-settings';
-import type { ListedSchedule, ScheduleTask } from './schedule-store';
+import type {
+  ListedSchedule,
+  NewSchedule,
+  ScheduleTask,
+} from './schedule-store';
 import { scheduleSender, type Schedules } from './schedules';
 import { renameSession } from './session-rename';
 import type { SessionHandlerSources } from './session-sources';
@@ -90,13 +94,13 @@ export class ProjectSchedules {
     await this.schedules.add({
       id,
       sessionId,
-      prompt: [{ type: 'text', text: settings.instructions }],
+      prompt: instructionsPrompt(settings.instructions),
       cadence: settings.cadence,
       anchorAt: now,
       nextAt,
       endsAt: null,
       paused: false,
-      task: taskOf(settings),
+      task: taskSettings(settings),
     });
 
     return projectScheduleOf(this.listed({ id, projectId: input.projectId }));
@@ -105,13 +109,12 @@ export class ProjectSchedules {
   public async edit({ id, ...input }: ScheduleEdit): Promise<ProjectSchedule> {
     const target = { id, projectId: input.projectId };
     const { row } = this.listed(target);
-    const settings = await resolveScheduleSettings(this.sources, input);
+    const { instructions, cadence } = requireSameTask(row, input);
 
-    requireSameTask(row, taskOf(settings));
     await this.schedules.store.edit(id, {
-      prompt: [{ type: 'text', text: settings.instructions }],
-      cadence: settings.cadence,
-      ...scheduleEditTiming(row, settings.cadence),
+      prompt: instructionsPrompt(instructions),
+      cadence,
+      ...scheduleEditTiming(row, cadence),
     });
     this.schedules.refresh(id);
 
@@ -145,9 +148,7 @@ export class ProjectSchedules {
 
   // Each Project Schedule stored before ADR-0067 becomes a task Schedule with one Session.
   public async migrate(log: (message: string) => void): Promise<void> {
-    const legacy = this.sources.database.select().from(legacyTable).all();
-
-    for (const row of legacy) {
+    for (const row of this.legacyRows(log)) {
       if (this.schedules.store.row(row.id)) continue;
 
       try {
@@ -160,27 +161,62 @@ export class ProjectSchedules {
     }
   }
 
+  private legacyRows(
+    log: (message: string) => void,
+  ): (typeof legacyTable.$inferSelect)[] {
+    try {
+      return this.sources.database.select().from(legacyTable).all();
+    } catch (error) {
+      log(
+        `Could not read Project Schedules to migrate: ${error instanceof Error ? error.message : String(error)}`,
+      );
+
+      return [];
+    }
+  }
+
   private async adopt(legacy: LegacySchedule): Promise<void> {
-    const { id, projectId, settings } = legacy;
+    const { id, settings } = legacy;
 
     const sessionId =
       this.liveSession(legacy.latestSessionId) ??
-      (await this.startSession(id, projectId, {
-        ...settings,
-        name: '',
-      }));
+      (await this.startLegacySession(legacy));
 
     await this.schedules.add({
       id,
       sessionId,
-      prompt: [{ type: 'text', text: settings.instructions }],
+      prompt: instructionsPrompt(settings.instructions),
       cadence: settings.cadence,
       anchorAt: legacy.anchorAt,
       nextAt: legacy.nextAt,
       endsAt: null,
       paused: legacy.paused,
-      task: taskOf(settings),
+      task: taskSettings(settings),
     });
+  }
+
+  // Recorded on the legacy row first, so a retry after a failed save adopts this Session instead of starting another.
+  private async startLegacySession({
+    id,
+    projectId,
+    settings,
+  }: LegacySchedule): Promise<string> {
+    const sessionId = await this.startSession(id, projectId, {
+      ...settings,
+      name: '',
+    });
+
+    await this.sources.open.write({
+      describe: () => 'Record a migrated Project Schedule Session',
+      commit: (tx) =>
+        tx
+          .update(legacyTable)
+          .set({ latestSessionId: sessionId })
+          .where(eq(legacyTable.id, id))
+          .run(),
+    });
+
+    return sessionId;
   }
 
   private liveSession(sessionId: string | null): string | undefined {
@@ -230,11 +266,15 @@ export class ProjectSchedules {
   }
 }
 
-const taskOf = ({
+const taskSettings = ({
   agent,
   checkout,
   configOptions,
 }: ScheduleTask): ScheduleTask => ({ agent, checkout, configOptions });
+
+const instructionsPrompt = (text: string): NewSchedule['prompt'] => [
+  { type: 'text', text },
+];
 
 const notFound = (): TRPCError =>
   new TRPCError({ code: 'NOT_FOUND', message: 'Project Schedule not found.' });

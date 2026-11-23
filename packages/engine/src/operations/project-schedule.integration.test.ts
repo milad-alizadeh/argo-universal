@@ -247,8 +247,17 @@ it('attributes a run to the stored Project Schedule when an Agent created it', a
     });
 }, 30000);
 
-it('lists a task Schedule and keeps a Schedule made inside its Session out of Scheduled', async () => {
-  const host = await startAcpEngine({ steps: [] });
+it('fires a Schedule made inside a task Schedule’s Session into that Session and keeps it out of Scheduled', async () => {
+  const followUpText = 'Check the deploy';
+  const received: PromptRequest[] = [];
+
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/prompt': [{ prompt: followUpText, requests: received }],
+    },
+  });
+
   const { project, session } = host.caller;
 
   const task = await project.scheduleCreate({
@@ -261,8 +270,8 @@ it('lists a task Schedule and keeps a Schedule made inside its Session out of Sc
 
   const followUp = await session.schedulePrompt({
     sessionId: task.sessionId,
-    intervalSeconds: 600,
-    prompt: textPrompt('Check the deploy'),
+    intervalSeconds: 1,
+    prompt: textPrompt(followUpText),
   });
 
   expect(await project.scheduleList({})).toMatchObject([{ id: task.id }]);
@@ -272,6 +281,10 @@ it('lists a task Schedule and keeps a Schedule made inside its Session out of Sc
       expect.objectContaining({ id: followUp.id, listed: false }),
     ]),
   );
+  await expect
+    .poll(() => received[0]?.prompt, { timeout: 8000 })
+    .toEqual(textPrompt(followUpText));
+  expect((await session.list({ archived: false })).sessions).toHaveLength(1);
 }, 30000);
 
 it('runs in the saved main Checkout without changing the Project’s remembered Checkout', async () => {

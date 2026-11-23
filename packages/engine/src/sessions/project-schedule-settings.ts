@@ -15,8 +15,8 @@ import {
   promptOf,
   taskOf,
   type ListedSchedule,
-  ScheduleTask,
   type ScheduleRow,
+  type ScheduleTask,
 } from './schedule-store';
 import type { SessionHandlerSources } from './session-sources';
 
@@ -63,6 +63,8 @@ export interface LegacySchedule {
   latestSessionId: string | null;
 }
 
+const LegacyProjectSchedule = ProjectSchedule.omit({ sessionId: true });
+
 const LegacySettings = z.looseObject({
   anchorAt: z.number().optional(),
   intervalSeconds: z.number().optional(),
@@ -77,11 +79,10 @@ export function decodeLegacy({
   );
 
   const { agent, instructions, cadence, checkout, configOptions } =
-    ProjectSchedule.parse({
+    LegacyProjectSchedule.parse({
       cadence: { type: 'interval', intervalSeconds },
       ...settings,
       ...row,
-      sessionId: row.latestSessionId ?? '',
     });
 
   return {
@@ -138,18 +139,37 @@ export function scheduleEditTiming(
   return { anchorAt: now, nextAt: firstOccurrence(cadence, now) };
 }
 
-const sameTask = (a: ScheduleTask, b: ScheduleTask): boolean =>
-  JSON.stringify(ScheduleTask.parse(a)) ===
-  JSON.stringify(ScheduleTask.parse(b));
+const sameCheckout = (
+  saved: ProjectSchedule['checkout'],
+  edit: ProjectScheduleInput['checkout'],
+): boolean =>
+  edit === undefined ||
+  (edit.type === saved.type &&
+    (edit.type === 'main' ||
+      edit.baseBranch === undefined ||
+      (saved.type === 'worktree' && edit.baseBranch === saved.baseBranch)));
 
 // The Agent, Checkout and configuration belong to the Schedule's Session once it exists (ADR-0067).
-export function requireSameTask(row: ScheduleRow, edit: ScheduleTask): void {
-  if (!sameTask(taskOf(row), edit))
+export function requireSameTask(
+  row: ScheduleRow,
+  input: ProjectScheduleInput,
+): ProjectScheduleInput {
+  const edit = ProjectScheduleInput.parse(input);
+  const saved = taskOf(row);
+
+  const same =
+    edit.agent === saved.agent &&
+    sameCheckout(saved.checkout, edit.checkout) &&
+    JSON.stringify(edit.configOptions) === JSON.stringify(saved.configOptions);
+
+  if (!same)
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message:
         "A Schedule's Agent, Checkout and configuration belong to its Session and cannot change.",
     });
+
+  return edit;
 }
 
 export async function resolveScheduleSettings(

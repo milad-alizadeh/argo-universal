@@ -217,17 +217,19 @@ export class ScheduleStore {
     if (!row || expired(row, now)) return undefined;
 
     const nextAt = followingAt(row, now);
+    // A one-time Schedule whose Prompt is already waiting is done: it has no later occurrence.
+    const coalesced = repeats(row) ? { nextAt } : { lastQueuedAt: now };
 
     return {
       sessionId: row.sessionId,
       prompt: promptOf(row),
       late: now - row.nextAt > lateGraceMs,
       deliveryWrite: recordWrite(row.id, { nextAt, lastQueuedAt: now }),
-      coalescedWrite: recordWrite(row.id, { nextAt }),
+      coalescedWrite: recordWrite(row.id, coalesced),
       skipWrite: recordWrite(row.id, { nextAt, lastSkippedAt: now }),
     };
   }
-  // Run now sends the Prompt without moving the next occurrence.
+  // Run now keeps a repeating Schedule's next occurrence; a one-time Schedule is done once its Prompt is sent.
   public sentNow(id: string): WriterJob {
     return recordWrite(id, { lastQueuedAt: Date.now() });
   }

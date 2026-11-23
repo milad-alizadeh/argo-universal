@@ -90,6 +90,9 @@ export class Sessions {
     log: (message: string) => void,
   ): void {
     new DelegatedResults(this.sources, signal, log).start();
+  }
+  // Gives each Project Schedule stored before ADR-0067 its one Session.
+  public startScheduleMigration(log: (message: string) => void): void {
     void this.projectSchedules.migrate(log);
   }
   // Opens a Session from storage, or waits for its open, without a Turn.

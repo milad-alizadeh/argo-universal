@@ -108,7 +108,7 @@ export class Schedules {
   public refresh(id: string): void {
     this.timers.refresh(id);
   }
-  // Sends the Schedule's Prompt now through the same queue an occurrence uses; the next occurrence stays.
+  // Sends the Schedule's Prompt now through the same queue an occurrence uses.
   public async runNow(id: string, signal?: AbortSignal): Promise<string> {
     const row = this.store.row(id);
 
@@ -132,27 +132,34 @@ export class Schedules {
 
     if (!due) return;
 
-    await (due.late
-      ? this.sources.open.write(due.skipWrite)
-      : this.deliverDue(id, due.sessionId, signal));
-  }
-  private async deliverDue(
-    id: string,
-    sessionId: string,
-    signal: AbortSignal,
-  ): Promise<void> {
+    const { sessionId } = due;
+
     if (this.sources.readSession(sessionId).archivedAt !== null) {
       await this.manage({ sessionId, id, action: 'pause' });
 
       return;
     }
 
+    await (due.late
+      ? this.sources.open.write(due.skipWrite)
+      : this.deliverDue(id, sessionId, signal));
+  }
+  private async deliverDue(
+    id: string,
+    sessionId: string,
+    signal: AbortSignal,
+  ): Promise<void> {
     const session = await this.open(sessionId, signal);
 
     signal.throwIfAborted();
+    // Read again: the Schedule may have changed, or passed the grace window, while the Session opened.
     const occurrence = this.store.occurrence(id);
 
-    if (occurrence) await this.enqueue(session, id, occurrence);
+    if (!occurrence) return;
+
+    await (occurrence.late
+      ? this.sources.open.write(occurrence.skipWrite)
+      : this.enqueue(session, id, occurrence));
   }
   private open(
     sessionId: string,
