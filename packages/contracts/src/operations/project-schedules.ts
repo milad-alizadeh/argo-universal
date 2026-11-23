@@ -74,12 +74,23 @@ const customInterval = z
     'Choose weekdays for a weekly repeat.',
   );
 
-export const ProjectScheduleCadence = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('interval'), intervalSeconds }),
+const calendarCadences = [
   z.strictObject({ type: z.literal('daily'), ...localFields }),
   z.strictObject({ type: z.literal('weekdays'), ...localFields }),
   z.strictObject({ type: z.literal('weekly'), weekdays, ...localFields }),
   customInterval,
+] as const;
+
+// A repeat at a local time in a time zone.
+export const ScheduleCalendar = z.discriminatedUnion('type', [
+  ...calendarCadences,
+]);
+
+export type ScheduleCalendar = z.infer<typeof ScheduleCalendar>;
+
+export const ProjectScheduleCadence = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('interval'), intervalSeconds }),
+  ...calendarCadences,
 ]);
 
 export type ProjectScheduleCadence = z.infer<typeof ProjectScheduleCadence>;
@@ -110,6 +121,9 @@ export const ProjectSchedule = ProjectScheduleInput.extend({
   name: z.string(),
   checkout: SessionCheckoutChoice,
   nextAt: z.number(),
+  // The one Session every occurrence prompts (ADR-0067).
+  sessionId: z.string(),
+  // The same Session, kept for callers that read the former run-list field.
   latestSessionId: z.string().nullable(),
   paused: z.boolean(),
 });
@@ -175,7 +189,7 @@ export const projectScheduleOperations = {
     label: 'Create Project Schedule',
     icon: scheduleIcon,
     description:
-      'Schedule fresh Sessions. Clarify an ambiguous destination and confirm the saved instructions, Project and next occurrence.',
+      'Schedule a task. Creates its Session now; every occurrence sends the instructions into that Session. Clarify an ambiguous destination and confirm the saved instructions, Project and next occurrence.',
     params: ProjectScheduleInput,
     result: ProjectSchedule,
     tier: 'act',
@@ -213,7 +227,8 @@ export const projectScheduleOperations = {
     id: 'project.scheduleEdit',
     label: 'Edit Project Schedule',
     icon: scheduleIcon,
-    description: 'Edit a Project Schedule.',
+    description:
+      'Edit a Project Schedule. Only its instructions and cadence change; its Agent, Checkout and configuration belong to its Session.',
     params: ProjectScheduleInput.extend({ id: target.shape.id }),
     result: ProjectSchedule,
     tier: 'act',
@@ -225,7 +240,7 @@ export const projectScheduleOperations = {
     label: 'Manage Project Schedule',
     icon: scheduleIcon,
     description:
-      'Pause, resume or delete a Project Schedule. Sessions already started remain available.',
+      'Pause, resume or delete a Project Schedule. Deleting it leaves its Session as an ordinary Session.',
     params: target.extend({ action: z.enum(['pause', 'resume', 'delete']) }),
     result: z.strictObject({}),
     tier: 'act',
@@ -236,7 +251,8 @@ export const projectScheduleOperations = {
     id: 'project.scheduleHistory',
     label: 'Read Project Schedule history',
     icon: scheduleIcon,
-    description: 'Read occurrence outcomes and Session links.',
+    description:
+      'Read older runs. Runs since a Schedule prompted one Session are in its Session Feed.',
     params: target.extend({ cursor: historyCursor.optional() }),
     result: ProjectScheduleHistoryPage,
     tier: 'read',
@@ -247,7 +263,8 @@ export const projectScheduleOperations = {
     id: 'project.scheduleRunNow',
     label: 'Run Project Schedule now',
     icon: scheduleIcon,
-    description: 'Start a scheduled Session now without moving its deadline.',
+    description:
+      "Prompt the Schedule's Session now. The next occurrence stays.",
     params: target,
     result: ProjectScheduleOccurrence,
     tier: 'act',

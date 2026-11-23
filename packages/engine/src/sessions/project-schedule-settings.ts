@@ -1,61 +1,102 @@
 import {
   ProjectSchedule,
-  type ProjectScheduleInput,
+  ProjectScheduleInput,
   type ProjectScheduleCadence,
 } from '@repo/contracts/operations';
-import type { projectSchedule as table } from '@repo/db/schema';
+import type { projectSchedule as legacyTable } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { requireInstalledAgent } from '../agents';
 import { titleFromPrompt } from '../feed';
 import { isFolder, listProjectBranches, readProjectPath } from '../projects';
 import { nextProjectScheduleAt } from './project-schedule-timing';
+import {
+  cadenceOf,
+  promptOf,
+  taskOf,
+  type ListedSchedule,
+  type ScheduleRow,
+  type ScheduleTask,
+} from './schedule-store';
 import type { SessionHandlerSources } from './session-sources';
 
-type ScheduleRow = typeof table.$inferSelect;
+export type SavedSettings = ScheduleTask &
+  Pick<ProjectSchedule, 'instructions' | 'cadence' | 'name'>;
 
-type SavedSettings = Pick<
-  ProjectSchedule,
-  'agent' | 'name' | 'instructions' | 'checkout' | 'cadence' | 'configOptions'
->;
+const nameOf = (instructions: string): string =>
+  titleFromPrompt([{ type: 'text', text: instructions }]);
 
-function settingsWithName(
-  input: ProjectScheduleInput,
-  checkout: ProjectSchedule['checkout'],
-): SavedSettings {
-  const { agent, instructions, cadence, configOptions } = input;
+const instructionsOf = (row: ScheduleRow): string =>
+  promptOf(row)
+    .map((block) => (block.type === 'text' ? block.text : ''))
+    .join('');
 
-  return {
-    agent,
+// A task Schedule as `project.schedule*` callers read it.
+export function projectScheduleOf({
+  row,
+  projectId,
+}: ListedSchedule): ProjectSchedule {
+  const instructions = instructionsOf(row);
+
+  return ProjectSchedule.parse({
+    ...taskOf(row),
+    id: row.id,
+    projectId,
+    name: nameOf(instructions),
     instructions,
-    cadence,
-    configOptions,
-    checkout,
-    name: titleFromPrompt([{ type: 'text', text: instructions }]),
-  };
+    cadence: cadenceOf(row),
+    nextAt: row.nextAt,
+    sessionId: row.sessionId,
+    latestSessionId: row.sessionId,
+    paused: row.paused,
+  });
 }
 
-type StoredSchedule = { schedule: ProjectSchedule; anchorAt: number };
+// A Project Schedule as stored before every Schedule prompted one Session; read only to migrate it.
+export interface LegacySchedule {
+  id: string;
+  projectId: string;
+  settings: ProjectScheduleInput & { checkout: ProjectSchedule['checkout'] };
+  anchorAt: number;
+  nextAt: number;
+  paused: boolean;
+  latestSessionId: string | null;
+}
 
-const ProjectScheduleSettings = z.looseObject({
+const LegacyProjectSchedule = ProjectSchedule.omit({ sessionId: true });
+
+const LegacySettings = z.looseObject({
   anchorAt: z.number().optional(),
   intervalSeconds: z.number().optional(),
 });
 
-export function decode({
+export function decodeLegacy({
   settings: json,
   ...row
-}: typeof table.$inferSelect): StoredSchedule {
-  const { anchorAt, intervalSeconds, ...settings } =
-    ProjectScheduleSettings.parse(JSON.parse(json));
+}: typeof legacyTable.$inferSelect): LegacySchedule {
+  const { anchorAt, intervalSeconds, ...settings } = LegacySettings.parse(
+    JSON.parse(json),
+  );
 
-  const schedule = ProjectSchedule.parse({
-    cadence: { type: 'interval', intervalSeconds },
-    ...settings,
+  const { agent, instructions, cadence, checkout, configOptions } =
+    LegacyProjectSchedule.parse({
+      cadence: { type: 'interval', intervalSeconds },
+      ...settings,
+      ...row,
+    });
+
+  return {
     ...row,
-  });
-
-  return { schedule, anchorAt: anchorAt ?? row.nextAt };
+    settings: {
+      projectId: row.projectId,
+      agent,
+      instructions,
+      cadence,
+      checkout,
+      configOptions,
+    },
+    anchorAt: anchorAt ?? row.nextAt,
+  };
 }
 
 export function firstOccurrence(
@@ -81,61 +122,54 @@ export function firstOccurrence(
 }
 
 interface EditTiming {
-  anchorAt: number;
+  anchorAt: number | null;
   nextAt: number;
-  changed: boolean;
 }
 
+// A changed cadence counts again from now; an unchanged one keeps its next occurrence.
 export function scheduleEditTiming(
   row: ScheduleRow,
   cadence: ProjectScheduleCadence,
 ): EditTiming {
-  const existing = decode(row);
+  if (JSON.stringify(cadence) === JSON.stringify(cadenceOf(row)))
+    return { anchorAt: row.anchorAt, nextAt: row.nextAt };
 
-  const changed =
-    JSON.stringify(cadence) !== JSON.stringify(existing.schedule.cadence);
-
-  const anchorAt = changed ? Date.now() : existing.anchorAt;
-  const nextAt = changed ? firstOccurrence(cadence, anchorAt) : row.nextAt;
-
-  return { anchorAt, nextAt, changed };
-}
-
-interface ScheduleEditUpdate {
-  settings: string;
-  nextAt?: number;
-}
-
-export function editedSchedule(
-  row: ScheduleRow,
-  settings: SavedSettings,
-): ScheduleEditUpdate {
-  const { anchorAt, nextAt, changed } = scheduleEditTiming(
-    row,
-    settings.cadence,
-  );
-
-  return {
-    settings: JSON.stringify({ ...settings, anchorAt }),
-    nextAt: changed ? nextAt : undefined,
-  };
-}
-
-export function managedSchedule(
-  row: ScheduleRow,
-  action: 'pause' | 'resume',
-): Pick<ScheduleRow, 'paused' | 'nextAt'> {
   const now = Date.now();
-  const elapsed = row.paused && row.nextAt <= now;
 
-  const { schedule, anchorAt } = decode(row);
+  return { anchorAt: now, nextAt: firstOccurrence(cadence, now) };
+}
 
-  const nextAt =
-    action === 'resume' && elapsed
-      ? nextProjectScheduleAt(schedule.cadence, now, anchorAt)
-      : row.nextAt;
+const sameCheckout = (
+  saved: ProjectSchedule['checkout'],
+  edit: ProjectScheduleInput['checkout'],
+): boolean =>
+  edit === undefined ||
+  (edit.type === saved.type &&
+    (edit.type === 'main' ||
+      edit.baseBranch === undefined ||
+      (saved.type === 'worktree' && edit.baseBranch === saved.baseBranch)));
 
-  return { paused: action === 'pause', nextAt };
+// The Agent, Checkout and configuration belong to the Schedule's Session once it exists (ADR-0067).
+export function requireSameTask(
+  row: ScheduleRow,
+  input: ProjectScheduleInput,
+): ProjectScheduleInput {
+  const edit = ProjectScheduleInput.parse(input);
+  const saved = taskOf(row);
+
+  const same =
+    edit.agent === saved.agent &&
+    sameCheckout(saved.checkout, edit.checkout) &&
+    JSON.stringify(edit.configOptions) === JSON.stringify(saved.configOptions);
+
+  if (!same)
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message:
+        "A Schedule's Agent, Checkout and configuration belong to its Session and cannot change.",
+    });
+
+  return edit;
 }
 
 export async function resolveScheduleSettings(
@@ -145,7 +179,17 @@ export async function resolveScheduleSettings(
   const checkout = await resolveCheckout(sources, input);
   requireInstalledAgent(sources.installedAgents, input.agent);
 
-  return settingsWithName(input, checkout);
+  const { agent, instructions, cadence, configOptions } =
+    ProjectScheduleInput.parse(input);
+
+  return {
+    agent,
+    instructions,
+    cadence,
+    configOptions,
+    checkout,
+    name: nameOf(instructions),
+  };
 }
 
 async function resolveCheckout(

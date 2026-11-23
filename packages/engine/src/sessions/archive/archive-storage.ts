@@ -1,5 +1,5 @@
 import type { SessionRecord } from '@repo/contracts';
-import { session, turn } from '@repo/db/schema';
+import { session, sessionSchedule, turn } from '@repo/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { settleArchivedChild } from '../../feed';
 import type { StorageTransaction, WriterJob } from '../../storage';
@@ -30,6 +30,12 @@ export class SessionArchiveJob
 
     if (this.archivedAt !== null) {
       revokeDelegations(transaction, this.ids);
+      // An archived Session's Schedules pause; unarchiving leaves resuming to the person (ADR-0067).
+      transaction
+        .update(sessionSchedule)
+        .set({ paused: true })
+        .where(inArray(sessionSchedule.sessionId, this.ids))
+        .run();
       this.cancelChildTurns(transaction);
     }
   }

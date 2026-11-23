@@ -77,11 +77,12 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
     autoStartRuns: (sessionId): void => autoStartRuns(deps, sessionId),
   });
 
-  if (deps.sessionCommandSignal)
-    sessions.startDelegatedResults(
-      deps.sessionCommandSignal,
-      deps.logSessionResult ?? ((): void => {}),
-    );
+  if (deps.sessionCommandSignal) {
+    const log = deps.logSessionResult ?? ((): void => {});
+
+    sessions.startDelegatedResults(deps.sessionCommandSignal, log);
+    sessions.startScheduleMigration(log);
+  }
 
   attachSessionActs(deps, sessions);
   attachConversation(deps, sessions);

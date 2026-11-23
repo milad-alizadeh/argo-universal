@@ -44,6 +44,7 @@ const creationCommand = (
   ...newSession,
   startedBySessionId: origin.startedBySessionId ?? undefined,
   rememberCheckout: origin.sender.type !== 'schedule',
+  keep: origin.sender.type === 'schedule',
   projectPath,
 });
 

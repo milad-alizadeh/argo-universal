@@ -8,16 +8,21 @@ import { delegationJourney } from '#mocks/session-delegation';
 
 const fixtureProjectId = 'project-1';
 
-const noSessionStarted = 'Expected the Schedule to start a Session';
+const textPrompt = (text: string): { type: 'text'; text: string }[] => [
+  { type: 'text', text },
+];
 
-it('runs a Project Schedule in a fresh worktree without moving its deadline', async () => {
+it('creates one Session when a task Schedule is saved and Run now prompts it without moving its deadline', async () => {
   const instructions = 'Review the build';
   const received: PromptRequest[] = [];
 
   const host = await startAcpEngine({
     steps: [],
     responses: {
-      'session/prompt': [{ prompt: instructions, requests: received }],
+      'session/prompt': [
+        { prompt: instructions, requests: received },
+        { prompt: instructions, requests: received },
+      ],
     },
   });
 
@@ -30,46 +35,135 @@ it('runs a Project Schedule in a fresh worktree without moving its deadline', as
     cadence: { type: 'interval' as const, intervalSeconds: 60 },
   });
 
-  expect(schedule.checkout.type).toBe('worktree');
-  expect(schedule.latestSessionId).toBeNull();
-
-  const occurrence = await project.scheduleRunNow({
-    projectId: schedule.projectId,
-    id: schedule.id,
+  expect(schedule).toMatchObject({
+    checkout: { type: 'worktree' },
+    sessionId: expect.any(String),
+    latestSessionId: schedule.sessionId,
   });
 
-  expect(occurrence.outcome).toBe('started');
-
-  if (occurrence.outcome !== 'started') throw new Error(noSessionStarted);
-  const opened = await session.get({ sessionId: occurrence.sessionId });
+  const opened = await session.get({ sessionId: schedule.sessionId });
   expect(opened).toMatchObject({
     projectId: fixtureProjectId,
     checkout: { type: 'worktree' },
+    title: instructions,
   });
-  expect(await project.scheduleList({})).toMatchObject([
-    {
-      id: schedule.id,
-      latestSessionId: occurrence.sessionId,
-      nextAt: schedule.nextAt,
-    },
-  ]);
   const [registered] = await project.list();
   expect(opened.checkout.path).not.toBe(registered?.path);
-  await expect.poll(() => received.length).toBe(1);
-  await waitForAcpSessionIdle(host, occurrence.sessionId);
+  expect(received).toHaveLength(0);
 
-  const again = await project.scheduleRunNow({
-    projectId: schedule.projectId,
-    id: schedule.id,
+  const target = { projectId: schedule.projectId, id: schedule.id };
+  const first = await project.scheduleRunNow(target);
+  expect(first).toMatchObject({
+    outcome: 'started',
+    sessionId: schedule.sessionId,
   });
+  await expect.poll(() => received.length).toBe(1);
+  await waitForAcpSessionIdle(host, schedule.sessionId);
 
-  if (again.outcome !== 'started') throw new Error('Expected another Session');
-  const second = await session.get({ sessionId: again.sessionId });
-  expect(again.sessionId).not.toBe(occurrence.sessionId);
-  expect(second.checkout.path).not.toBe(opened.checkout.path);
+  const second = await project.scheduleRunNow(target);
+  expect(second).toMatchObject({ sessionId: schedule.sessionId });
+  await expect.poll(() => received.length).toBe(2);
+
+  expect(await project.scheduleList({})).toMatchObject([
+    { id: schedule.id, sessionId: schedule.sessionId, nextAt: schedule.nextAt },
+  ]);
+  expect((await session.list({ archived: false })).sessions).toHaveLength(1);
 }, 30000);
 
-it('delivers a stored Project Schedule through the normal Session path after restart', async () => {
+it('prompts the same Session at every occurrence and starts no other Session', async () => {
+  const instructions = 'Summarize new issues';
+  const received: PromptRequest[] = [];
+  const reply = { prompt: instructions, requests: received };
+
+  const host = await startAcpEngine({
+    steps: [],
+    responses: { 'session/prompt': [reply, reply, reply] },
+  });
+
+  const { project, session, feed } = host.caller;
+
+  const schedule = await project.scheduleCreate({
+    projectId: fixtureProjectId,
+    agent: 'mock',
+    instructions,
+    checkout: { type: 'main' },
+    cadence: { type: 'interval' as const, intervalSeconds: 1 },
+  });
+
+  await expect.poll(() => received.length, { timeout: 15000 }).toBe(3);
+  await project.scheduleManage({
+    projectId: fixtureProjectId,
+    id: schedule.id,
+    action: 'pause',
+  });
+  await waitForAcpSessionIdle(host, schedule.sessionId);
+
+  const { sessions } = await session.list({ archived: false });
+  expect(sessions.map(({ sessionId }) => sessionId)).toEqual([
+    schedule.sessionId,
+  ]);
+
+  const page = await feed.page({
+    sessionId: schedule.sessionId,
+    direction: 'tail',
+  });
+
+  const scheduled = page.rows.filter(
+    (row) =>
+      row.sessionUpdate === 'prompt_message' &&
+      row._meta?.argo?.sender?.type === 'schedule',
+  );
+
+  expect(scheduled).toHaveLength(3);
+}, 30000);
+
+it('queues an occurrence that fires while the Session is busy and sends it when the Turn ends', async () => {
+  const gate = Promise.withResolvers<void>();
+  const instructions = 'Keep checking the build';
+  const received: PromptRequest[] = [];
+
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/prompt': [
+        {
+          prompt: instructions,
+          requests: received,
+          steps: [{ type: 'gate', waitFor: gate.promise }],
+        },
+        { prompt: instructions, requests: received },
+      ],
+    },
+  });
+
+  const { project, session } = host.caller;
+
+  try {
+    const schedule = await project.scheduleCreate({
+      projectId: fixtureProjectId,
+      agent: 'mock',
+      instructions,
+      cadence: { type: 'interval' as const, intervalSeconds: 1 },
+    });
+
+    await expect.poll(() => received.length, { timeout: 8000 }).toBe(1);
+    await expect
+      .poll(() => session.get({ sessionId: schedule.sessionId }), {
+        timeout: 8000,
+      })
+      .toMatchObject({
+        promptQueue: { items: [{ prompt: textPrompt(instructions) }] },
+      });
+    expect(received).toHaveLength(1);
+    expect((await session.list({ archived: false })).sessions).toHaveLength(1);
+  } finally {
+    gate.resolve();
+  }
+
+  await expect.poll(() => received.length, { timeout: 8000 }).toBe(2);
+}, 30000);
+
+it('delivers a stored task Schedule into its Session after restart', async () => {
   const host = await startAcpEngine();
   const instructions = 'Check the main Checkout';
 
@@ -93,74 +187,15 @@ it('delivers a stored Project Schedule through the normal Session path after res
     },
   });
 
-  const { project, session } = reopened.caller;
-
-  const read = async (): Promise<ProjectSchedule | undefined> =>
-    (await project.scheduleList({ projectId: fixtureProjectId }))[0];
-
   await expect
-    .poll(async () => (await read())?.latestSessionId, { timeout: 8000 })
-    .toEqual(expect.any(String));
-
-  const delivered = await read();
-  expect(delivered).toMatchObject({ id: saved.id, checkout: { type: 'main' } });
-  expect(delivered?.latestSessionId).toBeTruthy();
-
-  if (!delivered?.latestSessionId) throw new Error(noSessionStarted);
+    .poll(() => received[0]?.prompt, { timeout: 8000 })
+    .toEqual(textPrompt(instructions));
   expect(
-    await session.get({ sessionId: delivered.latestSessionId }),
-  ).toMatchObject({
-    checkout: { type: 'main' },
-  });
-  await expect
-    .poll(() => received[0]?.prompt)
-    .toEqual([{ type: 'text', text: instructions }]);
-}, 30000);
-
-it('skips Run now while an automatic Session is working', async () => {
-  const gate = Promise.withResolvers<void>();
-  const instructions = 'Keep checking the build';
-  const received: PromptRequest[] = [];
-
-  const host = await startAcpEngine({
-    steps: [],
-    responses: {
-      'session/prompt': [
-        {
-          prompt: instructions,
-          requests: received,
-          steps: [{ type: 'gate', waitFor: gate.promise }],
-        },
-      ],
-    },
-  });
-
-  const { project } = host.caller;
-
-  try {
-    const schedule = await project.scheduleCreate({
-      projectId: fixtureProjectId,
-      agent: 'mock',
-      instructions,
-      cadence: { type: 'interval' as const, intervalSeconds: 1 },
-    });
-
-    await expect.poll(() => received.length, { timeout: 8000 }).toBe(1);
-    const target = { id: schedule.id, projectId: schedule.projectId };
-    const outcome = await project.scheduleRunNow(target);
-    expect(outcome).toMatchObject({
-      outcome: 'skipped',
-      reason: expect.stringContaining('still working'),
-    });
-    await expect
-      .poll(async () => (await project.scheduleList({}))[0]?.nextAt, {
-        timeout: 8000,
-      })
-      .toBeGreaterThan(schedule.nextAt + 1000);
-    expect(received).toHaveLength(1);
-  } finally {
-    gate.resolve();
-  }
+    await reopened.caller.project.scheduleList({ projectId: fixtureProjectId }),
+  ).toMatchObject([{ id: saved.id, sessionId: saved.sessionId }]);
+  expect(
+    await reopened.caller.session.get({ sessionId: saved.sessionId }),
+  ).toMatchObject({ checkout: { type: 'main' } });
 }, 30000);
 
 it('attributes a run to the stored Project Schedule when an Agent created it', async () => {
@@ -193,27 +228,63 @@ it('attributes a run to the stored Project Schedule when an Agent created it', a
   });
   expect(await project.scheduleList({})).toMatchObject([input]);
 
-  const occurrence = await project.scheduleRunNow({
-    id: saved.id,
-    projectId: saved.projectId,
-  });
+  await project.scheduleRunNow({ id: saved.id, projectId: saved.projectId });
 
-  if (occurrence.outcome !== 'started') throw new Error(noSessionStarted);
-
-  const page = await feed.page({
-    sessionId: occurrence.sessionId,
-    direction: 'tail',
-  });
-
-  expect(page.rows[0]).toMatchObject({
-    sessionUpdate: 'prompt_message',
-    content: [{ type: 'text', text: instructions }],
-    _meta: {
-      argo: {
-        sender: { type: 'schedule', scheduleId: saved.id, title: 'Schedule' },
+  await expect
+    .poll(
+      async () =>
+        (await feed.page({ sessionId: saved.sessionId, direction: 'tail' }))
+          .rows[0],
+    )
+    .toMatchObject({
+      sessionUpdate: 'prompt_message',
+      content: textPrompt(instructions),
+      _meta: {
+        argo: {
+          sender: { type: 'schedule', scheduleId: saved.id, title: 'Schedule' },
+        },
       },
+    });
+}, 30000);
+
+it('fires a Schedule made inside a task Schedule’s Session into that Session and keeps it out of Scheduled', async () => {
+  const followUpText = 'Check the deploy';
+  const received: PromptRequest[] = [];
+
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/prompt': [{ prompt: followUpText, requests: received }],
     },
   });
+
+  const { project, session } = host.caller;
+
+  const task = await project.scheduleCreate({
+    projectId: fixtureProjectId,
+    agent: 'mock',
+    instructions: 'Give me a daily update',
+    checkout: { type: 'main' },
+    cadence: { type: 'interval' as const, intervalSeconds: 3600 },
+  });
+
+  const followUp = await session.schedulePrompt({
+    sessionId: task.sessionId,
+    intervalSeconds: 1,
+    prompt: textPrompt(followUpText),
+  });
+
+  expect(await project.scheduleList({})).toMatchObject([{ id: task.id }]);
+  expect(await session.listSchedules({ sessionId: task.sessionId })).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ id: task.id, listed: true }),
+      expect.objectContaining({ id: followUp.id, listed: false }),
+    ]),
+  );
+  await expect
+    .poll(() => received[0]?.prompt, { timeout: 8000 })
+    .toEqual(textPrompt(followUpText));
+  expect((await session.list({ archived: false })).sessions).toHaveLength(1);
 }, 30000);
 
 it('runs in the saved main Checkout without changing the Project’s remembered Checkout', async () => {
@@ -231,11 +302,7 @@ it('runs in the saved main Checkout without changing the Project’s remembered 
     cadence: { type: 'interval' as const, intervalSeconds: 60 },
   });
 
-  const run = await project.scheduleRunNow({ id: schedule.id, projectId });
-
-  if (run.outcome !== 'started') throw new Error(noSessionStarted);
-
-  expect(await session.get({ sessionId: run.sessionId })).toMatchObject({
+  expect(await session.get({ sessionId: schedule.sessionId })).toMatchObject({
     checkout: { type: 'main' },
   });
   expect(

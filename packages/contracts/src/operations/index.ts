@@ -61,6 +61,7 @@ export {
   ProjectScheduleCadence,
   ProjectScheduleInput,
   ProjectScheduleOccurrence,
+  ScheduleCalendar,
   ScheduleWeekday,
   projectScheduleOperations,
 } from './project-schedules';

@@ -1,12 +1,18 @@
 import { stat } from 'node:fs/promises';
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import { expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const projectId = 'project-1';
 
 const instructions = 'Review the build';
+
+const oneHourMs = 60 * 60 * 1000;
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const input = {
   projectId,
@@ -15,46 +21,30 @@ const input = {
   cadence: { type: 'interval' as const, intervalSeconds: 60 },
 };
 
-it('preserves a scheduled Session and its Checkout when its Schedule is deleted', async () => {
-  const host = await startAcpEngine({
-    steps: [],
-    responses: { 'session/prompt': [{ prompt: instructions }] },
-  });
-
+it('leaves its Session and Checkout as an ordinary Session when a task Schedule is deleted', async () => {
+  const host = await startAcpEngine({ steps: [] });
   const { project, session } = host.caller;
   const saved = await project.scheduleCreate(input);
-  const target = { projectId, id: saved.id };
-  const run = await project.scheduleRunNow(target);
+  const before = await session.get({ sessionId: saved.sessionId });
 
-  if (run.outcome !== 'started') throw new Error('Expected a Session');
-  await waitForAcpSessionIdle(host, run.sessionId);
+  await project.scheduleManage({ projectId, id: saved.id, action: 'delete' });
 
-  expect((await project.scheduleHistory(target)).entries).toMatchObject([
-    { occurrence: { outcome: 'started', sessionId: run.sessionId } },
-  ]);
-  const before = await session.get({ sessionId: run.sessionId });
-
-  await project.scheduleManage({ ...target, action: 'delete' });
   expect(await project.scheduleList({ projectId })).toEqual([]);
-  expect(await session.get({ sessionId: run.sessionId })).toMatchObject({
+  expect(await session.listSchedules({ sessionId: saved.sessionId })).toEqual(
+    [],
+  );
+  expect(await session.get({ sessionId: saved.sessionId })).toMatchObject({
     checkout: before.checkout,
     archivedAt: null,
   });
   expect((await stat(before.checkout.path)).isDirectory()).toBe(true);
 }, 30000);
 
-it('edits, pauses and resumes a Project Schedule without changing its earlier Session', async () => {
-  const host = await startAcpEngine({
-    steps: [],
-    responses: { 'session/prompt': [{ prompt: instructions }] },
-  });
-
+it('edits the instructions of a paused task Schedule and keeps its Agent and Checkout', async () => {
+  const host = await startAcpEngine({ steps: [] });
   const { project } = host.caller;
   const saved = await project.scheduleCreate(input);
   const target = { projectId, id: saved.id };
-  const launched = await project.scheduleRunNow(target);
-
-  if (launched.outcome !== 'started') throw new Error('Expected a Session');
 
   await project.scheduleManage({ ...target, action: 'pause' });
 
@@ -68,8 +58,15 @@ it('edits, pauses and resumes a Project Schedule without changing its earlier Se
     instructions: 'Summarize this build',
     paused: true,
     nextAt: saved.nextAt,
-    latestSessionId: launched.sessionId,
+    sessionId: saved.sessionId,
   });
+  await expect(
+    project.scheduleEdit({
+      ...input,
+      id: saved.id,
+      checkout: { type: 'main' },
+    }),
+  ).rejects.toThrow('belong to its Session');
 
   await project.scheduleManage({ ...target, action: 'resume' });
   expect(await project.scheduleList({ projectId })).toMatchObject([
@@ -77,7 +74,37 @@ it('edits, pauses and resumes a Project Schedule without changing its earlier Se
   ]);
 }, 30000);
 
-it('records the offline occurrence and starts no backlog after restart', async () => {
+it('pauses every Schedule of a Session when the Session is archived', async () => {
+  const host = await startAcpEngine({ steps: [] });
+  const { project, session } = host.caller;
+
+  const saved = await project.scheduleCreate({
+    ...input,
+    checkout: { type: 'main' },
+    cadence: { type: 'interval', intervalSeconds: 3600 },
+  });
+
+  await session.schedulePrompt({
+    sessionId: saved.sessionId,
+    intervalSeconds: 3600,
+    prompt: [{ type: 'text', text: 'Check the deploy' }],
+  });
+  await waitForAcpSessionIdle(host, saved.sessionId);
+  await session.archive({ sessionId: saved.sessionId });
+
+  await expect
+    .poll(async () =>
+      (await session.listSchedules({ sessionId: saved.sessionId })).map(
+        ({ paused }) => paused,
+      ),
+    )
+    .toEqual([true, true]);
+  expect(await project.scheduleList({ projectId })).toMatchObject([
+    { id: saved.id, paused: true },
+  ]);
+}, 30000);
+
+it('skips an occurrence missed by more than an hour once and starts no backlog after restart', async () => {
   const host = await startAcpEngine();
 
   const saved = await host.caller.project.scheduleCreate({
@@ -86,8 +113,11 @@ it('records the offline occurrence and starts no backlog after restart', async (
   });
 
   await host.stop();
-  await vi.waitFor(() => expect(Date.now()).toBeGreaterThan(saved.nextAt), {
-    timeout: 5000,
+  const returnedAt = saved.nextAt + oneHourMs + 1000;
+  vi.useFakeTimers({
+    toFake: ['Date'],
+    now: returnedAt,
+    shouldAdvanceTime: true,
   });
 
   const requests: PromptRequest[] = [];
@@ -98,31 +128,50 @@ it('records the offline occurrence and starts no backlog after restart', async (
     responses: { 'session/prompt': [{ prompt: instructions, requests }] },
   });
 
-  const { project } = reopened.caller;
-  const target = { projectId, id: saved.id };
+  const { session } = reopened.caller;
+
   await expect
-    .poll(async () => (await project.scheduleHistory(target)).entries)
-    .toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          occurrence: expect.objectContaining({
-            at: saved.nextAt,
-            outcome: 'skipped',
-            reason: expect.stringContaining('offline'),
-          }),
-        }),
-      ]),
-    );
-  const [next] = await project.scheduleList({ projectId });
-  expect(next?.nextAt).toBeGreaterThan(saved.nextAt);
+    .poll(
+      async () =>
+        (await session.listSchedules({ sessionId: saved.sessionId }))[0]
+          ?.lastSkippedAt,
+    )
+    .toBeGreaterThanOrEqual(returnedAt);
 
   await expect.poll(() => requests.length, { timeout: 5000 }).toBe(1);
-  const { entries } = await project.scheduleHistory(target);
 
-  const atMissedDeadline = entries.filter(
-    ({ occurrence }) => occurrence.at === saved.nextAt,
-  );
+  const [schedule] = await session.listSchedules({
+    sessionId: saved.sessionId,
+  });
 
-  expect(atMissedDeadline).toHaveLength(1);
-  expect(atMissedDeadline[0]?.occurrence.outcome).toBe('skipped');
+  expect(schedule?.nextAt).toBeGreaterThan(returnedAt);
+}, 30000);
+
+it('sends an occurrence late when the Server returns within an hour', async () => {
+  const host = await startAcpEngine();
+
+  const saved = await host.caller.project.scheduleCreate({
+    ...input,
+    cadence: { type: 'interval', intervalSeconds: 3600 },
+  });
+
+  await host.stop();
+  vi.useFakeTimers({
+    toFake: ['Date'],
+    now: saved.nextAt + oneHourMs - 60_000,
+    shouldAdvanceTime: true,
+  });
+
+  const requests: PromptRequest[] = [];
+
+  const reopened = await startAcpEngine({
+    steps: [],
+    restartOver: host.home,
+    responses: { 'session/prompt': [{ prompt: instructions, requests }] },
+  });
+
+  await expect.poll(() => requests.length, { timeout: 5000 }).toBe(1);
+  expect(
+    await reopened.caller.session.listSchedules({ sessionId: saved.sessionId }),
+  ).toMatchObject([{ lastQueuedAt: expect.any(Number), lastSkippedAt: null }]);
 }, 30000);

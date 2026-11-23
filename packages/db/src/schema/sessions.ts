@@ -105,10 +105,17 @@ export const sessionSchedule = snakeCase.table(
       .references(() => session.id, { onDelete: 'cascade' }),
     prompt: text().notNull(),
     intervalSeconds: integer(),
+    // A calendar repeat in a time zone, as JSON; null for a one-time or interval Schedule.
+    calendar: text(),
+    // Where an interval or calendar repeat counts from; null counts from nextAt.
+    anchorAt: integer(),
     endsAt: integer(),
     nextAt: integer().notNull(),
     lastQueuedAt: integer(),
+    lastSkippedAt: integer(),
     paused: integer({ mode: 'boolean' }).notNull().default(false),
+    // A task Schedule's creation settings, as JSON; it is listed in Scheduled. Null for one made inside a Session.
+    task: text(),
   },
   (row) => [index('session_schedule_due').on(row.paused, row.nextAt)],
 );
