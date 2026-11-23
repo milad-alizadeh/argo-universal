@@ -28,6 +28,8 @@ export const exemptFolders = {
     'App-only: the camera frame that reads the code for Add a Server; a Plugin has no camera.',
   'scaffolds/pairing-sheet':
     'App-only: the bottom sheet over the scanner that stops Add a Server short of a Server, with its tile, evidence, field and pills; a Plugin has no pairing to stop.',
+  'scaffolds/section-modal':
+    'Only the Frame draws this scaffold; Plugins draw their Settings pages without it (ADR-0068).',
   'scaffolds/pinned-footer':
     'App-only: holds one button at the foot of a Screen body; a Plugin has no footer to pin.',
   'actions/pressable':
