@@ -142,3 +142,17 @@ it('checks revocation and lets the person sign in again on the same page', async
     status: 'connected',
   });
 });
+
+it('recognises a signed-out Account on the sign-in page', async () => {
+  const tracked = await trackedGitHub();
+  await signIn(tracked);
+  const [account] = tracked.test.accounts.list();
+
+  if (!account) throw new Error('Expected a GitHub Account');
+
+  await tracked.test.accounts.signOut(account.id);
+  const page = await tracked.test.pages.open({ path: '/sign-in' });
+
+  expect(page.findText(signInLabel)).toBeDefined();
+  expect(page.findText(signedInText)).toBeUndefined();
+});

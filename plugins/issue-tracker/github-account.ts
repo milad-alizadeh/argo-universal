@@ -25,19 +25,30 @@ export const githubSignIn = (argo: Calls): DeviceFlow =>
 
 // The Operations, the sign-in page and the Account's provider: everything else is the kit's.
 export const provideGitHub = (
-  argo: Pick<Argo, 'operations' | 'pages' | 'fetch'>,
+  argo: Pick<Argo, 'operations' | 'pages' | 'fetch' | 'secrets'>,
   flow: DeviceFlow,
 ): Promise<void> =>
   provideSignIn(argo, flow, {
     ...signInOptions,
-    connectionProblem: async (): Promise<string | null> => {
-      const result = await githubConnectionStatus(argo).catch(() => null);
-
-      return result?.status === 'disconnected'
-        ? 'GitHub not connected. Sign in to continue.'
-        : null;
-    },
+    connectionProblem: () => checkSignIn(argo, flow).catch(() => null),
   });
+
+const signInProblem = 'GitHub not connected. Sign in to continue.';
+
+async function checkSignIn(
+  argo: Pick<Argo, 'fetch' | 'secrets'>,
+  flow: DeviceFlow,
+): Promise<string | null> {
+  const state = flow.state();
+
+  if (state.kind !== 'signed-in') return null;
+
+  if ((await argo.secrets.get(state.accountId)) === null) return signInProblem;
+
+  const result = await githubConnectionStatus(argo);
+
+  return result.status === 'disconnected' ? signInProblem : null;
+}
 
 const unauthorizedStatus = 401;
 
@@ -51,8 +62,7 @@ export async function githubConnectionStatus(
     account: githubHost,
   });
 
-  if (!reply || reply.status === unauthorizedStatus)
-    return { status: 'disconnected' };
+  if (reply?.status === unauthorizedStatus) return { status: 'disconnected' };
 
-  return { status: reply.status === okStatus ? 'connected' : 'unknown' };
+  return { status: reply?.status === okStatus ? 'connected' : 'unknown' };
 }
