@@ -234,9 +234,6 @@ _Avoid_: Call context, call scope, caller
 What keeps a Query's answer wanted: a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration
 
-**Session follow-up**:
-A stored instruction for the Server to send a Prompt once or at an interval in an existing Session. Each occurrence goes through that Session’s Prompt queue and uses its Checkout. The person manages it from Follow-ups in the Workbench.
-
 **Background pass**:
 One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
@@ -311,8 +308,9 @@ _Avoid_: Shell, terminal (that is a Terminal), process
 An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
 _Avoid_: Target, loop
 
-**Project Schedule**:
-A Project’s stored instructions and cadence for starting fresh Sessions on its Server. Each occurrence can start a Session with its own Checkout. The person finds Project Schedules in Scheduled.
+**Schedule**:
+A cadence and a Prompt attached to one Session. Each occurrence sends the Prompt into that Session through its Prompt queue, so earlier runs are earlier messages in its Feed. A Schedule made as a task in Scheduled creates its Session once, when it is saved, and is listed there; a Schedule made inside a Session uses that Session and is not listed. The person sees a Session's Schedules in its Workbench (ADR-0067).
+_Avoid_: Project Schedule, Session follow-up, run, scheduled run
 
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
