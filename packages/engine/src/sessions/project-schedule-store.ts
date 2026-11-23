@@ -243,7 +243,8 @@ export class ProjectScheduleStore {
             at: row.nextAt,
             through: now,
             outcome: 'skipped',
-            reason: 'The Server was offline when this Schedule was due.',
+            reason:
+              'The Server was offline or asleep for more than an hour after this Schedule was due.',
           },
         });
 

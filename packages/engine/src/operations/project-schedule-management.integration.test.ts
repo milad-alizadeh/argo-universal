@@ -8,7 +8,7 @@ const projectId = 'project-1';
 
 const instructions = 'Review the build';
 
-const graceMs = 60 * 60 * 1000;
+const oneHourMs = 60 * 60 * 1000;
 
 afterEach(() => {
   vi.useRealTimers();
@@ -94,7 +94,7 @@ it('records an occurrence missed by more than an hour and starts no backlog afte
   await host.stop();
   vi.useFakeTimers({
     toFake: ['Date'],
-    now: saved.nextAt + graceMs + 1000,
+    now: saved.nextAt + oneHourMs + 1000,
     shouldAdvanceTime: true,
   });
 
@@ -146,7 +146,7 @@ it('starts an occurrence late when the Server returns within an hour', async () 
   await host.stop();
   vi.useFakeTimers({
     toFake: ['Date'],
-    now: saved.nextAt + graceMs - 60_000,
+    now: saved.nextAt + oneHourMs - 60_000,
     shouldAdvanceTime: true,
   });
 
