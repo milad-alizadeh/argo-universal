@@ -3,6 +3,7 @@ import type { createRejectionCounter } from '@repo/machine-log';
 import type { AcpSessionLease, createAcpResponseReaders } from '../../agents';
 import { readAcpConfiguration } from '../acp/acp-configuration';
 import {
+  findOption,
   hasChoice,
   isOfferedConfigChoice,
   requireOfferedChoice,
@@ -43,8 +44,10 @@ export async function sendConfigChoice(
 }
 
 /*
- * `required` choices must be offered and must stick, as a Session's durable choices must; other choices the
- * Agent no longer offers are skipped, as Agent options picked before Send are.
+ * A choice whose option the Agent no longer offers at all is skipped: Agents offer some options only some of the
+ * time, as Claude offers its Agent persona only while it finds custom agents. Of the options still offered,
+ * `required` choices must name an offered value and must stick, as a Session's durable choices must; other
+ * choices whose value is no longer offered are skipped, as Agent options picked before Send are.
  */
 type ChoiceList = {
   options: SessionConfigOption[];
@@ -57,6 +60,8 @@ const admits = (
   choice: AgentConfigValue,
   required: boolean,
 ): boolean => {
+  if (!findOption(options, choice.configId)) return false;
+
   if (required) requireOfferedChoice(options, choice);
 
   return isOfferedConfigChoice(options, choice) && !hasChoice(options, choice);
