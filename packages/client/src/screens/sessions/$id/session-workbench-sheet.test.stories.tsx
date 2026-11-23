@@ -81,7 +81,7 @@ export const DrawsEachCardAsATitledSection: Story = {
       'Agents',
       'Background Tasks',
       'Runs',
-      'Schedules',
+      'Scheduled',
       'Issue Tracker',
     ].map((title) => sheet.getByText(title));
 
@@ -199,7 +199,7 @@ export const PreviewsFollowUpsAndOpensTheirList: Story = {
 
     await press(sheet, userEvent, 'Add Schedule');
     await expect(
-      await sheet.findByRole('heading', { name: 'Schedules' }),
+      await sheet.findByRole('heading', { name: 'Scheduled' }),
     ).toBeVisible();
     await expect(
       sheet.getByRole('button', { name: 'Add Schedule' }),

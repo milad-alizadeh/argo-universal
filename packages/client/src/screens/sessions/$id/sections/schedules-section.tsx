@@ -7,9 +7,11 @@ import {
 } from '#features/sessions';
 import type { SessionSection } from './session-section';
 
+const title = 'Scheduled';
+
 export const schedulesSection: SessionSection = {
   key: 'schedules',
-  title: 'Schedules',
+  title,
   icon: 'clock',
   offered: ({ followUpsAvailable }) => followUpsAvailable === true,
   count: ({ schedules }) => schedules?.items.length ?? 0,
@@ -27,7 +29,7 @@ export const schedulesSection: SessionSection = {
     count: schedules?.items.length,
   }),
   phone: ({ schedules }) => ({
-    sheetHeader: <Text>Schedules</Text>,
+    sheetHeader: <Text>{title}</Text>,
     body: <ScheduleList schedules={schedules} />,
   }),
 };

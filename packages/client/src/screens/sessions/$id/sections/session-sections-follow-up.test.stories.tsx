@@ -140,12 +140,12 @@ export const SchedulesOnce = {
   },
 } satisfies Story;
 
-export const WorkbenchShowsSchedules = {
+export const WorkbenchShowsScheduled = {
   ...Schedules,
   beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas }): Promise<void> => {
     await expect(
-      canvas.getByRole('group', { name: 'Schedules' }),
+      canvas.getByRole('group', { name: 'Scheduled' }),
     ).toBeVisible();
     await expect(
       canvas.queryByRole('group', { name: 'Follow-ups' }),
