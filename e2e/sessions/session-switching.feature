@@ -11,14 +11,16 @@ Feature: Session switching
   Scenario: Returning to a Session leaves its Agent and model closed
     Given a Session named "Plan the release"
     And I left an open Agent and model for Settings
-    When I return to the Session "Plan the release"
+    When I close the Settings modal
+    And I open the Session "Plan the release"
     Then no Agent and model overlay is shown
 
   Scenario: Returning from Settings shows a Session's draft
     Given a Session named "Plan the release"
     And the draft "Ship on Friday" in the Session "Plan the release"
     And I left an open Agent and model for Settings
-    When I return to the Session "Plan the release"
+    When I close the Settings modal
+    And I open the Session "Plan the release"
     Then the Message box shows "Ship on Friday"
 
   Scenario Outline: Each Session keeps its Workbench visibility
