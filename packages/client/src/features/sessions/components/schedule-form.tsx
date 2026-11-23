@@ -273,6 +273,11 @@ function EditEnd({
   );
 }
 
+// Edit end sits among a Schedule's Pause and Delete buttons, so it wears theirs; Add follow-up is a card's text action.
+const editEndLook = { variant: 'secondary' } as const;
+
+const addLook = { variant: 'text', icon: 'add' } as const;
+
 export function FollowUpEditor({
   controls,
   item,
@@ -288,9 +293,7 @@ export function FollowUpEditor({
       <Button
         label={item ? 'Edit end' : 'Add follow-up'}
         size="xs"
-        {...(item
-          ? { variant: 'secondary' }
-          : { variant: 'text', icon: 'add' })}
+        {...(item ? editEndLook : addLook)}
         disabled={controls.disabled}
         onPress={() => setOpen(true)}
       />
