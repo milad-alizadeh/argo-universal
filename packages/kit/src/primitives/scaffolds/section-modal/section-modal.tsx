@@ -1,5 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { Platform, View, useWindowDimensions } from 'react-native';
+import { OfferColumn } from '#kit/content-column/content-column';
+import { SidebarGutterHeld } from '#kit/sidebar-gutter';
 import { IconButton } from '#primitives/actions/icon-button';
 import { CentredModalRoot } from '#primitives/overlays/centred-overlay';
 import {
@@ -7,6 +9,14 @@ import {
   ScreenListColumn,
 } from '#primitives/scaffolds/screen';
 import { SectionModalOverlay } from './section-modal-overlay';
+
+export const sectionModalHeadingInset = 48;
+
+const windowMargin = 24;
+
+const maxCardWidth = 1040;
+
+const maxCardHeight = 680;
 
 interface SectionModalProps {
   label: string;
@@ -35,15 +45,13 @@ export function SectionModal(props: SectionModalProps): ReactElement {
         <View
           className="flex-row"
           style={{
-            width: Math.min(1040, window.width - 48),
-            height: Math.min(680, window.height - 48),
+            width: Math.min(maxCardWidth, window.width - windowMargin * 2),
+            height: Math.min(maxCardHeight, window.height - windowMargin * 2),
           }}
         >
-          <View className="w-60 border-r border-border pt-1.5 native:pt-2.5">
-            <ScreenListColumn>{props.list}</ScreenListColumn>
-          </View>
+          <ModalList>{props.list}</ModalList>
           <View className="min-w-0 flex-1">
-            <ScreenHeadingEndInset value={48}>
+            <ScreenHeadingEndInset value={sectionModalHeadingInset}>
               {props.children}
             </ScreenHeadingEndInset>
             <View className="absolute right-8 top-3">
@@ -59,5 +67,24 @@ export function SectionModal(props: SectionModalProps): ReactElement {
         </View>
       </SectionModalOverlay>
     </CentredModalRoot>
+  );
+}
+
+// Keep the sidebar row gutters inside the scroll view so its scrollbar meets the separator.
+const listColumn = { paddingLeft: 8, paddingRight: 14 };
+
+function ModalList({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <View className="w-60 border-r border-border pt-1.5 native:pt-2.5">
+      <ScreenListColumn>
+        {Platform.OS === 'web' ? (
+          <SidebarGutterHeld value>
+            <OfferColumn column={listColumn}>{children}</OfferColumn>
+          </SidebarGutterHeld>
+        ) : (
+          children
+        )}
+      </ScreenListColumn>
+    </View>
   );
 }

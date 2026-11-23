@@ -18,6 +18,7 @@ const meta = {
 } satisfies Meta;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 type Page = 'agents' | 'conversation';
@@ -33,6 +34,7 @@ function SettingsPreview({ page }: { page: Page }): ReactElement {
       />
     </Screen>
   );
+
   const detail =
     page === 'agents' ? (
       <AgentListView {...agentMeta.args} agents={pageRows()} />
@@ -53,6 +55,7 @@ function SettingsPreview({ page }: { page: Page }): ReactElement {
 export const Agents: Story = {
   render: () => <SettingsPreview page="agents" />,
 };
+
 export const Conversation: Story = {
   render: () => <SettingsPreview page="conversation" />,
 };

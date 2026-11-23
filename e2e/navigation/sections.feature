@@ -14,23 +14,28 @@ Feature: Sections
     When I close the Settings modal
     Then the wide Frame shows no Session beside the Sessions list
 
-  Scenario Outline: Closing Settings keeps the underlying page and its own last page
+  Scenario Outline: Closing Settings returns to the underlying page
     Given a wide Frame
     When I open New Session by its URL
     And I open Settings
     Then the Settings modal sits over New Session
-    When I open Agents from the Settings list
-    And I dismiss the Settings modal with <control>
+    When I dismiss the Settings modal with <control>
     Then New Session is open
     And focus returns to the Settings rail tile
-    When I open Settings
-    Then Agents is open in the Settings modal
 
     Examples:
       | control |
       | Escape  |
       | Close   |
       | the dim |
+
+  Scenario: Reopening Settings shows its last page
+    Given a wide Frame
+    When I open Settings
+    And I open Agents from the Settings list
+    And I close the Settings modal
+    And I open Settings
+    Then Agents is open in the Settings modal
 
   Scenario: An unknown address opens inside the wide Frame
     Given a wide Frame

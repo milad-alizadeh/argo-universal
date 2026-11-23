@@ -2,11 +2,13 @@ import {
   Frame,
   FramePage,
   type FrameSections,
+  type CoreSection,
   FrameSidebar,
   SectionDrawer,
   sectionOf,
   isCoreSection,
   sectionOrder,
+  sections,
   pluginPath,
   usePluginSections,
   PluginErrorToasts,
@@ -15,13 +17,14 @@ import {
   useSectionLists,
 } from '@repo/client';
 import { useSizeClass } from '@repo/client/size-class';
-import { SectionModal } from '@repo/kit/primitives/scaffolds/section-modal';
+import { SectionModalPage } from '@repo/kit/primitives/scaffolds/section-modal';
+import { SectionBackdropVisibility } from '@repo/kit/use-shown-page';
 import { usePathname, useSegments } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
 import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { CommonActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useLayoutEffect, useRef, type ComponentProps } from 'react';
+import { useLayoutEffect, useRef, useState, type ComponentProps } from 'react';
 import { drawerScrimLabel } from './compose-drawer-options';
 import { useDrawerOptions } from './frame-drawer-options';
 import {
@@ -64,6 +67,10 @@ const contentAt = (framed: boolean, frame: FrameSections, pick: PickSection) =>
     );
   };
 
+const inFramePage = (children: React.ReactNode): React.JSX.Element => (
+  <FramePage>{children}</FramePage>
+);
+
 type ScreenLayout = NonNullable<ComponentProps<typeof Drawer>['screenLayout']>;
 
 interface SectionsProps {
@@ -71,15 +78,15 @@ interface SectionsProps {
   frame: FrameSections;
   plugins: readonly PluginSection[];
   modal?: ModalSection;
-  opener: React.RefObject<HTMLElement | null>;
+  path: string;
+  focused: string | undefined;
+  restoreFocus: (event: Event) => void;
 }
 
 interface ModalSection {
-  name: string;
   title: string;
   list: React.ReactNode;
   backdropRoute: string;
-  opener: React.RefObject<HTMLElement | null>;
 }
 
 function SectionsDrawer({
@@ -87,90 +94,104 @@ function SectionsDrawer({
   frame,
   plugins,
   modal,
-  opener,
+  path,
+  focused,
+  restoreFocus,
 }: SectionsProps): React.JSX.Element {
-  const path = usePathname();
-  const focused = (useSegments() as readonly string[])[1];
   const options = frameDrawerOptions(framed, { plugins, path });
   const pick = usePickSection(plugins, sectionOf(path));
-  const props = useSectionsDrawerProps(framed, frame, (drawer, section) => {
-    if (
-      framed &&
-      frame.items.some(
-        (item) => item.id === section && item.widePresentation === 'modal',
-      )
-    ) {
-      const focused =
-        typeof document === 'undefined' ? null : document.activeElement;
-      if (typeof HTMLElement !== 'undefined' && focused instanceof HTMLElement)
-        opener.current = focused;
-    }
-
-    pick(drawer, section);
-  });
-
-  const screenLayout: ScreenLayout = ({ children, route, navigation }) => {
-    if (!modal || route.name !== modal.name)
-      return <FramePage>{children}</FramePage>;
-
-    return (
-      <SectionModal
-        label={modal.title}
-        list={modal.list}
-        onClose={() => {
-          const state: DrawerContent['state'] = navigation.getState();
-          const backdrop = state.routes.find(
-            (item) => item.name === modal.backdropRoute,
-          );
-          if (backdrop)
-            navigation.dispatch({
-              ...CommonActions.navigate({
-                name: backdrop.name,
-                params: backdrop.params,
-              }),
-              target: state.key,
-            });
-        }}
-        onCloseAutoFocus={(event) => {
-          const opener = modal.opener.current;
-          if (!opener) return;
-          event.preventDefault();
-          requestAnimationFrame(() => opener.focus());
-        }}
-      >
-        {children}
-      </SectionModal>
-    );
-  };
+  const props = useSectionsDrawerProps(framed, frame, pick);
 
   return (
     <Drawer
       {...props}
       detachInactiveScreens={!framed}
-      screenLayout={screenLayout}
+      screenLayout={sectionLayout(modal, restoreFocus)}
     >
       {sectionScreens(({ route }) => ({
         ...options({ route }),
-        ...wideScene(framed, route.name, focused, modal),
+        ...wideScene({
+          framed,
+          route: route.name,
+          focused,
+          backdrop: modal?.backdropRoute,
+        }),
       }))}
     </Drawer>
   );
 }
 
-function wideScene(
-  framed: boolean,
-  route: string,
-  focused: string | undefined,
+type SceneNavigation = Parameters<ScreenLayout>[0]['navigation'];
+
+function closeToBackdrop(navigation: SceneNavigation, routeName: string): void {
+  const state: DrawerContent['state'] = navigation.getState();
+  const route = state.routes.find((item) => item.name === routeName);
+
+  if (route)
+    navigation.dispatch({
+      ...CommonActions.navigate({ name: route.name, params: route.params }),
+      target: state.key,
+    });
+}
+
+function sectionLayout(
   modal: ModalSection | undefined,
-): DrawerNavigationOptions {
+  restoreFocus: SectionsProps['restoreFocus'],
+): ScreenLayout {
+  return ({ children, route, navigation }) => {
+    if (!modalSectionOf(route.name)) {
+      return (
+        <SectionBackdropVisibility value={route.name === modal?.backdropRoute}>
+          {inFramePage(children)}
+        </SectionBackdropVisibility>
+      );
+    }
+
+    return (
+      <SectionModalPage
+        renderPage={inFramePage}
+        modal={
+          modal && {
+            label: modal.title,
+            list: modal.list,
+            onClose: (): void =>
+              closeToBackdrop(navigation, modal.backdropRoute),
+            onCloseAutoFocus: restoreFocus,
+          }
+        }
+      >
+        {children}
+      </SectionModalPage>
+    );
+  };
+}
+
+function modalSectionOf(name: string | undefined): CoreSection | undefined {
+  return isCoreSection(name) && sections[name].widePresentation === 'modal'
+    ? name
+    : undefined;
+}
+
+interface SceneVisibility {
+  framed: boolean;
+  route: string;
+  focused: string | undefined;
+  backdrop: string | undefined;
+}
+
+function wideScene({
+  framed,
+  route,
+  focused,
+  backdrop,
+}: SceneVisibility): DrawerNavigationOptions {
   if (!framed) return {};
 
   return {
-    keepVisibleOnBlur: route === modal?.backdropRoute,
+    keepVisibleOnBlur: route === backdrop,
     sceneStyle: {
       backgroundColor: 'transparent',
-      display:
-        route === focused || route === modal?.backdropRoute ? 'flex' : 'none',
+      display: route === focused || route === backdrop ? 'flex' : 'none',
     },
   };
 }
@@ -222,51 +243,99 @@ export function FrameNavigator(): React.JSX.Element {
   const sizeClass = useSizeClass();
   const plugins = usePluginSections();
   const framed = sizeClass === 'wide';
-  const path = usePathname();
-  const route = (useSegments() as readonly string[])[1];
-  const section = sectionOf(path);
-  const items = [...coreNavigationSections, ...plugins];
-  const modalItem = items.find(
-    (item) => item.id === section && item.widePresentation === 'modal',
-  );
-  const wideModal =
-    framed && modalItem && isCoreSection(modalItem.id) ? modalItem : undefined;
-  const previous = useRef({ path: '/sessions', route: 'sessions' });
-  const opener = useRef<HTMLElement | null>(null);
-
-  useLayoutEffect(() => {
-    if (!modalItem) {
-      previous.current = { path, route: route ?? 'sessions' };
-    }
-  }, [modalItem, path, route]);
-
-  const lists = useSectionLists(wideModal ? previous.current.path : undefined);
-  const frame: FrameSections = {
-    section: wideModal ? sectionOf(previous.current.path) : section,
-    lists,
-    items,
-  };
-  const modal =
-    wideModal && isCoreSection(wideModal.id)
-      ? {
-          name: wideModal.id,
-          title: wideModal.title,
-          list: lists[wideModal.id].list,
-          backdropRoute: previous.current.route,
-          opener,
-        }
-      : undefined;
+  const presentation = useFramePresentation(framed, plugins);
+  const restoreFocus = useModalOpener(Boolean(presentation.modal));
 
   return (
-    <Frame sizeClass={sizeClass} {...frame}>
+    <Frame sizeClass={sizeClass} {...presentation.frame}>
       <PluginErrorToasts />
       <SectionsDrawer
         framed={framed}
-        frame={frame}
         plugins={plugins}
-        modal={modal}
-        opener={opener}
+        restoreFocus={restoreFocus}
+        {...presentation}
       />
     </Frame>
   );
+}
+
+interface Location {
+  path: string;
+  route: string;
+}
+
+const firstLocation: Location = { path: '/sessions', route: 'sessions' };
+
+function useBackdrop(location: Location, showingModal: boolean): Location {
+  const [lastPage, remember] = useState(firstLocation);
+
+  if (!showingModal && lastPage.path !== location.path) remember(location);
+
+  return lastPage;
+}
+
+type FramePresentation = Pick<
+  SectionsProps,
+  'frame' | 'focused' | 'path' | 'modal'
+>;
+
+function useFramePresentation(
+  framed: boolean,
+  plugins: readonly PluginSection[],
+): FramePresentation {
+  const path = usePathname();
+  const segments: readonly string[] = useSegments();
+  const focused = segments[1];
+  const section = sectionOf(path);
+  const modalSection = modalSectionOf(section);
+
+  const backdrop = useBackdrop(
+    { path, route: focused ?? firstLocation.route },
+    Boolean(modalSection),
+  );
+
+  const shown = framed ? modalSection : undefined;
+  const lists = useSectionLists(shown ? backdrop.path : undefined);
+
+  return {
+    frame: {
+      section: shown ? sectionOf(backdrop.path) : section,
+      lists,
+      items: [...coreNavigationSections, ...plugins],
+    },
+    focused,
+    path,
+    modal: shown && {
+      title: sections[shown].title,
+      list: lists[shown].list,
+      backdropRoute: backdrop.route,
+    },
+  };
+}
+
+// Track the element that opens the modal, whether it is a rail tile or a page Action.
+function useModalOpener(open: boolean): (event: Event) => void {
+  const opener = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (open || typeof document === 'undefined') return;
+
+    const remember = (event: FocusEvent): void => {
+      if (event.target instanceof HTMLElement && event.target !== document.body)
+        opener.current = event.target;
+    };
+
+    document.addEventListener('focusin', remember);
+
+    return (): void => document.removeEventListener('focusin', remember);
+  }, [open]);
+
+  return (event): void => {
+    const node = opener.current;
+
+    if (!node?.isConnected) return;
+
+    event.preventDefault();
+    requestAnimationFrame(() => node.focus());
+  };
 }

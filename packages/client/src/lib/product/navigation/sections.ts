@@ -27,7 +27,6 @@ export interface NavigationSection {
   id: Section;
   title: string;
   icon: DrawnIcon;
-  widePresentation?: 'page' | 'modal';
 }
 
 export const isCoreSection = (name: string | undefined): name is CoreSection =>

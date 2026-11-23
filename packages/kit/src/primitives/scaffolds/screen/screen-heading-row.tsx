@@ -17,12 +17,12 @@ import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 import { ScreenTitle } from './screen-title-menu';
 
+export const ScreenHeadingEndInset = createContext(0);
+
 /*
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
  * `wide:mt-frame-inset` sets level with the rail's first tile, so its title sits on the sidebar title's line.
  */
-export const ScreenHeadingEndInset = createContext(0);
-
 export function ScreenHeadingBody(
   props: ScreenHeaderInput & {
     standalone?: boolean;

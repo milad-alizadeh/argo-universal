@@ -206,7 +206,19 @@ When(
   async ({ page }, control: string) => {
     if (control === 'Escape') await page.keyboard.press('Escape');
     else if (control === 'Close') await closeSettingsModal(page);
-    else await page.mouse.click(20, 20);
+    else {
+      const tile = page.getByRole('button', {
+        name: 'Scheduled',
+        exact: true,
+        includeHidden: true,
+      });
+
+      const box = await tile.boundingBox();
+
+      if (!box) throw new Error('The dimmed rail tile has no bounds.');
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    }
+
     await expect(settingsModal(page)).toHaveCount(0);
   },
 );
@@ -219,7 +231,19 @@ Then('focus returns to the Settings rail tile', async ({ page }) => {
 
 Then('Agents is open in the Settings modal', async ({ page }) => {
   await expect(page).toHaveURL(/\/settings\/agents$/);
-  await expect(
-    settingsModal(page).getByRole('button', { name: 'Search Agents' }),
-  ).toBeVisible();
+
+  const search = settingsModal(page).getByRole('button', {
+    name: 'Search Agents',
+  });
+
+  const close = settingsModal(page).getByRole('button', {
+    name: 'Close Settings',
+  });
+
+  await expect(search).toBeVisible();
+  const searchBox = await search.boundingBox();
+  const closeBox = await close.boundingBox();
+  expect(
+    searchBox && closeBox && searchBox.x + searchBox.width <= closeBox.x,
+  ).toBe(true);
 });
