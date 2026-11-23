@@ -89,54 +89,37 @@ export async function resolveCheckoutBase(
   return base;
 }
 
-type SymbolicRef = { ref: string; prefix: string };
+const branchPrefixes = ['refs/remotes/origin/', 'refs/heads/'];
 
-const originDefault: SymbolicRef = {
-  ref: 'refs/remotes/origin/HEAD',
-  prefix: 'refs/remotes/origin/',
-};
-
-const checkedOut: SymbolicRef = { ref: 'HEAD', prefix: 'refs/heads/' };
-
-// The branch a symbolic ref names, or undefined when it names none.
-async function symbolicTarget(
+// The branch a resolved base names: a tracking or local ref's own name, or the main checkout's branch for its HEAD.
+async function baseBranchName(
   projectPath: string,
-  { ref, prefix }: SymbolicRef,
+  base: string,
   signal?: AbortSignal,
-): Promise<string | undefined> {
-  const target = await git(
-    projectPath,
-    ['symbolic-ref', '--quiet', ref],
-    signal,
-  ).then(
-    (stdout): string => stdout.trim(),
-    (): string => '',
-  );
+): Promise<string | null> {
+  const ref =
+    base === 'HEAD'
+      ? await readOrNull(
+          projectPath,
+          ['symbolic-ref', '--quiet', 'HEAD'],
+          signal,
+        )
+      : base;
 
-  return target.startsWith(prefix) ? target.slice(prefix.length) : undefined;
+  const prefix = branchPrefixes.find((start) => ref?.startsWith(start));
+
+  return prefix && ref ? ref.slice(prefix.length) : null;
 }
 
-// The saved base branch while it resolves; once it is gone, origin's default branch, then the main checkout's branch.
+// The branch a new worktree from this saved base starts on, for the reader; the saved name while Git names none.
 export async function resolveWorktreeBaseBranch(
   projectPath: string,
   saved: string,
   signal?: AbortSignal,
 ): Promise<string> {
-  const refs = (await git(projectPath, baseRefs, signal)).split('\n');
+  const base = await resolveCheckoutBase(projectPath, saved, signal);
 
-  const resolves = (branch: string | undefined): branch is string =>
-    branch !== undefined &&
-    candidateBaseRefs(branch).some((ref) => refs.includes(ref));
-
-  if (resolves(saved)) return saved;
-
-  for (const standIn of [originDefault, checkedOut]) {
-    const branch = await symbolicTarget(projectPath, standIn, signal);
-
-    if (resolves(branch)) return branch;
-  }
-
-  return saved;
+  return (await baseBranchName(projectPath, base, signal)) ?? saved;
 }
 
 export type TakenBranch = { path: string; action: 'reuse' | 'remove' };
