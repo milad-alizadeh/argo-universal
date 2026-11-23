@@ -37,6 +37,7 @@ export {
 export {
   type SessionWorkbench,
   SessionWorkbenchColumn,
+  WorkbenchTextAction,
   type WorkbenchSection,
 } from './components/session-workbench';
 

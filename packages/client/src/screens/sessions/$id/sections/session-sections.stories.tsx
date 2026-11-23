@@ -113,6 +113,22 @@ const includingRuns = { ...everySection, runs: runActions };
 
 export const Runs: Story = { args: { content: includingRuns } };
 
+// No .argo/run.json yet: the Runs card offers to create one, drawn like the Follow-ups card's action below it.
+export const RunSetup: Story = {
+  args: {
+    content: {
+      ...everySection,
+      schedules: emptyFollowUps,
+      runs: {
+        ...runActions,
+        runs: [],
+        defaultGroup: undefined,
+        draft: { pending: false, onPress: fn() },
+      },
+    },
+  },
+};
+
 // One pull request with a long title, 15 files and 10/23 checks: the number and diff total stay on the second line, the checks at its trailing edge.
 export const BusyPullRequest: Story = {
   args: {
