@@ -2,6 +2,7 @@ import type {
   PromptRequest,
   SessionConfigOption,
 } from '@agentclientprotocol/sdk';
+import { InitialConfigOption } from '@repo/contracts';
 import { session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
@@ -39,12 +40,14 @@ it('reopens and prompts when the Agent withdrew an option the Session saved, and
     prompt: [{ type: 'text', text: 'First' }],
   });
 
-  const savedChoices = (): unknown =>
-    host.database
-      .select()
-      .from(session)
-      .where(eq(session.id, created.sessionId))
-      .get()?.configValues;
+  const savedChoices = (): InitialConfigOption[] =>
+    InitialConfigOption.array().parse(
+      host.database
+        .select()
+        .from(session)
+        .where(eq(session.id, created.sessionId))
+        .get()?.configValues,
+    );
 
   await waitForAcpSessionIdle(host, created.sessionId);
   expect(savedChoices()).toContainEqual({
