@@ -6,12 +6,23 @@ export type WriterCommit = {
 
 export type PendingWriterCommit = { through: number; committed: WriterCommit };
 
+// A commit whose own job was dropped rejects; the others in the batch resolve, since their jobs committed.
 export const acknowledgeWrittenPrefix = (
   pendingCommits: PendingWriterCommit[],
   writtenCount: number,
+  dropped: readonly { index: number; error: Error }[],
 ): PendingWriterCommit[] => {
-  for (const entry of pendingCommits)
-    if (entry.through <= writtenCount) entry.committed.resolve();
+  const droppedErrors = new Map(
+    dropped.map(({ index, error }) => [index + 1, error]),
+  );
+
+  for (const entry of pendingCommits) {
+    if (entry.through > writtenCount) continue;
+
+    if (droppedErrors.has(entry.through))
+      entry.committed.reject(droppedErrors.get(entry.through));
+    else entry.committed.resolve();
+  }
 
   return pendingCommits.flatMap((entry) =>
     entry.through > writtenCount

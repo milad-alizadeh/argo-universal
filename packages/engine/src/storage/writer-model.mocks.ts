@@ -18,7 +18,7 @@ export const fixtures = [
   {
     type: 'xstate.done.actor.writeBatch',
     actorId: 'writeBatch',
-    output: [],
+    output: { dropped: [] },
   },
   {
     type: 'xstate.error.actor.writeBatch',

@@ -3,7 +3,9 @@ import {
   and,
   assertEvent,
   assign,
+  type DoneActorEvent,
   emit,
+  enqueueActions,
   fromPromise,
   setup,
   stateIn,
@@ -19,8 +21,9 @@ import {
   stampWriterJob,
   unpackWriterJobs,
   type WriterJob,
+  type WrittenWriterBatch,
   writeJobFiles,
-  writeJobs,
+  writeWriterBatch,
 } from './writer-job';
 
 type WriterBatchInput = {
@@ -58,9 +61,9 @@ interface WriterContext extends WriterInput {
   refusing: boolean;
 }
 
-// Queued jobs are announced when accepted, then again when their batch commits.
+// Queued jobs are announced when accepted, then again when their batch commits, or when it drops them.
 export type WriterJobsEvent = {
-  type: 'writer.queued' | 'writer.committed';
+  type: 'writer.queued' | 'writer.committed' | 'writer.dropped';
   jobs: readonly WriterJob[];
 };
 
@@ -84,6 +87,31 @@ const batchInput = ({
   blobsFolder: context.blobsFolder,
   jobs: context.queue.slice(0, context.batchSize),
 });
+
+// What the batch that just committed left out.
+const writtenBatch = ({
+  event,
+}: {
+  event: DoneActorEvent<WrittenWriterBatch>;
+}): WrittenWriterBatch => event.output;
+
+// Every committed batch reports the jobs it dropped, announces the rest, and leaves the queue.
+const committedBatch = [
+  { type: 'reportDropped', params: writtenBatch },
+  { type: 'announceWritten', params: writtenBatch },
+  { type: 'dropBatch', params: writtenBatch },
+] as const;
+
+const writtenJobs = (
+  context: WriterContext,
+  written: WrittenWriterBatch,
+): WriterJob[] => {
+  const dropped = new Set(written.dropped.map(({ index }) => index));
+
+  return context.queue
+    .slice(0, context.batchSize)
+    .filter((_, index): boolean => !dropped.has(index));
+};
 
 // The first refusal is logged; later ones wait for a batch to commit.
 const refuseOverBudget = [
@@ -110,6 +138,13 @@ const refuseOverBudget = [
   },
 ] as const;
 
+function writeLogLine(context: WriterContext, text: string): void {
+  const line = `databaseWriter: ${text}`;
+
+  if (context.log) context.log(line);
+  else console.error(line);
+}
+
 export const writerMachine = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
@@ -119,10 +154,11 @@ export const writerMachine = setup({
     emitted: {} as WriterJobsEvent,
   },
   actors: {
-    writeBatch: fromPromise<void, WriterBatchInput>(
-      async ({ input }): Promise<void> => {
+    writeBatch: fromPromise<WrittenWriterBatch, WriterBatchInput>(
+      async ({ input }): Promise<WrittenWriterBatch> => {
         await writeJobFiles(input.blobsFolder, input.jobs);
-        writeJobs(input.database, input.jobs);
+
+        return writeWriterBatch(input.database, input.jobs);
       },
     ),
   },
@@ -132,10 +168,37 @@ export const writerMachine = setup({
 
       return { type: 'writer.queued', jobs: unpackWriterJobs([event.job]) };
     }),
-    announceWritten: emit(({ context }): WriterJobsEvent => ({
-      type: 'writer.committed',
-      jobs: unpackWriterJobs(context.queue.slice(0, context.batchSize)),
-    })),
+    announceWritten: emit(
+      ({ context }, written: WrittenWriterBatch): WriterJobsEvent => ({
+        type: 'writer.committed',
+        jobs: unpackWriterJobs(writtenJobs(context, written)),
+      }),
+    ),
+    // A dropped job never commits, so retrying it would hold up every job behind it.
+    reportDropped: enqueueActions(
+      ({ context, enqueue }, written: WrittenWriterBatch): void => {
+        const dropped = written.dropped.flatMap(({ index, error }) => {
+          const job = context.queue[index];
+
+          return job ? [{ job, error }] : [];
+        });
+
+        if (!dropped.length) return;
+
+        const lines = dropped.map(
+          ({ job, error }) => `${job.describe()}: ${String(error)}`,
+        );
+
+        writeLogLine(
+          context,
+          `dropped ${dropped.length} jobs that break a constraint:\n${lines.join('\n')}`,
+        );
+        enqueue.emit({
+          type: 'writer.dropped',
+          jobs: unpackWriterJobs(dropped.map(({ job }) => job)),
+        });
+      },
+    ),
 
     enqueue: assign({
       pendingCommits: ({ context, event }): PendingWriterCommit[] => {
@@ -164,8 +227,15 @@ export const writerMachine = setup({
       batchSize: ({ context }): number => context.queue.length,
     }),
     dropBatch: assign({
-      pendingCommits: ({ context }): PendingWriterCommit[] =>
-        acknowledgeWrittenPrefix(context.pendingCommits, context.batchSize),
+      pendingCommits: (
+        { context },
+        written: WrittenWriterBatch,
+      ): PendingWriterCommit[] =>
+        acknowledgeWrittenPrefix(
+          context.pendingCommits,
+          context.batchSize,
+          written.dropped,
+        ),
       queue: ({ context }): WriterContext['queue'] =>
         context.queue.slice(context.batchSize),
       batchSize: 0,
@@ -187,12 +257,8 @@ export const writerMachine = setup({
           'error' in event ? event.error : new Error('Writer cannot commit'),
         ),
     }),
-    log: ({ context }, params: WriterLogParameters): void => {
-      const line = `databaseWriter: ${params.line}`;
-
-      if (context.log) context.log(line);
-      else console.error(line);
-    },
+    log: ({ context }, params: WriterLogParameters): void =>
+      writeLogLine(context, params.line),
   },
   guards: {
     isOverRefusableBudget: ({ context, event }): boolean => {
@@ -248,22 +314,22 @@ export const writerMachine = setup({
           {
             guard: and(['drainRequested', 'hasJobsAfterBatch']),
             target: 'draining',
-            actions: ['announceWritten', 'dropBatch'],
+            actions: committedBatch,
           },
           {
             guard: 'drainRequested',
             target: 'drained',
-            actions: ['announceWritten', 'dropBatch'],
+            actions: committedBatch,
           },
           {
             guard: 'hasJobsAfterBatch',
             target: 'writing',
             reenter: true,
-            actions: ['announceWritten', 'dropBatch'],
+            actions: committedBatch,
           },
           {
             target: 'idle',
-            actions: ['announceWritten', 'dropBatch'],
+            actions: committedBatch,
           },
         ],
         // While draining, a failed batch is tried once more at once, not after `writeRetryDelay`.
@@ -324,11 +390,11 @@ export const writerMachine = setup({
             guard: 'hasJobsAfterBatch',
             target: 'draining',
             reenter: true,
-            actions: ['announceWritten', 'dropBatch'],
+            actions: committedBatch,
           },
           {
             target: 'drained',
-            actions: ['announceWritten', 'dropBatch'],
+            actions: committedBatch,
           },
         ],
         // The jobs stay in `queue`, so the drained snapshot holds what was lost.

@@ -39,7 +39,11 @@ import {
   type CloseAcpResourcesInput,
 } from './agent-cleanup';
 import type { Caffeinate } from './caffeinate';
-import { openEngineDatabase, type OpenDatabaseInput } from './engine-database';
+import {
+  closeEngineDatabase,
+  openEngineDatabase,
+  type OpenDatabaseInput,
+} from './engine-database';
 import {
   recoverEngineAfterRestart,
   type RecoveryInput,
@@ -195,7 +199,7 @@ export const engineSetup = setup({
       writeLog({ home: context.home, label: 'engine', line: params.line });
     },
     closeDatabase: ({ context }): void => {
-      context.database?.$client.close();
+      closeEngineDatabase(context.home, context.database);
     },
   },
   guards: { hasFailure: ({ context }): boolean => context.failure !== null },

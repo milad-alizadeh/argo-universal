@@ -7,7 +7,7 @@ type ReceiptInput = {
   signal?: AbortSignal;
 };
 
-// The Blob's job committed, or the wait ended without it: the Writer stopped, or the caller left.
+// The Blob's job committed, or the wait ended without it: the Writer stopped or dropped the job, or the caller left.
 type ReceiptOutcome = { kind: 'stored' } | { kind: 'unstored'; cause: unknown };
 
 type ReceiptEvent =
@@ -16,8 +16,16 @@ type ReceiptEvent =
 
 type ReceiptContext = ReceiptInput & { outcome?: ReceiptOutcome };
 
+const ended = (cause: unknown): ReceiptEvent => ({
+  type: 'receipt.ended',
+  cause,
+});
+
 const unstoredMessage =
   'The Writer stopped before storing the Operation result';
+
+const droppedMessage =
+  'The Writer dropped the job storing the Operation result';
 
 // The role of a job that stores Blobs; a job of any module takes it by having the member.
 export interface BlobHoldingJob {
@@ -32,7 +40,7 @@ export const holdsBlob = (
   blobId: string,
 ): boolean => jobs.filter(storesBlobs).some((job) => job.holdsBlob(blobId));
 
-// Follows the Writer until the job holding the Blob commits, the Writer stops, or the caller leaves (ADR-0002, ADR-0003).
+// Follows the Writer until the job holding the Blob commits or is dropped, the Writer stops, or the caller leaves (ADR-0002, ADR-0003).
 export const blobReceiptMachine = setup({
   // SAFETY: XState reads these declarations only as types, never runtime input.
   types: {
@@ -99,10 +107,15 @@ function followWriter(
     if (holdsBlob(jobs, blobId)) sendBack({ type: 'receipt.committed' });
   });
 
+  const dropped = writer.on('writer.dropped', ({ jobs }) => {
+    if (holdsBlob(jobs, blobId)) sendBack(ended(new Error(droppedMessage)));
+  });
+
   const stopped = followWriterStop(writer, sendBack);
 
   return (): void => {
     committed.unsubscribe();
+    dropped.unsubscribe();
     stopped.unsubscribe();
   };
 }
@@ -112,8 +125,7 @@ const followWriterStop = (
   sendBack: SendBack,
 ): Subscription =>
   writer.subscribe({
-    complete: () =>
-      sendBack({ type: 'receipt.ended', cause: new Error(unstoredMessage) }),
+    complete: () => sendBack(ended(new Error(unstoredMessage))),
   });
 
 function followCaller(
@@ -122,8 +134,7 @@ function followCaller(
 ): () => void {
   if (!signal) return (): void => {};
 
-  const left = (): void =>
-    sendBack({ type: 'receipt.ended', cause: signal.reason });
+  const left = (): void => sendBack(ended(signal.reason));
 
   if (signal.aborted) left();
   else signal.addEventListener('abort', left, { once: true });

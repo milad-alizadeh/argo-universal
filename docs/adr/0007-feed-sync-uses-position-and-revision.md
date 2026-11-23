@@ -6,6 +6,8 @@ Open rows live in Server memory. The live stream sends `row.upsert`, `row.append
 
 Spec 0009 adds an ephemeral commit acknowledgement to an accepted Writer prefix. Session waits for its identity, Turn and local prompt row to commit before dispatching an ACP prompt. A failed write permanently rejects every acknowledgement behind that prefix; a later durable retry cannot restart the rejected submission. The acknowledgement contains no upstream completion promise or durable receipt (owner, 2026-10-09, #349).
 
+A job the Writer drops because it breaks a schema constraint (ADR-0002, owner, 2026-11-23) rejects only its own acknowledgement. The jobs behind it still commit and their acknowledgements resolve, since a retry could never commit the dropped job and would hold them up forever.
+
 A Turn completes through a nonterminal Feed publication barrier. Feed applies and settles the earlier accepted text rows, sends their waiting public changes, and only then acknowledges publication to Session. Session then clears the active Turn and admits another prompt. The Session callback remains attached throughout; terminal Feed flush remains reserved for Session closure (owner, 2026-10-09, #349).
 
 Plans keep their original row position and Turn through later replacements. Their `_meta.argo.contentRevision` records the last whole content replacement independently of removal; removing an older Plan cannot displace the latest Plan. Removal retains stored history and clears active presentation. An unaddressed ACP Plan persists the narrow `unaddressedPlanAcpSessionId` marker so the existing live/queued/stored revision reconciliation can recover its local row after close/reopen. Existing payload version 1 and stored row IDs remain readable.

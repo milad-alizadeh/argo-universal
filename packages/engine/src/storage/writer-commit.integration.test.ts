@@ -52,6 +52,57 @@ it('a Writer acknowledgement follows the durable ordered prefix', async () => {
   );
 });
 
+it('a job that breaks a constraint is dropped, so the jobs behind it still commit', async () => {
+  const storage = openTestDatabase();
+  const lines: string[] = [];
+
+  const writer = createActor(writerMachine, {
+    input: {
+      database: storage.database,
+      now: () => 1000,
+      log: (line) => lines.push(line),
+    },
+  }).start();
+
+  onTestFinished(() => {
+    writer.stop();
+    storage.remove();
+  });
+  const broken = Promise.withResolvers<void>();
+  const behind = Promise.withResolvers<void>();
+  const dropped: string[] = [];
+  writer.on('writer.dropped', ({ jobs }) =>
+    dropped.push(...jobs.map((job) => job.describe())),
+  );
+
+  const brokenOutcome = broken.promise.then(
+    () => 'committed',
+    () => 'rejected',
+  );
+
+  writer.send({ type: writeEvent, job: setTitle('first') });
+  writer.send({
+    type: writeEvent,
+    job: new SqlJob({ statement: 'UPDATE session SET title = NULL' }),
+    committed: broken,
+  });
+  writer.send({ type: writeEvent, job: insertTurn, committed: behind });
+
+  await behind.promise;
+  expect(await brokenOutcome).toBe('rejected');
+  expect(writer.getSnapshot().value).toBe('idle');
+  expect(
+    storage.database.$client.prepare('SELECT title FROM session').get(),
+  ).toEqual({ title: 'first' });
+  expect(storage.database.$client.prepare('SELECT id FROM turn').get()).toEqual(
+    { id: 'turn-1' },
+  );
+  expect(dropped).toEqual(['UPDATE session SET title = NULL']);
+  expect(lines).toEqual([
+    'databaseWriter: dropped 1 jobs that break a constraint:\nUPDATE session SET title = NULL: Error: NOT NULL constraint failed: session.title',
+  ]);
+});
+
 it('a failed prefix permanently rejects a receipt behind it while durable jobs still retry', async () => {
   const { database, writer } = startWriter();
   database.$client.exec(

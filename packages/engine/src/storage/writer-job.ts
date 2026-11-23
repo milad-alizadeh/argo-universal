@@ -1,4 +1,5 @@
 import type { Database } from '@repo/db';
+import { z } from 'zod';
 
 export type StorageTransaction = Parameters<
   Parameters<Database['transaction']>[0]
@@ -24,6 +25,66 @@ export function writeJobs(
 ): void {
   database.transaction((transaction): void => {
     for (const job of jobs) job.commit(transaction);
+  });
+}
+
+// A job the Writer left out of a batch, by its index in the batch.
+type DroppedWriterJob = { index: number; error: Error };
+
+export type WrittenWriterBatch = { dropped: DroppedWriterJob[] };
+
+// SQLite's primary result code for a broken constraint; extended codes keep it in their low byte.
+const sqliteConstraint = 19;
+
+const primaryCodeRange = 256;
+
+// A trigger's RAISE also reports a broken constraint, but it is the database refusing a write, which may pass.
+const sqliteConstraintTrigger = 1811;
+
+const SqliteFailure = z.object({ errcode: z.number() });
+
+// The SQLite error naming the schema constraint a job broke, if it broke one. Retrying cannot commit that job, so it would hold up every job behind it.
+function brokenConstraint(failure: Error): Error | undefined {
+  for (
+    let cause: unknown = failure;
+    cause instanceof Error;
+    cause = cause.cause
+  ) {
+    const sqlite = SqliteFailure.safeParse(cause);
+
+    if (
+      sqlite.success &&
+      sqlite.data.errcode % primaryCodeRange === sqliteConstraint
+    )
+      return sqlite.data.errcode === sqliteConstraintTrigger
+        ? undefined
+        : cause;
+  }
+
+  return undefined;
+}
+
+// Commits a batch in one transaction, each job in its own savepoint. A job that breaks a constraint rolls back alone and is dropped; any other failure rolls back the whole batch.
+export function writeWriterBatch(
+  database: Database,
+  jobs: readonly WriterJob[],
+): WrittenWriterBatch {
+  return database.transaction((transaction): WrittenWriterBatch => {
+    const dropped: DroppedWriterJob[] = [];
+
+    for (const [index, job] of jobs.entries()) {
+      try {
+        transaction.transaction((savepoint): void => job.commit(savepoint));
+      } catch (error) {
+        const constraint =
+          error instanceof Error ? brokenConstraint(error) : undefined;
+
+        if (!constraint) throw error;
+        dropped.push({ index, error: constraint });
+      }
+    }
+
+    return { dropped };
   });
 }
 

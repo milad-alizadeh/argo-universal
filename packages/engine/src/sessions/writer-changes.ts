@@ -13,7 +13,7 @@ const announces = (job: WriterJob): job is WriterJob & AnnouncedJob =>
 
 const unique = (ids: string[]): string[] => [...new Set(ids)];
 
-// The Sessions and Turns these jobs change, as the Writer announces them when they queue and commit.
+// The Sessions and Turns these jobs change, as the Writer announces them when they queue, commit, or are dropped.
 export const writerChangeOf = (jobs: readonly WriterJob[]): WriterChange => {
   const changes = jobs.flatMap((job) =>
     announces(job) ? [job.announcedChange()] : [],
@@ -25,7 +25,7 @@ export const writerChangeOf = (jobs: readonly WriterJob[]): WriterChange => {
   };
 };
 
-// Calls `listener` when the Writer queues jobs and again when they commit.
+// Calls `listener` when the Writer queues jobs and again when they commit or are dropped.
 export const onWriterChange = (
   writer: WriterActorRef,
   listener: (change: WriterChange) => void,
@@ -47,7 +47,8 @@ function writerSubscriptions(
   writer: WriterActorRef,
   listener: (change: WriterChange) => void,
 ): Subscription[] {
-  return (['writer.queued', 'writer.committed'] as const).map((type) =>
-    writer.on(type, ({ jobs }): void => listener(writerChangeOf(jobs))),
+  return (['writer.queued', 'writer.committed', 'writer.dropped'] as const).map(
+    (type) =>
+      writer.on(type, ({ jobs }): void => listener(writerChangeOf(jobs))),
   );
 }

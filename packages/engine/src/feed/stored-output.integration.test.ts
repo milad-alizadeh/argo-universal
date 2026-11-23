@@ -2,7 +2,11 @@ import { type Database, openDatabase } from '@repo/db';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor, fromPromise } from 'xstate';
 import { SqlJob } from '#mocks/storage-job';
-import { writerMachine, type WriterJob } from '../storage';
+import {
+  writerMachine,
+  type WriterJob,
+  type WrittenWriterBatch,
+} from '../storage';
 import { FeedRowsJob } from './feed-rows-job';
 import { outputBlobStored } from './stored-output';
 
@@ -28,19 +32,20 @@ type BatchInput = {
 
 type HeldWriter = {
   writer: ReturnType<typeof createActor<typeof writerMachine>>;
-  commit: () => void;
+  commit: (written?: WrittenWriterBatch) => void;
 };
 
 const writeEvent = 'writer.write';
 
 // A Writer whose every batch waits until the test commits it.
 function heldWriter(): HeldWriter {
-  const batches: (() => void)[] = [];
+  const batches: ((written: WrittenWriterBatch) => void)[] = [];
 
   const machine = writerMachine.provide({
     actors: {
-      writeBatch: fromPromise<void, BatchInput>(
-        () => new Promise<void>((resolve) => batches.push(resolve)),
+      writeBatch: fromPromise<WrittenWriterBatch, BatchInput>(
+        () =>
+          new Promise<WrittenWriterBatch>((resolve) => batches.push(resolve)),
       ),
     },
   });
@@ -53,7 +58,10 @@ function heldWriter(): HeldWriter {
     writer.stop();
   });
 
-  return { writer, commit: () => batches.shift()?.() };
+  return {
+    writer,
+    commit: (written = { dropped: [] }) => batches.shift()?.(written),
+  };
 }
 
 const settledYet = async (stored: Promise<void>): Promise<boolean> => {
@@ -96,4 +104,18 @@ it('stops waiting when the caller leaves', async () => {
   left.abort(new Error('The caller disconnected'));
 
   await expect(stored).rejects.toThrow('The caller disconnected');
+});
+
+it('stops waiting when the Writer drops the job that stores the Blob', async () => {
+  const { writer, commit } = heldWriter();
+  writer.send({ type: writeEvent, job: outputJob });
+
+  const stored = outputBlobStored(writer, blobId);
+  commit({
+    dropped: [{ index: 0, error: new Error('UNIQUE constraint failed') }],
+  });
+
+  await expect(stored).rejects.toThrow(
+    'The Writer dropped the job storing the Operation result',
+  );
 });

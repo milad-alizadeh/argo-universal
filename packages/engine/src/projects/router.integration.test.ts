@@ -49,7 +49,7 @@ it.each([
 ])(
   'counts each invalid Project request within its Engine: new Engine $newEngine',
   async ({ newEngine, expected }): Promise<void> => {
-    const { database, caller } = await startProjectTestHost();
+    const { database, caller, home, stop } = await startProjectTestHost();
     database
       .update(project)
       .set({ checkoutChoice: { type: 'unrecognised' } })
@@ -64,8 +64,11 @@ it.each([
       code: internalServerError,
     });
 
+    // A new Engine starts once the last one has stopped, since one Engine owns a home.
     const nextCaller = newEngine
-      ? (await startEngineTestHost({ database })).caller
+      ? await stop().then(
+          async () => (await startEngineTestHost({ home })).caller,
+        )
       : caller;
 
     await expect(nextCaller.project.list()).rejects.toMatchObject({
