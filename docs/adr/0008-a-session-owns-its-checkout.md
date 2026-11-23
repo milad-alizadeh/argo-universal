@@ -29,4 +29,6 @@ Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engin
 
 The owner approved an exception for #2250. A caller of `session.new` can supply the branch name for a worktree Checkout. A new branch starts at the requested base's `origin` tracking ref when present, with the local branch as a fallback.
 
+Owner amendment, 2026-11-23: a base branch deleted or renamed on the server must not block a new Session. When neither ref exists, the branch starts at origin's default branch (`origin/HEAD`) while Git still tracks it, else at the main checkout's commit. Only a Project with no commit is refused. Git cannot tell a deleted base from a mistyped one, so an unknown base is no longer refused.
+
 When a requested branch is checked out, Argo reports the path holding it. A clean, unlocked linked worktree without a Session owner can be reused in place. The caller can also choose removal from its current path. Argo moves the worktree to the new Session's normal path in one Git operation, keeping the branch tip. Both choices require the path from the conflict and transfer ownership to the new Session. Argo stores that ownership separately from the branch name. The main Checkout and any Checkout recorded against another Session are ineligible.

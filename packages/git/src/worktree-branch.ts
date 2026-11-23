@@ -3,7 +3,9 @@ import { git } from './git';
 
 export class CheckoutBaseMissing extends Error {
   constructor(branch: string) {
-    super(`No local branch or origin tracking branch ${branch}`);
+    super(
+      `No branch ${branch}, and the Project has no commit to start a worktree from`,
+    );
   }
 }
 
@@ -20,13 +22,67 @@ function candidateBaseRefs(branch: string): string[] {
   return branch === 'HEAD' ? [local] : [`refs/remotes/origin/${branch}`, local];
 }
 
+const readOrNull = (
+  projectPath: string,
+  arguments_: string[],
+  signal?: AbortSignal,
+): Promise<string | null> =>
+  git(projectPath, arguments_, signal).then(
+    (stdout): string | null => stdout.trim() || null,
+    (): null => null,
+  );
+
+// The branch origin names as its default, while Git still tracks it.
+async function originDefault(
+  projectPath: string,
+  refs: string[],
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const target = await readOrNull(
+    projectPath,
+    ['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD'],
+    signal,
+  );
+
+  return target !== null && refs.includes(target) ? target : null;
+}
+
+// The main checkout's commit, unless the Project has none yet.
+async function mainCheckoutHead(
+  projectPath: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const head = await readOrNull(
+    projectPath,
+    ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'],
+    signal,
+  );
+
+  return head === null ? null : 'HEAD';
+}
+
+// A base deleted or renamed on the server must not block a new Session, so it falls back to origin's default branch, then the main checkout.
+async function fallbackBase(
+  projectPath: string,
+  refs: string[],
+  signal?: AbortSignal,
+): Promise<string | null> {
+  return (
+    (await originDefault(projectPath, refs, signal)) ??
+    mainCheckoutHead(projectPath, signal)
+  );
+}
+
 export async function resolveCheckoutBase(
   projectPath: string,
   branch: string,
   signal?: AbortSignal,
 ): Promise<string> {
   const refs = (await git(projectPath, baseRefs, signal)).split('\n');
-  const base = candidateBaseRefs(branch).find((ref) => refs.includes(ref));
+
+  const base =
+    candidateBaseRefs(branch).find((ref) => refs.includes(ref)) ??
+    (await fallbackBase(projectPath, refs, signal));
 
   if (!base) throw new CheckoutBaseMissing(branch);
 

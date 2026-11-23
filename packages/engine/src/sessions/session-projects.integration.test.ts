@@ -4,17 +4,11 @@ import type { SessionNewInput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startSessionJourney, newSession } from '#mocks/session-journey';
 
-it('refuses a New Session for an unknown Project, base branch or an Agent that is not installed', async (): Promise<void> => {
+it('refuses a New Session for an unknown Project or an Agent that is not installed', async (): Promise<void> => {
   const { caller } = await startSessionJourney();
   await expect(
     caller.session.new({ ...newSession, projectId: 'missing' }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
-  await expect(
-    caller.session.new({
-      ...newSession,
-      checkout: { type: 'worktree', baseBranch: 'missing' },
-    }),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
   await expect(
     caller.session.new({ ...newSession, agent: 'unregistered' }),
   ).rejects.toMatchObject({
