@@ -11,6 +11,7 @@ import {
   PluginSettingsDetailView,
 } from './plugin-settings-detail-view';
 import {
+  disconnectedGitHub,
   signedInPlugin,
   stoppedPlugin,
 } from './plugin-settings-detail-view-fixtures';
@@ -232,6 +233,20 @@ export const StoppedStillOffersSignIn: Story = {
     await expect(canvas.getByPlaceholderText('Not set')).toHaveAttribute(
       'type',
       'password',
+    );
+  },
+};
+
+export const GitHubDisconnectedOpensProvider: Story = {
+  args: { plugin: disconnectedGitHub },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getByText('GitHub not connected')).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('link', { name: 'Continue with GitHub' }),
+    );
+    await expect(args.onOpenSignIn).toHaveBeenCalledWith(
+      '/sign-in',
+      'issue-tracker',
     );
   },
 };

@@ -1,3 +1,4 @@
+import { PluginActivation } from '@repo/contracts/plugins';
 import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { z } from 'zod';
@@ -8,11 +9,13 @@ import { usePluginNames } from '../../../accounts/use-accounts';
 export interface PluginSignInDetailScreenProps {
   pluginId: unknown;
   page: unknown;
+  from?: unknown;
 }
 
 const SignInParams = z.object({
   pluginId: z.string().min(1),
   page: z.string().startsWith('/'),
+  from: PluginActivation.shape.pluginId.optional(),
 });
 
 export function PluginSignInDetailScreen(
@@ -31,9 +34,10 @@ export function PluginSignInDetailScreen(
 function SignInPage({
   pluginId,
   page,
+  from,
 }: z.infer<typeof SignInParams>): React.JSX.Element {
   const title = usePluginNames()(pluginId);
-  const links = useSignInLinks(pluginId);
+  const links = useSignInLinks(pluginId, from);
 
   return (
     <PluginPageDetailView
@@ -50,15 +54,15 @@ type SignInLinks = Pick<
   'onBack' | 'onOpenPage'
 >;
 
-function useSignInLinks(pluginId: string): SignInLinks {
+function useSignInLinks(pluginId: string, from?: string): SignInLinks {
   const navigate = useNavigate();
 
   return {
-    onBack: () => navigate(`/settings/plugins/${pluginId}`),
+    onBack: () => navigate(`/settings/plugins/${from ?? pluginId}`),
     onOpenPage: (page: string) =>
       navigate({
         pathname: '/settings/plugins/sign-in/[id]',
-        params: { id: pluginId, page },
+        params: { id: pluginId, page, from },
       }),
   };
 }

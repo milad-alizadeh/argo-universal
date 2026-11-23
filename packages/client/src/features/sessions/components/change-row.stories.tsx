@@ -12,6 +12,7 @@ import {
   draftChangeRow,
   mergedChangeRow,
   rateLimitedChangeRow,
+  disconnectedChangeRow,
 } from './change-row-fixtures';
 
 // Paper 24GB-0: Components / ChangeRow, including the checks StatusDot states.
@@ -86,4 +87,8 @@ export const ChecksOverflow: Story = {
       canvas.getByRole('button', { name: /CI Checks 24\/24/ }),
     );
   },
+};
+
+export const GitHubSignInRequired: Story = {
+  args: disconnectedChangeRow,
 };

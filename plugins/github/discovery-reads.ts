@@ -1,6 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import { valueAt, type Json } from './json';
-import { githubHost } from './pull-reads';
+import { githubHost, signInMessage } from './pull-reads';
 import type { PullReference } from './pull-reference';
 
 type Fetch = Argo['fetch'];
@@ -8,8 +8,6 @@ type Fetch = Argo['fetch'];
 const okStatus = 200;
 
 const unauthorizedStatus = 401;
-
-const signInMessage = 'Sign in to GitHub to look for pull requests.';
 
 // Why GitHub could not be asked; `signIn` says whether signing in would help.
 export class Unavailable extends Error {

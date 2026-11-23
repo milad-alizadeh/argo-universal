@@ -115,3 +115,30 @@ it('reads the overview in one call, and opens again inside the freshness window 
   await test.pages.open({ path: '/' });
   expect(apiCalls(github)).toHaveLength(1);
 });
+
+it('checks revocation and lets the person sign in again on the same page', async () => {
+  const tracked = await trackedGitHub();
+  await signIn(tracked);
+  const { github, test } = tracked;
+
+  const check = { name: 'githubConnectionStatus' };
+
+  await expect(test.operations.run(check)).resolves.toEqual({
+    status: 'connected',
+  });
+  github.accepted.clear();
+  await expect(test.operations.run(check)).resolves.toEqual({
+    status: 'disconnected',
+  });
+
+  const page = await test.pages.open({ path: '/sign-in' });
+  expect(page.findText(signedInText)).toBeUndefined();
+  await page.press(signInLabel);
+  await page.draw();
+  expect(JSON.stringify(page.tree)).toContain('"value":"WDJB-MJHT"');
+  github.accepted.add('token-1');
+  await until(tracked, page, signedInText);
+  await expect(test.operations.run(check)).resolves.toEqual({
+    status: 'connected',
+  });
+});

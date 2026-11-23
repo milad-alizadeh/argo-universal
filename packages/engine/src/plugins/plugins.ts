@@ -38,7 +38,31 @@ export class Plugins {
     this.parts.runtime.openAsset(reference);
 
   private discoverAtTurnEnds(sessions: PluginsOptions['sessions']): () => void {
-    const discovery = { home: this.home, operations: this.router.operations };
+    const discovery = {
+      home: this.home,
+      operations: this.router.operations,
+      signInRequired: (sessionId: string): void => {
+        const session = sessions.getSnapshot().context.sessions[sessionId];
+
+        session?.getSnapshot().children.feed?.send({
+          type: 'feed.change',
+          turnId: null,
+          blobs: [],
+          change: {
+            type: 'upsert',
+            update: {
+              id: `github-discovery-sign-in:${sessionId}`,
+              sessionUpdate: 'notice',
+              state: 'settled',
+              severity: 'warning',
+              title: 'GitHub sign-in required',
+              description:
+                'Pull-request discovery could not run. Open Settings › Plugins › GitHub and choose Continue with GitHub.',
+            },
+          },
+        });
+      },
+    };
 
     return watchTurnEnds(sessions, (turn) => {
       void discoverPullRequests(discovery, turn);

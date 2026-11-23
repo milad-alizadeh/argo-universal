@@ -104,6 +104,15 @@ function trailingPart(
   change: SessionPullRequest,
   onOpen: () => void,
 ): ReactElement | undefined {
+  if (change.stale === 'signIn')
+    return (
+      <View className="ml-auto">
+        <Text role="secondary" tone="muted">
+          GitHub sign-in required
+        </Text>
+      </View>
+    );
+
   if (change.stale === 'rateLimited') return rateLimitedPart();
 
   return change.checks && checksPart(change.checks, onOpen);

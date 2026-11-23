@@ -1,6 +1,10 @@
 import type { Argo } from '@argo/plugin-kit';
 import { defineFilterPage } from './filter-page';
-import { githubSignIn, provideGitHub } from './github-account';
+import {
+  githubConnectionStatus,
+  githubSignIn,
+  provideGitHub,
+} from './github-account';
 import { defineReads } from './github-reads';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
@@ -45,6 +49,9 @@ export async function register(api: Argo): Promise<void> {
   const deps = createDeps(api);
 
   await provideGitHub(api, deps.signIn);
+  api.operations.register('githubConnectionStatus', () =>
+    githubConnectionStatus(api),
+  );
   registerIssueOperations(api, { storage: registerSessionFills(api, deps) });
   registerStatusOperation(api, deps);
   defineIssuePages(api, deps);

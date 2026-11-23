@@ -10,6 +10,7 @@ import {
   checksOverflowChangeRow,
   duplicateChecksChangeRow,
   rateLimitedChangeRow,
+  disconnectedChangeRow,
 } from './change-row-fixtures';
 
 const meta = {
@@ -132,3 +133,13 @@ function isScrollable(element: HTMLElement): boolean {
     ['auto', 'scroll'].includes(getComputedStyle(element).overflowY)
   );
 }
+
+export const GitHubSignInRequired: Story = {
+  args: disconnectedChangeRow,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('GitHub sign-in required')).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: /CI Checks \d/ }),
+    ).toBeNull();
+  },
+};

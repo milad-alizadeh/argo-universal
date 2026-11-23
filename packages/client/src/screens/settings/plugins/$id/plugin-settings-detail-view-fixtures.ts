@@ -59,3 +59,8 @@ export const stoppedPlugin = {
   ...signedOutPlugin,
   enabled: false,
 } satisfies PluginFixture;
+
+export const disconnectedGitHub = {
+  ...pluginWithoutSettings,
+  github: { providerId: 'issue-tracker', page: '/sign-in', connected: false },
+} satisfies PluginFixture;

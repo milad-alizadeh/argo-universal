@@ -200,6 +200,15 @@
         "keywords": ["account", "sign in"]
       },
       {
+        "name": "githubConnectionStatus",
+        "icon": "key",
+        "label": "Check GitHub connection",
+        "description": "Checks whether GitHub accepts the single GitHub Account provided by the Issue tracker.",
+        "policy": "allow",
+        "tier": "read",
+        "keywords": ["account", "github", "sign in"]
+      },
+      {
         "name": "cancelSignIn",
         "icon": "close",
         "label": "Cancel GitHub sign-in",

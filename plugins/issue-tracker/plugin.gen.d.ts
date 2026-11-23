@@ -121,6 +121,9 @@ declare module '@argo/plugin-kit' {
     signIn: {
       "params": {}
     };
+    githubConnectionStatus: {
+      "params": {}
+    };
     cancelSignIn: {
       "params": {}
     };

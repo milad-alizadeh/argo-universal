@@ -3,7 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import type * as React from 'react';
 
 export default function PluginSignInRoute(): React.JSX.Element {
-  const { id, page } = useLocalSearchParams();
+  const { id, page, from } = useLocalSearchParams();
 
-  return <PluginSignInDetailScreen pluginId={id} page={page} />;
+  return <PluginSignInDetailScreen pluginId={id} page={page} from={from} />;
 }

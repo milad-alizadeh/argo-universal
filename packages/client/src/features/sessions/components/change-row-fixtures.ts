@@ -87,3 +87,7 @@ export const spokenText = (row: Element): string =>
     (text, glyph) => text.replace(glyph, ''),
     row.textContent,
   );
+
+export const disconnectedChangeRow = {
+  change: { ...checksPassedChangeRow.change, stale: 'signIn' as const },
+};

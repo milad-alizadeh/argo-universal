@@ -30,7 +30,8 @@ export type ChecksTarget = {
 type Fetch = Argo['fetch'];
 
 // What a missing or refused sign-in says, so a failure that signing in would mend is told apart from the rest.
-const signInMessage = 'Sign in to GitHub to read this pull request.';
+export const signInMessage =
+  'Sign in to GitHub. Open Settings › Plugins › GitHub and choose Continue with GitHub.';
 
 // A missing Account answers null; inside a Query, which cannot ask to sign in, it is refused.
 const unavailable = 'Account is unavailable';
