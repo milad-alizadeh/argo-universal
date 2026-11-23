@@ -2,7 +2,7 @@ import type { SessionInfo } from '@repo/contracts';
 import { childTree, type TreeRow } from '@repo/kit/list-tree';
 import type { SessionsListEntry } from '../sessions-list-entries';
 
-export type SessionEntry = Extract<SessionsListEntry, { kind: 'session' }>;
+type SessionEntry = Extract<SessionsListEntry, { kind: 'session' }>;
 
 type SessionIdentity = Pick<
   SessionInfo,

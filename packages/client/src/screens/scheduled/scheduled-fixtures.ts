@@ -84,7 +84,7 @@ export const pausedSchedule: ProjectSchedule = {
   paused: true,
 };
 
-export const archivedSchedule = {
+const archivedSchedule = {
   ...pausedSchedule,
   id: 'schedule-archived',
   name: 'Summarize the test results',
