@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { PluginSettingsDetailView } from './plugin-settings-detail-view';
 import {
+  disconnectedGitHub,
   loadedPlugin,
   signedOutPlugin,
   signedInPlugin,
@@ -55,3 +56,7 @@ export const SignedOut: Story = { args: { plugin: signedOutPlugin } };
 export const SignedIn: Story = { args: { plugin: signedInPlugin } };
 
 export const Stopped: Story = { args: { plugin: stoppedPlugin } };
+
+export const GitHubDisconnected: Story = {
+  args: { plugin: disconnectedGitHub },
+};

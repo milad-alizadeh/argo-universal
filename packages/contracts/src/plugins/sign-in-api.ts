@@ -23,7 +23,10 @@ export type SignInFlows = SignInFlow | CombinedSignInFlows;
  * the page's mark. Without one, the App draws the Plugin's own icon. Nothing else is Argo's: the Plugin owns its
  * sign-in (ADR-0036), and the kit draws it.
  */
-export type SignInOptions = Readonly<{ name: string; logo?: string }>;
+export type SignInOptions = Readonly<{
+  name: string;
+  logo?: string;
+}>;
 
 /*
  * What the sign-in page draws: the flow where it stands, why a token already in use was refused when it was,
@@ -81,7 +84,10 @@ export type ProvideSignInArgo = Pick<Argo, 'operations' | 'pages'>;
  * `signIn` takes the pasted token as its `token` param, which the manifest marks `"secret": true`; it needs no
  * `cancelSignIn`.
  */
-export type ProvideSignInOptions = SignInOptions & { path?: string };
+export type ProvideSignInOptions = SignInOptions & {
+  path?: string;
+  connectionProblem?: () => Promise<string | null>;
+};
 
 export type CombinedSignInArgo = Pick<Argo, 'accounts' | 'changed'>;
 

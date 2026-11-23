@@ -8,6 +8,7 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { SettingsLoading } from '#features/settings';
 import { settingFieldSection } from './plugin-setting-field-row';
+import type { GitHubAccount } from './use-github-account';
 
 interface PluginSignInRow {
   host: string;
@@ -24,6 +25,7 @@ export type PluginLoad =
       fields: readonly PluginSettingField[];
       settings: PluginSettings;
       accounts: readonly PluginSignInRow[];
+      github?: GitHubAccount;
     };
 
 export interface PluginSettingsDetailViewProps {
@@ -33,7 +35,7 @@ export interface PluginSettingsDetailViewProps {
   onEnabledChange: (enabled: boolean) => void;
   onSettingChange: (key: string, value: PluginSettingValue) => void;
   onBack?: () => void;
-  onOpenSignIn: (page: string) => void;
+  onOpenSignIn: (page: string, providerId?: string) => void;
   onOpenAccount: (id: string) => void;
 }
 
@@ -73,6 +75,7 @@ function pluginSections(
   return (
     <>
       {enabledSection(plugin, props.onEnabledChange)}
+      {githubSection(plugin.github, props.onOpenSignIn)}
       {accountSections(plugin.accounts, props)}
       {settingSections(plugin, props.onSettingChange)}
     </>
@@ -145,4 +148,22 @@ function openAccountRow(
 ): void {
   if (account) links.onOpenAccount(account.id);
   else links.onOpenSignIn(page);
+}
+
+function githubSection(
+  github: LoadedPlugin['github'],
+  onOpenSignIn: BodyProps['onOpenSignIn'],
+): React.JSX.Element | null {
+  if (!github) return null;
+
+  return (
+    <FieldGroup.Section
+      title={github.connected ? 'GitHub Account' : 'GitHub not connected'}
+    >
+      <FieldGroup.Link
+        title="Continue with GitHub"
+        onPress={() => onOpenSignIn(github.page, github.providerId)}
+      />
+    </FieldGroup.Section>
+  );
 }

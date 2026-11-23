@@ -16,6 +16,7 @@ import {
   type PluginLoad,
   PluginSettingsDetailView,
 } from './plugin-settings-detail-view';
+import { useGitHubAccount, type GitHubAccount } from './use-github-account';
 
 export interface PluginSettingsDetailScreenProps {
   pluginId: string;
@@ -26,36 +27,31 @@ const loading: PluginLoad = { status: 'loading' };
 function toPluginLoad(
   plugins: PluginEntry[] | undefined,
   plugin: PluginEntry | undefined,
-  answers: {
+  {
+    settings,
+    accounts,
+    github,
+  }: {
     settings: PluginSettings | undefined;
     accounts: PluginAccount[] | undefined;
+    github: GitHubAccount | undefined;
   },
 ): PluginLoad {
   if (!plugins) return loading;
 
-  return plugin
-    ? foundPlugin(plugin, answers.settings, answers.accounts)
-    : { status: 'missing' };
+  if (!plugin) return { status: 'missing' };
+
+  if (!settings || !accounts) return loading;
+
+  return {
+    status: 'loaded',
+    enabled: plugin.enabled,
+    fields: plugin.manifest.contributes.settings ?? [],
+    settings,
+    accounts: signInRows(plugin.manifest, accounts),
+    github,
+  };
 }
-
-const foundPlugin = (
-  plugin: PluginEntry,
-  settings: PluginSettings | undefined,
-  accounts: PluginAccount[] | undefined,
-): PluginLoad =>
-  settings && accounts ? loadedPlugin(plugin, settings, accounts) : loading;
-
-const loadedPlugin = (
-  { enabled, manifest }: PluginEntry,
-  settings: PluginSettings,
-  accounts: PluginAccount[],
-): PluginLoad => ({
-  status: 'loaded',
-  enabled,
-  fields: manifest.contributes.settings ?? [],
-  settings,
-  accounts: signInRows(manifest, accounts),
-});
 
 function signInRows(
   manifest: PluginEntry['manifest'],
@@ -79,11 +75,13 @@ function usePluginLoad(pluginId: string): PluginLoad & { name?: string } {
   const settings = useSettingsQuery(pluginId, plugin !== undefined);
 
   const accounts = useAccountsQuery();
+  const github = useGitHubAccount(pluginId, plugins, accounts.data);
 
   return {
     ...toPluginLoad(plugins, plugin, {
       settings: settings.data,
       accounts: accounts.data,
+      github,
     }),
     name: plugin?.manifest.name,
   };
@@ -132,10 +130,10 @@ function useAccountLinks(pluginId: string): AccountLinks {
   return {
     onBack: () => navigate('/settings/plugins'),
     onOpenAccount: (id) => navigate(`/settings/accounts/${id}`),
-    onOpenSignIn: (page) =>
+    onOpenSignIn: (page, providerId = pluginId) =>
       navigate({
         pathname: '/settings/plugins/sign-in/[id]',
-        params: { id: pluginId, page },
+        params: { id: providerId, page, from: pluginId },
       }),
   };
 }
@@ -149,9 +147,12 @@ export function PluginSettingsDetailScreen({
 }
 
 function useAccountsQuery(): { data: PluginAccount[] | undefined } {
+  const focused = useScreenFocused();
+
   const accounts = useQuery({
     ...useTRPC().plugins.accounts.list.queryOptions(),
-    subscribed: useScreenFocused(),
+    enabled: focused,
+    subscribed: focused,
   });
 
   useErrorToast(errorToast('Could not load Accounts', accounts.error));

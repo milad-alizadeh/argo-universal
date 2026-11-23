@@ -10,7 +10,7 @@ import type {
   ProvideSignInPattern,
   SignInData,
   SignInFlows,
-  SignInOptions,
+  ProvideSignInOptions,
 } from '@repo/contracts/plugins/sign-in-api';
 import { z } from 'zod';
 import { flowKey, provideTogether } from './sign-in-credentials';
@@ -18,9 +18,17 @@ import { drawSignIn, isCombined, signInData } from './sign-in-parts';
 
 const signInPage = (
   flow: SignInFlows,
-  options: SignInOptions,
+  options: ProvideSignInOptions,
 ): LoaderPage<PageState, SignInData[]> => ({
-  load: ({ context }) => signInData(flow, context.serverDevice, null),
+  load: async ({ context }) => {
+    const active = isCombined(flow) ? flow : [flow];
+
+    const problem = active.some((entry) => entry.state().kind === 'signed-in')
+      ? await options.connectionProblem?.()
+      : null;
+
+    return signInData(flow, context.serverDevice, problem ?? null);
+  },
   render: (data, to, { state }) =>
     drawSignIn(flow, data, { ...options, to, state }),
 });

@@ -25,6 +25,44 @@ export const githubSignIn = (argo: Calls): DeviceFlow =>
 
 // The Operations, the sign-in page and the Account's provider: everything else is the kit's.
 export const provideGitHub = (
-  argo: Pick<Argo, 'operations' | 'pages'>,
+  argo: Pick<Argo, 'operations' | 'pages' | 'fetch' | 'secrets'>,
   flow: DeviceFlow,
-): Promise<void> => provideSignIn(argo, flow, signInOptions);
+): Promise<void> =>
+  provideSignIn(argo, flow, {
+    ...signInOptions,
+    connectionProblem: () => checkSignIn(argo, flow).catch(() => null),
+  });
+
+const signInProblem = 'GitHub not connected. Sign in to continue.';
+
+async function checkSignIn(
+  argo: Pick<Argo, 'fetch' | 'secrets'>,
+  flow: DeviceFlow,
+): Promise<string | null> {
+  const state = flow.state();
+
+  if (state.kind !== 'signed-in') return null;
+
+  if ((await argo.secrets.get(state.accountId)) === null) return signInProblem;
+
+  const result = await githubConnectionStatus(argo);
+
+  return result.status === 'disconnected' ? signInProblem : null;
+}
+
+const unauthorizedStatus = 401;
+
+const okStatus = 200;
+
+// Settings is global, so the broker only lends this Plugin's own single Account here.
+export async function githubConnectionStatus(
+  argo: Pick<Argo, 'fetch'>,
+): Promise<{ status: 'connected' | 'disconnected' | 'unknown' }> {
+  const reply = await argo.fetch(`https://${githubHost}/user`, {
+    account: githubHost,
+  });
+
+  if (reply?.status === unauthorizedStatus) return { status: 'disconnected' };
+
+  return { status: reply?.status === okStatus ? 'connected' : 'unknown' };
+}

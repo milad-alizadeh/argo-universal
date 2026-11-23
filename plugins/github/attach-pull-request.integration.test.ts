@@ -157,7 +157,21 @@ it(
     const run = await signedOutJourney();
 
     await expect(attach(run, pullReference)).rejects.toThrow(
-      'Sign in to GitHub',
+      'Open Settings › Plugins › GitHub and choose Continue with GitHub.',
+    );
+    expect(await changesOf(run)).toEqual([]);
+  },
+  slow,
+);
+
+it(
+  'gives reconnect instructions when GitHub refuses the saved Account',
+  async () => {
+    const run = await journey();
+    run.github.failWith.status = 401;
+
+    await expect(attach(run, pullReference)).rejects.toThrow(
+      'Open Settings › Plugins › GitHub and choose Continue with GitHub.',
     );
     expect(await changesOf(run)).toEqual([]);
   },

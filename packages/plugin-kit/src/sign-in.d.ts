@@ -17,6 +17,7 @@ import type {
   GatedPage as ContractsGatedPage,
   SignInOptions,
   SignInFlows,
+  ProvideSignInOptions,
 } from '@repo/contracts/plugins/sign-in-api';
 import type { Argo, LoaderPage } from './plugin-api';
 
@@ -53,13 +54,13 @@ export declare function signInGate<
 export declare function provideSignIn(
   argo: Pick<Argo, 'operations' | 'pages'>,
   flow: SignInFlow,
-  options: SignInOptions & { path?: string },
+  options: ProvideSignInOptions,
 ): Promise<void>;
 
 export declare function provideSignIn(
   argo: Pick<Argo, 'operations' | 'pages' | 'accounts' | 'changed'>,
   flow: CombinedSignInFlows,
-  options: SignInOptions & { path?: string },
+  options: ProvideSignInOptions,
 ): Promise<void>;
 
 // `argo.fetch` as the person signed in to a host: no Account or a 401 throws `SignInRequired`.

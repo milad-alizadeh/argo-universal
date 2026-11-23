@@ -4,7 +4,11 @@ import type { PluginOperationService } from './operations';
 
 type Discovery = {
   home: string;
-  operations: Pick<PluginOperationService, 'rows' | 'run'>;
+  operations: {
+    rows: () => Promise<{ id: string }[]>;
+    run: PluginOperationService['run'];
+  };
+  signInRequired: (sessionId: string) => void;
 };
 
 const discoverId = 'github.discover';
@@ -27,17 +31,26 @@ async function look(
 ): Promise<void> {
   if (!(await isDeclared(discovery))) return;
 
-  await discovery.operations.run({
+  const answer = await discovery.operations.run({
     pluginId: 'github',
     name: 'discover',
     params: { unlessAttached: true },
     caller: { sessionId, projectId },
   });
+
+  if (
+    answer &&
+    typeof answer === 'object' &&
+    !Array.isArray(answer) &&
+    answer.result === 'unavailable' &&
+    answer.signIn === true
+  )
+    discovery.signInRequired(sessionId);
 }
 
 /*
  * A Turn ended: the GitHub Plugin, when it is on, looks for the Session's pull request, only while it has none
- * (ADR-0052). Every answer is data and a failure is a log line, so a Plugin that fails never disturbs the Turn.
+ * (ADR-0052). Sign-in failures are shown in the Feed. Operation exceptions go to the log.
  */
 export async function discoverPullRequests(
   discovery: Discovery,
