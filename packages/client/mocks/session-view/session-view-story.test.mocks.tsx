@@ -1,6 +1,7 @@
 import { withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { within } from 'storybook/test';
 import {
   type OpenSessionViewProps,
   type SessionDetailViewProps,
@@ -39,4 +40,13 @@ export function idleConfiguration(): NonNullable<
   if (!configuration) throw new Error('Idle Session has no configuration.');
 
   return configuration;
+}
+
+// A wide window titles the Session in its title bar; the title opens the Session's menu.
+export async function titleTrigger(
+  canvas: ReturnType<typeof within>,
+): Promise<HTMLElement> {
+  const bar = within(await canvas.findByTestId('window-band-title'));
+
+  return within(await bar.findByRole('heading')).getByRole('button');
 }

@@ -4,6 +4,7 @@ import {
   meta as sessionDetailViewTestMeta,
   openProps,
   type Story,
+  titleTrigger,
 } from '../../../../mocks/session-view/session-view-story.test.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
@@ -18,16 +19,28 @@ type PlayContext = Parameters<NonNullable<Story['play']>>[0];
 
 type Layout = 'phone' | 'wide';
 
-async function openHeaderMenu({
-  canvas,
-  userEvent,
-}: PlayContext): Promise<ReturnType<typeof within>> {
-  await userEvent.click(await canvas.findByRole('button', { name: 'More' }));
+// A phone's header holds ⋯; a wide window's title, in the title bar, opens the same menu.
+async function headerMenuTrigger(
+  { canvas }: PlayContext,
+  layout: Layout,
+): Promise<HTMLElement> {
+  if (layout === 'phone') {
+    return canvas.findByRole('button', { name: 'More' });
+  }
+
+  return titleTrigger(canvas);
+}
+
+async function openHeaderMenu(
+  context: PlayContext,
+  layout: Layout,
+): Promise<ReturnType<typeof within>> {
+  await context.userEvent.click(await headerMenuTrigger(context, layout));
 
   return within(await screen.findByRole('menu'));
 }
 
-// ⋯ in the header opens Rename and Archive, as the Session's row does; each runs the page's action.
+// The header's menu opens Rename and Archive, as the Session's row does; each runs the page's action.
 function renamesAndArchivesAt(layout: Layout): Story {
   return {
     args: { view: { state: 'open', ...idleSession } },
@@ -36,13 +49,13 @@ function renamesAndArchivesAt(layout: Layout): Story {
       const { onRename, onArchive } =
         openProps(context.args.view).header.menu ?? {};
 
-      const menu = await openHeaderMenu(context);
+      const menu = await openHeaderMenu(context, layout);
       await context.userEvent.click(
         menu.getByRole('menuitem', { name: 'Rename' }),
       );
       await expect(onRename).toHaveBeenCalled();
 
-      const again = await openHeaderMenu(context);
+      const again = await openHeaderMenu(context, layout);
       await context.userEvent.click(
         again.getByRole('menuitem', { name: 'Archive' }),
       );

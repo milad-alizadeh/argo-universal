@@ -152,6 +152,47 @@ function BandLeading(parts: BandLeadingReads): ReactElement {
   );
 }
 
+// The page's heading starts a little in from the page's edge beside an open sidebar, and just after the capsule beside a closed one.
+const titleGaps = { besidePanel: 16, afterCapsule: 12, beforeControls: 8 };
+
+type BandTitleReads = PartReads<
+  'band',
+  'list' | 'measures' | 'inspector' | 'page' | 'width'
+>;
+
+// The heading ends where the page does, short of an open Inspector.
+const titleSpan = ({ layout }: BandTitleReads): ViewStyle => {
+  const { inset, paneGap } = layout.measures;
+  const rowEnd = layout.width - inset;
+  const pageEnd = layout.inspector.open
+    ? layout.inspector.offset - paneGap
+    : rowEnd;
+
+  return {
+    paddingLeft: layout.list.folded
+      ? titleGaps.afterCapsule
+      : inset + titleGaps.besidePanel,
+    paddingRight: titleGaps.beforeControls,
+    marginRight: Math.max(0, rowEnd - pageEnd),
+  };
+};
+
+// The shown page's heading, as Claude's and Codex's windows title theirs: gone while an expanded Inspector covers the page.
+function BandTitle(parts: BandTitleReads): ReactElement {
+  const title = parts.layout.page.hidden ? null : parts.scaffold.band?.title;
+
+  return (
+    <View
+      testID="window-band-title"
+      pointerEvents="box-none"
+      className="min-w-0 flex-1 flex-row items-center"
+      style={titleSpan(parts)}
+    >
+      {title ? <View className="min-w-0 flex-1">{title}</View> : null}
+    </View>
+  );
+}
+
 // The title bar's row, one inset below the window's top, which the window buttons share.
 const bandStyle = ({ layout }: ScaffoldPartProps): ViewStyle => ({
   top: layout.safeTop,
@@ -182,7 +223,7 @@ export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
       >
         <BandRow>
           <BandLeading {...parts} />
-          <View pointerEvents="none" className="flex-1" />
+          <BandTitle {...parts} />
           <BandTrailing {...parts} />
         </BandRow>
       </View>

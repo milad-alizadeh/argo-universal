@@ -9,6 +9,7 @@ import {
   partiallyReadyGroup,
   workbenchRuns,
 } from '../../../../mocks/run-configurations';
+import { titleTrigger } from '../../../../mocks/session-view/session-view-story.test.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
 import { openWorkbench } from './session-workbench-sheet.test.mocks';
@@ -110,7 +111,8 @@ export const OpensFromHeaderAndInspectorAndClosesEachShellIndependently: Story =
         await canvas.findByRole('tabpanel', { name: firstShell }),
       ).toBeVisible();
 
-      await userEvent.click(canvas.getByRole('button', { name: 'More' }));
+      // The title in the title bar opens the Session's menu.
+      await userEvent.click(await titleTrigger(canvas));
       const menu = within(document.body);
       await expect(
         await menu.findByRole('menuitem', { name: 'Rename' }),

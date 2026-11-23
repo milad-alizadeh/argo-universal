@@ -2,7 +2,7 @@ import {
   IconButton,
   type IconButtonProps,
 } from '@repo/kit/primitives/actions/icon-button';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import type { WindowBandSession } from '#lib/product/window-band';
 import { BandCapsule } from './band-capsule';
@@ -76,58 +76,64 @@ function inspectorToggleProps(parts: InspectorToggleReads): IconButtonProps {
   };
 }
 
-type ControlsReads = ScaffoldPartProps & SessionReads;
+// The shown page's buttons lead the window's own, then Workbench and Expand where a Session owns them.
+function PanelControls(parts: ScaffoldPartProps): ReactNode {
+  const band = parts.scaffold.band;
+  const session = band?.session;
 
-function PanelControls(parts: ControlsReads): ReactElement {
   return (
     <>
-      <IconButton {...workbenchProps(parts)} />
-      <IconButton {...expandProps(parts)} />
+      {band?.actions}
+      {session ? <IconButton {...workbenchProps({ ...parts, session })} /> : null}
+      {session ? <IconButton {...expandProps(parts)} /> : null}
     </>
   );
 }
 
-// Window controls follow the Session that owns the Workbench and Inspector; with the Inspector closed they float in a capsule at the title bar's end, mirroring the sidebar's.
-export function BandTrailing(parts: ScaffoldPartProps): ReactElement | null {
-  const session = parts.scaffold.band?.session;
+const hasControls = ({ scaffold }: ScaffoldPartProps): boolean =>
+  Boolean(scaffold.band?.session ?? scaffold.band?.actions);
 
-  if (!session || parts.layout.inspector.open) return null;
+// The page's buttons and the Session's panel controls float in a capsule at the title bar's end while the Inspector is closed, mirroring the sidebar's.
+export function BandTrailing(parts: ScaffoldPartProps): ReactElement | null {
+  if (!hasControls(parts) || parts.layout.inspector.open) return null;
 
   return (
     <View testID="window-band-trailing" className="shrink-0">
       <BandCapsule>
-        <PanelControls {...parts} session={session} />
-        <IconButton {...inspectorToggleProps(parts)} />
+        <PanelControls {...parts} />
+        {parts.scaffold.band?.session ? (
+          <IconButton {...inspectorToggleProps(parts)} />
+        ) : null}
       </BandCapsule>
     </View>
   );
 }
 
 /*
- * The open Inspector's top row, on the title bar's line: Workbench and Expand at its start, and its own toggle,
+ * The open Inspector's top row, on the title bar's line: the capsule's buttons at its start, and its own toggle,
  * selected, at its end, as the open sidebar holds its toggle. A page that owns no Session leaves the row empty.
  */
 export function InspectorTitleBar(parts: ScaffoldPartProps): ReactElement {
-  const session = parts.scaffold.band?.session;
-
   return (
     <View
       testID="inspector-title-bar"
       className="shrink-0 flex-row items-center justify-between px-2"
       style={{ height: parts.layout.measures.titleBarHeight }}
     >
-      {session ? <InspectorRowControls {...parts} session={session} /> : null}
+      {hasControls(parts) ? <InspectorRowControls {...parts} /> : null}
     </View>
   );
 }
 
-function InspectorRowControls(parts: ControlsReads): ReactElement {
+function InspectorRowControls(parts: ScaffoldPartProps): ReactElement {
   return (
     <>
       <View className="flex-row items-center gap-1">
         <PanelControls {...parts} />
       </View>
-      <IconButton {...inspectorToggleProps(parts)} />
+      {parts.scaffold.band?.session ? (
+        <IconButton {...inspectorToggleProps(parts)} />
+      ) : null}
     </>
   );
 }
