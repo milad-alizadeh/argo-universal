@@ -55,7 +55,7 @@ export function CentredModalTrigger(props: {
 }
 
 const scrimClass =
-  'fixed inset-0 z-50 flex items-center justify-center bg-scrim/50 p-2 web:animate-in web:fade-in-0 web:cursor-default web:*:cursor-auto';
+  'fixed inset-0 z-50 flex items-center justify-center bg-scrim/60 p-2 web:backdrop-blur-md web:[app-region:no-drag] web:animate-in web:fade-in-0 web:cursor-default web:*:cursor-auto';
 
 // The card over a scrim, centred on the window.
 export function CentredModal(props: CentredModalFrameProps): ReactElement {

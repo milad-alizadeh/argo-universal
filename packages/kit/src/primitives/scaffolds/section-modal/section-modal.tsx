@@ -39,14 +39,14 @@ export function SectionModal(props: SectionModalProps): ReactElement {
             height: Math.min(680, window.height - 48),
           }}
         >
-          <View className="w-60 border-r border-border bg-muted">
+          <View className="w-60 border-r border-border pt-1.5 native:pt-2.5">
             <ScreenListColumn>{props.list}</ScreenListColumn>
           </View>
-          <View className="min-w-0 flex-1 pt-6">
+          <View className="min-w-0 flex-1">
             <ScreenHeadingEndInset value={48}>
               {props.children}
             </ScreenHeadingEndInset>
-            <View className="absolute right-8 top-9">
+            <View className="absolute right-8 top-3">
               <IconButton
                 icon="close"
                 variant="secondary"

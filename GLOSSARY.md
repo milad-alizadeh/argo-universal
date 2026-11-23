@@ -683,7 +683,7 @@ Whether a content column is at least the threshold (`--container-content-wide`) 
 _Avoid_: Container query, second measurement
 
 **Centred modal**:
-The one overlay a Dialog and a web Sheet both open in: a card centred over a dimmed backdrop that keeps focus inside, closes on Escape, a backdrop press or the back button unless its content holds unsaved input, and hands focus back to what opened it.
+The one overlay a Dialog and a web Sheet both open in: a card centred over a dimmed backdrop, blurred on web and Electron, that keeps focus inside, closes on Escape, a backdrop press or the back button unless its content holds unsaved input, and hands focus back to what opened it.
 _Avoid_: Dialog overlay, modal sheet (for the shared overlay)
 
 **Settings modal**:
