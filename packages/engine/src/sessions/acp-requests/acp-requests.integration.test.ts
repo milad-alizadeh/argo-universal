@@ -45,6 +45,9 @@ import {
 
 type Kind = 'Permission' | 'Elicitation';
 
+/** The first test in a cold CI worker also pays for starting the Engine and its Plugin host. */
+const coldEngineTimeoutMs = 10_000;
+
 const stepsFor = (
   kind: Kind,
   permission: RequestPermissionResponse[],
@@ -120,6 +123,7 @@ it.each(
     expect(snapshot.pendingPermission).toBeNull();
     expect(snapshot.pendingElicitation).toBeNull();
   },
+  coldEngineTimeoutMs,
 );
 
 describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
