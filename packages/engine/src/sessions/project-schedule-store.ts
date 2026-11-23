@@ -46,6 +46,9 @@ const currentTiming = (row: ScheduleRow): ReturnType<typeof and> =>
     eq(table.paused, row.paused),
   );
 
+/** A Server that returns within this long of a due occurrence still starts it, late. */
+const lateStartGraceMs = 3_600_000;
+
 interface DueSchedule {
   schedule: ProjectSchedule;
   missed: boolean;
@@ -79,13 +82,12 @@ export class ProjectScheduleStore {
   public async claimDue(
     id: string,
     now: number,
-    missedAtStartup?: number,
   ): Promise<DueSchedule | undefined> {
     const row = this.row(id);
 
     if (!row || row.paused || row.nextAt > now) return undefined;
 
-    const missed = missedAtStartup === row.nextAt;
+    const missed = now - row.nextAt > lateStartGraceMs;
     const claimed = await this.advance(row, now, missed);
 
     return claimed ? { schedule: decode(row).schedule, missed } : undefined;

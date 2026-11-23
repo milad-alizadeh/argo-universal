@@ -34,7 +34,6 @@ export class ProjectSchedules {
   private readonly store: ProjectScheduleStore;
   private readonly timers: ScheduleTimers;
   private readonly launching = new Set<string>();
-  private readonly missedAtStartup = new Map<string, number>();
 
   public constructor(
     private readonly sources: SessionHandlerSources,
@@ -49,14 +48,8 @@ export class ProjectSchedules {
       stopping,
     );
 
-    const now = Date.now();
-
     for (const row of this.list()) {
-      if (row.paused) continue;
-
-      if (row.nextAt < now) this.missedAtStartup.set(row.id, row.nextAt);
-
-      this.timers.refresh(row.id);
+      if (!row.paused) this.timers.refresh(row.id);
     }
   }
 
@@ -105,15 +98,9 @@ export class ProjectSchedules {
   }
 
   private async due(id: string, signal: AbortSignal): Promise<void> {
-    const due = await this.store.claimDue(
-      id,
-      Date.now(),
-      this.missedAtStartup.get(id),
-    );
+    const due = await this.store.claimDue(id, Date.now());
 
     if (!due) return;
-
-    this.missedAtStartup.delete(id);
 
     if (!due.missed && !signal.aborted)
       await this.run(due.schedule, due.schedule.nextAt, signal);
