@@ -95,17 +95,40 @@ function bannerPlacement({
 }
 
 // A press anywhere outside the Workbench opened over the content closes it, as Codex's popover does.
+interface DismissProps extends Pick<ScaffoldParts, 'layout'> {
+  testID: string;
+  // Where the press lands: the whole window under the Workbench, or the Inspector over it.
+  style?: ViewStyle;
+}
+
 function WorkbenchDismiss({
   layout,
-}: Pick<ScaffoldParts, 'layout'>): React.JSX.Element | null {
+  testID,
+  style,
+}: DismissProps): React.JSX.Element | null {
   if (layout.workbench.state !== 'overlay') return null;
 
   return (
     <Pressable
-      testID="workbench-dismiss"
+      testID={testID}
       accessibilityLabel="Close Workbench"
-      className="absolute inset-0"
+      className={style ? 'absolute' : 'absolute inset-0'}
+      style={style}
       onPress={() => layout.setWorkbenchPopover(false)}
+    />
+  );
+}
+
+// The Inspector covers the Workbench, so a press on the Inspector closes the popover from above it.
+function InspectorDismiss(parts: InspectorReads): React.JSX.Element | null {
+  return (
+    <WorkbenchDismiss
+      layout={parts.layout}
+      testID="workbench-dismiss-inspector"
+      style={{
+        ...inspectorPosition(parts),
+        width: parts.layout.inspector.width,
+      }}
     />
   );
 }
@@ -113,9 +136,10 @@ function WorkbenchDismiss({
 function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
-      <FramedInspector {...parts} />
-      <WorkbenchDismiss layout={parts.layout} />
+      <WorkbenchDismiss layout={parts.layout} testID="workbench-dismiss" />
       <ScaffoldWorkbench {...parts} />
+      <FramedInspector {...parts} />
+      <InspectorDismiss {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner {...bannerPlacement(parts)}>
         {parts.scaffold.banner}
@@ -124,7 +148,7 @@ function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   );
 }
 
-// The Inspector, Workbench and handles share the panes' origin below the band.
+// The Inspector, Workbench and handles share the panes' origin below the band. The Inspector floats over the Workbench, which slides out from under its edge.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
     <View

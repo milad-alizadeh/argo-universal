@@ -5,12 +5,18 @@ import {
 import { cn } from '@repo/kit/utils';
 import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { BandCapsule } from './band-capsule';
+import type {
+  BandPlace,
+  BandRef,
+  BandRefs,
+} from '../hooks/band-motion-types';
+import { useBandMotion } from '../hooks/use-band-motion';
+import { BandCapsule, capsulePadding } from './band-capsule';
 import {
   bandControlAppearance,
   bandToggleAppearance,
 } from './band-control-appearance';
-import { BandTrailing } from './scaffold-band-controls';
+import { BandTrailing, trailingCapsuleShown } from './scaffold-band-controls';
 import type {
   PartReads,
   ScaffoldLayout,
@@ -77,25 +83,21 @@ type BandLeadingReads = PartReads<
   'bandLeading' | 'list' | 'requestSidebar' | 'measures'
 >;
 
-const sidebarControl = ({
-  scaffold,
-  layout,
-}: BandLeadingReads): ReactElement | null =>
-  scaffold.list ? <SidebarBandToggle layout={layout} /> : null;
-
 // Back and Forward keep the same gap inside the open panel's trailing edge as the toggle's capsule keeps from the lights.
 const panelEdgeGap = 4;
 
 function LeadingGroup(props: {
+  motionRef: BandRef;
   style: ViewStyle;
   spread?: boolean;
   children: ReactNode;
 }): ReactElement {
   return (
     <View
+      ref={props.motionRef}
       testID="window-band-leading"
       className={cn(
-        'shrink-0 flex-row items-center',
+        'shrink-0 flex-row items-center gap-1',
         props.spread && 'justify-between',
       )}
       style={props.style}
@@ -105,93 +107,120 @@ function LeadingGroup(props: {
   );
 }
 
-// The open sidebar's top row runs to the panel's trailing edge.
-const panelRowStyle = ({ layout }: BandLeadingReads): ViewStyle => ({
-  width: layout.measures.inset + layout.measures.railWidth + layout.list.width,
-  paddingLeft: layout.bandLeading.toggle,
-  paddingRight: panelEdgeGap,
-});
+/*
+ * The sidebar's toggle keeps one place, open or closed: the open panel's top row runs to the panel's trailing edge,
+ * with Back and Forward at its end, and the closed sidebar's capsule closes round the toggle where it stands, with Back
+ * and Forward after it. The row's padding never changes, so no button jumps as the group's width moves.
+ */
+const sidebarRowStyle = ({ layout }: BandLeadingReads): ViewStyle => {
+  const { toggle } = layout.bandLeading;
 
-function SidebarRow(parts: BandLeadingReads): ReactElement {
+  const padding = { paddingLeft: toggle, paddingRight: panelEdgeGap };
+
+  if (layout.list.folded) return padding;
+
+  return {
+    ...padding,
+    width: layout.measures.inset + layout.measures.railWidth + layout.list.width,
+  };
+};
+
+type BandLeadingProps = BandLeadingReads & { refs: BandRefs };
+
+function SidebarLeading({ refs, ...parts }: BandLeadingProps): ReactElement {
+  const { toggle } = parts.layout.bandLeading;
+
   return (
-    <LeadingGroup style={panelRowStyle(parts)} spread>
-      {sidebarControl(parts) ?? <View />}
+    <LeadingGroup motionRef={refs.leading} style={sidebarRowStyle(parts)} spread>
+      <BandCapsule
+        shown={parts.layout.list.folded}
+        motionRef={refs.leadingCapsule}
+        style={{
+          left: toggle - capsulePadding,
+          right: panelEdgeGap - capsulePadding,
+        }}
+      />
+      <SidebarBandToggle layout={parts.layout} />
       <BandHistory />
-    </LeadingGroup>
-  );
-}
-
-// Closed, the sidebar's controls gather in a capsule after the window buttons.
-function LeadingCapsule(parts: BandLeadingReads): ReactElement {
-  return (
-    <LeadingGroup style={{ paddingLeft: parts.layout.bandLeading.capsule }}>
-      <BandCapsule>
-        {sidebarControl(parts)}
-        <BandHistory />
-      </BandCapsule>
     </LeadingGroup>
   );
 }
 
 // A page with no list keeps the rail alone under the title bar, with Back and Forward after the window buttons.
-function ListlessLeading(parts: BandLeadingReads): ReactElement {
+function ListlessLeading({ refs, ...parts }: BandLeadingProps): ReactElement {
   return (
-    <LeadingGroup style={{ paddingLeft: parts.layout.bandLeading.toggle }}>
+    <LeadingGroup
+      motionRef={refs.leading}
+      style={{ paddingLeft: parts.layout.bandLeading.toggle }}
+    >
       <BandHistory />
     </LeadingGroup>
   );
 }
 
-function BandLeading(parts: BandLeadingReads): ReactElement {
-  if (!parts.scaffold.list) return <ListlessLeading {...parts} />;
-
-  return parts.layout.list.folded ? (
-    <LeadingCapsule {...parts} />
+function BandLeading(parts: BandLeadingProps): ReactElement {
+  return parts.scaffold.list ? (
+    <SidebarLeading {...parts} />
   ) : (
-    <SidebarRow {...parts} />
+    <ListlessLeading {...parts} />
   );
 }
 
-// The page's heading starts a little in from the page's edge beside an open sidebar, and just after the capsule beside a closed one.
-const titleGaps = { besidePanel: 16, afterCapsule: 12, beforeControls: 8 };
+// The page's heading starts a little in from the page's edge beside an open sidebar, and 12 after the capsule's pill beside a closed one, which ends 2 inside its group.
+const titleGaps = { besidePanel: 16, afterCapsule: 10, beforeControls: 8 };
 
 type BandTitleReads = PartReads<
   'band',
-  'list' | 'measures' | 'inspector' | 'page' | 'width'
+  'list' | 'measures' | 'inspector' | 'page'
 >;
 
-// The heading ends where the page does, short of an open Inspector.
-const titleSpan = ({ layout }: BandTitleReads): ViewStyle => {
+// The heading ends where the page does, the pane gap short of an open Inspector, whose top row the trailing group spans.
+const titlePlace = ({
+  layout,
+}: BandTitleReads): Pick<BandPlace, 'titleStart' | 'titleEnd'> => {
   const { inset, paneGap } = layout.measures;
-  const rowEnd = layout.width - inset;
-  const pageEnd = layout.inspector.open
-    ? layout.inspector.offset - paneGap
-    : rowEnd;
+
+  if (layout.page.hidden) return { titleStart: 0, titleEnd: 0 };
 
   return {
-    paddingLeft: layout.list.folded
+    titleStart: layout.list.folded
       ? titleGaps.afterCapsule
       : inset + titleGaps.besidePanel,
-    paddingRight: titleGaps.beforeControls,
-    marginRight: Math.max(0, rowEnd - pageEnd),
+    titleEnd: titleGaps.beforeControls + (layout.inspector.open ? paneGap : 0),
   };
 };
 
+const titleSpan = (place: Pick<BandPlace, 'titleStart' | 'titleEnd'>): ViewStyle => ({
+  paddingLeft: place.titleStart,
+  paddingRight: place.titleEnd,
+});
+
 // The shown page's heading, as Claude's and Codex's windows title theirs: gone while an expanded Inspector covers the page.
-function BandTitle(parts: BandTitleReads): ReactElement {
+function BandTitle({
+  motionRef,
+  ...parts
+}: BandTitleReads & { motionRef: BandRef }): ReactElement {
   const title = parts.layout.page.hidden ? null : parts.scaffold.band?.title;
 
   return (
     <View
+      ref={motionRef}
       testID="window-band-title"
       pointerEvents="box-none"
       className="min-w-0 flex-1 flex-row items-center"
-      style={titleSpan(parts)}
+      style={titleSpan(titlePlace(parts))}
     >
       {title ? <View className="min-w-0 flex-1">{title}</View> : null}
     </View>
   );
 }
+
+// Where the row puts each part, which moves on the panes' timing when the sidebar or the Inspector opens or closes.
+const bandPlace = (parts: ScaffoldPartProps): BandPlace => ({
+  ...titlePlace(parts),
+  leadingCapsule: Boolean(parts.scaffold.list) && parts.layout.list.folded,
+  trailingCapsule: trailingCapsuleShown(parts),
+});
 
 // The title bar's row, one inset below the window's top, which the window buttons share.
 const bandStyle = ({ layout }: ScaffoldPartProps): ViewStyle => ({
@@ -213,6 +242,8 @@ function BandRow({ children }: { children: ReactNode }): ReactElement {
 
 // Touches between the controls reach the panes under the title bar, such as the Inspector's own top row.
 export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
+  const refs = useBandMotion({ ...parts.layout.motion, place: bandPlace(parts) });
+
   return (
     <FixedSizeChrome>
       <View
@@ -222,9 +253,9 @@ export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
         style={bandStyle(parts)}
       >
         <BandRow>
-          <BandLeading {...parts} />
-          <BandTitle {...parts} />
-          <BandTrailing {...parts} />
+          <BandLeading {...parts} refs={refs} />
+          <BandTitle {...parts} motionRef={refs.title} />
+          <BandTrailing {...parts} refs={refs} />
         </BandRow>
       </View>
     </FixedSizeChrome>

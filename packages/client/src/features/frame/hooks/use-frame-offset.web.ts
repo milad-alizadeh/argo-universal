@@ -43,8 +43,14 @@ function keyframes(
   const now = currentPlace(element);
   const from = now.shift + last.offset - next.offset;
 
+  // At rest the element already holds its new opacity, so a fade starts from where it last showed.
+  const moving = element
+    .getAnimations()
+    .some((animation) => animation.playState === 'running');
+  const shown = moving ? now.opacity : Number(last.visible);
+
   const [start, end] =
-    opacity === 'fade' ? [now.opacity, Number(next.visible)] : [1, 1];
+    opacity === 'fade' ? [shown, Number(next.visible)] : [1, 1];
 
   return [
     { transform: `translateX(${from}px)`, opacity: start },
@@ -101,7 +107,10 @@ export function useFrameOffset(props: OffsetMotion): FrameSlide {
   return useOffsetMotion(props, 'fade');
 }
 
-// The same motion with no fade: the container is fully opaque while it shows or slides out, and transparent once it has gone.
+/*
+ * The same motion, opaque while the container shows, so the glass in it blurs the page under it, and fading as it
+ * slides out, so nothing of it shows through a translucent pane it slides under.
+ */
 export function useFrameSlide(props: OffsetMotion): FrameSlide {
-  return useOffsetMotion(props, 'hold');
+  return useOffsetMotion(props, props.visible ? 'hold' : 'fade');
 }

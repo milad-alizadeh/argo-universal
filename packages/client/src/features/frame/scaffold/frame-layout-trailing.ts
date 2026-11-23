@@ -29,14 +29,23 @@ function drawnWorkbenchWidth(
   return Math.min(input.measures.workbenchWidth, room);
 }
 
-// Over the page's trailing edge, in its gutter or over its content, between the page's leading edge and the Inspector. A Workbench that is not drawn waits at the page's trailing edge, where it slides in from, and never over the Inspector.
+/*
+ * A Workbench that is not drawn waits just past the page, at the window's edge or the open Inspector's, which it slides
+ * in from under: waiting inside the page, its cards would show at the page's edge as it slid out.
+ */
+const waitingOffset = (input: FrameLayoutInput, page: PaneSpan): number =>
+  Math.min(input.width, page.offset + page.width + input.measures.paneGap);
+
+// Over the page's trailing edge, in its gutter or over its content, between the page's leading edge and the Inspector.
 export function workbenchRegion(
   input: FrameLayoutInput,
   page: PaneSpan,
 ): WorkbenchRegion {
   const state = workbenchState(input, page.width);
   const width = drawnWorkbenchWidth(input, state, page);
-  const offset = Math.max(page.offset, trailingEdge(input, page) - width);
+  const offset = workbenchDrawn(state)
+    ? Math.max(page.offset, trailingEdge(input, page) - width)
+    : waitingOffset(input, page);
 
   return { state, width, offset, fits: workbenchFits(input, page.width) };
 }

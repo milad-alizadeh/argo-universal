@@ -39,7 +39,7 @@ function WorkbenchPanel({
 
 type PanelProps = ComponentProps<typeof Animated.View> & { inert: boolean };
 
-// The panel slides without fading: a translucent panel would stop its cards' frost blurring the page under them.
+// The panel slides in without fading, since a translucent panel would stop its cards' frost blurring the page under them, and fades as it slides out.
 function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
   const placement = workbenchPlacement(layout);
   const { visible } = placement.motion;
