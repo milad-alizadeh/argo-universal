@@ -22,6 +22,7 @@ import {
 import type * as React from 'react';
 import { useCallback, type PropsWithChildren } from 'react';
 import { View } from 'react-native';
+import { nativeFrame } from './native-frame';
 
 interface OpenFirstPageProps {
   useFirstPage: NonNullable<SectionList['useFirstPage']>;
@@ -120,7 +121,9 @@ export function NarrowRoot({
   const menu = useDrawerMenu();
 
   return (
-    <ScreenMenuContext value={root ? menu : null}>{children}</ScreenMenuContext>
+    <ScreenMenuContext value={root && !nativeFrame ? menu : null}>
+      {children}
+    </ScreenMenuContext>
   );
 }
 
@@ -131,7 +134,7 @@ export function NarrowRoot({
  */
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
   const wide = useWide();
-  const besidePages = useBesidePages(section, wide);
+  const besidePages = useBesidePages(section, wide || nativeFrame);
 
   if (besidePages) return besidePages;
 

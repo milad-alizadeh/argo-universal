@@ -1,6 +1,6 @@
 import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 import {
   isCoreSection,
   type Section,
@@ -19,7 +19,11 @@ import {
   useScaffoldParts,
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
-import { type FrameListDetail, useFrameListDetail } from './frame-list-detail';
+import {
+  NativeSidebarListPlace,
+  type FrameListDetail,
+  useFrameListDetail,
+} from './frame-list-detail';
 import { FrameOffers, type FrameParts, useFrameParts } from './frame-offers';
 import { type FrameState, useFrameState } from './frame-state';
 import type { FrameSections } from './section-lists';
@@ -44,11 +48,16 @@ interface FrameOptions extends FrameSections {
 function frameScaffold(
   state: FrameState['scaffold'],
   options: FrameOptions,
-  listDetail: FrameListDetail,
+  {
+    listDetail,
+    nativeSidebar,
+  }: { listDetail: FrameListDetail; nativeSidebar: boolean },
 ): ScaffoldProps {
   return {
     ...state,
-    ...sectionScaffold(options, listDetail),
+    ...(nativeSidebar
+      ? { list: null, sidebarShown: false }
+      : sectionScaffold(options, listDetail)),
     sizeClass: options.sizeClass,
     sidebar: null,
     banner: <LiveConnectionBanner />,
@@ -69,10 +78,13 @@ const sectionsOf = ({
 function useFrame(options: FrameOptions): FrameParts {
   const { scaffold, inspectorPlace, bandPlaces } = useFrameState();
   const listDetail = useFrameListDetail(options.section);
+  const nativeSidebar = use(NativeSidebarListPlace) !== undefined;
 
   return {
     bandPlaces,
-    scaffold: useScaffoldParts(frameScaffold(scaffold, options, listDetail)),
+    scaffold: useScaffoldParts(
+      frameScaffold(scaffold, options, { listDetail, nativeSidebar }),
+    ),
     inspectorPlace,
     ...sectionsOf(options),
     listDetail,

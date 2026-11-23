@@ -7,3 +7,6 @@ import type { InspectorProps } from './inspector-props';
  * shown page; absent in previews, where a wide Inspector draws its column in place.
  */
 export const InspectorPlaceOffer = createPlaceOffer<InspectorProps>();
+
+// The iPad split view offers its Inspector at every width.
+export const NativeInspectorPlace = createPlaceOffer<InspectorProps>();

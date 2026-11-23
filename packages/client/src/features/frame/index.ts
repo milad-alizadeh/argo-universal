@@ -14,6 +14,7 @@ export {
 } from './frame/frame';
 
 export {
+  NativeSidebarListPlace,
   SectionListDetail,
   useKeepSidebarWhileOpening,
   useKeepSidebarWhilePending,

@@ -12,6 +12,7 @@ export {
   useFrameSidebarWidth,
   PhoneConnectionBanner,
   SectionDrawer,
+  NativeSidebarListPlace,
   SectionListDetail,
   type SectionList,
   type SectionLists,
@@ -140,6 +141,7 @@ export {
 export {
   coreNavigationSections,
   isCoreSection,
+  isPage,
   isPluginSection,
   type CoreSection,
   type NavigationSection,

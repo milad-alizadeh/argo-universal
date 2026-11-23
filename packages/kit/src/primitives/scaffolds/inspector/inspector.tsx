@@ -1,9 +1,10 @@
-import type { ReactElement } from 'react';
+import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { useClaim, useOfferedPlace, type Place } from '#kit/place';
+import { useDrawnPage } from '#kit/use-shown-page';
 import { useWide } from '#kit/use-wide/use-wide';
 import { InspectorPane } from './inspector-pane';
-import { InspectorPlaceOffer } from './inspector-place';
+import { InspectorPlaceOffer, NativeInspectorPlace } from './inspector-place';
 import type { InspectorProps } from './inspector-props';
 import { InspectorSheet } from './inspector-sheet';
 
@@ -14,8 +15,16 @@ import { InspectorSheet } from './inspector-sheet';
  */
 export function Inspector(props: InspectorProps): ReactElement | null {
   const place = useOfferedPlace(InspectorPlaceOffer);
+  const nativePlace = use(NativeInspectorPlace);
+  const focused = useDrawnPage();
+  const wide = useWide();
 
-  if (!useWide()) return <InspectorSheet {...props} />;
+  if (nativePlace)
+    return (
+      <HostedInspector {...props} place={focused ? nativePlace : undefined} />
+    );
+
+  if (!wide) return <InspectorSheet {...props} />;
 
   const pane = { ...props, scrollable: undefined };
 
@@ -28,7 +37,7 @@ export function Inspector(props: InspectorProps): ReactElement | null {
 function HostedInspector({
   place,
   ...props
-}: InspectorProps & { place: Place<InspectorProps> }): null {
+}: InspectorProps & { place: Place<InspectorProps> | undefined }): null {
   useClaim(place, props);
 
   return null;

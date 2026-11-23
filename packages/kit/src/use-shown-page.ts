@@ -108,10 +108,15 @@ export function usePageFocused(): boolean {
 }
 
 // The Frame's Places stay with the drawn page, including while a modal is above it.
-export function useIsShownPage(): boolean {
-  const wide = useWide();
+export function useDrawnPage(): boolean {
   const backdrop = use(SectionBackdropVisibility);
   const route = use(NavigationRouteContext);
 
-  return usePageVisibility(backdrop ? route?.key : undefined) && wide;
+  return usePageVisibility(backdrop ? route?.key : undefined);
+}
+
+export function useIsShownPage(): boolean {
+  const wide = useWide();
+
+  return useDrawnPage() && wide;
 }

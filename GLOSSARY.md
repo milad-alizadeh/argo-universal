@@ -711,7 +711,7 @@ The column beside a Session's Feed with summary cards for its sections, includin
 _Avoid_: Inspector, right panel, second sidebar
 
 **Place**:
-Somewhere in the Frame that a page fills while it is shown: the window band, the sidebar or the Inspector column. The Frame offers it and a page claims it with what to draw; only the shown page holds it, and only on a wide window. The newest claim shows, and an older one is not restored when it ends. Selection mode is the one Place where the first claim holds it, unless a selecting List claims it.
+Somewhere in the Frame that a page fills while it is shown: the window band, the sidebar or the Inspector column. The Frame offers it and a page claims it with what to draw; only the drawn page holds it. Most Places are offered on wide windows. The native iPad Inspector offers its Place at every width. The newest claim shows, and an older one is not restored when it ends. Selection mode is the one Place where the first claim holds it, unless a selecting List claims it.
 _Avoid_: Host, slot (a Slot is a Plugin's)
 
 **Inspector**:

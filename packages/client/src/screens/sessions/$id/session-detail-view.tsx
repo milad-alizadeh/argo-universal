@@ -2,7 +2,9 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
+import { NativeInspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
 import type * as React from 'react';
+import { use } from 'react';
 import type { ComposerProps } from '#features/composer';
 import type { FeedProps } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
@@ -136,7 +138,14 @@ function OpenSessionBody({
   ...props
 }: SessionBodyProps): React.JSX.Element {
   const wide = useContentWide();
-  const work = useWorkPanels(props, phone.panels, phone.visible);
+  const nativeInspector = use(NativeInspectorPlace);
+
+  const work = useWorkPanels(
+    props,
+    phone.panels,
+    !nativeInspector && phone.visible,
+  );
+
   const layout = sessionParts(withWork(props, work), phone.panels, wide);
 
   return (
