@@ -8,6 +8,7 @@ import {
 } from '@repo/contracts/plugins';
 import type { ProcessCommand } from '../protocol/runtime';
 import { CapabilityRefusal } from './capability-refusal';
+import { checkGitHubCliRead } from './github-cli-read-command';
 import {
   allowLinks,
   allowRead,
@@ -98,6 +99,8 @@ export class PluginAccess {
       throw new CapabilityRefusal(
         `${command.argv.join(' ')} is not a declared command. Add { "kind": "process:exec", "command": "${command.argv[0]}", "args": [...] } to capabilities in plugin.json; args lists the arguments it may take, with * for one and ** for the rest.`,
       );
+
+    checkGitHubCliRead(command.argv);
 
     return this.checkedCommand(command, matching);
   }

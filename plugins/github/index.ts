@@ -1,4 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
+import { githubReadFetch } from './github-cli-reads';
 import { definePace } from './pace-page';
 import { createAutoArchive } from './pull-auto-archive';
 import { createAutoFix } from './pull-auto-fix';
@@ -11,12 +12,7 @@ import { keptShown } from './pull-kept';
 import { linkMarks, markedLinks } from './pull-link-marks';
 import { definePullReads } from './pull-reads';
 import { createPullRecords } from './pull-records';
-import {
-  registerFiles,
-  registerOperations,
-  registerReads,
-  type Parts,
-} from './pull-register';
+import { registerFiles, registerOperations, type Parts } from './pull-register';
 import { rowItemsBySession } from './pull-row-items';
 import { createPullStore } from './pull-store';
 import { createPulls, type Pulls } from './pull-sync';
@@ -24,13 +20,13 @@ import { defineViewerReads } from './pull-viewer';
 import { watchProject } from './pull-watch';
 import type { SessionCaller } from './session-caller';
 
-function sourceOf(argo: Argo): ChangesSource {
+function sourceOf(argo: Argo, fetch: Argo['fetch']): ChangesSource {
   return {
     store: createPullStore(argo),
     automations: { fix: createAutoFix(argo), archive: createAutoArchive(argo) },
     records: createPullRecords(argo),
     reads: {
-      ...definePullReads(argo),
+      ...definePullReads({ ...argo, fetch }),
       ...defineAutomationReads(argo),
       ...defineCommentsReads(argo),
       ...defineViewerReads(argo),
@@ -123,14 +119,15 @@ function registerWatch(argo: Argo, { source, pulls }: Parts): void {
 }
 
 export function register(argo: Argo): void {
-  const source = sourceOf(argo);
+  const fetch = githubReadFetch(argo);
+
+  const source = sourceOf(argo, fetch);
 
   const pulls = createPulls(source, () => argo.changed());
 
   definePace(argo);
-  registerOperations(argo, { source, pulls });
-  registerReads(argo, pulls);
-  registerFiles(argo, { source, pulls });
+  registerOperations(argo, { source, pulls }, fetch);
+  registerFiles({ ...argo, fetch }, { source, pulls });
   registerChanges(argo, { source, pulls });
   registerRowItems(argo, { source, pulls });
   registerLinkMarks(argo, pulls);

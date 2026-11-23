@@ -75,7 +75,7 @@ function pluginSections(
   return (
     <>
       {enabledSection(plugin, props.onEnabledChange)}
-      {githubSection(plugin.github, props.onOpenSignIn)}
+      {githubSection(plugin, props.onOpenSignIn)}
       {accountSections(plugin.accounts, props)}
       {settingSections(plugin, props.onSettingChange)}
     </>
@@ -151,14 +151,20 @@ function openAccountRow(
 }
 
 function githubSection(
-  github: LoadedPlugin['github'],
+  { github, settings }: LoadedPlugin,
   onOpenSignIn: BodyProps['onOpenSignIn'],
 ): React.JSX.Element | null {
   if (!github) return null;
 
+  const cliPreferred = settings.values['prefer-github-cli'] === true;
+
+  const accountTitle = github.connected
+    ? 'GitHub Account'
+    : 'GitHub not connected';
+
   return (
     <FieldGroup.Section
-      title={github.connected ? 'GitHub Account' : 'GitHub not connected'}
+      title={cliPreferred ? 'GitHub Account fallback' : accountTitle}
     >
       <FieldGroup.Link
         title="Continue with GitHub"

@@ -11,6 +11,15 @@
     "material": "merge_type"
   },
   "contributes": {
+    "settings": [
+      {
+        "key": "prefer-github-cli",
+        "type": "toggle",
+        "label": "Prefer GitHub CLI for reads",
+        "description": "Read pull requests and Checks with the Server Device’s active GitHub CLI login. Argo tries the Project’s GitHub Account if the CLI read fails.",
+        "default": false
+      }
+    ],
     "nav": [{ "id": "pace", "title": "Development pace", "path": "/pace" }],
     "slots": [
       "argo/session/changes/v1",
@@ -257,6 +266,21 @@
     ]
   },
   "capabilities": [
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "GET",
+        "--include",
+        "--",
+        "*"
+      ],
+      "env": ["GH_PROMPT_DISABLED"]
+    },
     {
       "kind": "sessions:read"
     },
