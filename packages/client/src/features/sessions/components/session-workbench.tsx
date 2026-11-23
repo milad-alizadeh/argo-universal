@@ -1,4 +1,7 @@
-import { Card, type CardProps } from '@repo/kit/primitives/layout/card';
+import {
+  type CardProps,
+  CardSection,
+} from '@repo/kit/primitives/layout/card';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { WorkbenchColumn, type WorkbenchColumnCard } from './workbench-column';
@@ -41,9 +44,8 @@ interface SectionCardProps {
   handle: ReactNode;
 }
 
-// Every Section's card collapses, and starts open.
+// Every Section's card collapses, and starts open; the Workbench's one panel draws the surface they share.
 const cardProps = ({ section, handle }: SectionCardProps): CardProps => ({
-  kind: 'glass',
   density: 'compact',
   collapsible: true,
   defaultOpen: true,
@@ -79,9 +81,9 @@ export function WorkbenchTextAction({
 function SectionCard(props: SectionCardProps): ReactElement {
   return (
     <View testID={`workbench-${props.section.key}`}>
-      <Card {...cardProps(props)}>
+      <CardSection {...cardProps(props)}>
         <SectionSummary section={props.section} />
-      </Card>
+      </CardSection>
     </View>
   );
 }
