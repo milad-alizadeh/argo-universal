@@ -9,6 +9,11 @@ import {
 } from 'electron';
 import { z } from 'zod';
 import { appOrigin } from './app-protocol';
+import {
+  bindSidebarGlass,
+  clearWindowBackground,
+  loadSidebarGlass,
+} from './sidebar-glass';
 import { reportWindowMinimized } from './window-minimized';
 import {
   readWindowState,
@@ -42,11 +47,35 @@ function makeWindow(
   options: WindowOptions,
   saved: WindowState | undefined,
 ): BrowserWindow {
-  return new BrowserWindow({
+  const glass = loadSidebarGlass();
+
+  const shellOptions = {
     ...restoreBounds(saved),
     minWidth: 600,
-    show: !options.background,
     ...windowChrome(),
+  };
+
+  if (glass) {
+    const window = new BrowserWindow({
+      ...shellOptions,
+      show: false,
+      transparent: true,
+      backgroundColor: clearWindowBackground,
+      webPreferences: webPreferences(url, options.background, true),
+    });
+
+    if (bindSidebarGlass(window, glass, options.origin)) {
+      if (!options.background) window.show();
+
+      return window;
+    }
+
+    window.destroy();
+  }
+
+  return new BrowserWindow({
+    ...shellOptions,
+    show: !options.background,
     webPreferences: webPreferences(url, options.background),
   });
 }
@@ -88,14 +117,21 @@ function alignTrafficLights(window: BrowserWindow): void {
   });
 }
 
-function webPreferences(url: string, background: boolean): WebPreferences {
+function webPreferences(
+  url: string,
+  background: boolean,
+  glass = false,
+): WebPreferences {
   return {
     backgroundThrottling: !background,
     preload: path.join(__dirname, 'preload.cjs'),
     contextIsolation: true,
     nodeIntegration: false,
     sandbox: true,
-    additionalArguments: [`--server-url=${url}`],
+    additionalArguments: [
+      `--server-url=${url}`,
+      ...(glass ? ['--native-sidebar-glass'] : []),
+    ],
   };
 }
 

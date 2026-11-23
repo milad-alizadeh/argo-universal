@@ -12,6 +12,11 @@ import { productCompatibility } from '@repo/contracts/product-identity';
  * https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
  */
 import { contextBridge, ipcRenderer, webFrame } from 'electron';
+import { bindSidebarGlass } from './sidebar-glass';
+
+if (process.argv.includes('--native-sidebar-glass')) {
+  window.addEventListener('DOMContentLoaded', bindSidebarGlass);
+}
 
 // Page zoom resizes the CSS viewport, while native traffic lights keep their size.
 function reportBandHeight(): void {

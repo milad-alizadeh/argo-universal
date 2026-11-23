@@ -123,6 +123,7 @@ function GlassFill({
 }: Pick<GlassMaskProps, 'props' | 'box'>): React.JSX.Element {
   return (
     <div
+      data-sidebar-glass-fill
       className={cn(
         'absolute bottom-0 left-0 top-0',
         glassMaterial.fill,
@@ -137,6 +138,7 @@ function GlassMask({ ref, ...layer }: GlassMaskProps): React.JSX.Element {
   return (
     <div
       ref={ref}
+      data-sidebar-glass-panel=""
       className="pointer-events-none absolute bottom-0 left-0 overflow-hidden rounded-2xl"
       style={layer.box}
     >
@@ -150,6 +152,7 @@ function GlassEdge({ ref, box }: GlassLayerProps): React.JSX.Element {
   return (
     <div
       ref={ref}
+      data-sidebar-glass-edge
       className={cn(
         'pointer-events-none absolute bottom-0 left-0 rounded-2xl',
         glassMaterial.edge,

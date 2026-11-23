@@ -1,6 +1,7 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import { z } from 'zod';
 import { reportUnrecognised } from './report-unrecognised';
+import { clearWindowBackground, hasSidebarGlass } from './sidebar-glass';
 import { isTrustedWindow } from './trusted-window';
 
 // The sRGB hex the page reads its content surface as; Electron takes nothing wider.
@@ -23,5 +24,12 @@ export function handleWindowBackground(windowOrigin: string): void {
 }
 
 function setBackgroundColor(sender: Electron.WebContents, color: string): void {
-  BrowserWindow.fromWebContents(sender)?.setBackgroundColor(color);
+  const window = BrowserWindow.fromWebContents(sender);
+
+  if (!window) return;
+
+  // An opaque Electron background would cover the native glass.
+  window.setBackgroundColor(
+    hasSidebarGlass(window) ? clearWindowBackground : color,
+  );
 }
