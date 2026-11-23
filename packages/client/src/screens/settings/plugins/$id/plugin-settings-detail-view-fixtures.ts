@@ -64,3 +64,18 @@ export const disconnectedGitHub = {
   ...pluginWithoutSettings,
   github: { providerId: 'issue-tracker', page: '/sign-in', connected: false },
 } satisfies PluginFixture;
+
+export const gitHubCliEnabled = {
+  ...disconnectedGitHub,
+  fields: [
+    {
+      key: 'prefer-github-cli',
+      type: 'toggle',
+      label: 'Prefer GitHub CLI for reads',
+      description:
+        'Read pull requests and Checks with the Server Device’s active GitHub CLI login. Argo tries the Project’s GitHub Account if the CLI read fails.',
+      default: false,
+    },
+  ],
+  settings: { values: { 'prefer-github-cli': true }, secretsSet: [] },
+} satisfies PluginFixture;

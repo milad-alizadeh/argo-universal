@@ -12,6 +12,7 @@ import {
 } from './plugin-settings-detail-view';
 import {
   disconnectedGitHub,
+  gitHubCliEnabled,
   signedInPlugin,
   stoppedPlugin,
 } from './plugin-settings-detail-view-fixtures';
@@ -248,5 +249,15 @@ export const GitHubDisconnectedOpensProvider: Story = {
       '/sign-in',
       'issue-tracker',
     );
+  },
+};
+
+export const GitHubCliOffersAccountFallback: Story = {
+  args: { plugin: gitHubCliEnabled },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('GitHub Account fallback')).toBeVisible();
+    await expect(
+      canvas.getByRole('link', { name: 'Continue with GitHub' }),
+    ).toBeVisible();
   },
 };

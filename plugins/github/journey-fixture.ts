@@ -135,15 +135,17 @@ const baseOptions = (
   archiveSession: archiveRecorder(github),
 });
 
+type JourneyOptions = Pick<PluginTestOptions, 'path' | 'settings'>;
+
 async function startOver(
   github: GitHubFixture,
-  keep: Keep,
+  options: Keep & JourneyOptions,
   sessions: Sessions,
 ): Promise<PluginTest> {
   const test = await startPluginTest({
     ...baseOptions(github, sessions),
     directory: await pluginsFolder(),
-    ...keep,
+    ...options,
   });
 
   onTestFinished(() => closeOnce(test));
@@ -160,7 +162,9 @@ async function keepFolder(): Promise<Keep> {
 }
 
 // The Plugin over a fixture GitHub, nobody signed in.
-export async function signedOutJourney(): Promise<Journey> {
+export async function signedOutJourney(
+  options: JourneyOptions = {},
+): Promise<Journey> {
   const github = await githubFixture();
 
   for (const [key, pull] of defaultPulls) github.pulls.set(key, { ...pull });
@@ -169,7 +173,7 @@ export async function signedOutJourney(): Promise<Journey> {
   const sessions = sessionsOf();
 
   return {
-    test: await startOver(github, keep, sessions),
+    test: await startOver(github, { ...keep, ...options }, sessions),
     sessions,
     github,
     keep,
@@ -177,8 +181,8 @@ export async function signedOutJourney(): Promise<Journey> {
 }
 
 // The same, with the person already signed in.
-export async function journey(): Promise<Journey> {
-  const run = await signedOutJourney();
+export async function journey(options: JourneyOptions = {}): Promise<Journey> {
+  const run = await signedOutJourney(options);
 
   await signIn(run.test);
 

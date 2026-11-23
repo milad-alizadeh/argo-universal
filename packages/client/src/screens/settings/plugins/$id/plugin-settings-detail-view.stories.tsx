@@ -3,6 +3,7 @@ import { action } from 'storybook/actions';
 import { PluginSettingsDetailView } from './plugin-settings-detail-view';
 import {
   disconnectedGitHub,
+  gitHubCliEnabled,
   loadedPlugin,
   signedOutPlugin,
   signedInPlugin,
@@ -60,3 +61,5 @@ export const Stopped: Story = { args: { plugin: stoppedPlugin } };
 export const GitHubDisconnected: Story = {
   args: { plugin: disconnectedGitHub },
 };
+
+export const GitHubCliEnabled: Story = { args: { plugin: gitHubCliEnabled } };

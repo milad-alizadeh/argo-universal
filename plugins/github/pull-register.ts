@@ -39,11 +39,11 @@ export function registerFiles(argo: Argo, { source, pulls }: Parts): void {
   );
 }
 
-function registerAttach(argo: Argo, { source, pulls }: Parts): void {
+function registerAttach(argo: Argo, scope: Scope): void {
   argo.operations.register('attach', async (params, caller) => ({
     attached: true,
     change: await attach(
-      scopeOf(argo, source, pulls),
+      scope,
       // A person attaching is asking for it, so only an Agent's run is held back by an earlier detach.
       {
         reference: params.reference,
@@ -75,20 +75,27 @@ function registerAutomation(argo: Argo, { source, pulls }: Parts): void {
   );
 }
 
-export function registerOperations(argo: Argo, { source, pulls }: Parts): void {
-  registerAttach(argo, { source, pulls });
+export function registerOperations(
+  argo: Argo,
+  { source, pulls }: Parts,
+  fetch: Argo['fetch'],
+): void {
+  const scope = { ...scopeOf(argo, source, pulls), fetch };
+
+  registerAttach(argo, scope);
   registerAutomation(argo, { source, pulls });
   registerDetach(argo, { source, pulls });
   argo.operations.register('discover', async (params, caller) =>
     (params.unlessAttached === true ? discoverUnlessAttached : discoverFor)(
-      scopeOf(argo, source, pulls),
+      scope,
       await sessionCaller(argo, params, caller),
     ),
   );
+  registerReads(argo, pulls);
 }
 
 // What the Session's pull requests look like now, and the retry that asks GitHub again.
-export function registerReads(argo: Argo, pulls: Pulls): void {
+function registerReads(argo: Argo, pulls: Pulls): void {
   argo.operations.register('list', async (params, caller) =>
     list(pulls, argo, await sessionCaller(argo, params, caller)),
   );
