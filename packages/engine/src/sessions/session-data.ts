@@ -8,6 +8,8 @@ export type SessionCreationInput = SessionNewInput & {
   turnId: string;
   startedBySessionId?: string;
   rememberCheckout?: boolean;
+  // Keeps the Session with no first Prompt: a task Schedule's Session waits for its first occurrence (ADR-0067).
+  keep?: boolean;
 };
 
 export type SessionInput = {

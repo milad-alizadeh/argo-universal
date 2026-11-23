@@ -1,20 +1,22 @@
 import { SessionPromptInput } from '@repo/contracts';
+import {
+  ProjectSchedule,
+  ScheduleCalendar,
+  type ProjectScheduleCadence,
+} from '@repo/contracts/operations';
 import type { operations } from '@repo/contracts/operations';
-import { sessionSchedule as table } from '@repo/db/schema';
+import { session, sessionSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { WriterJob } from '../storage';
+import { nextProjectScheduleAt } from './project-schedule-timing';
 import { nextIntervalAt } from './schedule-timing';
 import type { HandlerSources } from './session-sources';
 
-type ScheduleRow = typeof table.$inferSelect;
+export type ScheduleRow = typeof table.$inferSelect;
 
 type Definitions = typeof operations;
-
-export type CreateSchedule = z.output<
-  Definitions['session.schedulePrompt']['params']
->;
 
 export type ManageSchedule = z.output<
   Definitions['session.manageSchedule']['params']
@@ -24,26 +26,61 @@ export type Schedule = z.output<
   Definitions['session.schedulePrompt']['result']
 >;
 
-export type ScheduleOccurrence = {
+// What a task Schedule was created with; its Session keeps these for life (ADR-0067).
+export const ScheduleTask = ProjectSchedule.pick({
+  agent: true,
+  checkout: true,
+  configOptions: true,
+});
+
+export type ScheduleTask = z.infer<typeof ScheduleTask>;
+
+export interface NewSchedule {
+  id: string;
   sessionId: string;
   prompt: Schedule['prompt'];
+  // Null for a one-time Schedule.
+  cadence: ProjectScheduleCadence | null;
+  anchorAt: number;
+  nextAt: number;
+  endsAt: number | null;
+  paused: boolean;
+  task: ScheduleTask | null;
+}
+
+export type ScheduleEdit = Pick<NewSchedule, 'prompt'> &
+  Pick<ScheduleRow, 'anchorAt' | 'nextAt'> & {
+    cadence: ProjectScheduleCadence;
+  };
+
+export interface ScheduleOccurrence {
+  sessionId: string;
+  prompt: Schedule['prompt'];
+  // Due longer ago than the grace window: skipped once, never sent.
+  late: boolean;
   deliveryWrite: WriterJob;
   coalescedWrite: WriterJob;
-};
+  skipWrite: WriterJob;
+}
 
-const second = 1000;
+export interface ListedSchedule {
+  row: ScheduleRow;
+  projectId: string;
+}
 
-const oneDay = 86_400_000;
+/** A Server that returns within this long of a due occurrence still sends it, late. */
+const lateGraceMs = 3_600_000;
 
-const lastDate = 8_640_000_000_000_000;
+type ScheduleCadenceColumns = Pick<ScheduleRow, 'intervalSeconds' | 'calendar'>;
 
-type ScheduleTiming = Pick<
-  ScheduleRow,
-  'intervalSeconds' | 'lastQueuedAt' | 'endsAt' | 'paused'
->;
+type ScheduleTiming = ScheduleCadenceColumns &
+  Pick<ScheduleRow, 'lastQueuedAt' | 'lastSkippedAt' | 'endsAt' | 'paused'>;
+
+const repeats = (row: ScheduleCadenceColumns): boolean =>
+  row.intervalSeconds !== null || row.calendar !== null;
 
 const completed = (row: ScheduleTiming): boolean =>
-  row.intervalSeconds === null && row.lastQueuedAt !== null;
+  !repeats(row) && (row.lastQueuedAt !== null || row.lastSkippedAt !== null);
 
 const expired = (row: ScheduleTiming, now: number): boolean =>
   row.endsAt !== null && row.endsAt <= now;
@@ -59,38 +96,92 @@ function stateOf(row: ScheduleTiming, now: number): Schedule['state'] {
 const active = (): ReturnType<typeof and> =>
   and(
     eq(table.paused, false),
-    or(isNotNull(table.intervalSeconds), isNull(table.lastQueuedAt)),
+    or(
+      isNotNull(table.intervalSeconds),
+      isNotNull(table.calendar),
+      and(isNull(table.lastQueuedAt), isNull(table.lastSkippedAt)),
+    ),
   );
 
-const decodeSchedule = ({ prompt, ...row }: ScheduleRow): Schedule => ({
-  ...row,
-  state: stateOf(row, Date.now()),
-  prompt: SessionPromptInput.shape.prompt.parse(JSON.parse(prompt)),
-});
+const calendarOf = ({
+  calendar,
+}: Pick<ScheduleRow, 'calendar'>): ScheduleCalendar | null =>
+  calendar === null ? null : ScheduleCalendar.parse(JSON.parse(calendar));
 
-function occurrenceWrite(
-  row: ScheduleRow,
-  now: number,
-  queued: boolean,
-): WriterJob {
-  const nextAt =
-    row.intervalSeconds === null
-      ? row.nextAt
-      : nextIntervalAt(row.nextAt, row.intervalSeconds, now);
+// A one-time Schedule has no cadence.
+export function cadenceOf(
+  row: ScheduleCadenceColumns,
+): ProjectScheduleCadence | null {
+  const calendar = calendarOf(row);
 
-  const lastQueuedAt = queued ? now : row.lastQueuedAt;
+  if (calendar) return calendar;
 
-  return {
-    describe: () => 'Record scheduled Prompt',
-    commit: (tx) => {
-      tx.update(table)
-        .set({ nextAt, lastQueuedAt })
-        .where(eq(table.id, row.id))
-        .run();
-    },
-  };
+  return row.intervalSeconds === null
+    ? null
+    : { type: 'interval', intervalSeconds: row.intervalSeconds };
 }
 
+const oneTime: ScheduleCadenceColumns = {
+  intervalSeconds: null,
+  calendar: null,
+};
+
+function cadenceColumns(
+  cadence: ProjectScheduleCadence,
+): ScheduleCadenceColumns {
+  return cadence.type === 'interval'
+    ? { intervalSeconds: cadence.intervalSeconds, calendar: null }
+    : { intervalSeconds: null, calendar: JSON.stringify(cadence) };
+}
+
+export const taskOf = ({ task }: Pick<ScheduleRow, 'task'>): ScheduleTask =>
+  ScheduleTask.parse(JSON.parse(task ?? 'null'));
+
+export const promptOf = ({
+  prompt,
+}: Pick<ScheduleRow, 'prompt'>): Schedule['prompt'] =>
+  SessionPromptInput.shape.prompt.parse(JSON.parse(prompt));
+
+// The first occurrence after `now`; a one-time Schedule keeps its own.
+function followingAt(row: ScheduleRow, now: number): number {
+  const cadence = cadenceOf(row);
+  const anchorAt = row.anchorAt ?? row.nextAt;
+
+  if (cadence === null) return row.nextAt;
+
+  if (cadence.type === 'interval')
+    return nextIntervalAt(anchorAt, cadence.intervalSeconds, now);
+
+  return nextProjectScheduleAt(cadence, now, anchorAt);
+}
+
+const decodeSchedule = (row: ScheduleRow): Schedule => ({
+  id: row.id,
+  sessionId: row.sessionId,
+  prompt: promptOf(row),
+  intervalSeconds: row.intervalSeconds,
+  calendar: calendarOf(row),
+  nextAt: row.nextAt,
+  endsAt: row.endsAt,
+  lastQueuedAt: row.lastQueuedAt,
+  lastSkippedAt: row.lastSkippedAt,
+  paused: row.paused,
+  listed: row.task !== null,
+  state: stateOf(row, Date.now()),
+});
+
+type OccurrenceRecord = Partial<
+  Pick<ScheduleRow, 'nextAt' | 'lastQueuedAt' | 'lastSkippedAt'>
+>;
+
+const recordWrite = (id: string, record: OccurrenceRecord): WriterJob => ({
+  describe: () => 'Record scheduled Prompt',
+  commit: (tx) => {
+    tx.update(table).set(record).where(eq(table.id, id)).run();
+  },
+});
+
+// One store for every Schedule, made as a task in Scheduled or inside a Session (ADR-0067).
 export class ScheduleStore {
   public constructor(
     private readonly sources: HandlerSources<'database' | 'createId', 'write'>,
@@ -125,12 +216,27 @@ export class ScheduleStore {
 
     if (!row || expired(row, now)) return undefined;
 
+    const nextAt = followingAt(row, now);
+
     return {
       sessionId: row.sessionId,
-      prompt: decodeSchedule(row).prompt,
-      deliveryWrite: occurrenceWrite(row, now, true),
-      coalescedWrite: occurrenceWrite(row, now, false),
+      prompt: promptOf(row),
+      late: now - row.nextAt > lateGraceMs,
+      deliveryWrite: recordWrite(row.id, { nextAt, lastQueuedAt: now }),
+      coalescedWrite: recordWrite(row.id, { nextAt }),
+      skipWrite: recordWrite(row.id, { nextAt, lastSkippedAt: now }),
     };
+  }
+  // Run now sends the Prompt without moving the next occurrence.
+  public sentNow(id: string): WriterJob {
+    return recordWrite(id, { lastQueuedAt: Date.now() });
+  }
+  public row(id: string): ScheduleRow | undefined {
+    return this.sources.database
+      .select()
+      .from(table)
+      .where(eq(table.id, id))
+      .get();
   }
   public list(sessionId: string): Schedule[] {
     return this.sources.database
@@ -140,35 +246,31 @@ export class ScheduleStore {
       .all()
       .map(decodeSchedule);
   }
-  public async insert(input: CreateSchedule): Promise<Schedule> {
-    const now = Date.now();
-    const intervalSeconds = input.intervalSeconds ?? null;
-    const nextAt = input.onceAt ?? now + (intervalSeconds ?? 0) * second;
-
-    const endsAt =
-      intervalSeconds === null ? null : (input.endsAt ?? now + oneDay);
-
-    if (nextAt <= now || nextAt > lastDate)
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Choose a future delivery time',
-      });
-
-    if (endsAt !== null && endsAt <= nextAt)
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Choose an end time after the first occurrence',
-      });
-
+  // Task Schedules, which Scheduled lists, with their Session's Project.
+  public listed(projectId?: string): ListedSchedule[] {
+    return this.sources.database
+      .select({ row: table, projectId: session.projectId })
+      .from(table)
+      .innerJoin(session, eq(session.id, table.sessionId))
+      .where(
+        and(
+          isNotNull(table.task),
+          projectId === undefined
+            ? undefined
+            : eq(session.projectId, projectId),
+        ),
+      )
+      .orderBy(table.nextAt, table.id)
+      .all();
+  }
+  public async insert({ cadence, ...input }: NewSchedule): Promise<Schedule> {
     const row: ScheduleRow = {
-      id: this.sources.createId(),
-      sessionId: input.sessionId,
+      ...input,
+      ...(cadence ? cadenceColumns(cadence) : oneTime),
       prompt: JSON.stringify(input.prompt),
-      intervalSeconds,
-      endsAt,
-      nextAt,
+      task: input.task && JSON.stringify(input.task),
       lastQueuedAt: null,
-      paused: false,
+      lastSkippedAt: null,
     };
 
     await this.sources.open.write({
@@ -177,6 +279,25 @@ export class ScheduleStore {
     });
 
     return decodeSchedule(row);
+  }
+  // A changed cadence counts again from `anchorAt`.
+  public async edit(
+    id: string,
+    { prompt, cadence, ...timing }: ScheduleEdit,
+  ): Promise<void> {
+    await this.sources.open.write({
+      describe: () => 'Edit Schedule',
+      commit: (tx) =>
+        tx
+          .update(table)
+          .set({
+            prompt: JSON.stringify(prompt),
+            ...cadenceColumns(cadence),
+            ...timing,
+          })
+          .where(eq(table.id, id))
+          .run(),
+    });
   }
   public async change(input: ManageSchedule): Promise<void> {
     const { sessionId, id, action } = input;
@@ -187,7 +308,7 @@ export class ScheduleStore {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found' });
 
     if (completed(row) && action !== 'delete') return;
-    const update = this.update(row, input);
+    const update = changeOf(row, input);
     await this.sources.open.write({
       describe: () => 'Manage Schedule',
       commit: (tx) => {
@@ -196,20 +317,23 @@ export class ScheduleStore {
       },
     });
   }
-  private update(
-    row: ScheduleRow,
-    { action, endsAt }: ManageSchedule,
-  ): Partial<ScheduleRow> {
-    const now = Date.now();
+}
 
-    if (action === 'setEnd') return editEnd(row, endsAt, now);
+function changeOf(
+  row: ScheduleRow,
+  { action, endsAt }: ManageSchedule,
+): Partial<ScheduleRow> {
+  const now = Date.now();
 
-    if (action === 'pause') return { paused: true };
+  if (action === 'setEnd') return editEnd(row, endsAt, now);
 
-    if (!row.paused || row.intervalSeconds === null) return { paused: false };
+  if (action === 'pause') return { paused: true };
 
-    return { paused: false, nextAt: now + row.intervalSeconds * second };
-  }
+  // A resumed repeat skips what fell due while it was paused.
+  if (!row.paused || !repeats(row) || row.nextAt > now)
+    return { paused: false };
+
+  return { paused: false, nextAt: followingAt(row, now) };
 }
 
 function editEnd(
@@ -217,10 +341,10 @@ function editEnd(
   endsAt: number | undefined,
   now: number,
 ): Partial<ScheduleRow> {
-  if (row.intervalSeconds === null)
+  if (!repeats(row))
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Only Interval follow-ups have an end time',
+      message: 'Only a repeating Schedule has an end time',
     });
 
   if (endsAt === undefined || endsAt <= now)
@@ -230,9 +354,7 @@ function editEnd(
     });
 
   const nextAt =
-    expired(row, now) && row.nextAt <= now
-      ? nextIntervalAt(row.nextAt, row.intervalSeconds, now)
-      : row.nextAt;
+    expired(row, now) && row.nextAt <= now ? followingAt(row, now) : row.nextAt;
 
   return nextAt === row.nextAt ? { endsAt } : { endsAt, nextAt };
 }

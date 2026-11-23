@@ -46,6 +46,8 @@ import { createSessionWorkSource, type SessionWorkSource } from './work-source';
  * with stays behind this interface.
  */
 export class Sessions {
+  // Every Schedule, made as a task in Scheduled or inside a Session, fires through this one runner (ADR-0067).
+  private readonly schedules: Schedules;
   public readonly projectSchedules: ProjectSchedules;
   public readonly archives: SessionArchives;
   // The Session Operations that answer with their result, keyed by Operation id.
@@ -63,11 +65,17 @@ export class Sessions {
     const list = createSessionList(sources);
 
     this.sources = handlerSources(sources);
+    this.schedules = new Schedules(this.sources, sources.sessionCommandSignal);
     this.projectSchedules = new ProjectSchedules(
       this.sources,
+      this.schedules,
       sources.sessionCommandSignal,
     );
-    this.implementations = this.operations(sources, list);
+    this.implementations = sessionOperationImplementations(
+      this.sources,
+      list,
+      this.schedules,
+    );
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
@@ -82,14 +90,7 @@ export class Sessions {
     log: (message: string) => void,
   ): void {
     new DelegatedResults(this.sources, signal, log).start();
-  }
-  private operations(
-    { sessionCommandSignal }: SessionSources,
-    list: ReturnType<typeof createSessionList>,
-  ): SessionOperationImplementations {
-    const schedules = new Schedules(this.sources, sessionCommandSignal);
-
-    return sessionOperationImplementations(this.sources, list, schedules);
+    void this.projectSchedules.migrate(log);
   }
   // Opens a Session from storage, or waits for its open, without a Turn.
   public async open(sessionId: string): Promise<void> {

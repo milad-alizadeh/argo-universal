@@ -29,6 +29,7 @@ const dataForCheckout = (
   checkout: Checkout,
 ): SessionData => ({
   ...initialProgress(),
+  kept: input.keep === true,
   sessionId: input.sessionId,
   projectId: input.projectId,
   agent: input.agent,

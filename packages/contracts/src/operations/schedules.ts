@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { SessionPromptInput } from '../sessions/prompt';
 import type { OperationDefinition } from './index';
+import { ScheduleCalendar } from './project-schedules';
 
 const askOutsideProject = 'ask-outside-project';
 
@@ -49,10 +50,14 @@ const scheduleInput = schedulePrompt
 const schedule = schedulePrompt.extend({
   id: z.string(),
   intervalSeconds: intervalSeconds.nullable(),
+  calendar: ScheduleCalendar.nullable(),
   nextAt: time,
   endsAt: time.nullable(),
   lastQueuedAt: z.number().nullable(),
+  lastSkippedAt: z.number().nullable(),
   paused: z.boolean(),
+  // A task Schedule, made in Scheduled and listed there (ADR-0067).
+  listed: z.boolean(),
   state: z.enum(['active', 'paused', 'completed', 'expired']),
 });
 
@@ -73,7 +78,8 @@ export const scheduleOperations = {
     id: 'session.listSchedules',
     label: 'List Schedules',
     icon: 'checklist',
-    description: 'List Schedules and their last delivery times.',
+    description:
+      'List every Schedule attached to a Session, wherever it was made, with its last delivery and skip times.',
     params: scheduleTarget,
     result: z.array(schedule),
     tier: 'read',
@@ -85,7 +91,7 @@ export const scheduleOperations = {
     label: 'Manage Schedule',
     icon: 'checklist',
     description:
-      'Manage a Session follow-up. Pause, resume, delete or change its end time.',
+      'Manage a Schedule attached to a Session. Pause, resume, delete or change its end time.',
     params: scheduleTarget
       .extend({
         id: z.string(),

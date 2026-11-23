@@ -1,20 +1,44 @@
 import type { SentPromptSender } from '@repo/contracts';
+import type { operations } from '@repo/contracts/operations';
+import { TRPCError } from '@trpc/server';
+import type { z } from 'zod';
+import type { WriterJob } from '../storage';
 import { ScheduleTimers } from './schedule-machine';
 import {
   ScheduleStore,
-  type Schedule,
-  type ScheduleOccurrence,
-  type CreateSchedule,
   type ManageSchedule,
+  promptOf,
+  type NewSchedule,
+  type Schedule,
 } from './schedule-store';
 import { sendQueueCommand } from './sent-prompt/queue';
 import { requireWritableSession } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import type { SessionHandlerSources } from './session-sources';
 
+export type CreateSchedule = z.output<
+  (typeof operations)['session.schedulePrompt']['params']
+>;
+
+const second = 1000;
+
+const oneDay = 86_400_000;
+
+const lastDate = 8_640_000_000_000_000;
+
+interface Delivery {
+  prompt: Schedule['prompt'];
+  deliveryWrite: WriterJob;
+  coalescedWrite: WriterJob;
+}
+
+/*
+ * The one runner every Schedule fires through, whether it was made as a task in Scheduled or inside a
+ * Session (ADR-0067). Each occurrence is a Prompt into the Schedule's own Session; it never starts another.
+ */
 export class Schedules {
+  public readonly store: ScheduleStore;
   private readonly timers: ScheduleTimers;
-  private readonly store: ScheduleStore;
   public constructor(
     private readonly sources: SessionHandlerSources,
     stopping?: AbortSignal,
@@ -34,12 +58,46 @@ export class Schedules {
   public list(sessionId: string): Schedule[] {
     return this.store.list(sessionId);
   }
-  public async create(input: CreateSchedule): Promise<Schedule> {
+  // A Schedule made inside a Session: `session.schedulePrompt`.
+  public create(input: CreateSchedule): Promise<Schedule> {
     requireWritableSession(this.sources.readSession(input.sessionId));
-    const schedule = await this.store.insert(input);
-    this.timers.refresh(schedule.id);
+    const now = Date.now();
+    const intervalSeconds = input.intervalSeconds ?? null;
+    const nextAt = input.onceAt ?? now + (intervalSeconds ?? 0) * second;
 
-    return schedule;
+    const endsAt =
+      intervalSeconds === null ? null : (input.endsAt ?? now + oneDay);
+
+    if (nextAt <= now || nextAt > lastDate)
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Choose a future delivery time',
+      });
+
+    if (endsAt !== null && endsAt <= nextAt)
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Choose an end time after the first occurrence',
+      });
+
+    return this.add({
+      id: this.sources.createId(),
+      sessionId: input.sessionId,
+      prompt: input.prompt,
+      cadence:
+        intervalSeconds === null ? null : { type: 'interval', intervalSeconds },
+      anchorAt: now,
+      nextAt,
+      endsAt,
+      paused: false,
+      task: null,
+    });
+  }
+  public async add(schedule: NewSchedule): Promise<Schedule> {
+    const saved = await this.store.insert(schedule);
+    this.timers.refresh(saved.id);
+
+    return saved;
   }
   public async manage(input: ManageSchedule): Promise<Record<string, never>> {
     await this.store.change(input);
@@ -47,34 +105,66 @@ export class Schedules {
 
     return {};
   }
+  public refresh(id: string): void {
+    this.timers.refresh(id);
+  }
+  // Sends the Schedule's Prompt now through the same queue an occurrence uses; the next occurrence stays.
+  public async runNow(id: string, signal?: AbortSignal): Promise<string> {
+    const row = this.store.row(id);
+
+    if (!row)
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found' });
+
+    requireWritableSession(this.sources.readSession(row.sessionId));
+    const write = this.store.sentNow(id);
+    const session = await this.open(row.sessionId, signal);
+
+    await this.enqueue(session, id, {
+      prompt: promptOf(row),
+      deliveryWrite: write,
+      coalescedWrite: write,
+    });
+
+    return row.sessionId;
+  }
   private async deliver(id: string, signal: AbortSignal): Promise<void> {
-    const occurrenceBeforeOpen = this.store.occurrence(id);
+    const due = this.store.occurrence(id);
 
-    if (!occurrenceBeforeOpen) return;
+    if (!due) return;
 
-    const { sessionId } = occurrenceBeforeOpen;
-
+    await (due.late
+      ? this.sources.open.write(due.skipWrite)
+      : this.deliverDue(id, due.sessionId, signal));
+  }
+  private async deliverDue(
+    id: string,
+    sessionId: string,
+    signal: AbortSignal,
+  ): Promise<void> {
     if (this.sources.readSession(sessionId).archivedAt !== null) {
       await this.manage({ sessionId, id, action: 'pause' });
 
       return;
     }
 
-    const session = await this.sources.open.ready(
-      sessionId,
-      'session.queue',
-      signal,
-    );
+    const session = await this.open(sessionId, signal);
 
     signal.throwIfAborted();
     const occurrence = this.store.occurrence(id);
 
     if (occurrence) await this.enqueue(session, id, occurrence);
   }
+  private open(
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<SessionActorRef> {
+    return this.sources.open.ready(sessionId, 'session.queue', signal);
+  }
+  // A busy Session queues the Prompt; one already waiting from this Schedule absorbs the next (no backlog).
   private async enqueue(
     session: SessionActorRef,
     id: string,
-    { prompt, deliveryWrite, coalescedWrite }: ScheduleOccurrence,
+    { prompt, deliveryWrite, coalescedWrite }: Delivery,
   ): Promise<void> {
     const waiting = session
       .getSnapshot()
@@ -88,19 +178,16 @@ export class Schedules {
       return;
     }
 
-    const sender = scheduleSender(id);
-    const queuedId = this.sources.createId();
-    const command = { action: 'append', prompt } as const;
     await sendQueueCommand(session, {
-      command,
-      sender,
-      queuedId,
+      command: { action: 'append', prompt },
+      sender: scheduleSender(id),
+      queuedId: this.sources.createId(),
       commitWith: deliveryWrite,
     });
   }
 }
 
-const scheduleSender = (
+export const scheduleSender = (
   scheduleId: string,
 ): Extract<SentPromptSender, { type: 'schedule' }> => ({
   type: 'schedule',

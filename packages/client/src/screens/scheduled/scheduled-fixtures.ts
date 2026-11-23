@@ -61,8 +61,11 @@ export const firstSchedule = {
   cadence: { type: 'weekdays', localTime: '09:00', timeZone: london },
   nextAt: Date.UTC(2026, 10, 21, 14),
   paused: false,
+  sessionId: 'build-review-session',
   latestSessionId: null,
 } satisfies ProjectSchedule;
+
+const latestSessionId = 'latest-session';
 
 export const latestSchedule = {
   ...firstSchedule,
@@ -70,7 +73,8 @@ export const latestSchedule = {
   name: 'Review recent changes',
   instructions: 'Review recent changes and flag regressions.',
   cadence: { type: 'interval', intervalSeconds: 1800 },
-  latestSessionId: 'latest-session',
+  sessionId: latestSessionId,
+  latestSessionId,
 } satisfies ProjectSchedule;
 
 export const pausedSchedule: ProjectSchedule = {
@@ -91,7 +95,7 @@ export const scheduleHistoryFixture: readonly ProjectScheduleHistoryEntry[] = [
     occurrence: {
       at: Date.UTC(2026, 10, 21, 14),
       outcome: 'started',
-      sessionId: 'latest-session',
+      sessionId: latestSessionId,
     },
   },
   {

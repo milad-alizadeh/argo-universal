@@ -41,6 +41,7 @@ const createSessionCreationInput = (
   turnId: event.turnId,
   startedBySessionId: event.startedBySessionId,
   rememberCheckout: event.rememberCheckout,
+  keep: event.keep,
 });
 
 const sessionInput = (event: OpenSession): CreationInput | ExistingInput =>

@@ -1,11 +1,10 @@
 import {
   ProjectScheduleOccurrence,
   type ProjectScheduleHistoryPage,
-  type ProjectScheduleHistoryEntry,
 } from '@repo/contracts/operations';
 import type { Database } from '@repo/db';
 import { projectScheduleOccurrence as table } from '@repo/db/schema';
-import { and, desc, eq, inArray, lt, or } from 'drizzle-orm';
+import { and, desc, eq, lt, or } from 'drizzle-orm';
 
 type History = ProjectScheduleHistoryPage;
 
@@ -41,44 +40,4 @@ export function readScheduleHistory(
     })),
     next: edge ? { at: edge.at, id: edge.id } : null,
   };
-}
-
-export function hasRunningScheduleSession(
-  database: Database,
-  scheduleId: string,
-  running: string[],
-): boolean {
-  return (
-    running.length > 0 &&
-    database
-      .select({ id: table.id })
-      .from(table)
-      .where(
-        and(
-          eq(table.scheduleId, scheduleId),
-          inArray(table.sessionId, running),
-        ),
-      )
-      .get() !== undefined
-  );
-}
-
-export function writeScheduleOccurrence(
-  database: Pick<Database, 'insert'>,
-  scheduleId: string,
-  { id, occurrence }: ProjectScheduleHistoryEntry,
-): void {
-  const sessionId =
-    occurrence.outcome === 'started' ? occurrence.sessionId : null;
-
-  database
-    .insert(table)
-    .values({
-      id,
-      scheduleId,
-      sessionId,
-      at: occurrence.at,
-      result: JSON.stringify(occurrence),
-    })
-    .run();
 }
