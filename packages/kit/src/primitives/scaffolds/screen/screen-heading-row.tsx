@@ -22,18 +22,27 @@ import { ScreenTitle } from './screen-title-menu';
  * `wide:mt-frame-inset` sets level with the rail's first tile, so its title sits on the sidebar title's line.
  */
 export function ScreenHeadingBody(
-  props: ScreenHeaderInput & { standalone?: boolean },
+  props: ScreenHeaderInput & {
+    standalone?: boolean;
+    headingColumn?: (children: ReactNode) => ReactNode;
+  },
 ): ReactElement {
+  const content = (
+    <View className="gap-1" style={headingInset(useHeadingInset())}>
+      <HeadingRow {...props} />
+      <HeadingCaption {...props} />
+    </View>
+  );
+
   return (
     <View
       className={props.standalone ? 'mt-frame-inset pb-6' : 'py-6 wide:pt-0'}
     >
-      <ScreenColumn width={insetWidth(props.width)}>
-        <View className="gap-1" style={headingInset(useHeadingInset())}>
-          <HeadingRow {...props} />
-          <HeadingCaption {...props} />
-        </View>
-      </ScreenColumn>
+      {props.headingColumn ? (
+        props.headingColumn(content)
+      ) : (
+        <ScreenColumn width={insetWidth(props.width)}>{content}</ScreenColumn>
+      )}
     </View>
   );
 }
