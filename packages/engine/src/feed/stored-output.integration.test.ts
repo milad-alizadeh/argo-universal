@@ -32,7 +32,7 @@ type BatchInput = {
 
 type HeldWriter = {
   writer: ReturnType<typeof createActor<typeof writerMachine>>;
-  commit: () => void;
+  commit: (written?: WrittenWriterBatch) => void;
 };
 
 const writeEvent = 'writer.write';
@@ -58,7 +58,10 @@ function heldWriter(): HeldWriter {
     writer.stop();
   });
 
-  return { writer, commit: () => batches.shift()?.({ dropped: [] }) };
+  return {
+    writer,
+    commit: (written = { dropped: [] }) => batches.shift()?.(written),
+  };
 }
 
 const settledYet = async (stored: Promise<void>): Promise<boolean> => {
@@ -101,4 +104,18 @@ it('stops waiting when the caller leaves', async () => {
   left.abort(new Error('The caller disconnected'));
 
   await expect(stored).rejects.toThrow('The caller disconnected');
+});
+
+it('stops waiting when the Writer drops the job that stores the Blob', async () => {
+  const { writer, commit } = heldWriter();
+  writer.send({ type: writeEvent, job: outputJob });
+
+  const stored = outputBlobStored(writer, blobId);
+  commit({
+    dropped: [{ index: 0, error: new Error('UNIQUE constraint failed') }],
+  });
+
+  await expect(stored).rejects.toThrow(
+    'The Writer dropped the job storing the Operation result',
+  );
 });

@@ -5,6 +5,7 @@ import {
   assign,
   type DoneActorEvent,
   emit,
+  enqueueActions,
   fromPromise,
   setup,
   stateIn,
@@ -60,9 +61,9 @@ interface WriterContext extends WriterInput {
   refusing: boolean;
 }
 
-// Queued jobs are announced when accepted, then again when their batch commits.
+// Queued jobs are announced when accepted, then again when their batch commits, or when it drops them.
 export type WriterJobsEvent = {
-  type: 'writer.queued' | 'writer.committed';
+  type: 'writer.queued' | 'writer.committed' | 'writer.dropped';
   jobs: readonly WriterJob[];
 };
 
@@ -96,7 +97,7 @@ const writtenBatch = ({
 
 // Every committed batch reports the jobs it dropped, announces the rest, and leaves the queue.
 const committedBatch = [
-  { type: 'logDropped', params: writtenBatch },
+  { type: 'reportDropped', params: writtenBatch },
   { type: 'announceWritten', params: writtenBatch },
   { type: 'dropBatch', params: writtenBatch },
 ] as const;
@@ -174,18 +175,30 @@ export const writerMachine = setup({
       }),
     ),
     // A dropped job never commits, so retrying it would hold up every job behind it.
-    logDropped: ({ context }, written: WrittenWriterBatch): void => {
-      if (!written.dropped.length) return;
+    reportDropped: enqueueActions(
+      ({ context, enqueue }, written: WrittenWriterBatch): void => {
+        const dropped = written.dropped.flatMap(({ index, error }) => {
+          const job = context.queue[index];
 
-      const jobs = written.dropped.flatMap(
-        ({ index }) => context.queue[index] ?? [],
-      );
+          return job ? [{ job, error }] : [];
+        });
 
-      writeLogLine(
-        context,
-        `dropped ${jobs.length} jobs that break a constraint: ${String(written.dropped[0]?.error)}\n${describeLostJobs(jobs)}`,
-      );
-    },
+        if (!dropped.length) return;
+
+        const lines = dropped.map(
+          ({ job, error }) => `${job.describe()}: ${String(error)}`,
+        );
+
+        writeLogLine(
+          context,
+          `dropped ${dropped.length} jobs that break a constraint:\n${lines.join('\n')}`,
+        );
+        enqueue.emit({
+          type: 'writer.dropped',
+          jobs: unpackWriterJobs(dropped.map(({ job }) => job)),
+        });
+      },
+    ),
 
     enqueue: assign({
       pendingCommits: ({ context, event }): PendingWriterCommit[] => {

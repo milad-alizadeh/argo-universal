@@ -10,7 +10,7 @@ export type PendingWriterCommit = { through: number; committed: WriterCommit };
 export const acknowledgeWrittenPrefix = (
   pendingCommits: PendingWriterCommit[],
   writtenCount: number,
-  dropped: readonly { index: number; error: unknown }[] = [],
+  dropped: readonly { index: number; error: Error }[],
 ): PendingWriterCommit[] => {
   const droppedErrors = new Map(
     dropped.map(({ index, error }) => [index + 1, error]),
