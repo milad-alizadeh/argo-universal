@@ -39,7 +39,7 @@ it('reopens and prompts when the Agent withdrew an option the Session saved, and
     prompt: [{ type: 'text', text: 'First' }],
   });
 
-  const savedChoices = (): { configId: string }[] | undefined =>
+  const savedChoices = (): unknown =>
     host.database
       .select()
       .from(session)
@@ -60,7 +60,7 @@ it('reopens and prompts when the Agent withdrew an option the Session saved, and
   await waitForAcpSessionIdle(host, created.sessionId);
 
   expect(prompts).toHaveLength(2);
-  expect(savedChoices()?.map(({ configId }) => configId)).not.toContain(
-    'agent',
+  expect(savedChoices()).not.toContainEqual(
+    expect.objectContaining({ configId: 'agent' }),
   );
 });
