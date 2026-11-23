@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Then, When } from './fixtures';
 import { onPhone } from './frame';
@@ -8,9 +8,6 @@ import { navigation } from './plugins';
 const scheduled = 'Scheduled';
 
 const newSchedule = 'New Schedule';
-
-const runNow = (page: Page): Locator =>
-  page.getByRole('button', { name: 'Run now', exact: true });
 
 When('I open Scheduled', async ({ page }): Promise<void> => {
   const sections = await navigation(page);
@@ -34,28 +31,24 @@ When(
   },
 );
 
-Then(
-  'the Schedule offers to run for the first time',
-  async ({ page }): Promise<void> => {
-    await expect(runNow(page)).toBeVisible();
-    await expect(page.getByTestId('feed-scroll')).toHaveCount(0);
-  },
-);
+// A task Schedule's Session exists from creation, so its address names it (ADR-0067).
+const scheduleSession = /\/scheduled\/[^/?]+\?sessionId=([^&]+)$/;
 
-When('I run the Schedule now', async ({ page }): Promise<void> => {
-  await runNow(page).click();
+const openedSessions = new WeakMap<Page, string>();
+
+const openedSession = async (page: Page): Promise<string> => {
+  await expect(page).toHaveURL(scheduleSession, sessionOpenTimeout);
+
+  return scheduleSession.exec(page.url())?.[1] ?? '';
+};
+
+Then('the Schedule opens its Session', async ({ page }): Promise<void> => {
+  openedSessions.set(page, await openedSession(page));
 });
 
-Then(
-  'the Session Feed shows the scheduled instructions {string}',
-  async ({ page }, instructions: string): Promise<void> => {
-    const prompt = page
-      .getByTestId('feed-scroll')
-      .getByText(instructions, { exact: true });
-
-    await expect(prompt).toBeVisible(sessionOpenTimeout);
-  },
-);
+Then('the Schedule opens the same Session', async ({ page }): Promise<void> => {
+  expect(await openedSession(page)).toBe(openedSessions.get(page));
+});
 
 When(
   'I reopen the Schedule {string} from its list',
