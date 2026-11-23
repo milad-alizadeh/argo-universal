@@ -51,14 +51,19 @@ it('starts a Session in a new worktree when the base branch was deleted on the s
   );
 }, 15000);
 
-const archivedRow = async (change: BranchChange) => {
+type ArchivedSession = {
+  created: { sessionId: string; path: string };
+  read: () => typeof session.$inferSelect | undefined;
+};
+
+const archivedRow = async (change: BranchChange): Promise<ArchivedSession> => {
   const host = await startAcpEngine({ steps: [], archiveUndoMs: 100 });
   const created = await promptedArchiveSession(host, worktree);
 
   change(sessionJourneyGit(created.path));
   await host.caller.session.archive({ sessionId: created.sessionId });
 
-  const read = () =>
+  const read = (): typeof session.$inferSelect | undefined =>
     host.database
       .select()
       .from(session)
@@ -83,7 +88,10 @@ it('archives a Session whose branch was deleted, keeping the worktree Git cannot
   expect(existsSync(created.path)).toBe(true);
 }, 15000);
 
-const resumeAfter = async (change: BranchChange): Promise<void> => {
+// The Checkout the Agent opened, and each cwd it was resumed in after the change.
+const resumeAfter = async (
+  change: BranchChange,
+): Promise<{ cwd: string; resumed: string[] }> => {
   const host = await startSessionJourney();
 
   const { sessionId } = await host.caller.session.new({
@@ -102,13 +110,19 @@ const resumeAfter = async (change: BranchChange): Promise<void> => {
   });
 
   await expect.poll(() => host.prompts).toHaveLength(2);
-  expect(host.resumes).toMatchObject([{ cwd }]);
+
+  return { cwd, resumed: host.resumes.map((resume) => resume.cwd) };
 };
 
-it('resumes a Session whose branch was renamed', async () => {
-  await resumeAfter(renameBranch);
-}, 15000);
+it.each([
+  ['renamed', renameBranch],
+  ['deleted', deleteBranch],
+])(
+  'resumes a Session whose branch was %s',
+  async (_, change) => {
+    const { cwd, resumed } = await resumeAfter(change);
 
-it('resumes a Session whose branch was deleted', async () => {
-  await resumeAfter(deleteBranch);
-}, 15000);
+    expect(resumed).toEqual([cwd]);
+  },
+  15000,
+);
