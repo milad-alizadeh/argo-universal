@@ -101,7 +101,7 @@ function useSave(close: () => void): SaveFollowUp {
       close();
     } catch (failure) {
       setError(
-        failure instanceof Error ? failure.message : 'Could not save follow-up',
+        failure instanceof Error ? failure.message : 'Could not save Schedule',
       );
     }
   }
@@ -155,7 +155,7 @@ function CreateFollowUp({ controls, close }: EditorProps): ReactElement {
 
   return (
     <DialogForm
-      title="Schedule follow-up"
+      title="New Schedule"
       size="md"
       footer={
         <ScheduleFooter
@@ -250,7 +250,7 @@ function EditEnd({
 
   return (
     <DialogForm
-      title="Edit follow-up end"
+      title="Edit Schedule end"
       size="md"
       footer={
         <ScheduleFooter
@@ -291,7 +291,7 @@ export function FollowUpEditor({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button
-        label={item ? 'Edit end' : 'Add follow-up'}
+        label={item ? 'Edit end' : 'Add Schedule'}
         size="xs"
         {...(item ? editEndLook : addLook)}
         disabled={controls.disabled}

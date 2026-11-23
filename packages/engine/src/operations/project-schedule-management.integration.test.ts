@@ -38,6 +38,9 @@ it('leaves its Session and Checkout as an ordinary Session when a task Schedule 
     archivedAt: null,
   });
   expect((await stat(before.checkout.path)).isDirectory()).toBe(true);
+  expect(
+    (await session.list({ taskSessions: 'exclude' })).sessions,
+  ).toMatchObject([{ sessionId: saved.sessionId }]);
 }, 30000);
 
 it('edits the instructions of a paused task Schedule and keeps its Agent and Checkout', async () => {
@@ -128,7 +131,7 @@ it('skips an occurrence missed by more than an hour once and starts no backlog a
     responses: { 'session/prompt': [{ prompt: instructions, requests }] },
   });
 
-  const { session } = reopened.caller;
+  const { feed, session } = reopened.caller;
 
   await expect
     .poll(
@@ -145,6 +148,26 @@ it('skips an occurrence missed by more than an hour once and starts no backlog a
   });
 
   expect(schedule?.nextAt).toBeGreaterThan(returnedAt);
+
+  const { rows } = await feed.page({
+    sessionId: saved.sessionId,
+    direction: 'tail',
+  });
+
+  expect(
+    rows.filter(
+      (row) =>
+        row.sessionUpdate === 'notice' &&
+        Boolean(row._meta?.argo?.skippedSchedule),
+    ),
+  ).toEqual([
+    expect.objectContaining({
+      turnId: null,
+      _meta: {
+        argo: { skippedSchedule: { at: saved.nextAt, reason: 'offline' } },
+      },
+    }),
+  ]);
 }, 30000);
 
 it('sends an occurrence late when the Server returns within an hour', async () => {

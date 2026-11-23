@@ -10,6 +10,8 @@ export interface ListReadInput {
   readLiveHeader: ReturnType<typeof createLiveHeaderReader>;
   validate: <Value>(read: () => Value) => Value | undefined;
   rejectedSessions: Set<string>;
+  taskSessionIds: Set<string>;
+  seededSessionIds: Set<string>;
   shellCounts: Map<string, SessionInfo['shells']>;
 }
 

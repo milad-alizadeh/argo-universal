@@ -119,7 +119,11 @@ export function isGroupRow(row: SessionUpdate): row is GroupRow {
 }
 
 function isGroupedNotice(row: SessionUpdate): boolean {
-  return row.sessionUpdate === 'notice' && row.severity !== 'error';
+  return (
+    row.sessionUpdate === 'notice' &&
+    row.severity !== 'error' &&
+    !row._meta?.argo?.skippedSchedule
+  );
 }
 
 export function startsNewTurn(

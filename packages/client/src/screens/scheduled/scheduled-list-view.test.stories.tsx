@@ -5,23 +5,21 @@ import { expect, fn } from 'storybook/test';
 import { SessionDetailView } from '../sessions/$id/session-detail-view';
 import { idleSession } from '../sessions/$id/session-detail-view.mocks';
 import { SessionPageHeader } from '../sessions/$id/session-page-header';
-import { ScheduleDetailView } from './$id/schedule-detail-view';
 import { scheduleHref } from './schedule-href';
 import { scheduledListFixture } from './scheduled-fixtures';
 import {
   ScheduledListView,
   type ScheduledListViewProps,
 } from './scheduled-list-view';
+import { createdScheduleSession } from './scheduled-preview.mocks';
 
 const button = 'button';
 
 const selected = 'aria-pressed';
 
-const recordedPrompt = /explain in markdown why a Feed list re-renders/;
+const recordedReply = /Why every Feed row re-renders/;
 
 const open = fn(scheduleHref);
-
-const run = fn();
 
 function ScheduledNavigation(args: ScheduledListViewProps): ReactElement {
   const [opened, setOpened] =
@@ -49,13 +47,14 @@ function openedSchedule(
 ): ReactElement | null {
   if (!opened) return null;
 
-  if (!opened.latestSessionId)
-    return <ScheduleDetailView schedule={opened} onRunNow={run} />;
+  const task =
+    opened.id === 'review-build' ? createdScheduleSession : idleSession;
 
   return (
     <SessionDetailView
       state="open"
-      {...idleSession}
+      {...task}
+      header={{ ...task.header, title: opened.name }}
       drawHeader={(page) => <SessionPageHeader {...page} />}
     />
   );
@@ -73,7 +72,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const OpensTheLatestSessionUnderScheduled: Story = {
+export const OpensTheSessionUnderScheduled: Story = {
   play: async ({ canvas, userEvent }) => {
     const latest = canvas.getByRole(button, {
       name: 'Review recent changes',
@@ -82,11 +81,11 @@ export const OpensTheLatestSessionUnderScheduled: Story = {
     await userEvent.click(latest);
     await expect(latest).toHaveAttribute(selected, 'true');
     await expect(
-      await canvas.findByRole('heading', { name: recordedPrompt }),
+      await canvas.findByRole('heading', { name: recordedReply }),
     ).toBeVisible();
     await expect(open).toHaveReturnedWith({
       pathname: '/scheduled/[id]',
-      params: { id: 'review-changes', sessionId: 'latest-session' },
+      params: { id: 'review-changes' },
     });
 
     const first = canvas.getByRole(button, {
@@ -97,7 +96,7 @@ export const OpensTheLatestSessionUnderScheduled: Story = {
     await expect(first).toHaveAttribute(selected, 'true');
     await expect(latest).toHaveAttribute(selected, 'false');
     await expect(
-      canvas.queryByRole('heading', { name: recordedPrompt }),
+      canvas.queryByRole('heading', { name: recordedReply }),
     ).not.toBeInTheDocument();
     await expect(
       await canvas.findByText(
@@ -106,9 +105,10 @@ export const OpensTheLatestSessionUnderScheduled: Story = {
     ).toBeVisible();
     await expect(open).toHaveReturnedWith({
       pathname: '/scheduled/[id]',
-      params: { id: 'review-build', sessionId: '' },
+      params: { id: 'review-build' },
     });
-    await userEvent.click(canvas.getByRole(button, { name: 'Run now' }));
-    await expect(run).toHaveBeenCalledOnce();
+    await expect(
+      canvas.queryByRole(button, { name: 'Run now' }),
+    ).not.toBeInTheDocument();
   },
 };

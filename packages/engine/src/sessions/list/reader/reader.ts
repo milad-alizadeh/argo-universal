@@ -9,6 +9,7 @@ import { createSubagentsReader } from '../../subagents/reader';
 import { isSubagentOf } from '../../subagents/subagent-of';
 import type { WriterChange } from '../observation';
 import type { SessionListState } from '../state';
+import { taskSessionRoots } from '../task-session-rows';
 import { readSessionInformation } from './information';
 import type { ListReadInput, ListReaderOptions } from './input';
 import { listedSession } from './listed-session';
@@ -57,12 +58,16 @@ class ListReader {
     const input = this.readInput();
     const { rows, ids } = this.parents.readFamily(input, sessionIds);
 
+    const taskRootOf = taskSessionRoots(input.taskSessionIds, rows);
+
     return rows
       .filter(
         (row): boolean =>
           row.parentSessionId === null && includesId(ids, row.id),
       )
-      .flatMap((row): SessionListState => this.information(input, row, rows));
+      .flatMap((row): SessionListState =>
+        this.information(input, row, { rows, taskSessionId: taskRootOf(row) }),
+      );
   }
 
   public related(ids: readonly string[]): string[] {
@@ -96,6 +101,8 @@ class ListReader {
         this.validate(read),
       readLiveHeader: this.readHeader,
       rejectedSessions: new Set<string>(),
+      taskSessionIds: new Set(),
+      seededSessionIds: new Set(),
       shellCounts: new Map<string, SessionInfo['shells']>(),
     };
   }
@@ -113,25 +120,28 @@ class ListReader {
   private information(
     input: ListReadInput,
     row: SessionRecord,
-    rows: SessionRecord[],
+    { rows, taskSessionId }: { rows: SessionRecord[]; taskSessionId?: string },
   ): SessionListState {
     const children = rows.filter(isSubagentOf(row.id));
 
     const turns = familyTurns(input, row.id, children);
-    const listed = this.listed(input, { row, turns });
+    const listed = this.listed(input, { row, turns }, taskSessionId === row.id);
     const result = listed && this.project(input, listed, { children, turns });
 
-    return result ? [result] : [];
+    return result
+      ? [{ ...result, information: { ...result.information, taskSessionId } }]
+      : [];
   }
 
   private listed(
     input: ListReadInput,
     { row, turns }: Pick<FamilyTurns, 'turns'> & { row: SessionRecord },
+    task: boolean,
   ): SessionRecord | undefined {
     return listedSession(
       input.rejectedSessions,
       (id): SessionInput | undefined => this.inputOf(id),
-      { row, turns },
+      { row, turns, task: task || input.seededSessionIds.has(row.id) },
     );
   }
 

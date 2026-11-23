@@ -4,12 +4,14 @@ import {
   runningCompactionStatus,
   type UnsupportedContent,
 } from '@repo/contracts';
+import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import {
   isKnownSeverity,
   NoticeMessage,
   type NoticeMessageProps,
 } from './notice-message';
+import { QuietFeedRow } from './quiet-feed-row';
 
 const compactionNotices = new Map<string, NoticeMessageProps>([
   [
@@ -61,6 +63,36 @@ export interface FeedNoticeProps {
 
 // A Notice or a Compaction: one status row, never opened.
 export function FeedNotice({ row }: FeedNoticeProps): React.JSX.Element {
+  const skip =
+    row.sessionUpdate === 'notice' && row._meta?.argo?.skippedSchedule;
+
+  if (skip) {
+    const day = new Intl.DateTimeFormat(undefined, {
+      weekday: 'short',
+      timeZone: skip.timeZone,
+    }).format(skip.at);
+
+    const at = new Intl.DateTimeFormat(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: skip.timeZone,
+    }).format(skip.at);
+
+    const reason =
+      skip.reason === 'offline'
+        ? 'the Server was offline for more than an hour'
+        : 'the previous run was still waiting';
+
+    return (
+      <QuietFeedRow>
+        <Text tone="muted">
+          Skipped {day} {at} · {reason}
+        </Text>
+      </QuietFeedRow>
+    );
+  }
+
   const props =
     row.sessionUpdate === 'compaction_update'
       ? compactionNotice(row)

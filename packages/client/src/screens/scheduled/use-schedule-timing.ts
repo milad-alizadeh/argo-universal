@@ -1,9 +1,9 @@
 import { ProjectScheduleCadence } from '@repo/contracts/operations';
 import { useState } from 'react';
 import { useProjectSchedulePreview } from '#features/project-schedules';
+import { occurrenceTime, scheduleTimeZone } from '#features/project-schedules';
 import { cadenceOf, scheduleCadenceDraft } from './schedule-cadence-draft';
 import type { ScheduleCadenceFields } from './schedule-cadence-fields';
-import { occurrenceTime, scheduleTimeZone } from './schedule-time';
 
 export function useScheduleTiming(
   projectId: string,

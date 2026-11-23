@@ -1,7 +1,8 @@
-import type {
-  SessionInfo,
-  SessionListInput,
-  SessionListOutput,
+import {
+  matchesTaskSessions,
+  type SessionInfo,
+  type SessionListInput,
+  type SessionListOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -86,6 +87,7 @@ const matchers: readonly Matches[] = [
   matchesSession,
   matchesArchived,
   matchesQuery,
+  matchesTaskSessions,
 ];
 
 function afterCursor(row: SessionInfo, cursor: Cursor | undefined): boolean {

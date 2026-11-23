@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import type { z } from 'zod';
 import type { WriterJob } from '../storage';
 import { ScheduleTimers } from './schedule-machine';
+import { recordScheduleSkip } from './schedule-skip';
 import {
   ScheduleStore,
   type ManageSchedule,
@@ -30,6 +31,8 @@ interface Delivery {
   prompt: Schedule['prompt'];
   deliveryWrite: WriterJob;
   coalescedWrite: WriterJob;
+  at?: number;
+  timeZone?: string;
 }
 
 /*
@@ -93,8 +96,11 @@ export class Schedules {
       task: null,
     });
   }
-  public async add(schedule: NewSchedule): Promise<Schedule> {
-    const saved = await this.store.insert(schedule);
+  public async add(
+    schedule: NewSchedule,
+    notice?: (write: WriterJob) => Promise<void>,
+  ): Promise<Schedule> {
+    const saved = await this.store.insert(schedule, notice);
     this.timers.refresh(saved.id);
 
     return saved;
@@ -141,7 +147,12 @@ export class Schedules {
     }
 
     await (due.late
-      ? this.sources.open.write(due.skipWrite)
+      ? recordScheduleSkip(this.sources, {
+          ...due,
+          scheduleId: id,
+          reason: 'offline',
+          advance: due.skipWrite,
+        })
       : this.deliverDue(id, sessionId, signal));
   }
   private async deliverDue(
@@ -158,7 +169,12 @@ export class Schedules {
     if (!occurrence) return;
 
     await (occurrence.late
-      ? this.sources.open.write(occurrence.skipWrite)
+      ? recordScheduleSkip(this.sources, {
+          ...occurrence,
+          scheduleId: id,
+          reason: 'offline',
+          advance: occurrence.skipWrite,
+        })
       : this.enqueue(session, id, occurrence));
   }
   private open(
@@ -171,7 +187,7 @@ export class Schedules {
   private async enqueue(
     session: SessionActorRef,
     id: string,
-    { prompt, deliveryWrite, coalescedWrite }: Delivery,
+    { prompt, deliveryWrite, coalescedWrite, at, timeZone }: Delivery,
   ): Promise<void> {
     const waiting = session
       .getSnapshot()
@@ -180,9 +196,16 @@ export class Schedules {
       );
 
     if (waiting) {
-      await this.sources.open.write(coalescedWrite);
-
-      return;
+      return at === undefined
+        ? this.sources.open.write(coalescedWrite)
+        : recordScheduleSkip(this.sources, {
+            scheduleId: id,
+            sessionId: session.getSnapshot().context.sessionId,
+            at,
+            timeZone,
+            reason: 'waiting',
+            advance: coalescedWrite,
+          });
     }
 
     await sendQueueCommand(session, {

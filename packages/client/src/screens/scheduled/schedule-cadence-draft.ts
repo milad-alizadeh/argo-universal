@@ -2,7 +2,7 @@ import {
   type ProjectScheduleCadence,
   type ScheduleWeekday,
 } from '@repo/contracts/operations';
-import { secondsPerHour, secondsPerMinute } from './schedule-time';
+import { secondsPerHour, secondsPerMinute } from '#features/project-schedules';
 
 const intervalSeconds = {
   second: 1,

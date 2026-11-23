@@ -14,11 +14,17 @@ import {
   cadenceOf,
   promptOf,
   taskOf,
-  type ListedSchedule,
   type ScheduleRow,
   type ScheduleTask,
 } from './schedule-store';
 import type { SessionHandlerSources } from './session-sources';
+
+export interface ListedSchedule {
+  row: ScheduleRow;
+  projectId: string;
+  archivedAt: number | null;
+  title: string;
+}
 
 export type SavedSettings = ScheduleTask &
   Pick<ProjectSchedule, 'instructions' | 'cadence' | 'name'>;
@@ -35,6 +41,8 @@ const instructionsOf = (row: ScheduleRow): string =>
 export function projectScheduleOf({
   row,
   projectId,
+  archivedAt,
+  title,
 }: ListedSchedule): ProjectSchedule {
   const instructions = instructionsOf(row);
 
@@ -42,13 +50,15 @@ export function projectScheduleOf({
     ...taskOf(row),
     id: row.id,
     projectId,
-    name: nameOf(instructions),
+    name: title || nameOf(instructions),
     instructions,
     cadence: cadenceOf(row),
     nextAt: row.nextAt,
     sessionId: row.sessionId,
     latestSessionId: row.sessionId,
     paused: row.paused,
+    archived: archivedAt !== null,
+    lastQueuedAt: row.lastQueuedAt,
   });
 }
 

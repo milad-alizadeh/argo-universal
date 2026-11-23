@@ -1,22 +1,26 @@
-import { Dialog } from '@repo/kit/primitives/overlays/dialog';
-import { useQuery } from '@tanstack/react-query';
-import { usePathname } from 'expo-router';
+import type { SessionListOutput } from '@repo/contracts';
+import {
+  type InfiniteData,
+  type UseInfiniteQueryResult,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query';
+import { useLocalSearchParams, usePathname } from 'expo-router';
 import { useState, type ReactElement } from 'react';
-import { useTRPC } from '#features/connection';
+import { loadedAgents, useInstalledAgents } from '#features/agents';
+import { type ClientError, useTRPC, useTRPCClient } from '#features/connection';
 import { useProjectSchedules } from '#features/project-schedules';
-import { useNavigate } from '#lib/product/navigation/navigation';
+import { useSessionListUpdates } from '#features/sessions';
+import { sessionHref, useNavigate } from '#lib/product/navigation/navigation';
 import { useServerScope } from '#lib/product/server-scope';
-import { ScheduleDeleteView } from './schedule-delete-view';
-import {
-  ScheduleFormScreen,
-  type ScheduleContext,
-} from './schedule-form-screen';
+import { ScheduleDialog } from './schedule-dialog';
+import type { ScheduleContext } from './schedule-form-screen';
 import { scheduleHref } from './schedule-href';
-import { ScheduledListView } from './scheduled-list-view';
 import {
-  ConnectedScheduleHistory,
-  useScheduleManagement,
-} from './scheduled-management';
+  ScheduledListView,
+  type ScheduledListViewProps,
+} from './scheduled-list-view';
+import { useScheduleManagement } from './scheduled-management';
 
 export function useScheduleContext(
   sessionId?: string,
@@ -59,94 +63,91 @@ export function ScheduledListScreen({
   context?: ScheduleContext;
 }): ReactElement {
   const path = usePathname();
+  const enabled = path === '/scheduled' || path.startsWith('/scheduled/');
+  const { childId } = useLocalSearchParams<{ childId?: string }>();
+  const schedules = useProjectSchedules(enabled);
+  const agents = loadedAgents(useInstalledAgents());
 
-  const schedules = useProjectSchedules(
-    path === '/scheduled' || path.startsWith('/scheduled/'),
+  const started = useStartedSessions(
+    enabled && Boolean(schedules.data?.length),
   );
 
-  const navigate = useNavigate();
+  const navigation = useScheduledNavigation();
   const selected = schedules.data?.find(({ id }) => id === selectedId);
-  const management = useScheduleManagement();
+
+  const management = useScheduleManagement((schedule) => {
+    if (schedule.id === selectedId)
+      navigation.onDeleteSelected(childId ?? schedule.sessionId);
+  });
 
   return (
     <>
       <ScheduledListView
         schedules={schedules.data ?? []}
-        selectedId={selectedId}
+        selectedId={childId ? undefined : selectedId}
+        selectedChildId={childId}
+        startedSessions={started.data?.pages.flatMap(
+          ({ sessions }) => sessions,
+        )}
+        agents={agents}
+        onOpenStarted={navigation.onOpenStarted}
+        onEndReached={() => {
+          if (started.hasNextPage && !started.isFetchingNextPage)
+            void started.fetchNextPage();
+        }}
         status={listStatus(schedules)}
         onCreate={management.onCreate}
         onAction={management.onAction}
-        onOpen={(schedule) => navigate(scheduleHref(schedule))}
+        onOpen={navigation.onOpen}
       />
       <ScheduleDialog context={selected ?? context} management={management} />
     </>
   );
 }
 
-type ScheduleDialogProps = {
-  context?: ScheduleContext;
-  management: ReturnType<typeof useScheduleManagement>;
+type ScheduledNavigation = Pick<
+  ScheduledListViewProps,
+  'onOpen' | 'onOpenStarted'
+> & {
+  onDeleteSelected: (sessionId: string) => void;
 };
 
-function ScheduleDialog(props: ScheduleDialogProps): ReactElement {
-  const { overlay, onClose, saving } = props.management;
+function useScheduledNavigation(): ScheduledNavigation {
+  const navigate = useNavigate();
+  const client = useTRPCClient();
 
-  return (
-    <Dialog
-      open={overlay !== undefined}
-      onOpenChange={(open) => {
-        if (!open && !saving) onClose();
-      }}
-    >
-      <ScheduleDialogContent {...props} />
-    </Dialog>
-  );
+  return {
+    onDeleteSelected: (sessionId) =>
+      navigate(sessionHref(sessionId), { replace: true }),
+    onOpen: (schedule) => navigate(scheduleHref(schedule)),
+    onOpenStarted: (schedule, sessionId) => {
+      navigate({
+        pathname: '/scheduled/[id]',
+        params: { id: schedule.id, childId: sessionId },
+      });
+      void client.session.open.mutate({ sessionId }).catch(() => {});
+    },
+  };
 }
 
-function ScheduleDialogContent({
-  context,
-  management,
-}: ScheduleDialogProps): ReactElement | null {
-  const navigate = useNavigate();
-  const { overlay, onClose, saving, onDelete } = management;
+type StartedSessions = UseInfiniteQueryResult<
+  InfiniteData<SessionListOutput, string | null>,
+  ClientError
+>;
 
-  if (!overlay) return null;
+function useStartedSessions(enabled: boolean): StartedSessions {
+  const list = useTRPC().session.list;
+  useSessionListUpdates(enabled);
 
-  switch (overlay.type) {
-    case 'create':
-      return <ScheduleFormScreen context={context} onClose={onClose} />;
-    case 'edit':
-      return (
-        <ScheduleFormScreen
-          context={overlay.schedule}
-          editing={overlay.schedule}
-          onClose={onClose}
-        />
-      );
-    case 'delete':
-      return (
-        <ScheduleDeleteView
-          schedule={overlay.schedule}
-          saving={saving}
-          onDelete={() => onDelete(overlay.schedule)}
-        />
-      );
-    case 'history':
-      return (
-        <ConnectedScheduleHistory
-          schedule={overlay.schedule}
-          onOpenSession={(sessionId) => {
-            onClose();
-            navigate(
-              scheduleHref({
-                id: overlay.schedule.id,
-                latestSessionId: sessionId,
-              }),
-            );
-          }}
-        />
-      );
-  }
+  return useInfiniteQuery(
+    list.infiniteQueryOptions(
+      { taskSessions: 'started' },
+      {
+        enabled,
+        getNextPageParam: (page) => page.nextCursor ?? undefined,
+      },
+    ),
+  );
 }
 
 function listStatus(

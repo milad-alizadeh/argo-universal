@@ -4,15 +4,27 @@ import type { SessionsListEntry } from '../sessions-list-entries';
 
 export type SessionEntry = Extract<SessionsListEntry, { kind: 'session' }>;
 
+type SessionIdentity = Pick<
+  SessionInfo,
+  'sessionId' | 'projectId' | 'startedBySessionId'
+>;
+
+export type NestedSession<Session extends SessionIdentity> = Omit<
+  SessionEntry,
+  'session'
+> & { session: Session };
+
 export type SessionTree = Omit<TreeRow, 'parent'> & { hasChildren: boolean };
 
 const root: TreeRow = { depth: 0, through: [], last: true };
 
 // Only a parent in this visible Project group can hold a row; filtered and paged orphans stay top-level.
-export function nestedSessionEntries(sessions: SessionInfo[]): SessionEntry[] {
+export function nestedSessionEntries<Session extends SessionIdentity>(
+  sessions: readonly Session[],
+): NestedSession<Session>[] {
   const byId = new Map(sessions.map((session) => [session.sessionId, session]));
-  const children = new Map<string, SessionInfo[]>();
-  const roots: SessionInfo[] = [];
+  const children = new Map<string, Session[]>();
+  const roots: Session[] = [];
 
   for (const session of sessions)
     placeSession(session, { byId, children, roots });
@@ -27,13 +39,16 @@ export function nestedSessionEntries(sessions: SessionInfo[]): SessionEntry[] {
   return roots.flatMap((session) => flattenSession(session, children, root));
 }
 
-type Family = {
-  byId: ReadonlyMap<string, SessionInfo>;
-  children: Map<string, SessionInfo[]>;
-  roots: SessionInfo[];
+type Family<Session extends SessionIdentity> = {
+  byId: ReadonlyMap<string, Session>;
+  children: Map<string, Session[]>;
+  roots: Session[];
 };
 
-function placeSession(session: SessionInfo, family: Family): void {
+function placeSession<Session extends SessionIdentity>(
+  session: Session,
+  family: Family<Session>,
+): void {
   const parent = listedParent(session, family.byId);
 
   if (!parent) {
@@ -47,14 +62,14 @@ function placeSession(session: SessionInfo, family: Family): void {
   family.children.set(parent.sessionId, siblings);
 }
 
-function flattenSession(
-  session: SessionInfo,
-  children: ReadonlyMap<string, SessionInfo[]>,
+function flattenSession<Session extends SessionIdentity>(
+  session: Session,
+  children: ReadonlyMap<string, Session[]>,
   tree: TreeRow,
-): SessionEntry[] {
+): NestedSession<Session>[] {
   const rows = children.get(session.sessionId) ?? [];
 
-  const entry: SessionEntry = {
+  const entry: NestedSession<Session> = {
     kind: 'session',
     id: session.sessionId,
     session,
@@ -64,11 +79,11 @@ function flattenSession(
   return [entry, ...flattenChildren(rows, children, tree)];
 }
 
-function flattenChildren(
-  rows: SessionInfo[],
-  children: ReadonlyMap<string, SessionInfo[]>,
+function flattenChildren<Session extends SessionIdentity>(
+  rows: Session[],
+  children: ReadonlyMap<string, Session[]>,
   tree: TreeRow,
-): SessionEntry[] {
+): NestedSession<Session>[] {
   return rows.flatMap((session, index) =>
     flattenSession(
       session,
@@ -79,14 +94,13 @@ function flattenChildren(
 }
 
 // Descendants follow their parent immediately, so one folded lane skips that whole branch without losing other roots.
-export function visibleSessionEntries(
-  entries: SessionsListEntry[],
-  folded: ReadonlySet<string>,
-): SessionsListEntry[] {
+export function visibleSessionEntries<
+  Entry extends { id: string; kind: string; tree?: SessionTree },
+>(entries: Entry[], folded: ReadonlySet<string>): Entry[] {
   let hiddenBelow = Infinity;
 
   return entries.filter((entry) => {
-    const depth = entryDepth(entry);
+    const depth = entry.tree?.depth ?? 0;
 
     if (depth > hiddenBelow) return false;
 
@@ -96,35 +110,18 @@ export function visibleSessionEntries(
   });
 }
 
-function listedParent(
-  session: SessionInfo,
-  byId: ReadonlyMap<string, SessionInfo>,
-): SessionInfo | undefined {
+function listedParent<Session extends SessionIdentity>(
+  session: Session,
+  byId: ReadonlyMap<string, Session>,
+): Session | undefined {
   const parent = byId.get(session.startedBySessionId ?? '');
 
-  return parentInProject(parent, session.projectId);
+  return parent?.projectId === session.projectId ? parent : undefined;
 }
 
-function siblingsOf(
-  children: Map<string, SessionInfo[]>,
+function siblingsOf<Session extends SessionIdentity>(
+  children: Map<string, Session[]>,
   id: string,
-): SessionInfo[] {
+): Session[] {
   return children.get(id) ?? [];
-}
-
-function entryDepth(entry: SessionsListEntry): number {
-  if (entry.kind !== 'session') return 0;
-
-  return treeDepth(entry.tree);
-}
-
-function parentInProject(
-  parent: SessionInfo | undefined,
-  projectId: string,
-): SessionInfo | undefined {
-  return parent?.projectId === projectId ? parent : undefined;
-}
-
-function treeDepth(tree: SessionTree | undefined): number {
-  return tree?.depth ?? 0;
 }

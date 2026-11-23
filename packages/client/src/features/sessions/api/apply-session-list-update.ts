@@ -1,4 +1,5 @@
 import {
+  matchesTaskSessions,
   type SessionInfo,
   SessionListInput,
   type SessionListOutput,
@@ -61,6 +62,7 @@ function applyToPages(
   session: SessionInfo,
 ): Outcome {
   const input = inputOf(query);
+
   const outcome = outcomeFor(data, session, input);
 
   if (
@@ -181,6 +183,7 @@ type Filter = (session: SessionInfo, input: SessionListInput) => boolean;
 
 // The Server's own filters, which the list applies to a row before it pages.
 const filters: readonly Filter[] = [
+  matchesTaskSessions,
   (session, { projectId }): boolean =>
     projectId === undefined || session.projectId === projectId,
   (session, { sessionId }): boolean =>

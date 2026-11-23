@@ -1,16 +1,15 @@
 import type { ProjectSchedule } from '@repo/contracts/operations';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
-import { useState, type ReactElement } from 'react';
+import { useState } from 'react';
 import {
   useManageProjectSchedule,
-  useProjectScheduleHistory,
+  useRunProjectSchedule,
 } from '#features/project-schedules';
-import { ScheduleHistoryView } from './schedule-history-view';
 import type { ScheduleRowAction } from './scheduled-list-view';
 
 type ScheduleOverlay =
   | { type: 'create' }
-  | { type: 'edit' | 'history' | 'delete'; schedule: ProjectSchedule };
+  | { type: 'edit' | 'delete'; schedule: ProjectSchedule };
 
 type ScheduleManagement = {
   overlay: ScheduleOverlay | undefined;
@@ -21,9 +20,18 @@ type ScheduleManagement = {
   saving: boolean;
 };
 
-export function useScheduleManagement(): ScheduleManagement {
+export function useScheduleManagement(
+  onDeleted?: (schedule: ProjectSchedule) => void,
+): ScheduleManagement {
   const [overlay, setOverlay] = useState<ScheduleOverlay>();
-  const mutation = useManageProjectSchedule(() => setOverlay(undefined));
+
+  const run = useRunSchedule();
+
+  const mutation = useManageProjectSchedule(() => {
+    setOverlay(undefined);
+
+    if (overlay?.type === 'delete') onDeleted?.(overlay.schedule);
+  });
 
   useErrorToast(
     (mutation.error && {
@@ -37,6 +45,12 @@ export function useScheduleManagement(): ScheduleManagement {
     overlay,
     onCreate: (): void => setOverlay({ type: 'create' }),
     onAction: (schedule, action): void => {
+      if (action === 'run') {
+        run.mutate({ id: schedule.id, projectId: schedule.projectId });
+
+        return;
+      }
+
       if (action === 'pause' || action === 'resume') {
         mutation.mutate({
           id: schedule.id,
@@ -58,27 +72,17 @@ export function useScheduleManagement(): ScheduleManagement {
   };
 }
 
-export function ConnectedScheduleHistory({
-  schedule,
-  onOpenSession,
-}: {
-  schedule: ProjectSchedule;
-  onOpenSession: (sessionId: string) => void;
-}): ReactElement {
-  const history = useProjectScheduleHistory({
-    id: schedule.id,
-    projectId: schedule.projectId,
-  });
+function useRunSchedule(): ReturnType<typeof useRunProjectSchedule> {
+  const run = useRunProjectSchedule(() => {});
 
-  return (
-    <ScheduleHistoryView
-      entries={history.data?.pages.flatMap(({ entries }) => entries) ?? []}
-      loading={history.isPending || history.isFetchingNextPage}
-      error={history.error?.message}
-      onOpenSession={onOpenSession}
-      onLoadMore={
-        history.hasNextPage ? () => void history.fetchNextPage() : undefined
-      }
-    />
+  useErrorToast(
+    run.error
+      ? {
+          title: 'Could not run Schedule',
+          message: run.error.message,
+        }
+      : undefined,
   );
+
+  return run;
 }

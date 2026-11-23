@@ -26,14 +26,16 @@ describe('what session.list is asked for the view', () => {
       expect(sessionsListInput({ ...defaults, status }, '')).toStrictEqual({
         archived,
         query: undefined,
+        taskSessions: 'exclude',
       });
     },
   );
 
-  it('passes the search', () => {
+  it('passes the search and includes task Sessions', () => {
     expect(sessionsListInput(chosen, 'fix')).toStrictEqual({
       archived: undefined,
       query: 'fix',
+      taskSessions: undefined,
     });
   });
 });

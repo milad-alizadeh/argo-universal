@@ -126,6 +126,9 @@ export const ProjectSchedule = ProjectScheduleInput.extend({
   // The same Session, kept for callers that read the former run-list field.
   latestSessionId: z.string().nullable(),
   paused: z.boolean(),
+  archived: z.boolean().optional(),
+  running: z.boolean().optional(),
+  lastQueuedAt: z.number().nullable().optional(),
 });
 
 const occurrenceFields = { at: z.number() };

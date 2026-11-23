@@ -19,7 +19,7 @@ export function ScheduleDeleteView({
   return (
     <DialogForm
       title="Delete Schedule"
-      description={`Delete “${schedule.name}”? Sessions it started stay available.`}
+      description={`Delete “${schedule.name}”? Its Session stays available in Sessions.`}
       dismissible={!saving}
       showClose={!saving}
       footer={

@@ -7,6 +7,8 @@ import {
   compactionStoppedNotice,
   errorNotice,
   infoNotice,
+  SkippedWhileOffline as skippedWhileOffline,
+  SkippedWhileWaiting as skippedWhileWaiting,
   missingArgoToolsNotice,
   unrecognisedNotice,
   conversationFailedNotice,
@@ -55,3 +57,7 @@ export const Compacted: Story = { args: compactedNotice };
 export const CompactionFailed: Story = { args: compactionFailedNotice };
 
 export const CompactionStopped: Story = { args: compactionStoppedNotice };
+
+export const SkippedWhileOffline: Story = { args: skippedWhileOffline };
+
+export const SkippedWhileWaiting: Story = { args: skippedWhileWaiting };

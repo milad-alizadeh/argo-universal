@@ -3,9 +3,9 @@ Feature: Project Schedules
     Given a <frame> Frame
     When I open Scheduled
     And I create a Schedule with instructions "Check the nightly build"
-    Then the Schedule opens its Session
+    Then the Schedule opens its task Session with "Check the nightly build" in its Feed
     When I reopen the Schedule "Check the nightly build" from its list
-    Then the Schedule opens the same Session
+    Then Scheduled returns to the same task Session
 
     Examples:
       | frame |

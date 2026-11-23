@@ -145,6 +145,21 @@ it('coalesces due Prompts without steering an active Turn', async () => {
       .toBeGreaterThan(initialDeadline);
     expect(await queued()).toEqual(first);
     expect(steered).toBe(false);
+
+    const { rows } = await fixture.caller.feed.page({
+      sessionId,
+      direction: 'tail',
+    });
+
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        sessionUpdate: 'notice',
+        turnId: null,
+        _meta: {
+          argo: { skippedSchedule: { at: initialDeadline, reason: 'waiting' } },
+        },
+      }),
+    );
   } finally {
     fixture.result.resolve({ outcome: 'injected' });
     fixture.turnEnded.resolve();

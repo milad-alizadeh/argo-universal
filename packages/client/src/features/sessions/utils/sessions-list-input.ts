@@ -23,9 +23,10 @@ export function showsUnderStatus(
 export function sessionsListInput(
   view: SessionsView,
   query: string,
-): Pick<SessionListInput, 'archived' | 'query'> {
+): Pick<SessionListInput, 'archived' | 'query' | 'taskSessions'> {
   return {
     archived: statusArchived(view.status),
     query: query || undefined,
+    taskSessions: query.trim() ? undefined : 'exclude',
   };
 }

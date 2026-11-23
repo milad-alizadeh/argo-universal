@@ -1,7 +1,7 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
+import { weekdayChoices } from '#features/project-schedules';
 import type { ScheduleCadenceDraft } from './schedule-cadence-draft';
-import { weekdayChoices } from './schedule-time';
 
 export type ScheduleCadenceFields = {
   draft: ScheduleCadenceDraft;

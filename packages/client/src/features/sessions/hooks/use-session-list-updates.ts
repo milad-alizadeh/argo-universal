@@ -41,12 +41,13 @@ function useSessionListRefresh(): SessionListRefresh {
 }
 
 // Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
-export function useSessionListUpdates(): SessionListSubscription {
+export function useSessionListUpdates(enabled = true): SessionListSubscription {
   const trpc = useTRPC();
   const { refetch, apply } = useSessionListRefresh();
 
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
+      enabled,
       onStarted: refetch,
       onData: apply,
     }),

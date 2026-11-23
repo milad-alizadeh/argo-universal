@@ -10,7 +10,10 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { WriterJob } from '../storage';
+import type { ListedSchedule } from './project-schedule-settings';
 import { nextProjectScheduleAt } from './project-schedule-timing';
+import type { NoticeWriter, ScheduleOccurrence } from './schedule-skip';
+import { announceScheduleWrite } from './schedule-skip';
 import { nextIntervalAt } from './schedule-timing';
 import type { HandlerSources } from './session-sources';
 
@@ -52,21 +55,6 @@ export type ScheduleEdit = Pick<NewSchedule, 'prompt'> &
   Pick<ScheduleRow, 'anchorAt' | 'nextAt'> & {
     cadence: ProjectScheduleCadence;
   };
-
-export interface ScheduleOccurrence {
-  sessionId: string;
-  prompt: Schedule['prompt'];
-  // Due longer ago than the grace window: skipped once, never sent.
-  late: boolean;
-  deliveryWrite: WriterJob;
-  coalescedWrite: WriterJob;
-  skipWrite: WriterJob;
-}
-
-export interface ListedSchedule {
-  row: ScheduleRow;
-  projectId: string;
-}
 
 /** A Server that returns within this long of a due occurrence still sends it, late. */
 const lateGraceMs = 3_600_000;
@@ -223,6 +211,8 @@ export class ScheduleStore {
     return {
       sessionId: row.sessionId,
       prompt: promptOf(row),
+      at: row.nextAt,
+      timeZone: calendarOf(row)?.timeZone,
       late: now - row.nextAt > lateGraceMs,
       deliveryWrite: recordWrite(row.id, { nextAt, lastQueuedAt: now }),
       coalescedWrite: recordWrite(row.id, coalesced),
@@ -251,7 +241,12 @@ export class ScheduleStore {
   // Task Schedules, which Scheduled lists, with their Session's Project.
   public listed(projectId?: string): ListedSchedule[] {
     return this.sources.database
-      .select({ row: table, projectId: session.projectId })
+      .select({
+        row: table,
+        projectId: session.projectId,
+        archivedAt: session.archivedAt,
+        title: session.title,
+      })
       .from(table)
       .innerJoin(session, eq(session.id, table.sessionId))
       .where(
@@ -265,7 +260,10 @@ export class ScheduleStore {
       .orderBy(table.nextAt, table.id)
       .all();
   }
-  public async insert({ cadence, ...input }: NewSchedule): Promise<Schedule> {
+  public async insert(
+    { cadence, ...input }: NewSchedule,
+    notice?: NoticeWriter,
+  ): Promise<Schedule> {
     const row: ScheduleRow = {
       ...input,
       ...(cadence ? cadenceColumns(cadence) : oneTime),
@@ -275,10 +273,12 @@ export class ScheduleStore {
       lastSkippedAt: null,
     };
 
-    await this.sources.open.write({
+    const insert = announceScheduleWrite(row.sessionId, {
       describe: () => 'Create Schedule',
       commit: (tx) => tx.insert(table).values(row).run(),
     });
+
+    await (notice ? notice(insert) : this.sources.open.write(insert));
 
     return decodeSchedule(row);
   }
@@ -311,13 +311,16 @@ export class ScheduleStore {
 
     if (completed(row) && action !== 'delete') return;
     const update = changeOf(row, input);
-    await this.sources.open.write({
-      describe: () => 'Manage Schedule',
-      commit: (tx) => {
-        if (action === 'delete') tx.delete(table).where(target).run();
-        else tx.update(table).set(update).where(target).run();
-      },
-    });
+
+    await this.sources.open.write(
+      announceScheduleWrite(sessionId, {
+        describe: () => 'Manage Schedule',
+        commit: (tx) => {
+          if (action === 'delete') tx.delete(table).where(target).run();
+          else tx.update(table).set(update).where(target).run();
+        },
+      }),
+    );
   }
 }
 

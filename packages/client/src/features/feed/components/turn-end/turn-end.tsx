@@ -1,8 +1,8 @@
 import type { TurnEnd } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import type { FeedViewItem } from '../../view/feed-view';
 import { NoticeMessage } from '../feed-notice/notice-message';
+import { QuietFeedRow } from '../feed-notice/quiet-feed-row';
 import { turnEndNotice } from './turn-end-notice';
 
 function rowIds(item: FeedViewItem): string[] {
@@ -33,21 +33,15 @@ export interface TurnEndRowProps {
   end: TurnEnd;
 }
 
-const ruleClassName = 'h-px flex-1 bg-border';
-
 // The notice sits between two rules that mark where the Turn stopped.
 export function TurnEndRow({ end }: TurnEndRowProps): ReactElement | null {
   const notice = turnEndNotice(end);
 
   return (
     notice && (
-      <View className="w-full flex-row items-center gap-3">
-        <View className={ruleClassName} />
-        <View className="min-w-0 shrink">
-          <NoticeMessage {...notice} />
-        </View>
-        <View className={ruleClassName} />
-      </View>
+      <QuietFeedRow>
+        <NoticeMessage {...notice} />
+      </QuietFeedRow>
     )
   );
 }

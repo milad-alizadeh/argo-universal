@@ -25,3 +25,5 @@ export * from './link-preview';
 export * from './devices';
 
 export * from './sessions/delegated-attention';
+
+export { matchesTaskSessions } from './sessions/task-list';

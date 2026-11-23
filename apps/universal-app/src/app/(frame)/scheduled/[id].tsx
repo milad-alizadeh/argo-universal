@@ -3,10 +3,10 @@ import { useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 
 export default function ScheduledRoute(): ReactNode {
-  const { id, sessionId } = useLocalSearchParams<{
+  const { id, childId } = useLocalSearchParams<{
     id: string;
-    sessionId?: string;
+    childId?: string;
   }>();
 
-  return <ScheduledDetailScreen id={id} sessionId={sessionId} />;
+  return <ScheduledDetailScreen id={id} childId={childId} />;
 }

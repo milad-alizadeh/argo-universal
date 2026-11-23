@@ -1,14 +1,17 @@
 import type { SessionUpdate } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction } from '../storage';
 import { nextFeedRevision } from './feed-revision';
 import { highestFeedPosition } from './feed-row';
+import { FeedRowsJob } from './feed-rows-job';
 import { writeFeedRowsInTransaction } from './feed-rows-write';
+import type { QueuedFeed } from './feed-storage';
 
 type StoredNotice = Pick<
   Extract<SessionUpdate, { sessionUpdate: 'notice' }>,
-  'id' | 'severity' | 'title' | 'description'
+  'id' | 'severity' | 'title' | 'description' | '_meta'
 >;
 
 // Used after a Feed has closed and its live rows have settled.
@@ -28,6 +31,31 @@ export function appendStoredNotice(
 
   const write = { sessionId, maxRevision: revision, rows };
   writeFeedRowsInTransaction(transaction, write);
+}
+
+interface QueuedNotice {
+  sessionId: string;
+  notice: StoredNotice;
+  queued: QueuedFeed;
+  maxRevision: number;
+}
+
+// A closed Session can open before the Writer commits. Its loader reads queued Feed rows too.
+export function queuedNoticeJob(
+  database: Database,
+  { sessionId, notice, queued, maxRevision }: QueuedNotice,
+): FeedRowsJob {
+  const revision = nextFeedRevision(Math.max(queued.maxRevision, maxRevision));
+
+  const position =
+    Math.max(highestFeedPosition(database, sessionId), queued.highestPosition) +
+    1;
+
+  return new FeedRowsJob({
+    sessionId,
+    maxRevision: revision,
+    rows: [noticeRow(notice, { sessionId, position, revision })],
+  });
 }
 
 const noticeRow = (

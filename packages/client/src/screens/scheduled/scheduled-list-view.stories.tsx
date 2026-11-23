@@ -2,17 +2,27 @@ import { useStackPush, withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
-import { latestSchedule, scheduledListFixture } from './scheduled-fixtures';
+import {
+  latestSchedule,
+  scheduledListFixture,
+  startedSession,
+} from './scheduled-fixtures';
 import { ScheduledListView } from './scheduled-list-view';
 import {
   LatestScheduledRun,
+  NewlyScheduledSession,
   SchedulePreviewFrame,
 } from './scheduled-preview.mocks';
 
 const meta = {
   title: 'Screens/Scheduled/Scheduled',
   component: ScheduledListView,
-  args: { ...scheduledListFixture, onCreate: fn(), onOpen: fn() },
+  args: {
+    ...scheduledListFixture,
+    onCreate: fn(),
+    onOpen: fn(),
+    onAction: fn(),
+  },
   parameters: { screenPreview: true },
   argTypes: { selectedId: { control: 'text' } },
 } satisfies Meta<typeof ScheduledListView>;
@@ -43,4 +53,17 @@ function PhoneScheduleList(
 export const PhoneSession: Story = {
   decorators: [withStack({ latest: LatestScheduledRun })],
   render: (args): ReactElement => <PhoneScheduleList {...args} />,
+};
+
+export const StartedSessions: Story = {
+  args: { startedSessions: [startedSession] },
+};
+
+export const JustCreated: Story = {
+  render: (args): ReactElement => (
+    <SchedulePreviewFrame
+      list={<ScheduledListView {...args} />}
+      page={<NewlyScheduledSession />}
+    />
+  ),
 };

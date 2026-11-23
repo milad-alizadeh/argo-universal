@@ -83,5 +83,5 @@ const scheduleError = (
   error: Pick<Error, 'message'> | null,
 ): ErrorToast | undefined =>
   error
-    ? { title: 'Could not update follow-up', message: error.message }
+    ? { title: 'Could not update Schedule', message: error.message }
     : undefined;

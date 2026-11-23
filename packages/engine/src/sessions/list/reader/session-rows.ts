@@ -1,6 +1,16 @@
 import { SessionRecord } from '@repo/contracts';
-import { session } from '@repo/db/schema';
-import { inArray, or, type SQL } from 'drizzle-orm';
+import { feedRow, session, sessionSchedule } from '@repo/db/schema';
+import {
+  and,
+  eq,
+  exists,
+  inArray,
+  isNotNull,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
+import { scheduleCreatedNoticeSuffix } from '../../schedule-created';
 import {
   storedSessionColumns,
   decodeStoredSession,
@@ -13,6 +23,8 @@ import type { ListReadInput } from './input';
 import { shellCountColumns } from './shell-counts';
 
 type StoredSession = typeof session.$inferSelect & {
+  isTask: number;
+  hasCreationNotice: number;
   shellTotal: number;
   shellRunning: number;
 };
@@ -24,7 +36,7 @@ export function readListSessions(
   const projection = readQueuedSessionRows(input.writer);
 
   const stored = storedSessions(input, sessionIds);
-  rememberShellCounts(input, stored);
+  rememberListFacts(input, stored);
 
   const rows = new Map(
     stored.map((row): [string, typeof row] => [row.id, row]),
@@ -41,11 +53,38 @@ function storedSessions(
   input: ListReadInput,
   sessionIds: readonly string[] | undefined,
 ): StoredSession[] {
+  const tasks = input.database
+    .select({ id: sessionSchedule.sessionId })
+    .from(sessionSchedule)
+    .where(isNotNull(sessionSchedule.task));
+
   return input.database
-    .select({ ...storedSessionColumns, ...shellCountColumns(input.database) })
+    .select({
+      ...storedSessionColumns,
+      ...shellCountColumns(input.database),
+      isTask: sql<number>`${session.id} in (${tasks})`,
+      hasCreationNotice: creationNotice(input),
+    })
     .from(session)
     .where(sessionFilter(sessionIds))
     .all();
+}
+
+function creationNotice({ database }: ListReadInput): SQL<number> {
+  return sql<number>`${exists(
+    database
+      .select({ id: feedRow.id })
+      .from(feedRow)
+      .where(
+        and(
+          eq(feedRow.sessionId, session.id),
+          eq(
+            feedRow.id,
+            sql<string>`${session.id} || ${scheduleCreatedNoticeSuffix}`,
+          ),
+        ),
+      ),
+  )}`;
 }
 
 type ProjectedSessionInput = {
@@ -83,13 +122,18 @@ function sessionFilter(ids: readonly string[] | undefined): SQL | undefined {
     : undefined;
 }
 
-function rememberShellCounts(
+function rememberListFacts(
   input: ListReadInput,
   stored: StoredSession[],
 ): void {
-  for (const row of stored)
+  for (const row of stored) {
+    if (row.isTask) input.taskSessionIds.add(row.id);
+
+    if (row.hasCreationNotice) input.seededSessionIds.add(row.id);
+
     input.shellCounts.set(row.id, {
       total: row.shellTotal,
       running: row.shellRunning,
     });
+  }
 }

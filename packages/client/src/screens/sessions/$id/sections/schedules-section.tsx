@@ -9,9 +9,10 @@ import type { SessionSection } from './session-section';
 
 export const schedulesSection: SessionSection = {
   key: 'schedules',
-  title: 'Follow-ups',
-  icon: 'checklist',
+  title: 'Schedules',
+  icon: 'clock',
   offered: ({ followUpsAvailable }) => followUpsAvailable === true,
+  count: ({ schedules }) => schedules?.items.length ?? 0,
   card: ({ schedules }, tab) => ({
     onOpen: schedules?.items.length ? tab.open : undefined,
     footer: schedules?.canCreate ? (
@@ -26,7 +27,7 @@ export const schedulesSection: SessionSection = {
     count: schedules?.items.length,
   }),
   phone: ({ schedules }) => ({
-    sheetHeader: <Text>Follow-ups</Text>,
+    sheetHeader: <Text>Schedules</Text>,
     body: <ScheduleList schedules={schedules} />,
   }),
 };
