@@ -26,6 +26,8 @@ export function StartSessionIn(props: StartSessionInProps): React.JSX.Element {
 function startLocationProps(wide: boolean): React.ComponentProps<typeof View> {
   return {
     accessibilityLabel: 'Start the Session in',
-    className: wide ? 'flex-row items-center justify-center gap-4' : 'w-full',
+    className: wide
+      ? 'flex-row items-center justify-center gap-4'
+      : 'w-full gap-2',
   };
 }

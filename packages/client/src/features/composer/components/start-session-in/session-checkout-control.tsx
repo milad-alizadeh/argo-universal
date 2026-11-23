@@ -32,7 +32,6 @@ function checkoutTrigger(props: CheckoutControlProps): React.JSX.Element {
   return (
     <MenuTrigger
       {...checkoutButtonLabels(props)}
-      tone="muted"
       disabled={props.disabled || !props.checkout.onNewWorktreeChange}
       accessibilityLabel="Checkout"
     />
