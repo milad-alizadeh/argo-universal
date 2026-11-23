@@ -1,24 +1,15 @@
 import type {
   ProjectSchedule,
   ProjectScheduleCadence,
-  ProjectScheduleHistoryPage,
 } from '@repo/contracts/operations';
 import {
   skipToken,
-  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
-  type InfiniteData,
-  type UseInfiniteQueryResult,
   type UseQueryResult,
 } from '@tanstack/react-query';
-import {
-  useTRPC,
-  type TRPC,
-  type ServerMutation,
-  type ClientError,
-} from '#features/connection';
+import { useTRPC, type TRPC, type ServerMutation } from '#features/connection';
 
 const listInput = {};
 
@@ -30,8 +21,6 @@ type ScheduleListQuery = Pick<
 >;
 
 type ProjectProcedures = TRPC['project'];
-
-type Target = Pick<ProjectSchedule, 'id' | 'projectId'>;
 
 type PreviewTarget = {
   projectId: string;
@@ -59,27 +48,12 @@ export function useProjectSchedulePreview(input?: PreviewTarget): Pick<
   );
 }
 
-export function useProjectScheduleHistory(
-  target: Target,
-): UseInfiniteQueryResult<
-  InfiniteData<ProjectScheduleHistoryPage>,
-  ClientError
-> {
-  const { scheduleHistory } = useTRPC().project;
-
-  return useInfiniteQuery(
-    scheduleHistory.infiniteQueryOptions(target, {
-      getNextPageParam: (page) => page.next ?? undefined,
-      refetchInterval: refreshMs,
-    }),
-  );
-}
-
 type ListUpdate = (current: ProjectSchedule[]) => ProjectSchedule[];
 
 function useUpdateScheduleList(): (update?: ListUpdate) => void {
   const cache = useQueryClient();
-  const { scheduleList, scheduleHistory } = useTRPC().project;
+  const trpc = useTRPC();
+  const { scheduleList } = trpc.project;
 
   return (update): void => {
     if (update) {
@@ -89,7 +63,7 @@ function useUpdateScheduleList(): (update?: ListUpdate) => void {
     }
 
     void cache.invalidateQueries({ queryKey: scheduleList.pathKey() });
-    void cache.invalidateQueries({ queryKey: scheduleHistory.pathKey() });
+    void cache.invalidateQueries(trpc.session.list.pathFilter());
   };
 }
 

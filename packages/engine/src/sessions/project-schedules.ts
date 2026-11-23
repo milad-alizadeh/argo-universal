@@ -17,17 +17,15 @@ import {
   decodeLegacy,
   firstOccurrence,
   projectScheduleOf,
+  type ListedSchedule,
   requireSameTask,
   resolveScheduleSettings,
   scheduleEditTiming,
   type LegacySchedule,
   type SavedSettings,
 } from './project-schedule-settings';
-import type {
-  ListedSchedule,
-  NewSchedule,
-  ScheduleTask,
-} from './schedule-store';
+import { scheduleCreatedNotice } from './schedule-created';
+import type { NewSchedule, ScheduleTask } from './schedule-store';
 import { scheduleSender, type Schedules } from './schedules';
 import { renameSession } from './session-rename';
 import type { SessionHandlerSources } from './session-sources';
@@ -62,7 +60,10 @@ export class ProjectSchedules {
   ) {}
 
   public list(projectId?: string): ProjectSchedule[] {
-    return this.schedules.store.listed(projectId).map(projectScheduleOf);
+    return this.schedules.store.listed(projectId).map((listed) => ({
+      ...projectScheduleOf(listed),
+      running: this.sources.open.isRunning(listed.row.sessionId),
+    }));
   }
 
   public preview(
@@ -91,17 +92,23 @@ export class ProjectSchedules {
     const id = this.sources.createId();
     const sessionId = await this.startSession(id, input.projectId, settings);
 
-    await this.schedules.add({
-      id,
-      sessionId,
-      prompt: instructionsPrompt(settings.instructions),
-      cadence: settings.cadence,
-      anchorAt: now,
-      nextAt,
-      endsAt: null,
-      paused: false,
-      task: taskSettings(settings),
-    });
+    await this.schedules.add(
+      {
+        id,
+        sessionId,
+        prompt: instructionsPrompt(settings.instructions),
+        cadence: settings.cadence,
+        anchorAt: now,
+        nextAt,
+        endsAt: null,
+        paused: false,
+        task: taskSettings(settings),
+      },
+      scheduleCreatedNotice(this.sources, {
+        sessionId,
+        instructions: settings.instructions,
+      }),
+    );
 
     return projectScheduleOf(this.listed({ id, projectId: input.projectId }));
   }

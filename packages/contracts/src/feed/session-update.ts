@@ -108,6 +108,13 @@ export const Notice = z.strictObject({
   _meta: createFeedMetadataSchema(
     z.strictObject({
       turnEnd: TurnEnd.optional(),
+      skippedSchedule: z
+        .strictObject({
+          at: z.number(),
+          reason: z.enum(['offline', 'waiting']),
+          timeZone: z.string().optional(),
+        })
+        .optional(),
       retry: z
         .strictObject({
           attempt: z.int(),

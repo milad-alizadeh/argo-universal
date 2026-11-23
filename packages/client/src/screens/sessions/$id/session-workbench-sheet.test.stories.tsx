@@ -42,7 +42,7 @@ if (!working.length || !firstIdle)
 const [shownFollowUp, secondFollowUp, laterFollowUp] = followUps.items;
 
 if (!shownFollowUp || !secondFollowUp || !laterFollowUp)
-  throw new Error('Recorded catalog needs three Follow-ups.');
+  throw new Error('Recorded catalog needs three Schedules.');
 
 const promptOf = ({ prompt }: typeof shownFollowUp): string =>
   prompt.find((block) => block.type === 'text')?.text ?? '';
@@ -81,7 +81,7 @@ export const DrawsEachCardAsATitledSection: Story = {
       'Agents',
       'Background Tasks',
       'Runs',
-      'Follow-ups',
+      'Scheduled',
       'Issue Tracker',
     ].map((title) => sheet.getByText(title));
 
@@ -197,12 +197,12 @@ export const PreviewsFollowUpsAndOpensTheirList: Story = {
     ).toBeNull();
     await expect(sheet.getByRole('link', titled('1 more'))).toBeVisible();
 
-    await press(sheet, userEvent, 'Add follow-up');
+    await press(sheet, userEvent, 'Add Schedule');
     await expect(
-      await sheet.findByRole('heading', { name: 'Follow-ups' }),
+      await sheet.findByRole('heading', { name: 'Scheduled' }),
     ).toBeVisible();
     await expect(
-      sheet.getByRole('button', { name: 'Add follow-up' }),
+      sheet.getByRole('button', { name: 'Add Schedule' }),
     ).toBeVisible();
   },
 };

@@ -6,7 +6,6 @@ import {
   runStatusLabel,
   runStatusTone,
   ScheduleList,
-  scheduleMark,
   schedulePreviewLimit,
   schedulePreviewValue,
   scheduleTitle,
@@ -65,7 +64,7 @@ export function workbenchGroups(
     agentsGroup(content, onVisit),
     tasksGroup(content, onVisit),
     ...runsGroup(content.runs),
-    ...followUpsGroup(content),
+    ...schedulesGroup(content),
     ...(content.pluginCards ?? []).map((card) =>
       pluginGroup(card, cardLines(card)),
     ),
@@ -223,11 +222,11 @@ function runsGroup(runs: SessionRuns | undefined): WorkbenchGroup[] {
 
 type Schedules = NonNullable<SessionInspectorContent['schedules']>;
 
-const followUpsKey = schedulesSection.key;
+const schedulesKey = schedulesSection.key;
 
-// The Follow-ups list, which manages and adds them; every row of the section opens it.
-const followUpsList = (schedules: Schedules): WorkbenchRow => ({
-  key: followUpsKey,
+// The Schedules list, which manages and adds them; every row of the section opens it.
+const schedulesList = (schedules: Schedules): WorkbenchRow => ({
+  key: schedulesKey,
   label: schedulesSection.title,
   hidden: true,
   page: {
@@ -236,24 +235,23 @@ const followUpsList = (schedules: Schedules): WorkbenchRow => ({
   },
 });
 
-const followUpRow =
+const scheduleRow =
   (list: WorkbenchRow) =>
   (item: Schedules['items'][number]): WorkbenchRow => ({
-    key: `${followUpsKey}:${item.id}`,
+    key: `${schedulesKey}:${item.id}`,
     label: scheduleTitle(item),
-    leadingMark: scheduleMark(item),
     value: item.state === 'active' ? schedulePreviewValue(item) : undefined,
     status:
       item.state === 'active'
         ? undefined
         : {
             label: schedulePreviewValue(item),
-            tone: followUpTone[item.state],
+            tone: scheduleTone[item.state],
           },
     visits: list,
   });
 
-const followUpTone = {
+const scheduleTone = {
   paused: 'warning',
   completed: 'done',
   expired: 'muted',
@@ -266,30 +264,30 @@ const moreRow = (
   visits: WorkbenchRow,
 ): WorkbenchRow => ({ key: `${key}:more`, label: `${more} more`, visits });
 
-const addFollowUpRow = (visits: WorkbenchRow): WorkbenchRow => ({
-  key: `${followUpsKey}:add`,
-  label: 'Add follow-up',
+const addScheduleRow = (visits: WorkbenchRow): WorkbenchRow => ({
+  key: `${schedulesKey}:add`,
+  label: 'Add Schedule',
   visits,
 });
 
-// The Follow-ups card: the ones it previews, then a row for the rest and one to add another.
-function followUpsGroup({
+// The Schedules card: the ones it previews, then a row for the rest and one to add another.
+function schedulesGroup({
   schedules,
 }: SessionInspectorContent): WorkbenchGroup[] {
-  if (!schedules) return [];
+  if (!schedules?.items.length) return [];
 
-  const list = followUpsList(schedules);
+  const list = schedulesList(schedules);
   const more = schedules.items.length - schedulePreviewLimit;
   const previewed = schedules.items.slice(0, schedulePreviewLimit);
 
   const rows = [
     list,
-    ...previewed.map(followUpRow(list)),
-    ...(more > 0 ? [moreRow(followUpsKey, more, list)] : []),
-    ...(schedules.canCreate ? [addFollowUpRow(list)] : []),
+    ...previewed.map(scheduleRow(list)),
+    ...(more > 0 ? [moreRow(schedulesKey, more, list)] : []),
+    ...(schedules.canCreate ? [addScheduleRow(list)] : []),
   ];
 
-  return [{ key: followUpsKey, title: schedulesSection.title, rows }];
+  return [{ key: schedulesKey, title: schedulesSection.title, rows }];
 }
 
 const lineRow =

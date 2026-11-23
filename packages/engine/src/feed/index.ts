@@ -103,4 +103,4 @@ export {
 
 export { VoiceMarkerStream } from './conversation-marker-stream';
 
-export { appendStoredNotice } from './stored-notice';
+export { appendStoredNotice, queuedNoticeJob } from './stored-notice';

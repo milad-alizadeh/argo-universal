@@ -1,7 +1,5 @@
-import type {
-  ProjectSchedule,
-  ProjectScheduleHistoryEntry,
-} from '@repo/contracts/operations';
+import type { ProjectSchedule } from '@repo/contracts/operations';
+import { sessionRows } from '@repo/mocks/app';
 import { scheduleCadenceDraft } from './schedule-cadence-draft';
 import type { ScheduleFormViewProps } from './schedule-form-view';
 
@@ -81,38 +79,30 @@ export const pausedSchedule: ProjectSchedule = {
   ...latestSchedule,
   id: 'schedule-paused',
   name: 'Audit flaky tests',
+  sessionId: 'audit-flaky-tests-session',
+  latestSessionId: 'audit-flaky-tests-session',
   paused: true,
 };
 
-export const scheduledListFixture = {
-  schedules: [firstSchedule, latestSchedule, pausedSchedule],
-  selectedId: firstSchedule.id,
+const archivedSchedule = {
+  ...pausedSchedule,
+  id: 'schedule-archived',
+  name: 'Summarize the test results',
+  sessionId: 'archived-task-session',
+  latestSessionId: 'archived-task-session',
+  archived: true,
 };
 
-export const scheduleHistoryFixture: readonly ProjectScheduleHistoryEntry[] = [
-  {
-    id: 'occurrence-new',
-    occurrence: {
-      at: Date.UTC(2026, 10, 21, 14),
-      outcome: 'started',
-      sessionId: latestSessionId,
-    },
-  },
-  {
-    id: 'occurrence-skipped',
-    occurrence: {
-      at: Date.UTC(2026, 10, 21, 13),
-      outcome: 'skipped',
-      through: Date.UTC(2026, 10, 21, 13, 30),
-      reason: 'The Server was offline when this Schedule was due.',
-    },
-  },
-  {
-    id: 'occurrence-older',
-    occurrence: {
-      at: Date.UTC(2026, 10, 21, 12),
-      outcome: 'started',
-      sessionId: 'earlier-session',
-    },
-  },
-];
+export const startedSession = {
+  ...sessionRows.idle,
+  sessionId: 'check-logs',
+  projectId: firstSchedule.projectId,
+  startedBySessionId: firstSchedule.sessionId,
+  taskSessionId: firstSchedule.sessionId,
+  title: 'Check the build logs',
+};
+
+export const scheduledListFixture = {
+  schedules: [firstSchedule, latestSchedule, pausedSchedule, archivedSchedule],
+  selectedId: firstSchedule.id,
+};

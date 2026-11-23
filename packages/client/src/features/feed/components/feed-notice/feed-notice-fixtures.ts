@@ -74,3 +74,29 @@ export const compactionFailedNotice = {
 export const compactionStoppedNotice = {
   row: compactionOf('cancelled'),
 } satisfies FeedNoticeProps;
+
+function skippedSchedule(
+  reason: 'offline' | 'waiting',
+  at: number,
+): FeedNoticeProps {
+  return {
+    row: {
+      ...infoNotice.row,
+      title: 'Skipped Schedule occurrence',
+      turnId: null,
+      _meta: {
+        argo: { skippedSchedule: { at, reason, timeZone: 'Europe/London' } },
+      },
+    },
+  };
+}
+
+export const SkippedWhileOffline = skippedSchedule(
+  'offline',
+  Date.UTC(2026, 10, 23, 9),
+);
+
+export const SkippedWhileWaiting = skippedSchedule(
+  'waiting',
+  Date.UTC(2026, 10, 25, 9),
+);

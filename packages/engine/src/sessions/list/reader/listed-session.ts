@@ -35,13 +35,13 @@ const hasTurn = (row: SessionRecord, turns: Turns): boolean =>
 export function listedSession(
   rejected: ReadonlySet<string>,
   inputOf: (sessionId: string) => SessionInput | undefined,
-  { row, turns }: { row: SessionRecord; turns: Turns },
+  { row, turns, task }: { row: SessionRecord; turns: Turns; task?: boolean },
 ): SessionRecord | undefined {
   if (rejected.has(row.id)) return undefined;
 
   const prompt = promptOf(inputOf(row.id));
 
-  const listed = listsBeforeTurn(row, prompt) || hasTurn(row, turns);
+  const listed = task || listsBeforeTurn(row, prompt) || hasTurn(row, turns);
 
   return whenListed(listed, titled(row, prompt));
 }

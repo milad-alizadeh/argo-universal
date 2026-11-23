@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -64,6 +65,8 @@ function answerSkill(
       const form = await requestForm(canvas, width);
       const action = await form.findByRole('button', { name: button });
       const feed = within(await canvas.findByTestId('feed-scroll'));
+
+      if (width === 'phone') await settleOverlays(action);
 
       await expect(feed.queryByText('/implement #12345')).toBeNull();
       await expect(onDecision).not.toHaveBeenCalled();

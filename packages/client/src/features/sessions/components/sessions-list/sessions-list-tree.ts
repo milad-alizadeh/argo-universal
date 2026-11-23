@@ -2,7 +2,10 @@ import type { TreeRow } from '@repo/kit/list-tree';
 import { useCallback, useMemo, useState } from 'react';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListEntries } from './sessions-list-entries-state';
-import { visibleSessionEntries } from './sessions-list-nesting';
+import {
+  type SessionTree,
+  visibleSessionEntries,
+} from './sessions-list-nesting';
 import type { SessionsListProps } from './sessions-list-props';
 
 export interface SessionNesting {
@@ -50,7 +53,7 @@ function useVisibleEntries(
 
 // The same kit tree lanes and fold control as nested Issue rows, with each Session kept in its own virtualized cell.
 export function sessionTree(
-  entry: Extract<SessionsListEntry, { kind: 'session' }>,
+  entry: { id: string; tree?: SessionTree },
   nesting: SessionNesting,
 ): TreeRow | undefined {
   const tree = entry.tree;

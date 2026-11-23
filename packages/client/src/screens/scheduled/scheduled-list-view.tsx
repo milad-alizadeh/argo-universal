@@ -1,36 +1,48 @@
+import type { AgentServer, SessionInfo } from '@repo/contracts';
 import type { ProjectSchedule } from '@repo/contracts/operations';
+import { ListTreeContext } from '@repo/kit/list-tree';
 import { Action } from '@repo/kit/primitives/actions/action';
-import { Icon } from '@repo/kit/primitives/content/icon';
 import { List, ListSectionHeader } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  Menu,
+  type MenuEntry,
+  MenuTrigger,
+} from '@repo/kit/primitives/overlays/menu';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import {
+  cadenceLabel,
+  upcomingOccurrence,
+  scheduleTimeZone,
+} from '#features/project-schedules';
+import {
+  nestedSessionEntries,
+  SessionListRow,
+  sessionTree,
+  useSessionNesting,
+  visibleSessionEntries,
   sessionsListHeadingClassName,
   sessionsListLook,
   sessionsListSidebarRows,
   sessionsListTopPadding,
   useSessionsListRowClassName,
 } from '#features/sessions';
-import {
-  cadenceLabel,
-  upcomingOccurrence,
-  scheduleTimeZone,
-} from './schedule-time';
+import { useContentWide } from '#lib/product/content-layout';
 
-export type ScheduleRowAction =
-  | 'edit'
-  | 'pause'
-  | 'resume'
-  | 'history'
-  | 'delete';
+export type ScheduleRowAction = 'edit' | 'pause' | 'resume' | 'run' | 'delete';
 
 export interface ScheduledListViewProps {
   schedules: readonly ProjectSchedule[];
   selectedId?: string;
+  selectedChildId?: string;
+  startedSessions?: readonly SessionInfo[];
+  agents?: AgentServer[];
+  onOpenStarted?: (schedule: ProjectSchedule, sessionId: string) => void;
+  onEndReached?: () => void;
   status?: 'loading' | 'failed';
   onCreate: () => void;
   onOpen: (schedule: ProjectSchedule) => void;
@@ -67,46 +79,86 @@ function emptyTitle(status: ScheduledListViewProps['status']): string {
 
 type ScheduleSection = 'Active' | 'Paused';
 
-type ScheduleEntry = ScheduleSection | ProjectSchedule;
+type Task = {
+  sessionId: string;
+  projectId: string;
+  startedBySessionId: null;
+  schedule: ProjectSchedule;
+};
 
-const scheduleMark = <Icon name="clock" />;
+type NestedEntry = ReturnType<
+  typeof nestedSessionEntries<Task | SessionInfo>
+>[number];
+
+type ScheduleEntry = ScheduleSection | NestedEntry;
 
 function scheduleEntries(
-  schedules: readonly ProjectSchedule[],
+  props: ScheduledListViewProps,
   pausedExpanded: boolean,
+  folded: ReadonlySet<string>,
 ): ScheduleEntry[] {
-  const active = schedules.filter(({ paused }) => !paused);
-  const paused = schedules.filter((schedule) => schedule.paused);
+  const roots = props.schedules.map((schedule): Task => ({
+    sessionId: schedule.sessionId,
+    projectId: schedule.projectId,
+    startedBySessionId: null,
+    schedule,
+  }));
 
-  const entries: ScheduleEntry[] = [];
+  const entries = nestedSessionEntries<Task | SessionInfo>([
+    ...roots,
+    ...(props.startedSessions ?? []),
+  ]);
 
-  if (active.length > 0) entries.push('Active', ...active);
+  const sections = scheduleSections(visibleSessionEntries(entries, folded));
 
-  if (paused.length > 0)
-    entries.push('Paused', ...(pausedExpanded ? paused : []));
-
-  return entries;
+  return [
+    ...(sections.Active.length ? ['Active' as const, ...sections.Active] : []),
+    ...(sections.Paused.length
+      ? ['Paused' as const, ...(pausedExpanded ? sections.Paused : [])]
+      : []),
+  ];
 }
 
-const entryKind = (entry: ScheduleEntry): 'section' | 'schedule' =>
-  typeof entry === 'string' ? 'section' : 'schedule';
+function scheduleSections(
+  entries: readonly NestedEntry[],
+): Record<ScheduleSection, NestedEntry[]> {
+  const sections: Record<ScheduleSection, NestedEntry[]> = {
+    Active: [],
+    Paused: [],
+  };
+
+  let section: ScheduleSection | undefined;
+
+  for (const entry of entries) {
+    if ('schedule' in entry.session) {
+      const { schedule } = entry.session;
+      section = schedule.paused || schedule.archived ? 'Paused' : 'Active';
+    } else if (!entry.tree?.depth) {
+      section = undefined;
+    }
+
+    if (section) sections[section].push(entry);
+  }
+
+  return sections;
+}
+
+function entryKind(entry: ScheduleEntry): string {
+  if (typeof entry === 'string') return 'section';
+
+  return 'schedule' in entry.session ? 'schedule' : 'session';
+}
 
 const entryKey = (entry: ScheduleEntry): string =>
-  typeof entry === 'string' ? entry : `schedule:${entry.id}`;
-
-function entrySection(entry: ScheduleEntry): string {
-  if (typeof entry === 'string') return `heading:${entry}`;
-
-  return entry.paused ? 'Paused' : 'Active';
-}
+  typeof entry === 'string' ? entry : entry.id;
 
 function ScheduleRows(props: ScheduledListViewProps): ReactElement {
   const gutterHeld = useSidebarGutterHeld();
-  const [pausedExpanded, setPausedExpanded] = useState(false);
+  const [pausedExpanded, setPausedExpanded] = useState(true);
+  const nesting = useSessionNesting(useContentWide());
 
   const renderEntry = (entry: ScheduleEntry): ReactElement => {
-    if (typeof entry !== 'string')
-      return <ScheduleRow {...props} schedule={entry} />;
+    if (typeof entry !== 'string') return nestedRow(entry, nesting, props);
 
     const isExpanded = entry === 'Active' || pausedExpanded;
 
@@ -114,7 +166,6 @@ function ScheduleRows(props: ScheduledListViewProps): ReactElement {
       <View className={sessionsListHeadingClassName(!isExpanded)}>
         <ListSectionHeader
           title={entry}
-          leading={entry === 'Active' ? scheduleMark : undefined}
           sidebar={sessionsListSidebarRows}
           rowLanes
           isExpanded={isExpanded}
@@ -129,12 +180,49 @@ function ScheduleRows(props: ScheduledListViewProps): ReactElement {
       fit={false}
       {...sessionsListLook('regular', gutterHeld ? 'inset' : 'padded')}
       paddingTop={sessionsListTopPadding}
-      items={scheduleEntries(props.schedules, pausedExpanded)}
-      extraData={{ selectedId: props.selectedId, pausedExpanded }}
+      items={scheduleEntries(props, pausedExpanded, nesting.folded)}
+      extraData={{
+        selectedId: props.selectedId,
+        selectedChildId: props.selectedChildId,
+        pausedExpanded,
+      }}
       renderItem={renderEntry}
       keyExtractor={entryKey}
       getItemType={entryKind}
-      getSectionKey={entrySection}
+      onEndReached={props.onEndReached}
+    />
+  );
+}
+
+function nestedRow(
+  entry: NestedEntry,
+  nesting: ReturnType<typeof useSessionNesting>,
+  props: ScheduledListViewProps,
+): ReactElement {
+  const { session } = entry;
+  const tree = sessionTree(entry, nesting);
+
+  if ('schedule' in session) {
+    return (
+      <ListTreeContext value={tree ?? null}>
+        <ScheduleRow {...props} schedule={session.schedule} />
+      </ListTreeContext>
+    );
+  }
+
+  return (
+    <SessionListRow
+      session={session}
+      logo={props.agents?.find(({ id }) => id === session.agent)?.icon ?? ''}
+      selected={session.sessionId === props.selectedChildId}
+      tree={tree}
+      onSelect={(id) => {
+        const schedule = props.schedules.find(
+          ({ sessionId }) => sessionId === session.taskSessionId,
+        );
+
+        if (schedule) props.onOpenStarted?.(schedule, id);
+      }}
     />
   );
 }
@@ -152,64 +240,88 @@ function ScheduleRow({
   onOpen,
   onAction,
 }: ScheduleRowProps): ReactElement {
-  const cadence = cadenceLabel(schedule.cadence);
-
-  const subtitle = schedule.paused
-    ? cadence
-    : `${upcomingOccurrence(schedule.nextAt, scheduleTimeZone(schedule.cadence))} · ${cadence}`;
-
   return (
     <View className={useSessionsListRowClassName()}>
       <ListItem
         title={schedule.name}
-        subtitle={subtitle}
-        leading={scheduleMark}
+        subtitle={scheduleSubtitle(schedule)}
+        subtitleIcon="clock"
         selected={selectedId === schedule.id}
         sidebar={sessionsListSidebarRows}
         onPress={() => onOpen(schedule)}
-        actions={onAction && scheduleActions({ schedule, onAction })}
+        trailingAccessories={
+          onAction && <ScheduleMenu schedule={schedule} onAction={onAction} />
+        }
       />
     </View>
   );
 }
 
-function scheduleActions({
-  schedule,
-  onAction,
-}: {
+function scheduleSubtitle(schedule: ProjectSchedule): string {
+  const cadence = cadenceLabel(schedule.cadence);
+
+  if (schedule.archived) return `${cadence} · Archived`;
+
+  if (schedule.paused) return cadence;
+
+  if (schedule.running) return `${cadence} · Running`;
+
+  const time = upcomingOccurrence(
+    schedule.nextAt,
+    scheduleTimeZone(schedule.cadence),
+  );
+
+  return `${cadence} · ${time}`;
+}
+
+type ScheduleMenuProps = {
   schedule: ProjectSchedule;
   onAction: NonNullable<ScheduledListViewProps['onAction']>;
-}): ReactElement {
+};
+
+function menuEntries({ schedule, onAction }: ScheduleMenuProps): MenuEntry[] {
+  const entries: MenuEntry[] = [];
+
+  if (!schedule.archived) {
+    entries.push(
+      {
+        label: schedule.paused ? 'Resume' : 'Pause',
+        onPress: () => onAction(schedule, schedule.paused ? 'resume' : 'pause'),
+      },
+      {
+        label: 'Run now',
+        disabled: schedule.running,
+        onPress: () => onAction(schedule, 'run'),
+      },
+    );
+  }
+
+  entries.push(
+    {
+      label: 'Edit Schedule',
+      icon: 'edit',
+      onPress: () => onAction(schedule, 'edit'),
+    },
+    {
+      label: 'Delete Schedule…',
+      icon: 'delete',
+      tone: 'danger',
+      section: {},
+      onPress: () => onAction(schedule, 'delete'),
+    },
+  );
+
+  return entries;
+}
+
+function ScheduleMenu(props: ScheduleMenuProps): ReactElement {
+  const label = `Schedule actions for ${props.schedule.name}`;
+
   return (
-    <Action.Section>
-      <Action
-        label="Edit"
-        icon="edit"
-        onPress={() => onAction(schedule, 'edit')}
-      />
-      {schedule.paused ? (
-        <Action
-          label="Resume"
-          icon="play"
-          onPress={() => onAction(schedule, 'resume')}
-        />
-      ) : (
-        <Action
-          label="Pause"
-          icon="pause"
-          onPress={() => onAction(schedule, 'pause')}
-        />
-      )}
-      <Action
-        label="History"
-        icon="clock"
-        onPress={() => onAction(schedule, 'history')}
-      />
-      <Action
-        label="Delete"
-        icon="delete"
-        onPress={() => onAction(schedule, 'delete')}
-      />
-    </Action.Section>
+    <Menu
+      accessibilityLabel={label}
+      trigger={<MenuTrigger label={label} icon="more" iconOnly />}
+      actions={menuEntries(props)}
+    />
   );
 }

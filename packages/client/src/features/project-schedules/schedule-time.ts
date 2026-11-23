@@ -95,7 +95,8 @@ export function upcomingOccurrence(
     timeZone,
   });
 
-  if (calendar.format(at) !== calendar.format(now)) return day.format(at);
+  if (calendar.format(at) !== calendar.format(now))
+    return `Next ${day.format(at)}`;
 
   const clock = new Intl.DateTimeFormat(undefined, {
     timeStyle: 'short',

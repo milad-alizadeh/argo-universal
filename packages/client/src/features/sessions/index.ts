@@ -283,7 +283,6 @@ export {
   ScheduleList,
   schedulePreviewLimit,
   schedulePreviewValue,
-  scheduleMark,
   scheduleTitle,
 } from './components/schedule-list';
 
@@ -321,3 +320,15 @@ export {
 } from './components/session-workbench-runs';
 
 export { ShellTerminalInspector } from './components/shell-terminal-inspector';
+
+export { SessionListRow } from './components/sessions-list/sessions-list-rows';
+
+export {
+  nestedSessionEntries,
+  visibleSessionEntries,
+} from './components/sessions-list/sessions-list-nesting';
+
+export {
+  sessionTree,
+  useSessionNesting,
+} from './components/sessions-list/sessions-list-tree';

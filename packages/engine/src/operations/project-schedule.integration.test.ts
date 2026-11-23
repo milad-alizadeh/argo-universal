@@ -51,6 +51,23 @@ it('creates one Session when a task Schedule is saved and Run now prompts it wit
   expect(opened.checkout.path).not.toBe(registered?.path);
   expect(received).toHaveLength(0);
 
+  const initial = await host.caller.feed.page({
+    sessionId: schedule.sessionId,
+    direction: 'tail',
+  });
+
+  expect(initial.rows).toMatchObject([
+    { sessionUpdate: 'notice', turnId: null, description: instructions },
+  ]);
+  expect(opened.activeTurnId).toBeNull();
+
+  expect((await session.list({ taskSessions: 'exclude' })).sessions).toEqual(
+    [],
+  );
+  expect((await session.list({ query: instructions })).sessions).toMatchObject([
+    { sessionId: schedule.sessionId, taskSessionId: schedule.sessionId },
+  ]);
+
   const target = { projectId: schedule.projectId, id: schedule.id };
   const first = await project.scheduleRunNow(target);
   expect(first).toMatchObject({
@@ -68,6 +85,9 @@ it('creates one Session when a task Schedule is saved and Run now prompts it wit
     { id: schedule.id, sessionId: schedule.sessionId, nextAt: schedule.nextAt },
   ]);
   expect((await session.list({ archived: false })).sessions).toHaveLength(1);
+  expect(
+    (await session.list({ archived: false, taskSessions: 'exclude' })).sessions,
+  ).toEqual([]);
 }, 30000);
 
 it('prompts the same Session at every occurrence and starts no other Session', async () => {
@@ -231,10 +251,10 @@ it('attributes a run to the stored Project Schedule when an Agent created it', a
   await project.scheduleRunNow({ id: saved.id, projectId: saved.projectId });
 
   await expect
-    .poll(
-      async () =>
-        (await feed.page({ sessionId: saved.sessionId, direction: 'tail' }))
-          .rows[0],
+    .poll(async () =>
+      (
+        await feed.page({ sessionId: saved.sessionId, direction: 'tail' })
+      ).rows.find((row) => row.sessionUpdate === 'prompt_message'),
     )
     .toMatchObject({
       sessionUpdate: 'prompt_message',

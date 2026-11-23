@@ -31,31 +31,49 @@ When(
   },
 );
 
-// A task Schedule's Session exists from creation, so its address names it (ADR-0067).
-const scheduleSession = /\/scheduled\/[^/?]+\?sessionId=([^&]+)$/;
+// Scheduled resolves the task's Session from the Schedule id in the path.
+const taskRoute = /\/scheduled\/[^/?#]+$/;
 
-const openedSessions = new WeakMap<Page, string>();
+const openedTasks = new WeakMap<Page, string>();
 
-const openedSession = async (page: Page): Promise<string> => {
-  await expect(page).toHaveURL(scheduleSession, sessionOpenTimeout);
+const openedTask = async (page: Page): Promise<string> => {
+  await expect(page).toHaveURL(taskRoute, sessionOpenTimeout);
+  await expect(page.getByText('Schedule created', { exact: true })).toBeVisible(
+    sessionOpenTimeout,
+  );
 
-  return scheduleSession.exec(page.url())?.[1] ?? '';
+  return new URL(page.url()).pathname;
 };
 
-Then('the Schedule opens its Session', async ({ page }): Promise<void> => {
-  openedSessions.set(page, await openedSession(page));
-});
+Then(
+  'the Schedule opens its task Session with {string} in its Feed',
+  async ({ page }, instructions: string): Promise<void> => {
+    openedTasks.set(page, await openedTask(page));
+    await expect(
+      page.getByTestId('feed-scroll').getByText(instructions, { exact: true }),
+    ).toBeVisible();
+  },
+);
 
-Then('the Schedule opens the same Session', async ({ page }): Promise<void> => {
-  expect(await openedSession(page)).toBe(openedSessions.get(page));
-});
+Then(
+  'Scheduled returns to the same task Session',
+  async ({ page }): Promise<void> => {
+    expect(await openedTask(page)).toBe(openedTasks.get(page));
+  },
+);
 
 When(
   'I reopen the Schedule {string} from its list',
   async ({ page }, title: string): Promise<void> => {
-    if (onPhone(page))
-      await page.getByRole('link', { name: /, back$/ }).click();
+    await (onPhone(page)
+      ? page.getByRole('link', { name: /, back$/ }).click()
+      : page.goBack());
 
-    await page.getByRole('button', { name: title, exact: true }).click();
+    await expect(page).toHaveURL(/\/scheduled$/);
+
+    await page
+      .getByRole('button', { name: title, exact: true })
+      .and(page.locator('[aria-pressed]'))
+      .click();
   },
 );

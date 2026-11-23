@@ -2,7 +2,6 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import { View } from 'react-native';
 import type { ScheduleControls } from '../hooks/use-schedules';
 import { FollowUpEditor } from './schedule-form';
@@ -25,33 +24,20 @@ function scheduleInterval(seconds: number | null): string {
     : `Every ${seconds} s`;
 }
 
-// The Workbench card previews this many Follow-ups; the rest wait in the full list.
+// The Workbench card previews this many Schedules; the rest wait in the full list.
 export const schedulePreviewLimit = 2;
 
-// A previewed Follow-up's line under its prompt: its cadence while active, else where it stands.
+// A previewed Schedule's line under its prompt: its cadence while active, else where it stands.
 export const schedulePreviewValue = (item: Schedule): string =>
   item.state === 'active'
     ? scheduleInterval(item.intervalSeconds)
     : timing(item);
 
-export const scheduleMark = (item: Schedule) =>
-  ({
-    label: 'Follow-up',
-    icon: item.state === 'paused' ? 'pause' : 'clock',
-    tone: 'neutral',
-  }) as const;
-
 function previewRow(item: Schedule): React.JSX.Element {
   const label = schedulePreviewValue(item);
-  const mark = scheduleMark(item);
 
   return (
     <View key={item.id} className="flex-row items-center gap-2 px-1 py-2">
-      <TintedAvatar
-        accessibilityLabel={mark.label}
-        icon={mark.icon}
-        tone={mark.tone}
-      />
       <View className="min-w-0 flex-1">
         <Text numberOfLines={1}>{scheduleTitle(item)}</Text>
         <Text role="secondary" tone="muted" numberOfLines={1}>

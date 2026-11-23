@@ -2,7 +2,10 @@ import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fireEvent, screen, waitFor, within } from 'storybook/test';
-import sections, { SchedulesInspector } from './session-sections.stories';
+import sections, {
+  Schedules,
+  SchedulesInspector,
+} from './session-sections.stories';
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Sections/FollowUp',
@@ -15,11 +18,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const addFollowUp = 'Add follow-up';
+const addFollowUp = 'Add Schedule';
 
-const formTitle = 'Schedule follow-up';
+const formTitle = 'New Schedule';
 
 export const ValidatesFollowUp = {
+  ...Schedules,
   beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }): Promise<void> => {
     await userEvent.click(canvas.getByRole('button', { name: addFollowUp }));
@@ -39,6 +43,7 @@ export const ValidatesFollowUp = {
 } satisfies Story;
 
 export const SchedulesAnInterval = {
+  ...Schedules,
   beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ args, canvas, userEvent }): Promise<void> => {
     const prompt = 'Check the build';
@@ -86,7 +91,7 @@ export const EditsAnIntervalEnd = {
     await userEvent.click(edit);
 
     const form = within(
-      await screen.findByRole('dialog', { name: 'Edit follow-up end' }),
+      await screen.findByRole('dialog', { name: 'Edit Schedule end' }),
     );
 
     const local = '2099-06-04T13:00';
@@ -104,6 +109,7 @@ export const EditsAnIntervalEnd = {
 } satisfies Story;
 
 export const SchedulesOnce = {
+  ...Schedules,
   beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ args, canvas, userEvent }): Promise<void> => {
     await userEvent.click(canvas.getByRole('button', { name: addFollowUp }));
@@ -131,5 +137,18 @@ export const SchedulesOnce = {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
+  },
+} satisfies Story;
+
+export const WorkbenchShowsScheduled = {
+  ...Schedules,
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  play: async ({ canvas }): Promise<void> => {
+    await expect(
+      canvas.getByRole('group', { name: 'Scheduled' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('group', { name: 'Follow-ups' }),
+    ).not.toBeInTheDocument();
   },
 } satisfies Story;
