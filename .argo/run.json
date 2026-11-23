@@ -1,0 +1,13 @@
+// Run Configurations for this repo (ADR-0063). Every port comes from the Checkout's block, so worktrees never clash.
+{
+  "configurations": [
+    {
+      "name": "storybook",
+      "command": "pnpm generate:plugin-kit && EXPO_PUBLIC_STORYBOOK_WS_PORT=$ARGO_PORT_9 pnpm --filter @repo/storybook exec storybook dev -p $PORT --no-open"
+    },
+    {
+      "name": "expo",
+      "command": "pnpm generate:plugin-kit && ARGO_EXPO_PORT=$PORT pnpm --filter @repo/universal-app dev"
+    }
+  ]
+}

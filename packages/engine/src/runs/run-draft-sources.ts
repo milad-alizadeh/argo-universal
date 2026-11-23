@@ -117,6 +117,27 @@ const portOf = (command: string): number | undefined =>
   portIn(portFlags.exec(command)?.groups?.['port']) ??
   (/\bstorybook dev\b/u.test(command) ? storybookPort : undefined);
 
+// The literal must end its word, so a mapping such as `-p 8080:80` is not a port to replace.
+const portLiteral =
+  /(?<flag>--port[ =]|(?:^|\s)-p[ =]?|(?:^|\s)PORT=)(?<port>\d{2,5})(?=\s|$)/gu;
+
+// Two port literals mean two servers, and only one of them can take `$PORT`, so such a command keeps its pin.
+const withCheckoutPort = (command: string): string => {
+  const literals = [...command.matchAll(portLiteral)];
+
+  return literals.length === 1 &&
+    portIn(literals[0]?.groups?.['port']) !== undefined
+    ? command.replace(portLiteral, '$<flag>$$PORT')
+    : command;
+};
+
+const portedCommand = (command: string): Pick<Draft, 'command' | 'port'> => {
+  const ported = withCheckoutPort(command);
+  const port = ported === command ? portOf(command) : undefined;
+
+  return { command: ported, ...(port && { port }) };
+};
+
 const plainWord = /^[\w@%+=:,./-]+$/u;
 
 const quote = (word: string): string =>
@@ -178,9 +199,7 @@ export async function draftProcfile(checkout: string): Promise<SourceDrafts> {
 
     if (!name || !command) return [];
 
-    const port = portOf(command);
-
-    return [{ name, command, ...(port && { port }) }];
+    return [{ name, ...portedCommand(command) }];
   });
 
   return { source: 'Procfile', drafts, skipped: [] };
@@ -265,6 +284,17 @@ function workspaceExpander(
     );
 }
 
+// A port the launch names itself stays pinned; one only written in its command becomes `$PORT`.
+function launchCommand(
+  launch: LaunchConfiguration,
+  env: Record<string, string>,
+  written: string,
+): Pick<Draft, 'command' | 'port'> {
+  const pinned = portIn(launch.port) ?? portIn(env['PORT']);
+
+  return pinned ? { command: written, port: pinned } : portedCommand(written);
+}
+
 function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
   const words = commandWords(launch);
 
@@ -278,11 +308,11 @@ function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
 
   const expandWorkspace = workspaceExpander(checkout, cwd);
 
-  const command = launch.command
+  const written = launch.command
     ? expandWorkspace(launch.command)
     : words.map((word) => quote(expandWorkspace(word))).join(' ');
 
-  const port = portIn(launch.port) ?? portIn(env['PORT']) ?? portOf(command);
+  const { command, port } = launchCommand(launch, env, written);
 
   const pattern = launch.serverReadyAction?.pattern;
 

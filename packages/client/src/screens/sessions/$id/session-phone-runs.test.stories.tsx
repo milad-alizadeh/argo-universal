@@ -230,12 +230,6 @@ async function sendTerminalKeys(sheet: Inside, userEvent: User): Promise<void> {
   }
 
   await waitFor(() =>
-    expect(pressed.mock.calls).toEqual([
-      ['\u001b'],
-      ['a'],
-      ['\u0003'],
-      ['\t'],
-      ['\u001b[A'],
-    ]),
+    expect(pressed.mock.calls).toEqual([['\u001b'], ['a\u0003\t\u001b[A']]),
   );
 }

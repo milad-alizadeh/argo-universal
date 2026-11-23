@@ -110,8 +110,34 @@ it('drafts one Run Configuration per Procfile process', async () => {
   });
 
   expect(result.configurations).toEqual([
-    { name: 'web', command: 'bundle exec rails server -p 3000', port: 3000 },
+    { name: 'web', command: 'bundle exec rails server -p $PORT' },
     { name: 'worker', command: 'bundle exec sidekiq' },
+  ]);
+});
+
+it('gives a command it writes itself the Checkout’s $PORT in place of a fixed port, so worktrees do not clash', async () => {
+  const result = await draft({
+    Procfile: [
+      'api: PORT=4000 node server.js',
+      'web: vite --port=5173 --host',
+      'db: docker run -p 5432:5432 postgres',
+      'pair: serve -p 3000 && serve -p 3001',
+    ].join('\n'),
+    '.claude/launch.json': {
+      configurations: [
+        { name: 'expo', command: 'expo start --port 8337' },
+        { name: 'pinned', command: 'serve -p 3000', port: 3000 },
+      ],
+    },
+  });
+
+  expect(result.configurations).toEqual([
+    { name: 'expo', command: 'expo start --port $PORT' },
+    { name: 'pinned', command: 'serve -p 3000', port: 3000 },
+    { name: 'api', command: 'PORT=$PORT node server.js' },
+    { name: 'web', command: 'vite --port=$PORT --host' },
+    { name: 'db', command: 'docker run -p 5432:5432 postgres', port: 5432 },
+    { name: 'pair', command: 'serve -p 3000 && serve -p 3001', port: 3000 },
   ]);
 });
 
@@ -252,6 +278,29 @@ it('keeps both when two sources name a Run Configuration alike, and drops one th
   ).toEqual([
     ['dev', npmRunDev],
     ['dev-2', 'node other.js'],
+  ]);
+});
+
+it('drops a package script that repeats an imported launch command, with or without the package manager’s run', async () => {
+  const result = await draft({
+    'pnpm-lock.yaml': '',
+    [packageJson]: {
+      scripts: { 'dev:storybook': 'pnpm --filter storybook storybook' },
+    },
+    '.claude/launch.json': {
+      configurations: [
+        {
+          name: 'storybook',
+          runtimeExecutable: 'pnpm',
+          runtimeArgs: ['dev:storybook'],
+          port: 6006,
+        },
+      ],
+    },
+  });
+
+  expect(result.configurations).toEqual([
+    { name: 'storybook', command: 'pnpm dev:storybook', port: 6006 },
   ]);
 });
 

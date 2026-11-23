@@ -76,15 +76,28 @@ function useTerminalInput(
     applyOptions(terminal, { disableStdin: !enabled });
 
     let listening = true;
+    let queued = '';
+    let scheduled = false;
 
+    const send = (): Promise<void> | void => {
+      const text = queued;
+
+      queued = '';
+      scheduled = false;
+
+      return listening && text ? onInput(text) : undefined;
+    };
+
+    // Input that arrives while a send is in flight goes as one write, so a TUI's mouse reports cannot queue keys behind a round trip each.
     const input = terminal.onData((data) => {
       if (!enabled) return;
 
-      const text = applyControl(data);
+      queued += applyControl(data);
 
-      pending.current = pending.current
-        .then(() => (listening ? onInput(text) : undefined))
-        .catch((): void => {});
+      if (scheduled) return;
+
+      scheduled = true;
+      pending.current = pending.current.then(send).catch((): void => {});
     });
 
     return (): void => {
