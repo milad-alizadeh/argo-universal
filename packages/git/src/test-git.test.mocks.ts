@@ -52,11 +52,42 @@ async function buildTemplate(featureBranch: boolean): Promise<string> {
   return directory;
 }
 
-// One template repository per worker and shape; each test gets its own copy.
+// A test run builds both templates once and names their folder here, so a test file copies them instead of running git again.
+export const prebuiltRepositoriesVariable = 'ARGO_PREBUILT_TEST_REPOSITORIES';
+
+const templateFolder = (featureBranch: boolean): string =>
+  featureBranch ? 'feature' : 'main';
+
+// Builds the template of each shape inside `directory`, for a run's global setup to name in `prebuiltRepositoriesVariable`.
+export async function buildTestRepositoryTemplates(
+  directory: string,
+): Promise<void> {
+  await Promise.all(
+    [false, true].map(async (featureBranch) => {
+      const template = join(directory, templateFolder(featureBranch));
+
+      mkdirSync(template, { recursive: true });
+      await buildIn(template, featureBranch);
+    }),
+  );
+}
+
+const prebuiltTemplate = (featureBranch: boolean): Promise<string> | null => {
+  const directory = process.env[prebuiltRepositoriesVariable];
+
+  return directory
+    ? Promise.resolve(join(directory, templateFolder(featureBranch)))
+    : null;
+};
+
+// One template repository per test file and shape, unless the run built them; each test gets its own copy.
 const templates = new Map<boolean, Promise<string>>();
 
 function templateOf(featureBranch: boolean): Promise<string> {
-  const built = templates.get(featureBranch) ?? buildTemplate(featureBranch);
+  const built =
+    templates.get(featureBranch) ??
+    prebuiltTemplate(featureBranch) ??
+    buildTemplate(featureBranch);
 
   templates.set(featureBranch, built);
 

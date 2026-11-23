@@ -14,19 +14,32 @@ interface TestDatabase {
 
 let migratedTemplate: string | undefined;
 
-// One migrated database per worker; each test opens its own copy.
-function templateDatabase(): string {
-  if (migratedTemplate) return migratedTemplate;
+// A test run migrates one database and names its file here, so a test file copies it instead of migrating again.
+export const prebuiltDatabaseVariable = 'ARGO_PREBUILT_TEST_DATABASE';
+
+// Creates `file` with every migration applied.
+export const migrateTemplateDatabase = (file: string): void => {
+  openDatabase(file).$client.close();
+};
+
+const migrateTemplateInTempDirectory = (): string => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-db-template-'));
   const file = join(directory, 'argo.db');
 
-  openDatabase(file).$client.close();
+  migrateTemplateDatabase(file);
   process.once('exit', () =>
     rmSync(directory, { recursive: true, force: true }),
   );
-  migratedTemplate = file;
 
   return file;
+};
+
+// One migrated database per test file, unless the run migrated one; each test opens its own copy.
+function templateDatabase(): string {
+  migratedTemplate ??=
+    process.env[prebuiltDatabaseVariable] ?? migrateTemplateInTempDirectory();
+
+  return migratedTemplate;
 }
 
 const openTemplateCopy = (file: string): Database => {
