@@ -1,3 +1,5 @@
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { project } from '@repo/db/schema';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { startProjectTestHost } from '#mocks/project-host';
@@ -77,6 +79,21 @@ it("lists origin's default branch as the base branch once the saved one is delet
   expect(await caller.project.list()).toEqual([
     expect.objectContaining({
       checkoutChoice: { type: 'worktree', baseBranch: 'trunk' },
+    }),
+  ]);
+});
+
+it('keeps the saved base branch, and lists the Project, when its folder is no longer a Git repository', async (): Promise<void> => {
+  const { database, caller, projectPath } = await startProjectTestHost();
+  database
+    .update(project)
+    .set({ checkoutChoice: { type: 'worktree', baseBranch: 'dev' } })
+    .run();
+  rmSync(join(projectPath, '.git'), { recursive: true, force: true });
+  expect(await caller.project.list()).toEqual([
+    expect.objectContaining({
+      folderExists: true,
+      checkoutChoice: { type: 'worktree', baseBranch: 'dev' },
     }),
   ]);
 });

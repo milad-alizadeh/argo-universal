@@ -8,8 +8,10 @@ import { SessionNewView } from '../../src/screens/sessions/$id/session-new-view'
 import { readyNewSession } from '../../src/screens/sessions/$id/session-new-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
+const newWorktreeLabel = 'New worktree';
+
 // The trigger names the branch a new worktree starts from.
-const newWorktreeLabel = 'New worktree from main';
+const { branch } = readyNewSession.configuration.checkout;
 
 // The checkout follows the reader's choice, as the screen's state does.
 function ChoosingCheckout(): React.JSX.Element {
@@ -44,6 +46,7 @@ export const narrowMainColumn: Story = {
     await settleLayout('wide');
     const checkout = await canvas.findByRole('button', { name: 'Checkout' });
     await expect(checkout).toHaveTextContent(newWorktreeLabel);
+    await expect(checkout).toHaveTextContent(branch);
     await expect(
       canvas.getAllByRole('button', { name: 'Checkout' }),
     ).toHaveLength(1);
@@ -52,7 +55,7 @@ export const narrowMainColumn: Story = {
       await within(document.body).findByRole('radio', { name: 'Local' }),
     );
     await expect(checkout).toHaveTextContent('Local');
-    await expect(checkout).not.toHaveTextContent('main');
+    await expect(checkout).not.toHaveTextContent(branch);
   },
 };
 
@@ -115,7 +118,7 @@ export const longBaseBranch: Story = {
       const trigger = await canvas.findByRole('button', { name: 'Checkout' });
       const box = trigger.getBoundingClientRect();
 
-      await expect(trigger).toHaveTextContent(/^New worktree from claude\//);
+      await expect(trigger).toHaveTextContent(longBranch);
       await expect(box.left).toBeGreaterThanOrEqual(0);
       await expect(box.right).toBeLessThanOrEqual(window.innerWidth);
     }),

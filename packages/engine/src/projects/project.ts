@@ -82,13 +82,14 @@ async function readStoredCheckoutChoice(
 
   if (!choice.success || choice.data.type !== 'worktree') return stored;
 
-  return {
-    ...choice.data,
-    baseBranch: await resolveWorktreeBaseBranch(
-      projectPath,
-      choice.data.baseBranch,
-    ),
-  };
+  const saved = choice.data.baseBranch;
+
+  // A folder Git cannot read keeps its saved choice rather than failing the list, as its remote host does.
+  const baseBranch = await resolveWorktreeBaseBranch(projectPath, saved).catch(
+    (): string => saved,
+  );
+
+  return { type: 'worktree', baseBranch };
 }
 
 export function readProjectPath(
