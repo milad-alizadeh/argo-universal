@@ -4,7 +4,7 @@ import { SelectionModeScope } from '@repo/kit/selection-mode';
 import { SidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, type ViewStyle } from 'react-native';
 import {
   FramePane,
   type FramePaneProps,
@@ -20,16 +20,20 @@ import type { ScaffoldLayout } from './use-scaffold-layout';
 const listColumn = { paddingLeft: 8, paddingRight: 8 };
 
 interface SidebarLayout {
-  layout: Pick<ScaffoldLayout, 'measures' | 'list' | 'motion'>;
+  layout: Pick<
+    ScaffoldLayout,
+    'measures' | 'rail' | 'list' | 'motion' | 'safeTop'
+  >;
 }
 
+// A closed sidebar hides the whole panel, the rail with the list; a page with no list keeps the rail's.
 const glassGeometry = ({
   layout,
 }: SidebarLayout): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
-  width: layout.measures.railWidth + layout.list.width,
+  width: layout.rail.width + layout.list.width,
   expandedWidth: layout.measures.railWidth + layout.list.openWidth,
   railWidth: layout.measures.railWidth,
-  barHeight: 0,
+  barHeight: layout.measures.titleBarHeight,
   sidebarShown: !layout.list.folded,
 });
 
@@ -51,6 +55,26 @@ function SidebarListContent({ list }: { list: ReactNode }): React.JSX.Element {
 }
 
 type ListPlacement = Omit<FramePaneProps, 'testID' | 'children'>;
+
+// The rail leaves with the list, keeping its width while its pane closes over it.
+const railPlacement = ({ layout }: SidebarLayout): ListPlacement => ({
+  width: layout.rail.width,
+  offset: 0,
+  contentWidth: layout.measures.railWidth,
+  hidden: layout.rail.width === 0,
+  ...layout.motion,
+});
+
+function SidebarRail({
+  sidebar,
+  layout,
+}: SidebarLayout & { sidebar: ReactNode }): React.JSX.Element {
+  return (
+    <FramePane testID="desktop-rail-pane" {...railPlacement({ layout })}>
+      {sidebar}
+    </FramePane>
+  );
+}
 
 const listPlacement = ({ layout }: SidebarLayout): ListPlacement => ({
   width: layout.list.width,
@@ -77,17 +101,38 @@ export interface ScaffoldSidebarColumnProps extends SidebarLayout {
   list: ReactNode;
 }
 
+/*
+ * The panel runs the window's height one inset in from its edges, as Mail's does: the title bar's row at its top holds
+ * the window buttons and the band's controls, and the rail and the list start under it. Closed, the column takes no
+ * width, so the page reaches the window's edge.
+ */
+const columnStyle = ({ layout }: SidebarLayout): ViewStyle => {
+  const inset = layout.rail.width > 0 ? layout.measures.inset : 0;
+
+  return {
+    paddingTop: layout.safeTop + layout.measures.inset,
+    paddingBottom: layout.measures.inset,
+    paddingLeft: inset,
+    paddingRight: inset,
+  };
+};
+
 function SidebarColumnDrawing({
   sidebar,
   list,
   layout,
 }: ScaffoldSidebarColumnProps): React.JSX.Element {
   return (
-    <View className="px-frame-inset pb-frame-inset">
+    <View testID="desktop-sidebar" style={columnStyle({ layout })}>
       <View className="flex-1 flex-row">
         <SidebarGlass layout={layout} />
-        {sidebar}
-        <SidebarList list={list} layout={layout} />
+        <View
+          className="flex-1 flex-row"
+          style={{ paddingTop: layout.measures.titleBarHeight }}
+        >
+          <SidebarRail sidebar={sidebar} layout={layout} />
+          <SidebarList list={list} layout={layout} />
+        </View>
       </View>
     </View>
   );

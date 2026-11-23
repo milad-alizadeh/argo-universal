@@ -232,6 +232,9 @@
   /* The rail on a wide window; the web narrows it below. */
   --spacing-frame-rail: 80px;
   --spacing-frame-control: 44px;
+  /* The title bar's row inside a floating panel's top: the window buttons, the sidebar and Inspector controls and
+     the capsules share its centre, one frame inset below the window's top. */
+  --spacing-frame-title-bar: 52px;
   --spacing-frame-list: 312px;
   --spacing-frame-inspector: 352px;
   --spacing-frame-inset: 8px;
@@ -500,6 +503,9 @@
       --shadow-tray:
         0 0 0 1px var(--color-shadow-subtle),
         0 12px 32px var(--color-shadow-subtle);
+      /* Capsule: the title bar's floating group of window controls, a hairline edge and a soft drop. */
+      --shadow-capsule:
+        0 0 0 1px var(--color-hairline), 0 2px 8px var(--color-shadow-subtle);
       /* Hairline: a resting row's 1px edge. Selected rows use a flat fill. */
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
     }
@@ -663,6 +669,7 @@
         inset 0 1px 0 var(--color-hairline),
         inset 0 0 0 1px var(--color-hairline);
       --shadow-tray: 0 0 0 1px var(--color-hairline);
+      --shadow-capsule: 0 0 0 1px var(--color-hairline);
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
     }
   }
@@ -875,6 +882,10 @@
 
 @utility shadow-tray {
   box-shadow: var(--shadow-tray);
+}
+
+@utility shadow-capsule {
+  box-shadow: var(--shadow-capsule);
 }
 
 @utility shadow-hairline {

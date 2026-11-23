@@ -74,7 +74,7 @@ function useFrameMeasures(): FrameMeasures {
     inspectorWidth: useCSSPixels('--spacing-frame-inspector'),
     railWidth: useCSSPixels('--spacing-frame-rail'),
     inset: useCSSPixels('--spacing-frame-inset'),
-    bandHeight: useCSSPixels('--spacing-frame-control'),
+    titleBarHeight: useCSSPixels('--spacing-frame-title-bar'),
     workbenchWidth: useCSSPixels('--spacing-frame-list'),
     paneGap: useCSSPixels('--spacing-4'),
     composerWidth: useCSSPixels('--container-composer'),
@@ -121,6 +121,7 @@ const layoutOf = (
     ...sizing,
     width,
     workbenchAvailable: Boolean(bandWorkbench(scaffold.band)),
+    listless: !scaffold.list,
   });
 
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {

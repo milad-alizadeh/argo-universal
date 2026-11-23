@@ -16,14 +16,6 @@ const windowBand = 'window-band';
 
 const trailingGroup = 'window-band-trailing';
 
-// Every pane state the trailing controls must keep their places through.
-const paneStates = [false, true].flatMap((sidebarShown) =>
-  (['closed', 'open', 'expanded'] as const).map((inspectorState) => ({
-    sidebarShown,
-    inspectorState,
-  })),
-);
-
 // The trailing controls, in the order the band draws them.
 const trailingNames = [
   'Toggle Workbench',
@@ -101,7 +93,8 @@ export const PageTitleDrawsNoBack: ScaffoldStory = {
   }),
 };
 
-function trailingControls(width: number): ScaffoldStory {
+// With the Inspector closed its controls float in the title bar's trailing capsule, and the sidebar never moves them.
+function trailingCapsule(width: number): ScaffoldStory {
   return {
     args: { band: sessionBand },
     play: controlledPlay(async ({ canvas }, controlled) => {
@@ -114,8 +107,12 @@ function trailingControls(width: number): ScaffoldStory {
       for (const [index, name] of trailingNames.entries())
         await expect(controls[index]).toHaveAccessibleName(name);
 
-      for (const panes of paneStates) {
-        await controlled.render(panes);
+      await expect(
+        within(group).getByRole('button', { name: 'Expand Inspector' }),
+      ).toBeDisabled();
+
+      for (const sidebarShown of [false, true]) {
+        await controlled.render({ sidebarShown, inspectorState: 'closed' });
         await expect(
           within(group).getAllByRole('button').map(position),
         ).toEqual(positions);
@@ -124,11 +121,62 @@ function trailingControls(width: number): ScaffoldStory {
   };
 }
 
-export const TrailingControlsNeverMoveWithPanes = trailingControls(1440);
+export const TrailingCapsuleNeverMovesWithTheSidebar = trailingCapsule(1440);
 
-export const TrailingControlsAtNarrowWidth = trailingControls(1100);
+export const TrailingCapsuleAtNarrowWidth = trailingCapsule(1100);
 
-export const TrailingControlsAtVeryWideWidth = trailingControls(1920);
+export const TrailingCapsuleAtVeryWideWidth = trailingCapsule(1920);
+
+// Open or expanded, the Inspector holds its controls in its own top row, which the title bar above it lets presses through to.
+export const OpenInspectorHoldsItsControls: ScaffoldStory = {
+  args: { band: sessionBand },
+  play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
+    await settleLayout(1440);
+
+    for (const inspectorState of ['open', 'expanded'] as const) {
+      await controlled.render({ inspectorState });
+      const inspector = within(canvas.getByTestId('desktop-inspector'));
+      await expect(canvas.queryByTestId(trailingGroup)).toBeNull();
+      await expect(
+        inspector.getByRole('button', { name: 'Toggle Workbench' }),
+      ).toBeVisible();
+      await expect(
+        inspector.getByRole('button', { name: 'Hide Inspector' }),
+      ).toBeVisible();
+    }
+
+    await controlled.render({ inspectorState: 'open' });
+    await userEvent.click(
+      within(canvas.getByTestId('desktop-inspector')).getByRole('button', {
+        name: 'Hide Inspector',
+      }),
+    );
+    await expect(controlled.onInspectorStateChange).toHaveBeenCalledWith(
+      'closed',
+    );
+  }),
+};
+
+// Closed, the sidebar's toggle, Back and Forward gather in the leading capsule; open, they sit in the sidebar's top row.
+export const LeadingCapsuleHoldsTheClosedSidebarsControls: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await settleLayout('wide');
+
+    const leading = (): ReturnType<typeof within> =>
+      within(canvas.getByTestId('window-band-leading'));
+
+    await controlled.render({ sidebarShown: true });
+    await expect(leading().queryByTestId('window-band-capsule')).toBeNull();
+    await controlled.render({ sidebarShown: false });
+    const capsule = within(leading().getByTestId('window-band-capsule'));
+
+    await expect(
+      capsule
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(['Show sidebar', 'Back', 'Forward']);
+  }),
+};
 
 function position(element: HTMLElement): Pick<DOMRect, 'x' | 'y'> {
   const { x, y } = element.getBoundingClientRect();

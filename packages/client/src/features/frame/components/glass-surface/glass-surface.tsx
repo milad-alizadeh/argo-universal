@@ -1,12 +1,12 @@
 import type { FrameMotion } from '../../utils/frame-timing';
 
 export interface GlassSurfaceProps extends FrameMotion {
-  // The panel's width now, and its width with the sidebar list shown.
+  // The panel's width now, 0 once the sidebar closes, and its width with the sidebar list shown.
   width: number;
   expandedWidth: number;
-  // The rail at the panel's left, tinted below the shared top bar.
+  // The rail at the panel's left, tinted below the title bar.
   railWidth: number;
-  // The shared top bar's height: the panel runs under it while the sidebar shows and starts below it once only the rail is left.
+  // The title bar's row at the panel's top, which the rail's tint starts below; a panel with the rail alone starts below it.
   barHeight: number;
   sidebarShown: boolean;
 }

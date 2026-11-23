@@ -133,7 +133,7 @@ describe('the Inspector handle agrees with the layout', () => {
   });
 
   it('lowers no floor for an Inspector left at its default width', () => {
-    const narrow = { ...input, width: 1100, inspectorState: 'open' as const };
+    const narrow = { ...input, width: 1020, inspectorState: 'open' as const };
     const { inspector } = frameLayout(narrow).handles;
 
     expect(frameLayout(narrow).page.width).toBeLessThan(688);

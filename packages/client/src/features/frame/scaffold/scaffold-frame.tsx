@@ -9,12 +9,12 @@ import {
 import { shownInspectorState } from './inspector-column';
 import { isFramed } from './is-framed';
 import { ScaffoldBand } from './scaffold-band';
+import { InspectorTitleBar } from './scaffold-band-controls';
 import { PaneBanner, type PaneBannerProps } from './scaffold-chrome';
 import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import { ScaffoldWorkbench } from './scaffold-workbench';
 import {
-  type PartReads,
   type ScaffoldPartProps,
   useScaffoldLayout,
 } from './use-scaffold-layout';
@@ -42,10 +42,7 @@ export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
 
 export type PanePlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
-type InspectorReads = PartReads<
-  'inspector',
-  'inspector' | 'motion' | 'measures'
->;
+type InspectorReads = ScaffoldPartProps;
 
 const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   offset: layout.inspector.offset,
@@ -54,24 +51,32 @@ const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   ...layout.motion,
 });
 
+// The Inspector floats as the sidebar does: its panel runs up beside the title bar, whose row it holds its controls in.
 function FramedInspector(parts: InspectorReads): React.JSX.Element {
   return (
-    <View className="absolute top-0 flex-row" style={inspectorPosition(parts)}>
+    <View className="absolute flex-row" style={inspectorPosition(parts)}>
       <FramePane
         testID="desktop-inspector"
         surface="glass"
         {...inspectorPlacement(parts)}
       >
-        <InspectorControlsContext value={true}>
-          {parts.scaffold.inspector(parts.layout.inspector.expanded)}
-        </InspectorControlsContext>
+        <InspectorTitleBar {...parts} />
+        <View className="min-h-0 flex-1">
+          <InspectorControlsContext value={true}>
+            {parts.scaffold.inspector(parts.layout.inspector.expanded)}
+          </InspectorControlsContext>
+        </View>
       </FramePane>
     </View>
   );
 }
 
 function inspectorPosition({ layout }: InspectorReads): ViewStyle {
-  return { left: layout.inspector.offset, bottom: layout.measures.inset };
+  return {
+    left: layout.inspector.offset,
+    top: -layout.measures.titleBarHeight,
+    bottom: layout.measures.inset,
+  };
 }
 
 type BannerPlacement = Pick<PaneBannerProps, 'left' | 'width'>;
@@ -148,18 +153,11 @@ const frameEdges = (parts: ScaffoldParts): FrameEdges =>
 
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// A framed tablet's panes start under the status bar; the window surface still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
-function frameTop(parts: ScaffoldParts): ViewStyle {
-  return {
-    paddingTop: parts.framed ? parts.layout.safeTop + parts.layout.panesTop : 0,
-  };
-}
-
+// The sidebar's panel runs up beside the title bar, so the page and the sidebar each set their own top.
 const frameViewProps = (parts: ScaffoldParts): ViewProps => ({
   // Named for the Size class it lays out, such as `wide-frame`.
   testID: `${parts.scaffold.sizeClass}-frame`,
   className: 'flex-1 flex-row overflow-hidden bg-content',
-  style: frameTop(parts),
   onLayout: parts.layout.onLayout,
 });
 

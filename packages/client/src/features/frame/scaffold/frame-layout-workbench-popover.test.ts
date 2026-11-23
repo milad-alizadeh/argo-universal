@@ -58,7 +58,7 @@ describe("the Workbench opened over the content, as Codex's popover", () => {
       workbenchPopover: true,
     });
 
-    expect(layout.page).toEqual({ offset: 72, width: 828, hidden: false });
+    expect(layout.page).toEqual({ offset: 0, width: 900, hidden: false });
     expect(layout.workbench).toEqual({
       state: 'overlay',
       offset: 580,

@@ -123,7 +123,7 @@ describe('panes placed under the Workbench', () => {
       preferredInspectorWidth: 1500,
     });
 
-    expect(layout.page).toEqual({ offset: 72, width: 688, hidden: false });
-    expect(layout.inspector).toMatchObject({ offset: 768, width: 1144 });
+    expect(layout.page).toEqual({ offset: 0, width: 688, hidden: false });
+    expect(layout.inspector).toMatchObject({ offset: 696, width: 1216 });
   });
 });

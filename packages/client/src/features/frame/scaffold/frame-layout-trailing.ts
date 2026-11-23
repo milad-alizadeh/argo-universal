@@ -68,10 +68,9 @@ function inspectorSpanWidth(
   input: FrameLayoutInput,
   contentStart: number,
 ): number {
-  const available = Math.max(
-    0,
-    input.width - contentStart - input.measures.inset,
-  );
+  // With nothing beside the page the Inspector still keeps the window's inset on its leading side.
+  const start = Math.max(contentStart, input.measures.inset);
+  const available = Math.max(0, input.width - start - input.measures.inset);
 
   if (input.inspectorState === 'closed') return 0;
 

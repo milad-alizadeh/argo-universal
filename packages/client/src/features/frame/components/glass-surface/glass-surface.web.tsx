@@ -16,10 +16,11 @@ interface GlassRefs {
   rail: PanelRef;
 }
 
-// The panel's box inside the sidebar column: under the top bar with the list, or only the rail's below it.
+// The panel's box inside the sidebar column: it narrows to nothing and fades as the sidebar closes, or keeps the rail alone below the title bar.
 interface GlassBox {
   width: number;
   top: number;
+  opacity: number;
 }
 
 interface GlassLayerProps {
@@ -42,15 +43,17 @@ const glassBox = ({
 >): GlassBox => ({
   width,
   top: sidebarShown ? 0 : barHeight,
+  opacity: width > 0 ? 1 : 0,
 });
 
 // The tint keeps the rail's place in the window while the panel's top moves past it.
 const railTop = (props: GlassSurfaceProps, box: GlassBox): number =>
   props.barHeight - box.top;
 
-const panelFrame = ({ width, top }: GlassBox): Keyframe => ({
+const panelFrame = ({ width, top, opacity }: GlassBox): Keyframe => ({
   width: `${width}px`,
   top: `${top}px`,
+  opacity,
 });
 
 function glassFrames(

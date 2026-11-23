@@ -13,18 +13,23 @@ import { productCompatibility } from '@repo/contracts/product-identity';
  */
 import { contextBridge, ipcRenderer, webFrame } from 'electron';
 
-// Page zoom resizes the CSS viewport, while native traffic lights keep their size.
-function reportBandHeight(): void {
-  const height = getComputedStyle(document.documentElement).getPropertyValue(
-    '--spacing-frame-control',
+const cssPixels = (name: string): number =>
+  Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(name),
   );
 
-  ipcRenderer.send('window:band-height', Number.parseFloat(height));
+// The traffic lights centre on the title bar's row, one frame inset below the window's top. Page zoom resizes the CSS viewport, while native traffic lights keep their size.
+function reportTitleBarCentre(): void {
+  const centre =
+    cssPixels('--spacing-frame-inset') +
+    cssPixels('--spacing-frame-title-bar') / 2;
+
+  ipcRenderer.send('window:title-bar-centre', centre);
 }
 
 if (process.platform === 'darwin') {
-  window.addEventListener('load', reportBandHeight);
-  window.addEventListener('resize', reportBandHeight);
+  window.addEventListener('load', reportTitleBarCentre);
+  window.addEventListener('resize', reportTitleBarCentre);
 }
 
 // Main passes the Server URL in additionalArguments; a sandboxed preload can read only process.argv.

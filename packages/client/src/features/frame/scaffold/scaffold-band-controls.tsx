@@ -5,6 +5,7 @@ import {
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { WindowBandSession } from '#lib/product/window-band';
+import { BandCapsule } from './band-capsule';
 import { bandToggleAppearance } from './band-control-appearance';
 import { workbenchDrawn } from './frame-layout';
 import { inspectorOffered, moveInspector } from './inspector-column';
@@ -75,30 +76,58 @@ function inspectorToggleProps(parts: InspectorToggleReads): IconButtonProps {
   };
 }
 
-function SessionControls(
-  parts: ScaffoldPartProps & SessionReads,
-): ReactElement {
+type ControlsReads = ScaffoldPartProps & SessionReads;
+
+function PanelControls(parts: ControlsReads): ReactElement {
   return (
     <>
       <IconButton {...workbenchProps(parts)} />
       <IconButton {...expandProps(parts)} />
-      <IconButton {...inspectorToggleProps(parts)} />
     </>
   );
 }
 
-// Window controls follow the Session that owns the Workbench and Inspector.
+// Window controls follow the Session that owns the Workbench and Inspector; with the Inspector closed they float in a capsule at the title bar's end, mirroring the sidebar's.
 export function BandTrailing(parts: ScaffoldPartProps): ReactElement | null {
   const session = parts.scaffold.band?.session;
 
-  if (!session) return null;
+  if (!session || parts.layout.inspector.open) return null;
+
+  return (
+    <View testID="window-band-trailing" className="shrink-0">
+      <BandCapsule>
+        <PanelControls {...parts} session={session} />
+        <IconButton {...inspectorToggleProps(parts)} />
+      </BandCapsule>
+    </View>
+  );
+}
+
+/*
+ * The open Inspector's top row, on the title bar's line: Workbench and Expand at its start, and its own toggle,
+ * selected, at its end, as the open sidebar holds its toggle. A page that owns no Session leaves the row empty.
+ */
+export function InspectorTitleBar(parts: ScaffoldPartProps): ReactElement {
+  const session = parts.scaffold.band?.session;
 
   return (
     <View
-      testID="window-band-trailing"
-      className="shrink-0 flex-row items-center gap-1"
+      testID="inspector-title-bar"
+      className="shrink-0 flex-row items-center justify-between px-2"
+      style={{ height: parts.layout.measures.titleBarHeight }}
     >
-      <SessionControls {...parts} session={session} />
+      {session ? <InspectorRowControls {...parts} session={session} /> : null}
     </View>
+  );
+}
+
+function InspectorRowControls(parts: ControlsReads): ReactElement {
+  return (
+    <>
+      <View className="flex-row items-center gap-1">
+        <PanelControls {...parts} />
+      </View>
+      <IconButton {...inspectorToggleProps(parts)} />
+    </>
   );
 }
