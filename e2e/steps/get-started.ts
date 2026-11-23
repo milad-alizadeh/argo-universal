@@ -2,7 +2,7 @@ import { expect } from '../fixtures';
 import { agentCard } from './agent-catalog';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
-import { returnToSessions } from './navigation';
+import { closeSettingsModal } from './navigation';
 import { openConfiguration } from './new-session';
 
 Given('the fixture Server has no Projects', async ({ page }) => {
@@ -19,7 +19,7 @@ When(
     await agentCard(page, name)
       .getByRole('button', { name: `Install ${name}`, exact: true })
       .click();
-    await returnToSessions(page);
+    await closeSettingsModal(page);
   },
 );
 

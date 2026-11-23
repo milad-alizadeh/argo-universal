@@ -81,7 +81,9 @@ Then(
     await expect(
       page.getByRole('link', { name: /^Accounts(?:,|$)/ }),
     ).toBeVisible();
-    await expect(accountsPage(page)).toBeVisible();
+    await expect(
+      settingsModal(page).getByRole('heading', { name: 'Accounts', level: 1 }),
+    ).toBeVisible();
   },
 );
 
@@ -169,4 +171,79 @@ When('I press Back in the page header', async ({ page }): Promise<void> => {
 
 Then('New Session is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions\/new(\?|$)/);
+});
+
+const settingsModal = (page: Page): Locator =>
+  page.getByRole('dialog', { name: 'Settings', exact: true });
+
+export async function closeSettingsModal(page: Page): Promise<void> {
+  await settingsModal(page)
+    .getByRole('button', { name: 'Close Settings' })
+    .click();
+  await expect(settingsModal(page)).toHaveCount(0);
+}
+
+When('I close the Settings modal', async ({ page }) =>
+  closeSettingsModal(page),
+);
+
+Then('the Settings modal sits over New Session', async ({ page }) => {
+  await expect(settingsModal(page)).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /^Project: /, includeHidden: true }),
+  ).toBeVisible();
+});
+
+When('I open Agents from the Settings list', async ({ page }) => {
+  await settingsModal(page)
+    .getByRole('link', { name: /^Agents(?:,|$)/ })
+    .click();
+  await expect(page).toHaveURL(/\/settings\/agents$/);
+});
+
+When(
+  /I dismiss the Settings modal with (Escape|Close|the dim)/,
+  async ({ page }, control: string) => {
+    if (control === 'Escape') await page.keyboard.press('Escape');
+    else if (control === 'Close') await closeSettingsModal(page);
+    else {
+      const tile = page.getByRole('button', {
+        name: 'Scheduled',
+        exact: true,
+        includeHidden: true,
+      });
+
+      const box = await tile.boundingBox();
+
+      if (!box) throw new Error('The dimmed rail tile has no bounds.');
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    }
+
+    await expect(settingsModal(page)).toHaveCount(0);
+  },
+);
+
+Then('focus returns to the Settings rail tile', async ({ page }) => {
+  await expect(
+    page.getByRole('button', { name: 'Settings', exact: true }),
+  ).toBeFocused();
+});
+
+Then('Agents is open in the Settings modal', async ({ page }) => {
+  await expect(page).toHaveURL(/\/settings\/agents$/);
+
+  const search = settingsModal(page).getByRole('button', {
+    name: 'Search Agents',
+  });
+
+  const close = settingsModal(page).getByRole('button', {
+    name: 'Close Settings',
+  });
+
+  await expect(search).toBeVisible();
+  const searchBox = await search.boundingBox();
+  const closeBox = await close.boundingBox();
+  expect(
+    searchBox && closeBox && searchBox.x + searchBox.width <= closeBox.x,
+  ).toBe(true);
 });

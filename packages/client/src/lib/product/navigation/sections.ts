@@ -3,10 +3,13 @@ import type { DrawnIcon } from '@repo/kit/symbols/icon-symbol';
 
 // Each section's title and icon, top to bottom in the rail and the drawer. A section's key is also its route: `/sessions` and the drawer screen `sessions`.
 export const sections = {
-  sessions: { title: 'Sessions', icon: 'sessions' },
-  scheduled: { title: 'Scheduled', icon: 'clock' },
-  settings: { title: 'Settings', icon: 'settings' },
-} as const satisfies Record<string, { title: string; icon: IconName }>;
+  sessions: { title: 'Sessions', icon: 'sessions', widePresentation: 'page' },
+  scheduled: { title: 'Scheduled', icon: 'clock', widePresentation: 'page' },
+  settings: { title: 'Settings', icon: 'settings', widePresentation: 'modal' },
+} as const satisfies Record<
+  string,
+  { title: string; icon: IconName; widePresentation: 'page' | 'modal' }
+>;
 
 export type CoreSection = keyof typeof sections;
 

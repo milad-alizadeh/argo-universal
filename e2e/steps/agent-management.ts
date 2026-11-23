@@ -3,6 +3,7 @@ import { agentCard, browseAgents } from './agent-catalog';
 import { closeAgentMenus } from './agent-menus';
 import { When, Then } from './fixtures';
 import { onPhone } from './frame';
+import { closeSettingsModal } from './navigation';
 import {
   agentModelLabel,
   openConfiguration,
@@ -77,6 +78,8 @@ async function openSessionsSection(
       .getByRole('link', { name: 'Settings, back', exact: true })
       .click();
     await page.getByRole('button', { name: 'Open navigation' }).click();
+  } else {
+    await closeSettingsModal(page);
   }
 
   await page.getByRole('button', { name: 'Sessions', exact: true }).click();

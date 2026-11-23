@@ -264,3 +264,6 @@ allowBuilds:
 # pnpm's default, written out: Electron Forge refuses to start unless node-linker is hoisted or a hoist pattern is set.
 hoistPattern:
   - "*"
+
+patchedDependencies:
+  expo-router@58.0.25: patches/expo-router@58.0.25.patch

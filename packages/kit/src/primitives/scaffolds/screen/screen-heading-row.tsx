@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { createContext, use, type ReactElement, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
 import { useEnlargedText } from '#kit/enlarged-text';
@@ -17,6 +17,8 @@ import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 import { ScreenTitle } from './screen-title-menu';
 
+export const ScreenHeadingEndInset = createContext(0);
+
 /*
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
  * `wide:mt-frame-inset` sets level with the rail's first tile, so its title sits on the sidebar title's line.
@@ -28,7 +30,10 @@ export function ScreenHeadingBody(
   },
 ): ReactElement {
   const content = (
-    <View className="gap-1" style={headingInset(useHeadingInset())}>
+    <View
+      className="gap-1"
+      style={headingInset(useHeadingInset(), use(ScreenHeadingEndInset))}
+    >
       <HeadingRow {...props} />
       <HeadingCaption {...props} />
     </View>
@@ -48,9 +53,9 @@ export function ScreenHeadingBody(
 }
 
 // A phone-width page of grouped cards starts its title and caption on its rows' text line.
-const headingInset = (inset: number): ViewStyle => ({
+const headingInset = (inset: number, end: number): ViewStyle => ({
   paddingLeft: inset,
-  paddingRight: inset,
+  paddingRight: inset + end,
 });
 
 // A List that is selecting owns the header, so the page's caption stands down with its title.

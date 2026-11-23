@@ -3,7 +3,6 @@ import { expect } from '../fixtures';
 import { shownFeed } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 import { openSessionRow, sessionRow, startSession } from './live-session';
-import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
 
 const feed = shownFeed;
@@ -46,14 +45,6 @@ Given(
     ).toBeVisible();
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/accounts$/);
-  },
-);
-
-When(
-  'I return to the Session {string}',
-  async ({ page }, title: string): Promise<void> => {
-    await returnToSessions(page);
-    await openSession(page, title);
   },
 );
 

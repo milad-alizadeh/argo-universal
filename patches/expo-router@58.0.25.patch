@@ -1,0 +1,35 @@
+diff --git a/build/react-navigation/drawer/types.d.ts b/build/react-navigation/drawer/types.d.ts
+index 2a75e280d53c1c2e9d0b8dc2f67e3c13ba94b3a2..980f1df3550db64ce8b2f5c82f4b435c04c7b430 100644
+--- a/build/react-navigation/drawer/types.d.ts
++++ b/build/react-navigation/drawer/types.d.ts
+@@ -176,6 +176,8 @@ export type DrawerNavigationOptions = HeaderOptions & {
+      * @deprecated This option has no effect in Expo Router.
+      */
+     freezeOnBlur?: boolean;
++    /** Keep this scene drawn while another route has focus. */
++    keepVisibleOnBlur?: boolean;
+ };
+ export type DrawerContentComponentProps = {
+     state: DrawerNavigationState<ParamListBase>;
+diff --git a/build/react-navigation/drawer/views/DrawerView.js b/build/react-navigation/drawer/views/DrawerView.js
+index bc3df334f3cb08bbd997b445d1a4d65336dc2a07..b9df6f03304d2e2aa32811b22c08c3d598131fb6 100644
+--- a/build/react-navigation/drawer/views/DrawerView.js
++++ b/build/react-navigation/drawer/views/DrawerView.js
+@@ -236,7 +236,7 @@ function DrawerViewBase({ state, navigation, descriptors, defaultStatus, drawerC
+                         headerRight: drawerPosition === 'right' && options.headerRight == null ? (props)=>/*#__PURE__*/ (0, _jsxruntime().jsx)(_DrawerToggleButton.DrawerToggleButton, {
+                                 ...props
+                             }) : options.headerRight
+-                    }), headerShown, headerStatusBarHeight, headerTransparent, sceneStyle } = descriptor.options;
++                    }), headerShown, headerStatusBarHeight, headerTransparent, sceneStyle, keepVisibleOnBlur } = descriptor.options;
+                 return /*#__PURE__*/ (0, _jsxruntime().jsx)(_ScreenFallback.MaybeScreen, {
+                     style: [
+                         _reactnative().StyleSheet.absoluteFill,
+@@ -244,7 +244,7 @@ function DrawerViewBase({ state, navigation, descriptors, defaultStatus, drawerC
+                             zIndex: isFocused ? 0 : -1
+                         }
+                     ],
+-                    visible: isFocused,
++                    visible: isFocused || keepVisibleOnBlur === true,
+                     enabled: detachInactiveScreens,
+                     children: /*#__PURE__*/ (0, _jsxruntime().jsx)(_elements.Screen, {
+                         focused: isFocused,

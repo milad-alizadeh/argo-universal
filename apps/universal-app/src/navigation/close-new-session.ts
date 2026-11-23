@@ -1,4 +1,4 @@
-import { withoutNewSession } from '@repo/client';
+import { isCoreSection, sections, withoutNewSession } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
 import type { Stack } from 'expo-router';
 import {
@@ -51,9 +51,19 @@ function closeNewSession(navigation: Navigation): void {
  * list shows its empty detail again when Sessions shows. A page swapped out within the shown
  * section is gone already. The phone shell keeps New Session open.
  */
+function isUnderModal(navigation: Navigation): boolean {
+  const frame = navigation.getParent()?.getState();
+  const next = frame?.routes[frame.index]?.name;
+
+  return isCoreSection(next) && sections[next].widePresentation === 'modal';
+}
+
 const closeWhenSectionHidden: PageListeners = ({ navigation }) => ({
   blur: (): void => {
-    if (navigation.getParent()?.isFocused() === false)
+    if (
+      navigation.getParent()?.isFocused() === false &&
+      !isUnderModal(navigation)
+    )
       closeNewSession(navigation);
   },
 });

@@ -51,7 +51,7 @@ Feature: Drafts kept on this Device
     Given a wide Frame
     And a New Session
     When I send the prompt "Tidy the README" and open Settings at once
-    And I return to Sessions
+    And I close the Settings modal
     And I open the Session "Tidy the README"
     And the Agent replies "The shared fixture completed this Turn."
     And I open a New Session
@@ -62,7 +62,7 @@ Feature: Drafts kept on this Device
     And a New Session
     When New Session opens with the draft "Tidy the README"
     And I press Send and open Settings at once
-    And I return to Sessions
+    And I close the Settings modal
     And I open the Session "Tidy the README"
     And the Agent replies "The shared fixture completed this Turn."
     And I open a New Session
@@ -74,7 +74,7 @@ Feature: Drafts kept on this Device
     And a New Session
     And the Server's answer to a Session open is held
     When I send the prompt "Tidy the README" and open Settings at once
-    And I return to Sessions
+    And I close the Settings modal
     And I open a New Session
     Then the Message box shows "Tidy the README"
     When the Server answers the Session open
@@ -86,7 +86,7 @@ Feature: Drafts kept on this Device
     And a New Session
     And the Server's answer to a Session open is held
     When I send the prompt "Tidy the README" and open Settings at once
-    And I return to Sessions
+    And I close the Settings modal
     And I open a New Session
     And I change the draft to "Tidy the docs"
     And the Server answers the Session open

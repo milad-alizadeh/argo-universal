@@ -24,3 +24,5 @@ export {
 } from './screen-navigation-context';
 
 export { ScreenStoryBack } from './screen-story-back';
+
+export { ScreenHeadingEndInset } from './screen-heading-row';
