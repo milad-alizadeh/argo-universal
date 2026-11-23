@@ -29,7 +29,7 @@ export function writeJobs(
 }
 
 // A job the Writer left out of a batch, by its index in the batch.
-export type DroppedWriterJob = { index: number; error: Error };
+type DroppedWriterJob = { index: number; error: Error };
 
 export type WrittenWriterBatch = { dropped: DroppedWriterJob[] };
 
