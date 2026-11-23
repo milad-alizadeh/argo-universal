@@ -2,7 +2,11 @@ export * from './changes';
 
 export { createCheckout } from './checkout';
 
-export { resolveCheckoutBase, CheckoutBaseMissing } from './worktree-branch';
+export {
+  resolveCheckoutBase,
+  resolveWorktreeBaseBranch,
+  CheckoutBaseMissing,
+} from './worktree-branch';
 
 export {
   discardCheckout,

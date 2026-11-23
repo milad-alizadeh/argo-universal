@@ -1,4 +1,4 @@
-import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -8,7 +8,8 @@ import { SessionNewView } from '../../src/screens/sessions/$id/session-new-view'
 import { readyNewSession } from '../../src/screens/sessions/$id/session-new-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
-const newWorktreeLabel = 'New worktree';
+// The trigger names the branch a new worktree starts from.
+const newWorktreeLabel = 'New worktree from main';
 
 // The checkout follows the reader's choice, as the screen's state does.
 function ChoosingCheckout(): React.JSX.Element {
@@ -43,7 +44,6 @@ export const narrowMainColumn: Story = {
     await settleLayout('wide');
     const checkout = await canvas.findByRole('button', { name: 'Checkout' });
     await expect(checkout).toHaveTextContent(newWorktreeLabel);
-    await expect(checkout).not.toHaveTextContent('main');
     await expect(
       canvas.getAllByRole('button', { name: 'Checkout' }),
     ).toHaveLength(1);
@@ -52,6 +52,7 @@ export const narrowMainColumn: Story = {
       await within(document.body).findByRole('radio', { name: 'Local' }),
     );
     await expect(checkout).toHaveTextContent('Local');
+    await expect(checkout).not.toHaveTextContent('main');
   },
 };
 
@@ -90,4 +91,32 @@ export const checkoutChoice: Story = {
     );
     await expect(trigger).toHaveTextContent(newWorktreeLabel);
   },
+};
+
+const longBranch = 'claude/tokens-from-figma-2026-11-18-design-system-catch-up';
+
+// A long base branch truncates inside the window rather than pushing the trigger off it.
+export const longBaseBranch: Story = {
+  args: {
+    view: {
+      state: 'ready',
+      ...readyNewSession,
+      configuration: {
+        ...readyNewSession.configuration,
+        checkout: {
+          ...readyNewSession.configuration.checkout,
+          branch: longBranch,
+        },
+      },
+    },
+  },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      const trigger = await canvas.findByRole('button', { name: 'Checkout' });
+      const box = trigger.getBoundingClientRect();
+
+      await expect(trigger).toHaveTextContent(/^New worktree from claude\//);
+      await expect(box.left).toBeGreaterThanOrEqual(0);
+      await expect(box.right).toBeLessThanOrEqual(window.innerWidth);
+    }),
 };

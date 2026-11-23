@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import { stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 import {
+  ProjectCheckoutChoice,
   ProjectInfo,
-  type ProjectCheckoutChoice,
   type ProjectsListOutput,
   type ProjectsBranchesInput,
 } from '@repo/contracts';
@@ -13,6 +13,7 @@ import {
   listBranches,
   readOriginHost,
   readRepository,
+  resolveWorktreeBaseBranch,
   type Repository,
 } from '@repo/git';
 import type { createRejectionCounter } from '@repo/machine-log';
@@ -70,6 +71,24 @@ async function readDefaultCheckoutChoice(
   return currentBranch === null
     ? { type: 'main' }
     : { type: 'worktree', baseBranch: currentBranch };
+}
+
+// A saved base branch that Git no longer has gives way to the one a new worktree would start from instead.
+async function readStoredCheckoutChoice(
+  projectPath: string,
+  stored: NonNullable<StoredProject['checkoutChoice']>,
+): Promise<NonNullable<StoredProject['checkoutChoice']>> {
+  const choice = ProjectCheckoutChoice.safeParse(stored);
+
+  if (!choice.success || choice.data.type !== 'worktree') return stored;
+
+  return {
+    ...choice.data,
+    baseBranch: await resolveWorktreeBaseBranch(
+      projectPath,
+      choice.data.baseBranch,
+    ),
+  };
 }
 
 export function readProjectPath(
@@ -134,7 +153,9 @@ async function readProjectDetail({
   if (!(await isFolder(path))) return missingFolderDetail(checkoutChoice);
 
   const [choice, remoteHost] = await Promise.all([
-    Promise.resolve(checkoutChoice ?? readDefaultCheckoutChoice(path)),
+    checkoutChoice
+      ? readStoredCheckoutChoice(path, checkoutChoice)
+      : readDefaultCheckoutChoice(path),
     readRemoteHost(path),
   ]);
 

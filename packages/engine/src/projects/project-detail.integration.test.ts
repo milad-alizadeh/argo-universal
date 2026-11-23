@@ -61,3 +61,22 @@ it('lists a Project whose folder is gone beside the Projects that are still ther
     }),
   ]);
 });
+
+it("lists origin's default branch as the base branch once the saved one is deleted", async (): Promise<void> => {
+  const { database, caller, git } = await startProjectTestHost();
+  await git('update-ref', 'refs/remotes/origin/trunk', 'HEAD');
+  await git(
+    'symbolic-ref',
+    'refs/remotes/origin/HEAD',
+    'refs/remotes/origin/trunk',
+  );
+  database
+    .update(project)
+    .set({ checkoutChoice: { type: 'worktree', baseBranch: 'dev' } })
+    .run();
+  expect(await caller.project.list()).toEqual([
+    expect.objectContaining({
+      checkoutChoice: { type: 'worktree', baseBranch: 'trunk' },
+    }),
+  ]);
+});

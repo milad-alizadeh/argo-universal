@@ -101,6 +101,15 @@ function shortModelName(choice: SessionConfigSelectOption): string | undefined {
   return choiceMetadata(choice)?.shortName;
 }
 
+// A new worktree's trigger names the branch it starts from, once that branch is known.
+export function newWorktreeLabel(
+  checkout: ComposerConfigurationProps['checkout'],
+): string {
+  return checkout.branch
+    ? `New worktree from ${checkout.branch}`
+    : 'New worktree';
+}
+
 export function checkoutName(
   checkout: ComposerConfigurationProps['checkout'],
 ): string {

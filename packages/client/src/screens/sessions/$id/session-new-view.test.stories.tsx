@@ -4,6 +4,7 @@ import { eachLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn, screen } from 'storybook/test';
 import {
   checkoutChoice,
+  longBaseBranch,
   narrowMainColumn,
 } from '../../../../mocks/new-session-view/new-session-checkout.test.mocks';
 import {
@@ -40,6 +41,8 @@ export default meta;
 export const NarrowMainColumn = narrowMainColumn;
 
 export const CheckoutChoice = checkoutChoice;
+
+export const LongBaseBranch = longBaseBranch;
 
 export const Ready: Story = {
   play: async ({ canvas }) =>

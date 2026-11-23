@@ -5,6 +5,7 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { CheckoutContents } from '../composer-configuration/composer-configuration';
+import { newWorktreeLabel } from '../composer-configuration/configuration-values';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { StartSessionInProps } from './start-session-types';
 
@@ -42,7 +43,7 @@ function checkoutButtonLabels(
   props: Pick<CheckoutControlProps, 'checkout'>,
 ): Pick<MenuTriggerProps, 'label' | 'icon'> {
   return props.checkout.newWorktree
-    ? { label: 'New worktree', icon: 'branch' }
+    ? { label: newWorktreeLabel(props.checkout), icon: 'branch' }
     : { label: 'Local', icon: 'folder' };
 }
 

@@ -89,6 +89,56 @@ export async function resolveCheckoutBase(
   return base;
 }
 
+type SymbolicRef = { ref: string; prefix: string };
+
+const originDefault: SymbolicRef = {
+  ref: 'refs/remotes/origin/HEAD',
+  prefix: 'refs/remotes/origin/',
+};
+
+const checkedOut: SymbolicRef = { ref: 'HEAD', prefix: 'refs/heads/' };
+
+// The branch a symbolic ref names, or undefined when it names none.
+async function symbolicTarget(
+  projectPath: string,
+  { ref, prefix }: SymbolicRef,
+  signal?: AbortSignal,
+): Promise<string | undefined> {
+  const target = await git(
+    projectPath,
+    ['symbolic-ref', '--quiet', ref],
+    signal,
+  ).then(
+    (stdout): string => stdout.trim(),
+    (): string => '',
+  );
+
+  return target.startsWith(prefix) ? target.slice(prefix.length) : undefined;
+}
+
+// The saved base branch while it resolves; once it is gone, origin's default branch, then the main checkout's branch.
+export async function resolveWorktreeBaseBranch(
+  projectPath: string,
+  saved: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const refs = (await git(projectPath, baseRefs, signal)).split('\n');
+
+  const resolves = (branch: string | undefined): branch is string =>
+    branch !== undefined &&
+    candidateBaseRefs(branch).some((ref) => refs.includes(ref));
+
+  if (resolves(saved)) return saved;
+
+  for (const standIn of [originDefault, checkedOut]) {
+    const branch = await symbolicTarget(projectPath, standIn, signal);
+
+    if (resolves(branch)) return branch;
+  }
+
+  return saved;
+}
+
 export type TakenBranch = { path: string; action: 'reuse' | 'remove' };
 
 type BranchHolder = {
