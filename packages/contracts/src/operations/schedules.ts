@@ -79,7 +79,7 @@ export const scheduleOperations = {
     label: 'List Schedules',
     icon: 'checklist',
     description:
-      'List every Schedule attached to a Session, wherever it was made, with its last delivery and skip times.',
+      "List a Session's Schedules. Includes task Schedules and ones made in the Session, with last delivery and skip times.",
     params: scheduleTarget,
     result: z.array(schedule),
     tier: 'read',
@@ -91,7 +91,7 @@ export const scheduleOperations = {
     label: 'Manage Schedule',
     icon: 'checklist',
     description:
-      'Manage a Schedule attached to a Session. Pause, resume, delete or change its end time.',
+      "Manage a Session's Schedule. Pause, resume, delete or change its end time.",
     params: scheduleTarget
       .extend({
         id: z.string(),

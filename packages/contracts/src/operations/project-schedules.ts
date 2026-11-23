@@ -228,7 +228,7 @@ export const projectScheduleOperations = {
     label: 'Edit Project Schedule',
     icon: scheduleIcon,
     description:
-      "Edit a Project Schedule's instructions and cadence. Its Agent, Checkout and configuration belong to its Session and cannot change.",
+      'Edit a Project Schedule. Only its instructions and cadence change; its Agent, Checkout and configuration belong to its Session.',
     params: ProjectScheduleInput.extend({ id: target.shape.id }),
     result: ProjectSchedule,
     tier: 'act',
@@ -252,7 +252,7 @@ export const projectScheduleOperations = {
     label: 'Read Project Schedule history',
     icon: scheduleIcon,
     description:
-      'Read the runs recorded before a Schedule prompted one Session. New occurrences are in its Session Feed.',
+      'Read older runs. Runs since a Schedule prompted one Session are in its Session Feed.',
     params: target.extend({ cursor: historyCursor.optional() }),
     result: ProjectScheduleHistoryPage,
     tier: 'read',
@@ -264,7 +264,7 @@ export const projectScheduleOperations = {
     label: 'Run Project Schedule now',
     icon: scheduleIcon,
     description:
-      "Send the Schedule's instructions into its Session now without moving its next occurrence.",
+      "Prompt the Schedule's Session now. The next occurrence stays.",
     params: target,
     result: ProjectScheduleOccurrence,
     tier: 'act',
