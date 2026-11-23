@@ -234,9 +234,6 @@ _Avoid_: Call context, call scope, caller
 What keeps a Query's answer wanted: a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration
 
-**Session follow-up**:
-A stored instruction for the Server to send a Prompt once or at an interval in an existing Session. Each occurrence goes through that Session’s Prompt queue and uses its Checkout. The person manages it from Follow-ups in the Workbench.
-
 **Background pass**:
 One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
@@ -311,8 +308,9 @@ _Avoid_: Shell, terminal (that is a Terminal), process
 An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
 _Avoid_: Target, loop
 
-**Project Schedule**:
-A Project’s stored instructions and cadence for starting fresh Sessions on its Server. Each occurrence can start a Session with its own Checkout. The person finds Project Schedules in Scheduled.
+**Schedule**:
+A cadence and a Prompt attached to one Session, which each occurrence sends into that Session. One made as a task in Scheduled creates its Session when saved and is listed there; one made inside a Session is not (ADR-0067).
+_Avoid_: Project Schedule, Session follow-up, scheduled run
 
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
@@ -427,15 +425,15 @@ An Issue named in a prompt as `#` and its number.
 _Avoid_: Mention, issue link, tag
 
 **Prompt**:
-What is sent to a Session's Agent to start a Turn. It comes from the user, from another Session or from a Plugin, and the Feed shows which; only the user's is the user's own message.
+What is sent to a Session's Agent to start a Turn. It comes from the user, from another Session, from a Plugin or from a Schedule, and the Feed shows which; only the user's is the user's own message.
 _Avoid_: Message (alone), input, instruction
 
 **Queued Prompt**:
-A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s. A Conversation keeps at most one waiting: its next request joins that one until it starts or the person edits it (ADR-0064).
+A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, a Schedule’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s. A Conversation keeps at most one waiting: its next request joins that one until it starts or the person edits it (ADR-0064).
 _Avoid_: Pending message, draft Prompt
 
 **Sent Prompt**:
-A Prompt from a sender other than the person: another Session, a Plugin or a Conversation. An idle Session starts a Turn with it; a busy or paused one takes it at the end of its queue with its sender, and never resumes a paused queue. When the Agent supports steering, the running Turn takes it in at once, unless a Plugin sent it. The person's own Prompt is typed, not sent, and keeps its own busy behaviour.
+A Prompt from a sender other than the person: another Session, a Plugin, a Schedule or a Conversation. An idle Session starts a Turn with it; a busy or paused one takes it at the end of its queue with its sender, and never resumes a paused queue. When the Agent supports steering, the running Turn takes it in at once, unless a Plugin sent it. The person's own Prompt is typed, not sent, and keeps its own busy behaviour.
 _Avoid_: Plugin Prompt, non-user Prompt, steered Prompt
 
 **Turn**:
