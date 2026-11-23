@@ -192,18 +192,22 @@ export const SendsKeysAfterMouseReportsInOneWrite: Story = {
 
     await within(region).findByText(tuiText);
 
+    // xterm gives its drawn screen no role, and it reads mouse reports from DOM events on it.
     const screen = region.querySelector('.xterm-screen');
-    const box = screen?.getBoundingClientRect();
+
+    if (!screen) throw new Error('The terminal drew no screen');
+
+    const box = screen.getBoundingClientRect();
 
     within(region).getByRole('textbox').focus();
     await userEvent.keyboard('x');
 
     for (let move = 0; move < pointerMoves; move += 1)
-      screen?.dispatchEvent(
+      screen.dispatchEvent(
         new MouseEvent('mousemove', {
           bubbles: true,
-          clientX: (box?.left ?? 0) + 4 + move * 8,
-          clientY: (box?.top ?? 0) + 8,
+          clientX: box.left + 4 + move * 8,
+          clientY: box.top + 8,
         }),
       );
 

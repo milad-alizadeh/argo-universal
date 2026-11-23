@@ -57,7 +57,6 @@ const sameOrUnset = <Value>(
   earlier: Value | undefined,
 ): boolean => later === undefined || isDeepStrictEqual(later, earlier);
 
-// A later draft repeats an earlier one when it runs the same command the same way and adds nothing of its own.
 const repeats = (earlier: Draft, later: Omit<Draft, 'name'>): boolean =>
   scriptCommand(earlier.command) === scriptCommand(later.command) &&
   earlier.cwd === later.cwd &&

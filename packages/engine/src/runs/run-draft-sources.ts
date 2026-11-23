@@ -117,22 +117,20 @@ const portOf = (command: string): number | undefined =>
   portIn(portFlags.exec(command)?.groups?.['port']) ??
   (/\bstorybook dev\b/u.test(command) ? storybookPort : undefined);
 
-const portFlagLiteral = /(?<flag>--port[ =]|(?:^|\s)-p[ =]?)\d{2,5}(?!\d)/u;
+// The literal must end its word, so a mapping such as `-p 8080:80` is not a port to replace.
+const portLiteral =
+  /(?<flag>--port[ =]|(?:^|\s)-p[ =]?|(?:^|\s)PORT=)(?<port>\d{2,5})(?=\s|$)/gu;
 
-const portAssignment = /(?:^|\s)PORT=\d{2,5}(?!\d)(?:\s+|$)/u;
+// Two port literals mean two servers, and only one of them can take `$PORT`, so such a command keeps its pin.
+const withCheckoutPort = (command: string): string => {
+  const literals = [...command.matchAll(portLiteral)];
 
-// A command Argo writes itself takes the Checkout's `$PORT` in place of a fixed one, so two worktrees can run it at once.
-const withCheckoutPort = (command: string): string =>
-  portIn(portFlags.exec(command)?.groups?.['port']) === undefined
-    ? command
-    : command
-        .replace(portAssignment, (assignment) =>
-          /^\s/u.test(assignment) ? ' ' : '',
-        )
-        .replace(portFlagLiteral, '$<flag>$$PORT')
-        .trim();
+  return literals.length === 1 &&
+    portIn(literals[0]?.groups?.['port']) !== undefined
+    ? command.replace(portLiteral, '$<flag>$$PORT')
+    : command;
+};
 
-// A drafted command, with the port it still has to pin when it cannot take `$PORT`.
 const portedCommand = (command: string): Pick<Draft, 'command' | 'port'> => {
   const ported = withCheckoutPort(command);
   const port = ported === command ? portOf(command) : undefined;

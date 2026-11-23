@@ -117,7 +117,12 @@ it('drafts one Run Configuration per Procfile process', async () => {
 
 it('gives a command it writes itself the Checkout’s $PORT in place of a fixed port, so worktrees do not clash', async () => {
   const result = await draft({
-    Procfile: 'api: PORT=4000 node server.js\nweb: vite --port=5173 --host\n',
+    Procfile: [
+      'api: PORT=4000 node server.js',
+      'web: vite --port=5173 --host',
+      'db: docker run -p 5432:5432 postgres',
+      'pair: serve -p 3000 && serve -p 3001',
+    ].join('\n'),
     '.claude/launch.json': {
       configurations: [
         { name: 'expo', command: 'expo start --port 8337' },
@@ -129,8 +134,10 @@ it('gives a command it writes itself the Checkout’s $PORT in place of a fixed 
   expect(result.configurations).toEqual([
     { name: 'expo', command: 'expo start --port $PORT' },
     { name: 'pinned', command: 'serve -p 3000', port: 3000 },
-    { name: 'api', command: 'node server.js' },
+    { name: 'api', command: 'PORT=$PORT node server.js' },
     { name: 'web', command: 'vite --port=$PORT --host' },
+    { name: 'db', command: 'docker run -p 5432:5432 postgres', port: 5432 },
+    { name: 'pair', command: 'serve -p 3000 && serve -p 3001', port: 3000 },
   ]);
 });
 
