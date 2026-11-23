@@ -16,6 +16,11 @@ type ReceiptEvent =
 
 type ReceiptContext = ReceiptInput & { outcome?: ReceiptOutcome };
 
+const ended = (cause: unknown): ReceiptEvent => ({
+  type: 'receipt.ended',
+  cause,
+});
+
 const unstoredMessage =
   'The Writer stopped before storing the Operation result';
 
@@ -103,8 +108,7 @@ function followWriter(
   });
 
   const dropped = writer.on('writer.dropped', ({ jobs }) => {
-    if (holdsBlob(jobs, blobId))
-      sendBack({ type: 'receipt.ended', cause: new Error(droppedMessage) });
+    if (holdsBlob(jobs, blobId)) sendBack(ended(new Error(droppedMessage)));
   });
 
   const stopped = followWriterStop(writer, sendBack);
@@ -121,8 +125,7 @@ const followWriterStop = (
   sendBack: SendBack,
 ): Subscription =>
   writer.subscribe({
-    complete: () =>
-      sendBack({ type: 'receipt.ended', cause: new Error(unstoredMessage) }),
+    complete: () => sendBack(ended(new Error(unstoredMessage))),
   });
 
 function followCaller(
@@ -131,8 +134,7 @@ function followCaller(
 ): () => void {
   if (!signal) return (): void => {};
 
-  const left = (): void =>
-    sendBack({ type: 'receipt.ended', cause: signal.reason });
+  const left = (): void => sendBack(ended(signal.reason));
 
   if (signal.aborted) left();
   else signal.addEventListener('abort', left, { once: true });
