@@ -8,8 +8,8 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
 import { ComposerCover } from '#lib/product/composer-cover';
-import { useContentWide } from '#lib/product/content-layout';
 import { NewSessionQuestion } from '#lib/product/new-session-question';
+import { useFeedTrayInset } from '#lib/product/session-column';
 import type { FeedViewItem } from '../../view/feed-view';
 import { usePartialTranscripts } from '../../view/use-partial-transcripts';
 import { drawnFeedItems } from '../drawn-feed-item';
@@ -131,11 +131,11 @@ function FeedWithImages(props: FeedListProps & FeedProps): React.JSX.Element {
 
 // A Feed that opens at its start has no Composer at its end, so it keeps no room for one.
 function FeedWithCover(props: FeedListProps): React.JSX.Element {
-  const wide = useContentWide();
+  const inset = useFeedTrayInset(props.opensAtStart);
 
   if (!props.opensAtStart)
     return (
-      <FeedTrayInset.Provider value={wide}>
+      <FeedTrayInset.Provider value={inset}>
         <FeedList {...props} />
       </FeedTrayInset.Provider>
     );

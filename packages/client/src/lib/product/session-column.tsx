@@ -3,13 +3,22 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { createContext, useContext, type Ref } from 'react';
 import { type ViewProps, View, type ViewInstance } from 'react-native';
-import { useContentShift } from './content-layout';
+import { useContentShift, useContentWide } from './content-layout';
 import { columnGutter } from './content-rule';
 import { filledClass } from './session-fill';
 import { useContentRule } from './use-content-rule';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 export const sessionSurface = 'bg-content';
+
+// Match the Composer tray's outer inset and callout padding.
+export const feedTrayInsetClass = 'px-10 web:px-7.5';
+
+export function useFeedTrayInset(opensAtStart: boolean | undefined): boolean {
+  const wide = useContentWide();
+
+  return wide && !opensAtStart;
+}
 
 type SessionColumnProps = ViewProps & {
   ref?: Ref<ViewInstance>;

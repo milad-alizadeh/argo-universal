@@ -6,6 +6,11 @@ import {
   type SessionPanels,
   type SessionPluginActions,
 } from '#features/sessions';
+import {
+  feedTrayInsetClass,
+  SessionColumn,
+  useFeedTrayInset,
+} from '#lib/product/session-column';
 import { openNewShell } from './sections/runs-section';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
@@ -25,10 +30,20 @@ const pluginActionsOf = (props: SessionDetailViewProps): SessionPluginActions =>
 export function SessionPageHeader(
   props: SessionDetailViewProps,
 ): React.JSX.Element {
+  const inset = useFeedTrayInset(
+    props.state === 'open' ? props.feed.opensAtStart : true,
+  );
+
+  const headingColumn = (children: React.ReactNode): React.JSX.Element => (
+    <SessionColumn className={inset ? feedTrayInsetClass : undefined}>
+      {children}
+    </SessionColumn>
+  );
+
   return (
     <SizeClass
       compact={stackHeader(props, true)}
-      wide={stackHeader(props, false)}
+      wide={stackHeader(props, false, headingColumn)}
     />
   );
 }
@@ -72,9 +87,13 @@ function directActions(
 function stackHeader(
   props: SessionDetailViewProps,
   compact: boolean,
+  headingColumn?: React.ComponentProps<
+    typeof ScreenStackHeader
+  >['headingColumn'],
 ): React.JSX.Element {
   return (
     <ScreenStackHeader
+      headingColumn={headingColumn}
       title={props.state === 'open' ? props.header.title : 'Session'}
       actions={sessionHeaderActions(
         props.state === 'open' ? props.header.menu : undefined,

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { ScreenHeadingBody } from './screen-heading-row';
 import { ScreenNavigation } from './screen-navigation';
@@ -7,7 +7,9 @@ import type { ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
 import { useHeaderDrawing } from './use-header-drawing';
 
-export type ScreenStackHeaderProps = Omit<ScreenProps, 'children'>;
+export type ScreenStackHeaderProps = Omit<ScreenProps, 'children'> & {
+  headingColumn?: (children: ReactNode) => ReactNode;
+};
 
 // The shared Screen header for a page with its own body layout, such as the Session Feed.
 export function ScreenStackHeader(props: ScreenStackHeaderProps): ReactElement {
