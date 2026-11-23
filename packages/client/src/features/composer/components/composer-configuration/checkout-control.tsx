@@ -7,7 +7,7 @@ import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { checkoutName } from './configuration-values';
+import { checkoutName, newWorktreeLabel } from './configuration-values';
 
 interface CheckoutProps {
   checkout: ComposerConfigurationProps['checkout'];
@@ -140,5 +140,5 @@ const checkoutChoice = (
   checkout: CheckoutProps['checkout'],
 ): Pick<React.ComponentProps<typeof MenuTrigger>, 'label' | 'icon'> =>
   checkout.newWorktree
-    ? { label: 'New worktree', icon: 'branch' }
+    ? { label: newWorktreeLabel(checkout), icon: 'branch' }
     : { label: 'Local', icon: 'folder' };

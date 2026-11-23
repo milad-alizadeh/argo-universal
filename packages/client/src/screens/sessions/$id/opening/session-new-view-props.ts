@@ -39,7 +39,8 @@ const checkoutProps = ({
   choices,
   setChosen,
 }: NewSessionData): ConfigurationProps['checkout'] => ({
-  branch: choices.baseBranch,
+  // No branch until the Project's branches say which, so the trigger never names a guess.
+  branch: choices.baseBranchLoaded ? choices.baseBranch : '',
   newWorktree: choices.inNewWorktree,
   onNewWorktreeChange: (newWorktree) =>
     setChosen((current) => ({ ...current, newWorktree })),

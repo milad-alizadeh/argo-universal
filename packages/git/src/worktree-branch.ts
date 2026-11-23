@@ -89,6 +89,39 @@ export async function resolveCheckoutBase(
   return base;
 }
 
+const branchPrefixes = ['refs/remotes/origin/', 'refs/heads/'];
+
+// The branch a resolved base names: a tracking or local ref's own name, or the main checkout's branch for its HEAD.
+async function baseBranchName(
+  projectPath: string,
+  base: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const ref =
+    base === 'HEAD'
+      ? await readOrNull(
+          projectPath,
+          ['symbolic-ref', '--quiet', 'HEAD'],
+          signal,
+        )
+      : base;
+
+  const prefix = branchPrefixes.find((start) => ref?.startsWith(start));
+
+  return prefix && ref ? ref.slice(prefix.length) : null;
+}
+
+// The branch a new worktree from this saved base starts on, for the reader; the saved name while Git names none.
+export async function resolveWorktreeBaseBranch(
+  projectPath: string,
+  saved: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const base = await resolveCheckoutBase(projectPath, saved, signal);
+
+  return (await baseBranchName(projectPath, base, signal)) ?? saved;
+}
+
 export type TakenBranch = { path: string; action: 'reuse' | 'remove' };
 
 type BranchHolder = {
