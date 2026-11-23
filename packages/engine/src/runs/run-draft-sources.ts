@@ -117,6 +117,29 @@ const portOf = (command: string): number | undefined =>
   portIn(portFlags.exec(command)?.groups?.['port']) ??
   (/\bstorybook dev\b/u.test(command) ? storybookPort : undefined);
 
+const portFlagLiteral = /(?<flag>--port[ =]|(?:^|\s)-p[ =]?)\d{2,5}(?!\d)/u;
+
+const portAssignment = /(?:^|\s)PORT=\d{2,5}(?!\d)(?:\s+|$)/u;
+
+// A command Argo writes itself takes the Checkout's `$PORT` in place of a fixed one, so two worktrees can run it at once.
+const withCheckoutPort = (command: string): string =>
+  portIn(portFlags.exec(command)?.groups?.['port']) === undefined
+    ? command
+    : command
+        .replace(portAssignment, (assignment) =>
+          /^\s/u.test(assignment) ? ' ' : '',
+        )
+        .replace(portFlagLiteral, '$<flag>$$PORT')
+        .trim();
+
+// A drafted command, with the port it still has to pin when it cannot take `$PORT`.
+const portedCommand = (command: string): Pick<Draft, 'command' | 'port'> => {
+  const ported = withCheckoutPort(command);
+  const port = ported === command ? portOf(command) : undefined;
+
+  return { command: ported, ...(port && { port }) };
+};
+
 const plainWord = /^[\w@%+=:,./-]+$/u;
 
 const quote = (word: string): string =>
@@ -178,9 +201,7 @@ export async function draftProcfile(checkout: string): Promise<SourceDrafts> {
 
     if (!name || !command) return [];
 
-    const port = portOf(command);
-
-    return [{ name, command, ...(port && { port }) }];
+    return [{ name, ...portedCommand(command) }];
   });
 
   return { source: 'Procfile', drafts, skipped: [] };
@@ -265,6 +286,17 @@ function workspaceExpander(
     );
 }
 
+// A port the launch names itself stays pinned; one only written in its command becomes `$PORT`.
+function launchCommand(
+  launch: LaunchConfiguration,
+  env: Record<string, string>,
+  written: string,
+): Pick<Draft, 'command' | 'port'> {
+  const pinned = portIn(launch.port) ?? portIn(env['PORT']);
+
+  return pinned ? { command: written, port: pinned } : portedCommand(written);
+}
+
 function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
   const words = commandWords(launch);
 
@@ -278,11 +310,11 @@ function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
 
   const expandWorkspace = workspaceExpander(checkout, cwd);
 
-  const command = launch.command
+  const written = launch.command
     ? expandWorkspace(launch.command)
     : words.map((word) => quote(expandWorkspace(word))).join(' ');
 
-  const port = portIn(launch.port) ?? portIn(env['PORT']) ?? portOf(command);
+  const { command, port } = launchCommand(launch, env, written);
 
   const pattern = launch.serverReadyAction?.pattern;
 

@@ -230,12 +230,7 @@ async function sendTerminalKeys(sheet: Inside, userEvent: User): Promise<void> {
   }
 
   await waitFor(() =>
-    expect(pressed.mock.calls).toEqual([
-      ['\u001b'],
-      ['a'],
-      ['\u0003'],
-      ['\t'],
-      ['\u001b[A'],
-    ]),
+    // Keys pressed while the first is in flight go together, in order.
+    expect(pressed.mock.calls).toEqual([['\u001b'], ['a\u0003\t\u001b[A']]),
   );
 }

@@ -48,6 +48,23 @@ const nothingFound = (skipped: SkippedDraft[]): string =>
     ),
   ].join('\n');
 
+// `pnpm dev` and `pnpm run dev` run the same script; npm needs its `run`.
+const scriptCommand = (command: string): string =>
+  command.replace(/^(?<manager>pnpm|yarn|bun) run /u, '$<manager> ');
+
+const sameOrUnset = <Value>(
+  later: Value | undefined,
+  earlier: Value | undefined,
+): boolean => later === undefined || isDeepStrictEqual(later, earlier);
+
+// A later draft repeats an earlier one when it runs the same command the same way and adds nothing of its own.
+const repeats = (earlier: Draft, later: Omit<Draft, 'name'>): boolean =>
+  scriptCommand(earlier.command) === scriptCommand(later.command) &&
+  earlier.cwd === later.cwd &&
+  isDeepStrictEqual(earlier.env, later.env) &&
+  sameOrUnset(later.port, earlier.port) &&
+  sameOrUnset(later.ready, earlier.ready);
+
 type Merged = Pick<DraftedRunConfigurations, 'configurations' | 'sources'>;
 
 function merge(found: SourceDrafts[]): Merged {
@@ -55,12 +72,8 @@ function merge(found: SourceDrafts[]): Merged {
 
   for (const { source, drafts } of found)
     for (const { name, ...draft } of drafts) {
-      const repeats = merged.configurations.some(
-        ({ name: _name, ...configuration }) =>
-          isDeepStrictEqual(configuration, draft),
-      );
-
-      if (repeats) continue;
+      if (merged.configurations.some((earlier) => repeats(earlier, draft)))
+        continue;
 
       const draftedName = uniqueName(
         name,

@@ -5,14 +5,14 @@
   "private": true,
   "scripts": {
     "postinstall": "setup-skia-web public",
-    "android": "expo run:android --port 8337",
+    "android": "expo run:android --port ${ARGO_EXPO_PORT:-8337}",
     "build": "expo export --platform web",
     "build:profiling": "ARGO_PROFILING_BUILD=1 expo export --platform web --no-minify",
     "check-types": "tsc --noEmit",
-    "dev": "expo start --port 8337",
-    "ios": "expo run:ios --port 8337",
-    "start": "expo start --port 8337",
-    "web": "expo start --web --port 8337",
+    "dev": "expo start --port ${ARGO_EXPO_PORT:-8337}",
+    "ios": "expo run:ios --port ${ARGO_EXPO_PORT:-8337}",
+    "start": "expo start --port ${ARGO_EXPO_PORT:-8337}",
+    "web": "expo start --web --port ${ARGO_EXPO_PORT:-8337}",
     "test": "vitest run"
   },
   "dependencies": {

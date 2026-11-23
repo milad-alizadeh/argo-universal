@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserKeys } from 'vitest/browser';
 import {
   RunInspector,
   runIsActive,
@@ -145,5 +146,78 @@ export const ResumesWithoutRepeatingTheRecording: Story = {
 
     await expect(await terminal.findByText(resumedText)).toBeVisible();
     await expect(terminal.getAllByText(outputText)).toHaveLength(1);
+  },
+};
+
+// Turbo's TUI turns on any-motion mouse reports, so xterm reports every cell the pointer crosses.
+const tuiText = 'a#dev';
+
+const tuiRecording = `\u001b[?1049h\u001b[?1003h\u001b[?1006h${tuiText}`;
+
+const recordTui: RunOutputSource = (_cursor, receive) => {
+  receive({
+    cursor: { runId: 'tui-fixture', offset: tuiRecording.length },
+    data: btoa(tuiRecording),
+  });
+
+  return (): void => {};
+};
+
+function TuiTerminal(): ReactElement {
+  return (
+    <View className="h-160 w-frame-list">
+      <RunTerminal
+        name={webRun.name}
+        interactive
+        connected
+        listen={recordTui}
+        onInput={typeInRun}
+        onResize={resizeRun}
+      />
+    </View>
+  );
+}
+
+const pointerMoves = 40;
+
+export const SendsKeysAfterMouseReportsInOneWrite: Story = {
+  render: TuiTerminal,
+  play: async ({ canvas, userEvent }) => {
+    const firstSend = Promise.withResolvers<void>();
+
+    typeInRun.mockClear();
+    typeInRun.mockImplementationOnce(() => firstSend.promise);
+
+    const region = canvas.getByRole('region', terminalRegion);
+
+    await within(region).findByText(tuiText);
+
+    const screen = region.querySelector('.xterm-screen');
+    const box = screen?.getBoundingClientRect();
+
+    within(region).getByRole('textbox').focus();
+    await userEvent.keyboard('x');
+
+    for (let move = 0; move < pointerMoves; move += 1)
+      screen?.dispatchEvent(
+        new MouseEvent('mousemove', {
+          bubbles: true,
+          clientX: (box?.left ?? 0) + 4 + move * 8,
+          clientY: (box?.top ?? 0) + 8,
+        }),
+      );
+
+    // A real key press: xterm reads arrow keys from keydown, which a synthetic event does not drive.
+    await browserKeys.keyboard('{ArrowDown}');
+
+    firstSend.resolve();
+
+    await waitFor(() => expect(typeInRun).toHaveBeenCalledTimes(2));
+
+    const queued = typeInRun.mock.lastCall?.[0] ?? '';
+    const mouseReports = queued.split('\u001b[<').length - 1;
+
+    await expect(mouseReports).toBeGreaterThan(pointerMoves / 2);
+    await expect(queued.endsWith('\u001b[B')).toBe(true);
   },
 };
