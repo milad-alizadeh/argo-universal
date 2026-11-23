@@ -8,6 +8,7 @@ export {
   AtomicWriterJob,
   type StorageTransaction,
   type WriterJob,
+  type WrittenWriterBatch,
   writeJobs,
 } from './writer-job';
 

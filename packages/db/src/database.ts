@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { drizzle, type NodeSQLiteDatabase } from 'drizzle-orm/node-sqlite';
@@ -24,4 +24,29 @@ export function openDatabase(
   migrate(database, { migrationsFolder: migrations });
 
   return database;
+}
+
+const folderLockFile = 'engine.lock';
+
+// The lock each locked folder holds, by folder.
+const folderLocks = new Map<string, DatabaseSync>();
+
+// One process at a time owns the database in `folder`: another would migrate and repair it under the owner. The lock is SQLite's own file lock, which the operating system frees when the process ends.
+export function lockDatabaseFolder(folder: string): void {
+  mkdirSync(folder, { recursive: true });
+  const lock = new DatabaseSync(join(folder, folderLockFile));
+
+  try {
+    lock.exec('BEGIN EXCLUSIVE');
+  } catch (error) {
+    lock.close();
+    throw new Error(`Another process is using ${folder}`, { cause: error });
+  }
+
+  folderLocks.set(folder, lock);
+}
+
+export function unlockDatabaseFolder(folder: string): void {
+  folderLocks.get(folder)?.close();
+  folderLocks.delete(folder);
 }

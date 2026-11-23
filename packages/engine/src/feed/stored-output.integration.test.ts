@@ -2,7 +2,11 @@ import { type Database, openDatabase } from '@repo/db';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor, fromPromise } from 'xstate';
 import { SqlJob } from '#mocks/storage-job';
-import { writerMachine, type WriterJob } from '../storage';
+import {
+  writerMachine,
+  type WriterJob,
+  type WrittenWriterBatch,
+} from '../storage';
 import { FeedRowsJob } from './feed-rows-job';
 import { outputBlobStored } from './stored-output';
 
@@ -35,12 +39,13 @@ const writeEvent = 'writer.write';
 
 // A Writer whose every batch waits until the test commits it.
 function heldWriter(): HeldWriter {
-  const batches: (() => void)[] = [];
+  const batches: ((written: WrittenWriterBatch) => void)[] = [];
 
   const machine = writerMachine.provide({
     actors: {
-      writeBatch: fromPromise<void, BatchInput>(
-        () => new Promise<void>((resolve) => batches.push(resolve)),
+      writeBatch: fromPromise<WrittenWriterBatch, BatchInput>(
+        () =>
+          new Promise<WrittenWriterBatch>((resolve) => batches.push(resolve)),
       ),
     },
   });
@@ -53,7 +58,7 @@ function heldWriter(): HeldWriter {
     writer.stop();
   });
 
-  return { writer, commit: () => batches.shift()?.() };
+  return { writer, commit: () => batches.shift()?.({ dropped: [] }) };
 }
 
 const settledYet = async (stored: Promise<void>): Promise<boolean> => {

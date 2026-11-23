@@ -7,7 +7,7 @@ import {
   type SnapshotFrom,
 } from 'xstate';
 import { SqlJob } from '#mocks/storage-job';
-import type { WriterJob, writeJobs } from './writer-job';
+import type { WriterJob, WrittenWriterBatch } from './writer-job';
 import { writerMachine } from './writer-machine';
 
 export const writeFeedEvent = 'writer.write';
@@ -46,11 +46,11 @@ export const mockDatabase = openDatabase(':memory:');
 export const machine = writerMachine.provide({
   actors: {
     writeBatch: fromPromise<
-      ReturnType<typeof writeJobs>,
+      WrittenWriterBatch,
       { database: Database; jobs: WriterJob[] }
     >(
-      ({ input }): Promise<ReturnType<typeof writeJobs>> =>
-        new Promise<ReturnType<typeof writeJobs>>((resolve, reject): void =>
+      ({ input }): Promise<WrittenWriterBatch> =>
+        new Promise<WrittenWriterBatch>((resolve, reject): void =>
           recordBatch(input.jobs, resolve, reject),
         ),
     ),
@@ -64,7 +64,7 @@ export const machine = writerMachine.provide({
 
 const recordBatch = (
   jobs: WriterJob[],
-  resolve: () => void,
+  resolve: (written: WrittenWriterBatch) => void,
   reject: WriteBatchCall['reject'],
 ): void => {
   const call: WriteBatchCall = {
@@ -77,10 +77,13 @@ const recordBatch = (
   writeBatchCalls.push(call);
 };
 
-const commitBatch = (call: WriteBatchCall, resolve: () => void): void => {
+const commitBatch = (
+  call: WriteBatchCall,
+  resolve: (written: WrittenWriterBatch) => void,
+): void => {
   call.settled = true;
   committedJobs.push(...call.jobs);
-  resolve();
+  resolve({ dropped: [] });
 };
 
 const rejectBatch = (

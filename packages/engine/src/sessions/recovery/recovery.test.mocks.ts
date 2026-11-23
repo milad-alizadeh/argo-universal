@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { type Database, openDatabase } from '@repo/db';
+import { type Database, openDatabase, unlockDatabaseFolder } from '@repo/db';
 import { feedRow, project, session, turn } from '@repo/db/schema';
 import { afterEach, beforeEach } from 'vitest';
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
@@ -82,7 +82,9 @@ export const interruptEngine = async (): Promise<void> => {
   const { database, server } = engine.getSnapshot().context;
   engine.stop();
   await server?.close();
+  // An interrupted process loses its database and its home's lock together.
   database?.$client.close();
+  unlockDatabaseFolder(home);
 };
 
 const fail = (message: string): never => {
