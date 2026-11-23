@@ -67,6 +67,15 @@ function RowsEdge({
   return <View className="-mx-1">{children}</View>;
 }
 
+// A text Button keeps 12 beside its label; RowsEdge gives back 4, this the other 8, so its icon sits on the title's edge.
+export function WorkbenchTextAction({
+  children,
+}: {
+  children: ReactNode;
+}): ReactElement {
+  return <View className="-ms-2 self-start">{children}</View>;
+}
+
 function SectionCard(props: SectionCardProps): ReactElement {
   return (
     <View testID={`workbench-${props.section.key}`}>

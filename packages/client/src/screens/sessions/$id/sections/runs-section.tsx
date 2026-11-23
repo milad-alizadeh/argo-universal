@@ -1,6 +1,7 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import {
   WorkbenchRuns,
+  WorkbenchTextAction,
   type SessionRuns,
   type SessionPanels,
   type WorkbenchSection,
@@ -68,12 +69,16 @@ export function runsCard(
       key: 'runs',
       title: 'Runs',
       summary: controls.draft ? (
-        <Button
-          label={createRunFileLabel}
-          onPress={controls.draft.onPress}
-          disabled={controls.draft.pending}
-          size="sm"
-        />
+        <WorkbenchTextAction>
+          <Button
+            label={createRunFileLabel}
+            onPress={controls.draft.onPress}
+            disabled={controls.draft.pending}
+            size="xs"
+            variant="text"
+            icon="add"
+          />
+        </WorkbenchTextAction>
       ) : (
         <WorkbenchRuns
           {...controls}

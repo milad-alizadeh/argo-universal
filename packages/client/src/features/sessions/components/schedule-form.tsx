@@ -288,7 +288,9 @@ export function FollowUpEditor({
       <Button
         label={item ? 'Edit end' : 'Add follow-up'}
         size="xs"
-        variant="secondary"
+        {...(item
+          ? { variant: 'secondary' }
+          : { variant: 'text', icon: 'add' })}
         disabled={controls.disabled}
         onPress={() => setOpen(true)}
       />

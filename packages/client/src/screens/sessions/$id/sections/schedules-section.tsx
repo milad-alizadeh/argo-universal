@@ -3,6 +3,7 @@ import {
   FollowUpEditor,
   ScheduleList,
   SchedulePreview,
+  WorkbenchTextAction,
 } from '#features/sessions';
 import type { SessionSection } from './session-section';
 
@@ -14,7 +15,9 @@ export const schedulesSection: SessionSection = {
   card: ({ schedules }, tab) => ({
     onOpen: schedules?.items.length ? tab.open : undefined,
     footer: schedules?.canCreate ? (
-      <FollowUpEditor controls={schedules} />
+      <WorkbenchTextAction>
+        <FollowUpEditor controls={schedules} />
+      </WorkbenchTextAction>
     ) : null,
     summary: <SchedulePreview schedules={schedules} />,
   }),
