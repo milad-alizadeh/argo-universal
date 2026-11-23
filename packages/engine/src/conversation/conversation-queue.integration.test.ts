@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { messageRows } from '#mocks/conversation-feed-rows';
 import { promptText, startConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
@@ -111,5 +112,77 @@ describe('a request for work while a Turn runs', () => {
         _meta: { argo: { sender: { type: 'conversation' } } },
       },
     ]);
+  });
+});
+
+describe('spoken turns during Agent activity', () => {
+  it('uses the whole spoken request without letting a later request overtake it', async () => {
+    const release = Promise.withResolvers<void>();
+
+    const work = await startConversationWork([
+      { prompt: longJob, holdUntil: release.promise },
+    ]);
+
+    await work.start();
+    const { call } = work.provider;
+    call.requestWork('r1', longJob);
+    await expect.poll(() => work.prompts).toHaveLength(2);
+
+    const request =
+      'Monitor the open Sessions and put the archive ticket first.';
+
+    call.requestWork('r2', 'put the archive ticket first.', 'p1');
+    call.personSays('Monitor the open Sessions', 'p1');
+    call.requestWork('r3', extra);
+    call.personSays(request, 'p1');
+    call.emit({ type: 'person.turn.completed', id: 'p1', text: request });
+    await expect
+      .poll(() => call.sent)
+      .toContainEqual(
+        expect.objectContaining({ requestId: 'r3', text: relayWords.queued }),
+      );
+
+    release.resolve();
+    await expect.poll(() => work.prompts).toHaveLength(3);
+    expect(work.prompts[2]?.prompt.slice(-2)).toMatchObject([
+      { type: 'text', text: request },
+      { type: 'text', text: extra },
+    ]);
+  });
+
+  it('keeps the spoken exchange in Feed order through steering, cancellation and hang-up', async () => {
+    const work = await startConversationWork(
+      [{ prompt: longJob, untilCancelled: true }],
+      { steering: true },
+    );
+
+    await work.start();
+    const { call } = work.provider;
+    call.requestWork('r1', longJob);
+    await expect.poll(() => work.prompts).toHaveLength(2);
+
+    call.personSays('Check the archive ticket.', 'p1');
+    call.requestWork('r2', extra);
+    call.voiceSays('Understood.', 'v1');
+    call.personSays('Thanks.', 'p2');
+    call.wordsAtEnd.push({
+      type: 'voice.transcript',
+      id: 'v2',
+      text: 'You’re welcome.',
+      final: true,
+    });
+    await work.steered;
+    await expect.poll(work.promptRows).toHaveLength(2);
+    await work.host.caller.session.cancel({ sessionId: work.sessionId });
+    await work.host.caller.conversation.end({ sessionId: work.sessionId });
+
+    await expect
+      .poll(() => messageRows(work))
+      .toEqual([
+        'person_transcript: Check the archive ticket.',
+        'voice_transcript: Understood.',
+        'person_transcript: Thanks.',
+        'voice_transcript: You’re welcome.',
+      ]);
   });
 });

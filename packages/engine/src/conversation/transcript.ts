@@ -39,7 +39,12 @@ export function withTranscript(
   const speaker = speakerOf(event);
   const others = partials.filter((partial) => partial.speaker !== speaker);
 
-  if (event.final || isReadOut(call.readOut, event)) return others;
+  if (event.final)
+    return partials.filter(
+      (partial) => partial.speaker !== speaker || partial.id !== event.id,
+    );
+
+  if (isReadOut(call.readOut, event)) return others;
   const { id, text } = event;
   const rowId = rowIdOf(call.conversationId, event);
 
@@ -63,7 +68,7 @@ const transcriptUpdate = (
 const transcriptRow = (
   conversationId: string,
   event: TranscriptEvent,
-): FeedEvent => ({
+): Extract<FeedEvent, { type: 'feed.change' }> => ({
   type: 'feed.change',
   turnId: null,
   blobs: [],
@@ -77,7 +82,7 @@ interface ActorLookup {
 const feedOf = (
   system: ActorLookup,
   sessionId: string,
-): { send: (event: FeedEvent) => void } | undefined =>
+): AnyActorRef | undefined =>
   system.get(sessionActorId(sessionId))?.getSnapshot().children.feed;
 
 /*
@@ -113,6 +118,7 @@ export type HearingCall = {
   conversationId: string;
   sessionId: string;
   readOut: ReadOut | null;
+  log: (line: string) => void;
 };
 
 // Final words are kept; words still changing are live state, and a read-out is never kept.
@@ -125,8 +131,24 @@ export function storeTranscript(
   call: HearingCall,
   event: TranscriptEvent,
 ): void {
-  if (kept(call, event))
-    feedOf(system, call.sessionId)?.send(
-      transcriptRow(call.conversationId, event),
+  if (!kept(call, event)) return;
+
+  const rowId = rowIdOf(call.conversationId, event);
+
+  const rejected = (cause: unknown): void =>
+    call.log(
+      `could not write transcript ${rowId} in Session ${call.sessionId}: ${String(cause)}`,
     );
+
+  const feed = feedOf(system, call.sessionId);
+
+  if (feed?.getSnapshot().status !== 'active')
+    return rejected('Feed unavailable');
+
+  const change: FeedEvent = {
+    ...transcriptRow(call.conversationId, event),
+    committed: { resolve: () => {}, reject: rejected, waitForRetry: true },
+  };
+
+  feed.send(change);
 }

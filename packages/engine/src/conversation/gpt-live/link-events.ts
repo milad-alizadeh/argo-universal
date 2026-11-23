@@ -59,11 +59,6 @@ const personDone =
       : transcript;
   };
 
-// The service closed the call: the words still being said end first, then the close with the reason it gave.
-const closed =
-  ({ reason }: { reason?: string }): Step =>
-  (turns) => [...turns.closing(), serviceClosed(reason)];
-
 type DelegationItem = {
   id: string;
   content: { type: string; text: string }[];
@@ -140,7 +135,7 @@ const reported = z.union([
       type: z.literal('session.closed'),
       reason: z.string().optional(),
     })
-    .transform(closed),
+    .transform(({ reason }) => report(serviceClosed(reason))),
 ]);
 
 const rejectFrame = frameRejections('GPT-Live control link');

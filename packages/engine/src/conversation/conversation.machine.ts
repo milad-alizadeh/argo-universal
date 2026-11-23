@@ -189,6 +189,7 @@ const finished = (
 const hearing = (context: ConversationContext): HearingCall => ({
   ...runningCall(context),
   readOut: context.readOut,
+  log: context.log,
 });
 
 function transcriptOf(event: ConversationEvent): TranscriptEvent | undefined {
@@ -391,11 +392,12 @@ const lastWordsOf =
   (self: AnyActorRef, call: RunningCall) =>
   (event: ConversationProviderEvent): void => {
     // SAFETY: `self` is this machine's own actor, whose snapshot's context is a ConversationContext.
-    const { readOut } = (self.getSnapshot() as { context: ConversationContext })
-      .context;
+    const { readOut, log } = (
+      self.getSnapshot() as { context: ConversationContext }
+    ).context;
 
     if (isTranscript(event))
-      storeTranscript(self.system, { ...call, readOut }, event);
+      storeTranscript(self.system, { ...call, readOut, log }, event);
   };
 
 const providerInput = (

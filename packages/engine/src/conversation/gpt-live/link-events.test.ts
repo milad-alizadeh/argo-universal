@@ -32,3 +32,23 @@ describe('the voice speaking, as the control link reports it', () => {
     );
   });
 });
+
+it('keeps the newer turn open when an older turn finishes late', () => {
+  const reader = new LinkReader();
+  const newer = voiceTurnOpens.replace('turn_ElnYpcwGda0vchfrIUvO2', 'newer');
+  reader.read(voiceTurnOpens);
+  reader.read(newer);
+  reader.read(voiceTurnDone);
+  reader.read(
+    '{"type":"turn.delta","turn_id":"newer","delta":", still here."}',
+  );
+
+  expect(reader.closing()).toEqual([
+    {
+      type: 'voice.transcript',
+      id: 'newer',
+      text: 'Okay, still here.',
+      final: true,
+    },
+  ]);
+});

@@ -67,7 +67,7 @@ export class SpokenTurns {
   public done(speaker: Speaker, turn: Utterance): ConversationProviderEvent[] {
     const open = this.matching(speaker, turn.id);
 
-    this.open.delete(speaker);
+    if (this.open.get(speaker)?.id === turn.id) this.open.delete(speaker);
 
     return this.settle({
       ...open,
