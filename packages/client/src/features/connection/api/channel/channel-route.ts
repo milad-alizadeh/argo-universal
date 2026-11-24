@@ -53,10 +53,27 @@ export class ChannelRoute {
 
   public async open<T>(
     attempt: (address: ChannelAddress) => Promise<T>,
+    discard: (channel: T) => void = () => {},
   ): Promise<T> {
     const causes: unknown[] = [];
+    const last = this.proven;
 
-    for await (const address of this.candidates()) {
+    if (last) {
+      const result = await this.tryAt(last, attempt, causes);
+
+      if (result) return result.channel;
+    }
+
+    const announcing = this.lookAgain();
+    const kept = inOrder([this.keptAddress, ...this.otherKeptAddresses]);
+    const direct = kept.filter(differentFrom(last)).filter((a) => !linkLocal(a));
+    const first = await this.race(direct, attempt, discard, causes);
+
+    if (first) return first.channel;
+    const asked = new Set([last, ...direct].map((a) => a && keyOf(a)));
+    const everywhere = inOrder([...kept, ...(await announcing)]);
+
+    for (const address of everywhere.filter((a) => !asked.has(keyOf(a)))) {
       const result = await this.tryAt(address, attempt, causes);
 
       if (result) return result.channel;
@@ -65,22 +82,38 @@ export class ChannelRoute {
     throw new ServerUnreachable(causes);
   }
 
-  private async *candidates(): AsyncGenerator<ChannelAddress> {
-    const last = this.proven;
+  // The addresses Pairing kept are asked together: a stale home address that never answers must not hold up the tailnet one. The first to prove the key wins; one that answers later is closed.
+  private async race<T>(
+    addresses: readonly ChannelAddress[],
+    attempt: (address: ChannelAddress) => Promise<T>,
+    discard: (channel: T) => void,
+    causes: unknown[],
+  ): Promise<{ channel: T } | undefined> {
+    if (addresses.length === 0) return undefined;
 
-    if (last) yield last;
-    const announcing = this.lookAgain();
-    const kept = inOrder([this.keptAddress, ...this.otherKeptAddresses]);
+    return new Promise((resolve, reject) => {
+      let won = false;
+      let pending = addresses.length;
 
-    const direct = kept
-      .filter(differentFrom(last))
-      .filter((a) => !linkLocal(a));
+      for (const address of addresses) {
+        this.tryAt(address, attempt, causes).then(
+          (result) => {
+            pending -= 1;
 
-    yield* direct;
-    const everywhere = inOrder([...kept, ...(await announcing)]);
-    const asked = new Set([last, ...direct].map((a) => a && keyOf(a)));
-
-    yield* everywhere.filter((address) => !asked.has(keyOf(address)));
+            if (result && won) discard(result.channel);
+            else if (result) {
+              won = true;
+              resolve(result);
+            } else if (pending === 0 && !won) resolve(undefined);
+          },
+          (cause: unknown) => {
+            pending -= 1;
+            if (!won) reject(cause as Error);
+            won = true;
+          },
+        );
+      }
+    });
   }
 
   private async tryAt<T>(

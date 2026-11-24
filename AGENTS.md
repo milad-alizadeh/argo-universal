@@ -13,6 +13,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Appearance: a test-first or regression-test step covers behaviour and layout invariants only. How the UI looks is proved by before and after screenshots, not by a test (`docs/agents/storybook.md`, Tests).
 - Designs: Storybook owns how built UI looks; Paper is for exploring a design before it is built, and its board is deleted once the design ships. Before drawing in Paper, read `docs/agents/paper.md`.
 - Profiling: before chasing a slow screen or adding a render-count test, read `docs/agents/profiling.md`.
+- Remote testing: before testing the phone away from home or pairing over Tailscale, read `docs/agents/remote-testing.md`.
 - Android emulator: before booting or driving an Android emulator, read `docs/agents/android-emulator.md`.
 
 ## Agent skills

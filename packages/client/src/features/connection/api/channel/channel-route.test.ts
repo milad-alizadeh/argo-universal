@@ -69,6 +69,47 @@ describe('ChannelRoute', () => {
     expect(server.tried).toEqual([kept, tailnet]);
   });
 
+  it('keeps the first kept address that answers, without waiting on a dead one that never does', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+
+    const attempt = async (address: ChannelAddress): Promise<string> =>
+      address.host === kept.host
+        ? new Promise<string>(() => {})
+        : `channel at ${address.host}`;
+
+    await expect(route.open(attempt)).resolves.toBe(
+      `channel at ${tailnet.host}`,
+    );
+  });
+
+  it('closes a channel that opens after another address has already won', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+    const discard = vi.fn();
+    let answerLate: (channel: string) => void = () => {};
+
+    const attempt = async (address: ChannelAddress): Promise<string> =>
+      address.host === kept.host
+        ? new Promise<string>((resolve) => {
+            answerLate = resolve;
+          })
+        : 'tailnet channel';
+
+    await route.open(attempt, discard);
+    answerLate('late lan channel');
+
+    await vi.waitFor(() => {
+      expect(discard).toHaveBeenCalledWith('late lan channel');
+    });
+  });
+
+  it('says the Server is unreachable once every kept address has failed', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+    const server = serverOn();
+
+    await expect(route.open(server.attempt)).rejects.toThrow(unreachable);
+    expect(server.tried).toEqual([kept, tailnet]);
+  });
+
   it('then tries where the Server announces itself now, when none of the kept addresses answers', async () => {
     const now = lan(40);
     const route = new ChannelRoute(kept, announcing(now), [tailnet]);
