@@ -157,7 +157,7 @@ export const ChangedRowInSectionDrawsAlone: Story = {
 
 const longSectioned: WireNode = {
   ...firstPage,
-  props: { ...firstPage.props, pagination: undefined },
+  props: { appearance: 'plain', density: 'compact' },
   children: [
     sectionOf('one', issueListTree(200).children),
     sectionOf(
