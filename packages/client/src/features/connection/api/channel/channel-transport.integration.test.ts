@@ -5,7 +5,7 @@ import {
   startAcpEngine,
 } from '@repo/engine/mocks/acp-engine';
 import { waitForAcpSessionIdle } from '@repo/engine/mocks/acp-feed';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import {
   endpointOf,
   nodeChannelPlatform,
@@ -13,7 +13,11 @@ import {
   pairedNodeDevice,
 } from '../../../../../mocks/node-channel-platform';
 import { channelServerUrl, createTRPCClient } from '../trpc/create-trpc-client';
-import { createChannelTransport } from './channel-transport';
+import type { ByteSocket } from './byte-socket';
+import {
+  createChannelTransport,
+  type ChannelPlatform,
+} from './channel-transport';
 import { PairingRefused } from './open-channel';
 
 const closers: (() => Promise<void> | void)[] = [];
@@ -153,4 +157,79 @@ it('names the reason when the Pairing Ticket was already spent', async () => {
   await expect(openAs(host, nodeChannelPlatform(), { ticket })).rejects.toEqual(
     new PairingRefused('ticket-spent'),
   );
+});
+
+const nobody = (): void => {};
+
+// Wraps the platform so the first socket it opens can be made to swallow everything in both directions without closing, as one does after a Wi-Fi change.
+interface Silenceable {
+  platform: ChannelPlatform;
+  sockets: ByteSocket[];
+  silence: () => void;
+}
+
+function silenceable(platform: ChannelPlatform): Silenceable {
+  const sockets: ByteSocket[] = [];
+  let silent = false;
+
+  const openSocket: ChannelPlatform['openSocket'] = async (to) => {
+    const socket = await platform.openSocket(to);
+    const first = sockets.length === 0;
+    const heard = (): boolean => !(first && silent);
+    const write = socket.write.bind(socket);
+    const received = new Map<'to', ByteSocket['onData']>();
+
+    sockets.push(socket);
+
+    socket.write = (data): void => {
+      if (heard()) write(data);
+    };
+
+    Object.defineProperty(socket, 'onData', {
+      get: (): ByteSocket['onData'] => (chunk) => {
+        if (heard()) (received.get('to') ?? nobody)(chunk);
+      },
+      set: (next: ByteSocket['onData']): void => {
+        received.set('to', next);
+      },
+    });
+
+    return socket;
+  };
+
+  return {
+    platform: { ...platform, openSocket },
+    sockets,
+    silence: (): void => {
+      silent = true;
+    },
+  };
+}
+
+it('reconnects when the Connection goes silent without closing', async () => {
+  const host = await startEngineTestHost();
+  const quiet = silenceable(nodeChannelPlatform(await pairedNodeDevice(host)));
+  const { host: address, port, serverPublicKey } = await endpointOf(host);
+
+  const transport = createChannelTransport(
+    { address: { host: address, port }, serverPublicKey },
+    quiet.platform,
+  );
+
+  const trpc = createTRPCClient(channelServerUrl, undefined, {
+    channel: transport,
+    keepAlive: { intervalMs: 50, pongTimeoutMs: 50 },
+  });
+
+  closers.push(trpc.close);
+
+  await trpc.client.system.info.query();
+  quiet.silence();
+
+  await vi.waitFor(() => expect(quiet.sockets).toHaveLength(2), {
+    timeout: 5000,
+  });
+  expect(await trpc.client.system.info.query()).toMatchObject({
+    version: '1.2.3',
+  });
 });

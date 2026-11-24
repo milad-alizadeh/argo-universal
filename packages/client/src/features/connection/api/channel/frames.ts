@@ -1,3 +1,4 @@
+import { ByteQueue } from './byte-queue';
 import { concatBytes } from './bytes';
 
 const headerBytes = 2;
@@ -13,21 +14,21 @@ export function frameRecord(record: Uint8Array): Uint8Array {
 }
 
 // Where the first record in these bytes ends, once all of it is here.
-function recordEnd(bytes: Uint8Array): number | undefined {
+function recordEnd(bytes: Uint8Array, held: number): number | undefined {
   if (bytes.length < headerBytes) return undefined;
 
   const end =
     headerBytes + new DataView(bytes.buffer, bytes.byteOffset).getUint16(0);
 
-  return bytes.length < end ? undefined : end;
+  return held < end ? undefined : end;
 }
 
 // TCP hands over whatever bytes have arrived, so each record is read back out of the stream by the length that precedes it.
 export class FrameReader {
-  private pending: Uint8Array = new Uint8Array(0);
+  private readonly pending = new ByteQueue();
 
   public push(chunk: Uint8Array): Uint8Array[] {
-    this.pending = concatBytes(this.pending, chunk);
+    this.pending.push(chunk);
     const records: Uint8Array[] = [];
 
     for (let record = this.take(); record; record = this.take())
@@ -37,12 +38,10 @@ export class FrameReader {
   }
 
   private take(): Uint8Array | undefined {
-    const end = recordEnd(this.pending);
+    const end = recordEnd(this.pending.peek(headerBytes), this.pending.length);
 
     if (end === undefined) return undefined;
-    const record = this.pending.subarray(headerBytes, end);
-    this.pending = this.pending.subarray(end);
 
-    return record;
+    return this.pending.take(end).subarray(headerBytes);
   }
 }
