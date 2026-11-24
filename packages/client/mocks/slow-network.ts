@@ -44,14 +44,17 @@ function wire({ latencyMs = 0, bytesPerSecond }: Link): Wire {
     const next = queue[0];
 
     if (next && timer === undefined)
-      timer = setTimeout(deliverNext, Math.max(0, next.dueAt - Date.now()));
+      timer = setTimeout(
+        deliverNext,
+        Math.max(0, next.dueAt - performance.now()),
+      );
   };
 
   return {
     send: (deliver, bytes) => {
       const onWire = bytesPerSecond ? (bytes / bytesPerSecond) * 1000 : 0;
 
-      freeAt = Math.max(freeAt, Date.now()) + onWire;
+      freeAt = Math.max(freeAt, performance.now()) + onWire;
       lastDueAt = Math.max(lastDueAt, freeAt + latencyMs);
       queue.push({ dueAt: lastDueAt, deliver });
       arm();

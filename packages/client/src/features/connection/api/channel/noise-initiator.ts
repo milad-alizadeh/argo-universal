@@ -1,4 +1,3 @@
-import type { Aead } from './aead';
 import { concatBytes } from './bytes';
 import { ChannelCipher } from './channel-cipher';
 import { tagBytes } from './cipher-state';
@@ -24,8 +23,6 @@ export interface InitiatorInput {
 export interface HandshakeVector {
   readonly ephemeral: Keypair;
   readonly prologue: Uint8Array;
-  // Which cipher seals the records; a test sets it to run the same vector through the phone's.
-  readonly aead?: Aead;
 }
 
 interface AcceptedChannel {
@@ -67,11 +64,7 @@ class Exchange {
     private readonly ephemeral: Keypair,
     vector: HandshakeVector | undefined,
   ) {
-    this.noise = new SymmetricState(
-      input.serverPublicKey,
-      vector?.prologue,
-      vector?.aead,
-    );
+    this.noise = new SymmetricState(input.serverPublicKey, vector?.prologue);
   }
 
   // `e`, then the Device Key sealed to the Server alone: `es` first, so only the holder of that static private key can read it, then `ss`, which proves this Device holds its own.
