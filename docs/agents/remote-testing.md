@@ -25,3 +25,7 @@ For a repeatable slow link in CI, see `docs/agents/slow-network-tests.md`.
 - The Connection shows the Server unreachable: Tailscale is down on either side, or Local network access is off.
 - It connects only on Wi-Fi: the pairing happened without Tailscale up. Pair again.
 - iOS `ws://` to `100.x` is expected to work and is not yet verified on a device. Record the result here when you test it.
+
+## Why the iOS App allows `ts.net` over `ws://`
+
+The channel's socket on iOS is `URLSessionWebSocketTask`, which App Transport Security polices (React Native's own WebSocket was not). `app.json` therefore sets `NSAllowsLocalNetworking` for LAN and IP addresses and an exception for `ts.net` (`NSIncludesSubdomains`, `NSExceptionAllowsInsecureHTTPLoads`), so a typed `<computer>.<tailnet>.ts.net:<port>` is not blocked. The outer transport is plaintext, but everything inside is encrypted and authenticated by the Noise channel (ADR-0045).

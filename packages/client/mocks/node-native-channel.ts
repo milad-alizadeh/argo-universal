@@ -57,8 +57,8 @@ const cipherOf = (handed: ChannelHandOver): ChannelCipher =>
   );
 
 /*
- * The native module's contract, kept in Node: sockets come from the `openSocket` it is given and, after the hand-over, the channel runs on the same JavaScript framing the web uses.
- * It does the one thing the real module does that matters to JavaScript: it takes the keys and record numbers it is handed, and from then on sends only finished message strings. A test that passes through it proves what the JavaScript side hands over and does with what comes back.
+ * The native module's contract, kept in Node. It tests the JavaScript side of the hand-over (the keys, the record numbers, one string per message), not Swift or Kotlin: after the hand-over it reuses the JavaScript framing, so the native record paths have tests of their own (`apps/universal-app/modules/argo-channel`).
+ * Its sockets come from the `openSocket` it is given. It does the one thing the real module does that matters to JavaScript: it takes the keys and record numbers it is handed, and from then on sends only finished message strings.
  */
 export class NodeNativeModule implements ChannelNative {
   // Every message string the module handed up.
@@ -106,8 +106,8 @@ export class NodeNativeModule implements ChannelNative {
       });
   }
 
-  public write(id: string, base64: string): void {
-    this.entryOf(id).socket.write(base64Bytes(base64));
+  public write(id: string, bytes: Uint8Array): void {
+    this.entryOf(id).socket.write(bytes);
   }
 
   public handOver(id: string, handed: ChannelHandOver): void {
@@ -149,6 +149,7 @@ export class NodeNativeModule implements ChannelNative {
     ws.addEventListener('open', () => this.emit(id, { id, type: 'open' }));
 
     ws.addEventListener('message', (event) => {
+      if (!('data' in event)) return;
       this.messages.push(String(event.data));
       this.emit(id, { id, type: 'message', data: String(event.data) });
     });
@@ -163,10 +164,6 @@ export class NodeNativeModule implements ChannelNative {
 
     if (entry.ws && event.type === 'bytes') this.rawEventsAfterHandOver += 1;
 
-    this.deliver(event);
-  }
-
-  private deliver(event: NativeChannelEvent): void {
     for (const listener of this.listeners) listener(event);
   }
 

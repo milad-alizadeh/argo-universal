@@ -14,6 +14,7 @@ private final class Channel {
   let socket: ChannelSocket
   private let lock = NSLock()
   private var session: ChannelSession?
+  private var closed = false
   private let emit: ([String: Any]) -> Void
 
   init(socket: ChannelSocket, emit: @escaping ([String: Any]) -> Void) {
@@ -22,6 +23,18 @@ private final class Channel {
   }
 
   func event(_ event: [String: Any]) {
+    emit(event)
+  }
+
+  /// The channel ended, however it did; JavaScript hears of it once, so the Server's close frame and the socket's own close do not both reach it.
+  func ended(code: Int, reason: String, error: String?) {
+    lock.lock()
+    let first = !closed
+    closed = true
+    lock.unlock()
+    guard first else { return }
+    var event: [String: Any] = ["type": "close", "code": code, "reason": reason]
+    if let error { event["error"] = error }
     emit(event)
   }
 
@@ -52,18 +65,23 @@ private final class Channel {
       let result = try session.receive(outer)
       result.replies.forEach(socket.send)
       for inner in result.events {
-        event(describe(inner))
-        if case .close = inner { socket.close() }
+        if case .close(let code, let reason) = inner {
+          ended(code: code, reason: reason, error: nil)
+          socket.close()
+        } else {
+          event(describe(inner))
+        }
       }
     } catch {
-      event(["type": "close", "code": 1006, "reason": "", "error": "\(error)"])
+      ended(code: 1006, reason: "", error: "\(error)")
       socket.close()
     }
   }
 
   func send(_ message: String) throws {
     lock.lock()
-    defer { lock.unlock() }
+    let session = self.session
+    lock.unlock()
     guard let session else { throw ChannelError.malformed("not handed over") }
     try session.send(message: message).forEach(socket.send)
   }
@@ -80,12 +98,12 @@ private final class Channel {
     switch inner {
     case .open: return ["type": "open"]
     case .message(let text): return ["type": "message", "data": text]
-    case .close(let code, let reason): return ["type": "close", "code": code, "reason": reason]
+    case .close: return [:]
     }
   }
 }
 
-/// The channel's WebSocket, owned natively (#2704). JavaScript opens the socket and runs the Noise handshake over it, then hands over the session keys; from there this module decrypts each record, decompresses it when the channel does (#2705), and hands JavaScript one message string per event, and does the reverse to send.
+/// The channel's WebSocket, owned natively (#2704). JavaScript opens the socket and runs the Noise handshake over it, then hands over the session keys; from there this module decrypts each record, and hands JavaScript one message string per event, and does the reverse to send.
 public final class ArgoChannelModule: Module {
   private var channels: [String: Channel] = [:]
   private let channelsLock = NSLock()
@@ -105,9 +123,7 @@ public final class ArgoChannelModule: Module {
       }
       socket.onMessage = { channel.received($0) }
       socket.onClose = { [weak self] code, reason, error in
-        var event: [String: Any] = ["type": "close", "code": code, "reason": reason]
-        if let error { event["error"] = error }
-        channel.event(event)
+        channel.ended(code: code, reason: reason, error: error)
         self?.forget(id)
       }
       self.channelsLock.lock()
@@ -121,8 +137,9 @@ public final class ArgoChannelModule: Module {
       }
     }
 
-    Function("write") { (id: String, base64: String) in
-      if let data = Data(base64Encoded: base64) { self.channel(id)?.socket.send(data) }
+    // `Data` is a `Uint8Array` on the JavaScript side.
+    Function("write") { (id: String, bytes: Data) in
+      self.channel(id)?.socket.send(bytes)
     }
 
     Function("handOver") { (id: String, record: HandOverRecord) in

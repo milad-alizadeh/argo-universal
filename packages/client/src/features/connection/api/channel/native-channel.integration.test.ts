@@ -11,8 +11,11 @@ import {
   nodeNativeChannel,
   type NodeNativeModule,
 } from '../../../../../mocks/node-native-channel';
+import { openConnection } from '../open-connection';
 import { channelServerUrl, createTRPCClient } from '../trpc/create-trpc-client';
 import { createChannelTransport } from './channel-transport';
+
+const notAllowedState = 'not-allowed';
 
 const closers: (() => Promise<void> | void)[] = [];
 
@@ -83,4 +86,56 @@ it('reconnects with a new handshake when the module reports the socket closed', 
 
   await vi.waitFor(() => expect(native.opened()).toBe(2), { timeout: 5000 });
   expect(await client.system.info.query()).toMatchObject({ version: '1.2.3' });
+});
+
+// These run the Server, the handshake and tRPC for real and the JavaScript side of the module's contract. The module itself is `NodeNativeModule`, which reuses the JavaScript framing after the hand-over, so what the Swift and Kotlin record paths do is tested in their own tests (`modules/argo-channel`).
+async function connectedThroughTheModule(): Promise<{
+  host: Awaited<ReturnType<typeof startEngineTestHost>>;
+  opened: ReturnType<typeof openConnection>;
+}> {
+  const host = await startEngineTestHost({ version: '1.2.3' });
+  const platform = nodeChannelPlatform(await pairedNodeDevice(host));
+  const { channel, module } = nodeNativeChannel(platform.openSocket);
+
+  const opened = openConnection(await endpointOf(host), {
+    ...platform,
+    nativeChannel: channel,
+  });
+
+  closers.push(opened.close, () => module.closeAll());
+  await vi.waitFor(() => expect(opened.connection.state()).toBe('open'), {
+    timeout: 5000,
+  });
+
+  return { host, opened };
+}
+
+const notAllowed = (connection: { state: () => string }): Promise<void> =>
+  vi.waitFor(() => expect(connection.state()).toBe(notAllowedState), {
+    timeout: 5000,
+  });
+
+it('says Not allowed when the Server does not know this Device, through the module', async () => {
+  const host = await startEngineTestHost();
+  const platform = nodeChannelPlatform();
+  const { channel, module } = nodeNativeChannel(platform.openSocket);
+
+  const opened = openConnection(await endpointOf(host), {
+    ...platform,
+    nativeChannel: channel,
+  });
+
+  closers.push(opened.close, () => module.closeAll());
+  await notAllowed(opened.connection);
+  expect(opened.connection.state()).toBe(notAllowedState);
+});
+
+it('says Not allowed once the owner unpairs the Device, through the module', async () => {
+  const { host, opened } = await connectedThroughTheModule();
+  const [, device] = await host.caller.devices.list();
+
+  await host.caller.devices.unpair({ deviceId: device?.id ?? '' });
+
+  await notAllowed(opened.connection);
+  expect(opened.connection.state()).toBe(notAllowedState);
 });

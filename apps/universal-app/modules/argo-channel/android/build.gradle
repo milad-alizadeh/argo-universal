@@ -10,6 +10,10 @@ android {
     versionCode 1
     versionName "1.0.0"
   }
+  sourceSets {
+    // The vectors the JavaScript test makes from the Server's cipher, shared with the iOS tests.
+    test.resources.srcDirs += ['../fixtures']
+  }
   lintOptions {
     abortOnError false
   }
@@ -18,4 +22,8 @@ android {
 dependencies {
   // The channel's outer WebSocket is OkHttp's, the client React Native's own WebSocket uses; `react-android` exposes it.
   implementation 'com.facebook.react:react-android'
+
+  // Runs on the JVM: `./gradlew :argo-channel:testDebugUnitTest` in a prebuilt `android/` project (see docs/agents/native-channel-tests.md).
+  testImplementation 'junit:junit:4.13.2'
+  testImplementation 'org.json:json:20240303'
 }

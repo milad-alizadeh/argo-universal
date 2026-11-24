@@ -1,10 +1,11 @@
 import CryptoKit
 import Foundation
 
-// The channel's record path, with no sockets and no Expo in it, so it can be read and run on its own (ADR-0045).
-// What arrives is one pipeline: outer WebSocket message -> records (two-byte length) -> decrypt -> PayloadCodec -> inner HTTP upgrade and WebSocket frames -> message strings.
+// The channel's record path, with no sockets and no Expo in it, so it can be read and tested on its own (ADR-0045).
+// What arrives is one pipeline: outer WebSocket message -> records (two-byte length) -> decrypt -> inner HTTP upgrade and WebSocket frames -> message strings.
+// Compression (#2705) is one more step in `ChannelSession.receive` after a record is opened, and in `records(of:)` before one is sealed.
 
-enum ChannelError: Error {
+enum ChannelError: Error, Equatable {
   case authentication
   case upgradeRefused(String)
   case malformed(String)
@@ -12,6 +13,34 @@ enum ChannelError: Error {
 
 private let tagBytes = 16
 private let maxRecordBytes = 65_535
+private let maxFrameBytes = 1 << 30
+
+/// A byte queue that reads from the front without copying what is left, so a long stream is read in linear time.
+struct ByteQueue {
+  private var storage = Data()
+  private var head = 0
+
+  var count: Int { storage.count - head }
+
+  mutating func append(_ data: Data) {
+    storage.append(data)
+  }
+
+  func byte(at index: Int) -> UInt8 {
+    storage[storage.startIndex + head + index]
+  }
+
+  mutating func take(_ length: Int) -> Data {
+    let start = storage.startIndex + head
+    let taken = Data(storage[start..<start + length])
+    head += length
+    if head > 4096 && head * 2 > storage.count {
+      storage = Data(storage[(storage.startIndex + head)...])
+      head = 0
+    }
+    return taken
+  }
+}
 
 /// One direction of the channel: a key and a record number, counted from the number JavaScript's handshake reached. The number is not on the wire.
 struct RecordCipher {
@@ -34,10 +63,9 @@ struct RecordCipher {
   mutating func open(_ record: Data) throws -> Data {
     guard record.count >= tagBytes else { throw ChannelError.authentication }
     let nonce = try nextNonce()
-    let body = record.prefix(record.count - tagBytes)
-    let tag = record.suffix(tagBytes)
     do {
-      let box = try ChaChaPoly.SealedBox(nonce: nonce, ciphertext: body, tag: tag)
+      let box = try ChaChaPoly.SealedBox(
+        nonce: nonce, ciphertext: record.prefix(record.count - tagBytes), tag: record.suffix(tagBytes))
       return try ChaChaPoly.open(box, using: key)
     } catch {
       throw ChannelError.authentication
@@ -50,29 +78,18 @@ struct RecordCipher {
   }
 }
 
-/// What happens to a record's plaintext between the cipher and the inner stream. Today it is nothing. Compression (#2705) is a codec here: `decode` inflates after a record is opened, `encode` deflates before one is sealed, and the pipeline needs no other change.
-protocol PayloadCodec {
-  func decode(_ plaintext: Data) throws -> Data
-  func encode(_ plaintext: Data) throws -> Data
-}
-
-struct IdentityCodec: PayloadCodec {
-  func decode(_ plaintext: Data) throws -> Data { plaintext }
-  func encode(_ plaintext: Data) throws -> Data { plaintext }
-}
-
 /// Records come out of the byte stream by the two-byte length that precedes each.
 struct RecordReader {
-  private var pending = Data()
+  private var pending = ByteQueue()
 
   mutating func push(_ chunk: Data) -> [Data] {
     pending.append(chunk)
     var records: [Data] = []
     while pending.count >= 2 {
-      let length = Int(pending[pending.startIndex]) << 8 | Int(pending[pending.startIndex + 1])
+      let length = Int(pending.byte(at: 0)) << 8 | Int(pending.byte(at: 1))
       guard pending.count >= 2 + length else { break }
-      records.append(Data(pending.dropFirst(2).prefix(length)))
-      pending = Data(pending.dropFirst(2 + length))
+      _ = pending.take(2)
+      records.append(pending.take(length))
     }
     return records
   }
@@ -84,12 +101,12 @@ enum InnerEvent: Equatable {
   case close(code: Int, reason: String)
 }
 
-private let headEnd = Data("\r\n\r\n".utf8)
+private let headEnd: [UInt8] = Array("\r\n\r\n".utf8)
 
 /// The plaintext inside the channel: the Server's answer to the WebSocket upgrade, then RFC 6455 frames. Control frames are answered here; text and binary frames, however split, are one message.
 struct InnerStream {
   private let accept: String
-  private var buffer = Data()
+  private var queue = ByteQueue()
   private var upgraded = false
   private var fragments = Data()
 
@@ -104,12 +121,11 @@ struct InnerStream {
   }
 
   mutating func push(_ chunk: Data) throws -> Output {
-    buffer.append(chunk)
+    queue.append(chunk)
     var output = Output()
     if !upgraded {
-      guard let end = buffer.range(of: headEnd) else { return output }
-      try checkUpgrade(String(decoding: buffer[buffer.startIndex..<end.lowerBound], as: UTF8.self))
-      buffer = Data(buffer[end.upperBound...])
+      guard let end = headLength() else { return output }
+      try checkUpgrade(String(decoding: queue.take(end), as: UTF8.self))
       upgraded = true
       output.events.append(.open)
     }
@@ -117,6 +133,17 @@ struct InnerStream {
       handle(frame, into: &output)
     }
     return output
+  }
+
+  // How many bytes the head takes, through its blank line, once all of it is here.
+  private func headLength() -> Int? {
+    guard queue.count >= headEnd.count else { return nil }
+    for start in 0...(queue.count - headEnd.count) {
+      if headEnd.indices.allSatisfy({ queue.byte(at: start + $0) == headEnd[$0] }) {
+        return start + headEnd.count
+      }
+    }
+    return nil
   }
 
   private func checkUpgrade(_ head: String) throws {
@@ -135,28 +162,32 @@ struct InnerStream {
     let payload: Data
   }
 
+  // Reads only the header to learn the frame's length, then takes the frame once all of it is here.
   private mutating func takeFrame() throws -> Frame? {
-    let bytes = [UInt8](buffer)
-    guard bytes.count >= 2 else { return nil }
-    let masked = bytes[1] & 0x80 != 0
-    var length = Int(bytes[1] & 0x7f)
+    guard queue.count >= 2 else { return nil }
+    let masked = queue.byte(at: 1) & 0x80 != 0
+    var length = Int(queue.byte(at: 1) & 0x7f)
     var at = 2
     if length == 126 {
-      guard bytes.count >= 4 else { return nil }
-      length = Int(bytes[2]) << 8 | Int(bytes[3])
+      guard queue.count >= 4 else { return nil }
+      length = Int(queue.byte(at: 2)) << 8 | Int(queue.byte(at: 3))
       at = 4
     } else if length == 127 {
-      guard bytes.count >= 10 else { return nil }
-      length = bytes[2..<10].reduce(0) { $0 << 8 | Int($1) }
+      guard queue.count >= 10 else { return nil }
+      var wide: UInt64 = 0
+      for index in 2..<10 { wide = wide << 8 | UInt64(queue.byte(at: index)) }
+      guard wide <= UInt64(maxFrameBytes) else { throw ChannelError.malformed("frame length") }
+      length = Int(wide)
       at = 10
     }
     let maskAt = at
     if masked { at += 4 }
-    guard bytes.count >= at + length else { return nil }
-    var payload = Array(bytes[at..<at + length])
-    if masked { for index in payload.indices { payload[index] ^= bytes[maskAt + index % 4] } }
-    buffer = Data(bytes[(at + length)...])
-    return Frame(fin: bytes[0] & 0x80 != 0, opcode: bytes[0] & 0x0f, payload: Data(payload))
+    guard queue.count >= at + length else { return nil }
+    let mask = masked ? (0..<4).map { queue.byte(at: maskAt + $0) } : []
+    let first = queue.byte(at: 0)
+    var payload = Array(queue.take(at + length).dropFirst(at))
+    if masked { for index in payload.indices { payload[index] ^= mask[index % 4] } }
+    return Frame(fin: first & 0x80 != 0, opcode: first & 0x0f, payload: Data(payload))
   }
 
   private mutating func handle(_ frame: Frame, into output: inout Output) {
@@ -166,10 +197,10 @@ struct InnerStream {
     case 10:
       break
     case 8:
-      let code = frame.payload.count >= 2 ? Int(frame.payload[frame.payload.startIndex]) << 8 | Int(frame.payload[frame.payload.startIndex + 1]) : 1005
-      let reason = String(decoding: frame.payload.dropFirst(2), as: UTF8.self)
+      let bytes = [UInt8](frame.payload)
+      let code = bytes.count >= 2 ? Int(bytes[0]) << 8 | Int(bytes[1]) : 1005
       output.replies.append((opcode: 8, payload: frame.payload))
-      output.events.append(.close(code: code, reason: reason))
+      output.events.append(.close(code: code, reason: String(decoding: bytes.dropFirst(2), as: UTF8.self)))
     default:
       fragments.append(frame.payload)
       if frame.fin {
@@ -198,37 +229,49 @@ func clientFrame(opcode: UInt8, payload: Data, mask: [UInt8]) -> Data {
 }
 
 /// Everything a handed-over channel does, as data in and data out. The socket code feeds it outer messages and sends what it returns.
+/// The two ciphers count records, so every call that touches them runs under one lock: a receive, a send and a close never interleave and no record number is reused or skipped.
 final class ChannelSession {
+  private let lock = NSLock()
   private var sending: RecordCipher
   private var receiving: RecordCipher
   private var reader = RecordReader()
   private var inner: InnerStream
   private let upgrade: String
-  private let codec: PayloadCodec
+  private let randomMask: () -> [UInt8]
 
   init(
     sendKey: Data, sendRecords: UInt64, receiveKey: Data, receiveRecords: UInt64,
-    upgrade: String, accept: String, codec: PayloadCodec = IdentityCodec()
+    upgrade: String, accept: String,
+    randomMask: @escaping () -> [UInt8] = ChannelSession.secureMask
   ) {
     sending = RecordCipher(key: sendKey, records: sendRecords)
     receiving = RecordCipher(key: receiveKey, records: receiveRecords)
     inner = InnerStream(accept: accept)
     self.upgrade = upgrade
-    self.codec = codec
+    self.randomMask = randomMask
+  }
+
+  static func secureMask() -> [UInt8] {
+    var mask = [UInt8](repeating: 0, count: 4)
+    _ = SecRandomCopyBytes(kSecRandomDefault, 4, &mask)
+    return mask
   }
 
   /// The first outer message: the upgrade request, sealed.
   func start() throws -> [Data] {
-    try records(of: Data(upgrade.utf8))
+    lock.lock()
+    defer { lock.unlock() }
+    return try records(of: Data(upgrade.utf8))
   }
 
   /// One outer message in: the events it completes, and the outer messages to send in answer.
   func receive(_ outer: Data) throws -> (events: [InnerEvent], replies: [Data]) {
+    lock.lock()
+    defer { lock.unlock() }
     var events: [InnerEvent] = []
     var replies: [Data] = []
     for record in reader.push(outer) {
-      let plaintext = try codec.decode(try receiving.open(record))
-      let output = try inner.push(plaintext)
+      let output = try inner.push(try receiving.open(record))
       events += output.events
       for reply in output.replies {
         replies += try frames(opcode: reply.opcode, payload: reply.payload)
@@ -238,17 +281,19 @@ final class ChannelSession {
   }
 
   func send(message: String) throws -> [Data] {
-    try frames(opcode: 1, payload: Data(message.utf8))
+    lock.lock()
+    defer { lock.unlock() }
+    return try frames(opcode: 1, payload: Data(message.utf8))
   }
 
   func close(code: Int, reason: String) throws -> [Data] {
-    try frames(opcode: 8, payload: Data([UInt8(code >> 8), UInt8(code & 0xff)]) + Data(reason.utf8))
+    lock.lock()
+    defer { lock.unlock() }
+    return try frames(opcode: 8, payload: Data([UInt8(code >> 8), UInt8(code & 0xff)]) + Data(reason.utf8))
   }
 
   private func frames(opcode: UInt8, payload: Data) throws -> [Data] {
-    var mask = [UInt8](repeating: 0, count: 4)
-    _ = SecRandomCopyBytes(kSecRandomDefault, 4, &mask)
-    return try records(of: clientFrame(opcode: opcode, payload: payload, mask: mask))
+    try records(of: clientFrame(opcode: opcode, payload: payload, mask: randomMask()))
   }
 
   // Each message becomes one record when it fits, which is nearly always; a larger one is cut into records the Server reads back in order.
@@ -258,7 +303,7 @@ final class ChannelSession {
     var start = bytes.startIndex
     repeat {
       let end = min(start + largest, bytes.endIndex)
-      let sealed = try sending.seal(try codec.encode(Data(bytes[start..<end])))
+      let sealed = try sending.seal(Data(bytes[start..<end]))
       outer.append(Data([UInt8(sealed.count >> 8), UInt8(sealed.count & 0xff)]) + sealed)
       start = end
     } while start < bytes.endIndex

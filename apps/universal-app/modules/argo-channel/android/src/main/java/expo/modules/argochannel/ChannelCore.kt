@@ -7,13 +7,49 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-// The channel's record path, with no sockets and no Expo in it (ADR-0045). What arrives is one pipeline:
-// outer WebSocket message -> records (two-byte length) -> decrypt -> PayloadCodec -> inner HTTP upgrade and WebSocket frames -> message strings.
+// The channel's record path, with no sockets and no Expo in it, so it can be read and tested on its own (ADR-0045).
+// What arrives is one pipeline: outer WebSocket message -> records (two-byte length) -> decrypt -> inner HTTP upgrade and WebSocket frames -> message strings.
+// Compression (#2705) is one more step in `ChannelSession.receive` after a record is opened, and in `records` before one is sealed.
 
 class ChannelException(message: String) : Exception(message)
 
 private const val TAG_BYTES = 16
 private const val MAX_RECORD_BYTES = 65_535
+private const val MAX_FRAME_BYTES = 1L shl 30
+
+/** A byte queue that reads from the front without copying what is left, so a long stream is read in linear time. */
+class ByteQueue {
+  private var buffer = ByteArray(1024)
+  private var start = 0
+  private var end = 0
+
+  val size: Int get() = end - start
+
+  fun append(chunk: ByteArray) {
+    if (end + chunk.size > buffer.size) {
+      val live = size
+      val grown = ByteArray(maxOf(buffer.size, (live + chunk.size) * 2))
+      System.arraycopy(buffer, start, grown, 0, live)
+      buffer = grown
+      start = 0
+      end = live
+    }
+    System.arraycopy(chunk, 0, buffer, end, chunk.size)
+    end += chunk.size
+  }
+
+  fun byteAt(index: Int): Int = buffer[start + index].toInt() and 0xff
+
+  fun take(length: Int): ByteArray {
+    val taken = buffer.copyOfRange(start, start + length)
+    start += length
+    if (start == end) {
+      start = 0
+      end = 0
+    }
+    return taken
+  }
+}
 
 /** One direction of the channel: a key and a record number, counted from the number JavaScript's handshake reached. The number is not on the wire. */
 class RecordCipher(key: ByteArray, private var records: Long) {
@@ -44,32 +80,18 @@ class RecordCipher(key: ByteArray, private var records: Long) {
   fun seal(plaintext: ByteArray): ByteArray = run(Cipher.ENCRYPT_MODE, plaintext)
 }
 
-/**
- * What happens to a record's plaintext between the cipher and the inner stream. Today it is nothing. Compression (#2705) is a codec here:
- * `decode` inflates after a record is opened, `encode` deflates before one is sealed, and the pipeline needs no other change.
- */
-interface PayloadCodec {
-  fun decode(plaintext: ByteArray): ByteArray
-  fun encode(plaintext: ByteArray): ByteArray
-}
-
-object IdentityCodec : PayloadCodec {
-  override fun decode(plaintext: ByteArray) = plaintext
-  override fun encode(plaintext: ByteArray) = plaintext
-}
-
 /** Records come out of the byte stream by the two-byte length that precedes each. */
 class RecordReader {
-  private var pending = ByteArray(0)
+  private val pending = ByteQueue()
 
   fun push(chunk: ByteArray): List<ByteArray> {
-    pending += chunk
+    pending.append(chunk)
     val records = mutableListOf<ByteArray>()
     while (pending.size >= 2) {
-      val length = (pending[0].toInt() and 0xff shl 8) or (pending[1].toInt() and 0xff)
+      val length = (pending.byteAt(0) shl 8) or pending.byteAt(1)
       if (pending.size < 2 + length) break
-      records.add(pending.copyOfRange(2, 2 + length))
-      pending = pending.copyOfRange(2 + length, pending.size)
+      pending.take(2)
+      records.add(pending.take(length))
     }
     return records
   }
@@ -90,27 +112,18 @@ class InnerOutput {
 
 private val HEAD_END = "\r\n\r\n".toByteArray()
 
-private fun indexOf(haystack: ByteArray, needle: ByteArray): Int {
-  for (at in 0..haystack.size - needle.size) {
-    if (needle.indices.all { haystack[at + it] == needle[it] }) return at
-  }
-  return -1
-}
-
 /** The plaintext inside the channel: the Server's answer to the WebSocket upgrade, then RFC 6455 frames. Control frames are answered here; text and binary frames, however split, are one message. */
 class InnerStream(private val accept: String) {
-  private var buffer = ByteArray(0)
+  private val queue = ByteQueue()
   private var upgraded = false
   private val fragments = ByteArrayOutputStream()
 
   fun push(chunk: ByteArray): InnerOutput {
-    buffer += chunk
+    queue.append(chunk)
     val output = InnerOutput()
     if (!upgraded) {
-      val end = indexOf(buffer, HEAD_END)
-      if (end < 0) return output
-      checkUpgrade(String(buffer, 0, end, Charsets.UTF_8))
-      buffer = buffer.copyOfRange(end + HEAD_END.size, buffer.size)
+      val length = headLength() ?: return output
+      checkUpgrade(String(queue.take(length), Charsets.UTF_8))
       upgraded = true
       output.events.add(InnerEvent.Open)
     }
@@ -119,6 +132,14 @@ class InnerStream(private val accept: String) {
       handle(frame, output)
     }
     return output
+  }
+
+  // How many bytes the head takes, through its blank line, once all of it is here.
+  private fun headLength(): Int? {
+    for (at in 0..queue.size - HEAD_END.size) {
+      if (HEAD_END.indices.all { queue.byteAt(at + it) == (HEAD_END[it].toInt() and 0xff) }) return at + HEAD_END.size
+    }
+    return null
   }
 
   private fun checkUpgrade(head: String) {
@@ -133,28 +154,30 @@ class InnerStream(private val accept: String) {
 
   private class Frame(val fin: Boolean, val opcode: Int, val payload: ByteArray)
 
+  // Reads only the header to learn the frame's length, then takes the frame once all of it is here.
   private fun takeFrame(): Frame? {
-    if (buffer.size < 2) return null
-    val masked = buffer[1].toInt() and 0x80 != 0
-    var length = buffer[1].toInt() and 0x7f
+    if (queue.size < 2) return null
+    val masked = queue.byteAt(1) and 0x80 != 0
+    var length = (queue.byteAt(1) and 0x7f).toLong()
     var at = 2
-    if (length == 126) {
-      if (buffer.size < 4) return null
-      length = (buffer[2].toInt() and 0xff shl 8) or (buffer[3].toInt() and 0xff)
+    if (length == 126L) {
+      if (queue.size < 4) return null
+      length = ((queue.byteAt(2) shl 8) or queue.byteAt(3)).toLong()
       at = 4
-    } else if (length == 127) {
-      if (buffer.size < 10) return null
-      length = (2 until 10).fold(0L) { sum, index -> (sum shl 8) or (buffer[index].toLong() and 0xff) }.toInt()
+    } else if (length == 127L) {
+      if (queue.size < 10) return null
+      length = (2 until 10).fold(0L) { sum, index -> (sum shl 8) or queue.byteAt(index).toLong() }
       at = 10
     }
+    if (length < 0 || length > MAX_FRAME_BYTES) throw ChannelException("malformed frame length")
     val maskAt = at
     if (masked) at += 4
-    if (buffer.size < at + length) return null
-    val payload = buffer.copyOfRange(at, at + length)
-    if (masked) for (index in payload.indices) payload[index] = (payload[index].toInt() xor buffer[maskAt + index % 4].toInt()).toByte()
-    val frame = Frame(buffer[0].toInt() and 0x80 != 0, buffer[0].toInt() and 0x0f, payload)
-    buffer = buffer.copyOfRange(at + length, buffer.size)
-    return frame
+    if (queue.size.toLong() < at + length) return null
+    val mask = if (masked) IntArray(4) { queue.byteAt(maskAt + it) } else IntArray(0)
+    val first = queue.byteAt(0)
+    val payload = queue.take(at + length.toInt()).copyOfRange(at, at + length.toInt())
+    if (masked) for (index in payload.indices) payload[index] = (payload[index].toInt() xor mask[index % 4]).toByte()
+    return Frame(first and 0x80 != 0, first and 0x0f, payload)
   }
 
   private fun handle(frame: Frame, output: InnerOutput) {
@@ -163,7 +186,7 @@ class InnerStream(private val accept: String) {
       10 -> {}
       8 -> {
         val payload = frame.payload
-        val code = if (payload.size >= 2) (payload[0].toInt() and 0xff shl 8) or (payload[1].toInt() and 0xff) else 1005
+        val code = if (payload.size >= 2) ((payload[0].toInt() and 0xff) shl 8) or (payload[1].toInt() and 0xff) else 1005
         val reason = if (payload.size > 2) String(payload, 2, payload.size - 2, Charsets.UTF_8) else ""
         output.replies.add(8 to payload)
         output.events.add(InnerEvent.Close(code, reason))
@@ -181,9 +204,10 @@ class InnerStream(private val accept: String) {
 
 private val random = SecureRandom()
 
+fun secureMask(): ByteArray = ByteArray(4).also { random.nextBytes(it) }
+
 /** A client's frame: masked, as RFC 6455 says a client's always are. */
-fun clientFrame(opcode: Int, payload: ByteArray): ByteArray {
-  val mask = ByteArray(4).also { random.nextBytes(it) }
+fun clientFrame(opcode: Int, payload: ByteArray, mask: ByteArray): ByteArray {
   val out = ByteArrayOutputStream()
   out.write(0x80 or opcode)
   val length = payload.size
@@ -206,7 +230,10 @@ fun clientFrame(opcode: Int, payload: ByteArray): ByteArray {
 
 class SessionResult(val events: List<InnerEvent>, val replies: List<ByteArray>)
 
-/** Everything a handed-over channel does, as data in and data out. The socket code feeds it outer messages and sends what it returns. */
+/**
+ * Everything a handed-over channel does, as data in and data out. The socket code feeds it outer messages and sends what it returns.
+ * The two ciphers count records, so every call that touches them is synchronized: a receive, a send and a close never interleave and no record number is reused or skipped.
+ */
 class ChannelSession(
   sendKey: ByteArray,
   sendRecords: Long,
@@ -214,7 +241,7 @@ class ChannelSession(
   receiveRecords: Long,
   private val upgrade: String,
   accept: String,
-  private val codec: PayloadCodec = IdentityCodec,
+  private val mask: () -> ByteArray = ::secureMask,
 ) {
   private val sending = RecordCipher(sendKey, sendRecords)
   private val receiving = RecordCipher(receiveKey, receiveRecords)
@@ -222,26 +249,30 @@ class ChannelSession(
   private val inner = InnerStream(accept)
 
   /** The first outer message: the upgrade request, sealed. */
+  @Synchronized
   fun start(): List<ByteArray> = records(upgrade.toByteArray())
 
   /** One outer message in: the events it completes, and the outer messages to send in answer. */
+  @Synchronized
   fun receive(outer: ByteArray): SessionResult {
     val events = mutableListOf<InnerEvent>()
     val replies = mutableListOf<ByteArray>()
     for (record in reader.push(outer)) {
-      val output = inner.push(codec.decode(receiving.open(record)))
+      val output = inner.push(receiving.open(record))
       events += output.events
       for ((opcode, payload) in output.replies) replies += frames(opcode, payload)
     }
     return SessionResult(events, replies)
   }
 
+  @Synchronized
   fun send(message: String): List<ByteArray> = frames(1, message.toByteArray())
 
+  @Synchronized
   fun close(code: Int, reason: String): List<ByteArray> =
     frames(8, byteArrayOf((code ushr 8).toByte(), code.toByte()) + reason.toByteArray())
 
-  private fun frames(opcode: Int, payload: ByteArray) = records(clientFrame(opcode, payload))
+  private fun frames(opcode: Int, payload: ByteArray) = records(clientFrame(opcode, payload, mask()))
 
   // Each message becomes one record when it fits, which is nearly always; a larger one is cut into records the Server reads back in order.
   private fun records(bytes: ByteArray): List<ByteArray> {
@@ -250,7 +281,7 @@ class ChannelSession(
     var start = 0
     do {
       val end = minOf(start + largest, bytes.size)
-      val sealed = sending.seal(codec.encode(bytes.copyOfRange(start, end)))
+      val sealed = sending.seal(bytes.copyOfRange(start, end))
       outer.add(byteArrayOf((sealed.size ushr 8).toByte(), sealed.size.toByte()) + sealed)
       start = end
     } while (start < bytes.size)

@@ -1,5 +1,5 @@
 import type { ByteSocket, ChannelAddress, OpenSocket } from './byte-socket';
-import { base64Bytes, bytesBase64 } from './bytes';
+import { base64Bytes } from './bytes';
 import { channelUrl } from './web-socket-carrier';
 
 // How long the module waits for the socket to open, as the JavaScript carrier does.
@@ -43,7 +43,8 @@ export interface ChannelSubscription {
  */
 export interface ChannelNative {
   open: (id: string, url: string, timeoutMs: number) => Promise<void>;
-  write: (id: string, base64: string) => void;
+  // Handshake bytes to the Server. A `Uint8Array` is an Expo module's `Data` or `ByteArray`.
+  write: (id: string, bytes: Uint8Array) => void;
   handOver: (id: string, handOver: ChannelHandOver) => void;
   send: (id: string, message: string) => void;
   close: (id: string, code: number, reason: string) => void;
@@ -72,7 +73,7 @@ export class NativeByteSocket implements ByteSocket {
   }
 
   public write(data: Uint8Array): void {
-    this.channel.native.write(this.id, bytesBase64(data));
+    this.channel.native.write(this.id, data);
   }
 
   public close(): void {

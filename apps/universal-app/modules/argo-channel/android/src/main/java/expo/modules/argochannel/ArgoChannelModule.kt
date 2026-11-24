@@ -1,6 +1,7 @@
 package expo.modules.argochannel
 
 import android.util.Base64
+import com.facebook.react.modules.network.OkHttpClientProvider
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -8,7 +9,6 @@ import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -30,9 +30,15 @@ class HandOverRecord : Record {
  * and only finished message strings leave.
  */
 private class Channel(private val id: String, private val emit: (Map<String, Any?>) -> Unit) {
-  lateinit var socket: WebSocket
+  private lateinit var socket: WebSocket
   private var session: ChannelSession? = null
   private var closed = false
+
+  /** Assigned under the lock, so a callback that runs before `newWebSocket` returns waits for it. */
+  fun attach(socket: WebSocket) = synchronized(this) { this.socket = socket }
+
+  @Synchronized
+  fun write(bytes: ByteArray) = sendOuter(bytes)
 
   fun event(event: Map<String, Any?>) {
     emit(event + ("id" to id))
@@ -61,10 +67,15 @@ private class Channel(private val id: String, private val emit: (Map<String, Any
       val result = session.receive(outer)
       result.replies.forEach(::sendOuter)
       for (inner in result.events) {
-        event(describe(inner))
-        if (inner is InnerEvent.Close) socket.close(1000, null)
+        if (inner is InnerEvent.Close) {
+          ended(inner.code, inner.reason, null)
+          socket.close(1000, null)
+        } else {
+          event(describe(inner))
+        }
       }
-    } catch (error: ChannelException) {
+    } catch (error: Exception) {
+      // Anything the record path throws ends the channel; it must not escape to OkHttp's thread.
       ended(1006, "", error.message)
       socket.close(1000, null)
     }
@@ -97,20 +108,20 @@ private class Channel(private val id: String, private val emit: (Map<String, Any
   private fun describe(inner: InnerEvent): Map<String, Any?> = when (inner) {
     is InnerEvent.Open -> mapOf("type" to "open")
     is InnerEvent.Message -> mapOf("type" to "message", "data" to inner.text)
-    is InnerEvent.Close -> mapOf("type" to "close", "code" to inner.code, "reason" to inner.reason)
+    is InnerEvent.Close -> emptyMap()
   }
 }
 
 /**
  * The channel's WebSocket, owned natively (#2704). JavaScript opens the socket and runs the Noise handshake over it, then hands over the session
- * keys; from there this module decrypts each record, decompresses it when the channel does (#2705), and hands JavaScript one message string per
+ * keys; from there this module decrypts each record, and hands JavaScript one message string per
  * event, and does the reverse to send.
  */
 class ArgoChannelModule : Module() {
   private val channels = ConcurrentHashMap<String, Channel>()
 
-  // Cleartext `ws://` to an address on the local network or a tailnet is permitted for the App (`usesCleartextTraffic`), as it is for React Native's own WebSocket.
-  private val client = OkHttpClient.Builder().pingInterval(0, TimeUnit.SECONDS).build()
+  // React Native's own client, so the channel inherits its network configuration (cleartext `ws://` to a local or tailnet address is permitted by `usesCleartextTraffic`).
+  private val client get() = OkHttpClientProvider.getOkHttpClient()
 
   override fun definition() = ModuleDefinition {
     Name("ArgoChannel")
@@ -139,7 +150,7 @@ class ArgoChannelModule : Module() {
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) = channel.received(bytes.toByteArray())
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-          webSocket.close(code, null)
+          webSocket.close(1000, null)
           channel.ended(code, reason, null)
           channels.remove(id)
         }
@@ -157,12 +168,11 @@ class ArgoChannelModule : Module() {
       }
 
       val timed = client.newBuilder().connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS).build()
-      channel.socket = timed.newWebSocket(Request.Builder().url(url).build(), listener)
+      synchronized(channel) { channel.attach(timed.newWebSocket(Request.Builder().url(url).build(), listener)) }
     }
 
-    Function("write") { id: String, base64: String ->
-      channels[id]?.socket?.send(Base64.decode(base64, Base64.NO_WRAP).toByteString())
-    }
+    // A `ByteArray` is a `Uint8Array` on the JavaScript side.
+    Function("write") { id: String, bytes: ByteArray -> channels[id]?.write(bytes) }
 
     Function("handOver") { id: String, record: HandOverRecord -> channels[id]?.handOver(record) }
 

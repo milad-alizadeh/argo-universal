@@ -10,17 +10,16 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
   private var task: URLSessionWebSocketTask?
   private var opening: CheckedContinuation<Void, Error>?
   private let lock = NSLock()
+  private var opened = false
   private var closed = false
 
   init(url: URL) {
     self.url = url
   }
 
-  /// Resolves when the socket is open, or throws when it fails or the time is up.
+  /// Resolves when the socket is open, or throws when it fails or has not opened within `timeout`. The session keeps its default timeouts, so an idle open channel is not dropped.
   func open(timeout: TimeInterval) async throws {
-    let configuration = URLSessionConfiguration.default
-    configuration.timeoutIntervalForRequest = timeout
-    let session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+    let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
     let task = session.webSocketTask(with: url)
     self.session = session
     self.task = task
@@ -29,6 +28,11 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
       opening = continuation
       lock.unlock()
       task.resume()
+      DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { [weak self] in
+        guard let self, !self.hasOpened() else { return }
+        self.settleOpening(URLError(.timedOut))
+        task.cancel(with: .goingAway, reason: nil)
+      }
     }
     receive()
   }
@@ -41,6 +45,12 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
 
   func close() {
     task?.cancel(with: .normalClosure, reason: nil)
+  }
+
+  private func hasOpened() -> Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    return opened
   }
 
   private func receive() {
@@ -65,6 +75,7 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
     if let error { continuation?.resume(throwing: error) } else { continuation?.resume() }
   }
 
+  /// Ends the socket once, tells the owner, and lets go of its closures so nothing keeps the owner alive.
   private func finish(code: Int, reason: String, error: String?) {
     lock.lock()
     let first = !closed
@@ -72,10 +83,16 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
     lock.unlock()
     guard first else { return }
     session?.invalidateAndCancel()
-    onClose?(code, reason, error)
+    let notify = onClose
+    onMessage = nil
+    onClose = nil
+    notify?(code, reason, error)
   }
 
   func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+    lock.lock()
+    opened = true
+    lock.unlock()
     settleOpening(nil)
   }
 
