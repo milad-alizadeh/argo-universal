@@ -82,12 +82,7 @@ function useFrames(
   };
 }
 
-interface Opening {
-  shown: boolean;
-  loaded: boolean;
-  // How many times the cache was read for a new open; a read is what gives the memo below a new point.
-  reads: number;
-}
+type Opening = Pick<LiveOptions, 'shown' | 'loaded'>;
 
 // Where a subscription opening now resumes: after the newest revision the cache holds.
 function pointToOpen(
@@ -104,31 +99,39 @@ function pointToOpen(
   return point ? feedEventId(point) : undefined;
 }
 
+// A reopen's id, good for the open it was read for.
+interface Reopened {
+  opening: string | undefined;
+  id: string | undefined;
+}
+
 interface ResumePoint {
   lastEventId: string | undefined;
   // The id an open now would carry.
   read: () => string | undefined;
-  reread: () => void;
+  // Opens again with `id`, which the cache holds a newer revision than the id it opened with.
+  reopenAt: (id: string | undefined) => void;
 }
 
-// The id the subscription opens with, read when it opens (on the first rows, on a return from hiding, and when it reopens), not on every row. From then on tRPC's client sends the id of the last event it received when its socket reconnects.
-function useResumePoint(
-  cacheId: string,
-  { shown, loaded }: Pick<LiveOptions, 'shown' | 'loaded'>,
-): ResumePoint {
+// The id the subscription opens with, read when it opens (on the first rows and on a return from hiding), not on every row, and read again for a reopen. From then on tRPC's client sends the id of the last event it received when its socket reconnects.
+function useResumePoint(cacheId: string, opening: Opening): ResumePoint {
   const queryClient = useQueryClient();
-  const [reads, setReads] = useState(0);
+  const [reopened, setReopened] = useState<Reopened | null>(null);
 
-  const lastEventId = useMemo(
-    () => pointToOpen(queryClient, cacheId, { shown, loaded, reads }),
-    [queryClient, cacheId, shown, loaded, reads],
+  const opened = useMemo(
+    () =>
+      pointToOpen(queryClient, cacheId, {
+        shown: opening.shown,
+        loaded: opening.loaded,
+      }),
+    [queryClient, cacheId, opening.shown, opening.loaded],
   );
 
   return {
-    lastEventId,
-    read: (): string | undefined =>
-      pointToOpen(queryClient, cacheId, { shown, loaded, reads }),
-    reread: (): void => setReads((count) => count + 1),
+    lastEventId:
+      reopened !== null && reopened.opening === opened ? reopened.id : opened,
+    read: (): string | undefined => pointToOpen(queryClient, cacheId, opening),
+    reopenAt: (id): void => setReopened({ opening: opened, id }),
   };
 }
 
@@ -140,7 +143,7 @@ export function useFeedLive(
   const [closure, setClosure] = useState<FeedLive['closure']>(null);
   const receive = useFrames(sessionId, { cacheId, shown });
 
-  const { lastEventId, read, reread } = useResumePoint(cacheId, {
+  const { lastEventId, read, reopenAt } = useResumePoint(cacheId, {
     shown,
     loaded,
   });
@@ -163,8 +166,10 @@ export function useFeedLive(
 
   // A new open starts after the newest revision the cache holds: a new id opens it by itself, the same one starts it again.
   const reopen = (): void => {
-    if (read() === lastEventId) changes.reset();
-    else reread();
+    const next = read();
+
+    if (next === lastEventId) changes.reset();
+    else reopenAt(next);
   };
 
   useResubscribeOnReconnect({ status: changes.status, reset: reopen });
