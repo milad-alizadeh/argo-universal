@@ -13,6 +13,7 @@ import {
 type Part = keyof BandRefs;
 
 type Elements = Partial<Record<Part, HTMLElement>>;
+
 type Positions = Partial<Record<Part, number>>;
 
 interface BandElements {
