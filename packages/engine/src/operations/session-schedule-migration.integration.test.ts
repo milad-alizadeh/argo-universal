@@ -5,7 +5,6 @@ import { migrationsFolder, openDatabase } from '@repo/db';
 import { project } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import { insertSession } from '#mocks/database';
 
 const lastLegacyMigration = '20261120075029_chemical_magdalene';
 
@@ -39,7 +38,12 @@ function legacyStore(): LegacyScheduleStore {
       .insert(project)
       .values({ id: 'project-1', name: 'Project', path: home })
       .run();
-    insertSession(database, { checkoutPath: home });
+    // Raw SQL, as the store is at the legacy schema, not today's.
+    database.$client
+      .prepare(
+        'INSERT INTO session (id, project_id, agent, checkout_path, projection_version) VALUES (?, ?, ?, ?, ?)',
+      )
+      .run(legacySession, 'project-1', 'mock', home, 1);
 
     const insert = database.$client.prepare(
       'INSERT INTO session_schedule (id, session_id, prompt, interval_seconds, next_at, paused) VALUES (?, ?, ?, ?, ?, ?)',
