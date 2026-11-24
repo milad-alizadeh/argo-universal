@@ -21,7 +21,7 @@ import {
 const hourMs = 3_600_000;
 
 // The subscription keeps a Feed current, so it never goes stale on a clock; it is kept long enough that a Session seen today opens from here.
-export const feedKeptMs = 24 * hourMs;
+const feedKeptMs = 24 * hourMs;
 
 export const feedKeyPrefix = ['feed', 'window'] as const;
 
@@ -65,7 +65,7 @@ type RowEvent = Exclude<FeedSubscribeOutput, { type: 'closed' | 'snapshot' }>;
 type Held = RowEvent | { type: 'fetched'; row: SessionUpdate };
 
 // Snapshots are plain data from the Server, so equal ones serialize alike.
-export const sameSnapshot = (
+const sameSnapshot = (
   held: SessionSnapshot | null | undefined,
   next: SessionSnapshot,
 ): boolean =>

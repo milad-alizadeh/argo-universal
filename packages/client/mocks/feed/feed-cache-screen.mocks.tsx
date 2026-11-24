@@ -9,7 +9,7 @@ import { createQueryClient } from '../../src/query-cache';
 import { page } from '../feed-state.mocks';
 
 // A Feed cache whose frames are the screen's own, and whose pages and rows are empty.
-export const newFeedCache = (): FeedCache =>
+const newFeedCache = (): FeedCache =>
   new FeedCache(createQueryClient(), 'session-1', {
     frame: waitForFrame,
     fetchPage: () => Promise.resolve(page([], 0)),
