@@ -7,6 +7,7 @@ import {
   loadKnownServers,
   loadLookedAtServer,
 } from './known-servers';
+import { forgetServerCache, rememberServerCache } from './server-cache-store';
 import { forgetServerHistory, notePaired } from './server-history';
 
 export interface ServersSnapshot {
@@ -78,6 +79,7 @@ class AppServersStore implements ServersStore {
       read: true,
     });
     keepLookedAtServer(added.id);
+    rememberServerCache(added.id);
     void keepKnownServer(known);
     void notePaired(known.key, Date.now());
   };
@@ -96,6 +98,7 @@ class AppServersStore implements ServersStore {
     });
     void forgetKnownServer(id);
     void forgetServerHistory(id);
+    void forgetServerCache(id);
   };
 
   private set(next: ServersSnapshot): void {

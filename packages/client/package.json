@@ -25,6 +25,7 @@
     "@repo/contracts": "workspace:*",
     "@repo/kit": "workspace:*",
     "@tanstack/pacer-lite": "catalog:",
+    "@tanstack/query-persist-client-core": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",

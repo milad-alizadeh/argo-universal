@@ -67,11 +67,11 @@ function useSessionListLookups(): SessionListLookups {
   };
 }
 
-function useLiveUpdatesStatus(): Pick<
-  SessionListViewProps,
-  'liveUpdatesStopped'
-> {
-  const listUpdates = useSessionListUpdates();
+// Live updates start once the list holds rows, from the Device or the Server, for them to land on.
+function useLiveUpdatesStatus(
+  listed: boolean,
+): Pick<SessionListViewProps, 'liveUpdatesStopped'> {
+  const listUpdates = useSessionListUpdates(listed);
   const connection = useConnectionState();
 
   return {
@@ -152,7 +152,7 @@ function useSessionsViewProps(
     ...lookups,
     ...pages,
     ...useRowMarks(pages.sessions),
-    ...useLiveUpdatesStatus(),
+    ...useLiveUpdatesStatus(!pageProgress.pending),
     ...useSessionsNavigation(),
     loadState: sessionsLoadState([...lookupProgress, pageProgress]),
   };

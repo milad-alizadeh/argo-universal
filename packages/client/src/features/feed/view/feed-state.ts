@@ -128,3 +128,12 @@ function heldPageRows(
 ): FeedState['rows'] {
   return page.epoch === feed.epoch ? feed.rows : [];
 }
+
+// The newest `limit` rows of the window, with the older history left to page in again; the window as is when it is no longer.
+export function keepNewestRows(feed: FeedState, limit: number): FeedState {
+  if (feed.rows.length <= limit) return feed;
+
+  const rows = feed.rows.slice(-limit);
+
+  return { ...feed, rows, hasOlder: true, startCursor: startCursor(rows) };
+}
