@@ -1,6 +1,6 @@
 import type { AppRouter } from '@repo/engine/router';
 import { activeSessions, agentsList, projectsList } from '@repo/mocks/app';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClientProvider } from '@tanstack/react-query';
 import {
   createTRPCClient,
   type OperationLink,
@@ -9,7 +9,8 @@ import {
   type TRPCLink,
 } from '@trpc/client';
 import { observable, type Observer } from '@trpc/server/observable';
-import type { JSX } from 'react';
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import { type JSX, useEffect, useState } from 'react';
 import {
   type Connection,
   ConnectionContext,
@@ -17,7 +18,7 @@ import {
   TRPCProvider,
 } from '#features/connection';
 import { defaultSessionsView } from '#features/sessions';
-import { createQueryClient } from '../../src/query-cache';
+import { createQueryClient, keepServerLists } from '../../src/query-cache';
 import { LiveSessionList } from '../../src/screens/sessions/live-session-list';
 
 const noop = (): void => {};
@@ -49,12 +50,22 @@ type Wire = Observer<
   TRPCClientError<AppRouter>
 >;
 
+interface Screen {
+  // Shows or hides the list, as leaving it and returning to it do.
+  show: (shown: boolean) => void;
+  // The preview hands over how it shows or hides the list.
+  attach: (show: (shown: boolean) => void) => void;
+}
+
 export interface LiveSessionListFixture {
+  screen: Screen;
   queryClient: ReturnType<typeof createQueryClient>;
   client: TRPCClient<AppRouter>;
   connection: Connection;
   // How many `session.list` reads reached the Server.
   listReads: () => number;
+  // How many `session.list` reads are on their way.
+  listFetching: () => number;
   // How many `session.listUpdates` subscriptions started.
   listUpdatesStarted: () => number;
   // Ends the open `session.listUpdates` subscription with an error, as a dropped socket does.
@@ -62,6 +73,8 @@ export interface LiveSessionListFixture {
   // Holds `agent.list` unanswered until `releaseAgents`, as a slow Server does.
   holdAgents: () => void;
   releaseAgents: () => void;
+  // The window regains focus, as the App returns to the foreground.
+  returnToForeground: () => void;
   // Moves the Connection to another state, as an outage and its recovery do.
   connect: (state: ConnectionState) => void;
 }
@@ -130,12 +143,28 @@ export function liveSessionListFixture(): LiveSessionListFixture {
   };
 
   const queryClient = createQueryClient();
+  const client = createTRPCClient<AppRouter>({ links: [serverLink(state)] });
+
+  // The App's own lists and their 30 s freshness.
+  const trpc = createTRPCOptionsProxy<AppRouter>({ client, queryClient });
+  keepServerLists(queryClient, trpc);
+
+  let showList: (shown: boolean) => void = noop;
+
+  const screen: Screen = {
+    show: (shown) => showList(shown),
+    attach: (show) => {
+      showList = show;
+    },
+  };
 
   return {
     queryClient,
-    client: createTRPCClient<AppRouter>({ links: [serverLink(state)] }),
+    client,
+    screen,
     connection: connectionOf(link),
     listReads: () => state.listReads,
+    listFetching: () => queryClient.isFetching(trpc.session.list.pathFilter()),
     listUpdatesStarted: () => state.updatesStarted,
     dropListUpdates: () =>
       state.updatesWire?.error(TRPCClientError.from(new Error('Socket lost'))),
@@ -143,6 +172,10 @@ export function liveSessionListFixture(): LiveSessionListFixture {
       state.agentsHeld = true;
     },
     releaseAgents: () => releaseAgents(state),
+    returnToForeground: () => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    },
     connect: (next) => {
       link.state = next;
 
@@ -156,6 +189,12 @@ export function LiveSessionListPreview({
 }: {
   fixture: LiveSessionListFixture;
 }): JSX.Element {
+  const [shown, show] = useState(true);
+
+  useEffect(() => {
+    fixture.screen.attach(show);
+  }, [fixture, show]);
+
   return (
     <ConnectionContext.Provider value={fixture.connection}>
       <QueryClientProvider client={fixture.queryClient}>
@@ -163,11 +202,13 @@ export function LiveSessionListPreview({
           trpcClient={fixture.client}
           queryClient={fixture.queryClient}
         >
-          <LiveSessionList
-            query=""
-            onQueryChange={noop}
-            view={defaultSessionsView}
-          />
+          {shown ? (
+            <LiveSessionList
+              query=""
+              onQueryChange={noop}
+              view={defaultSessionsView}
+            />
+          ) : null}
         </TRPCProvider>
       </QueryClientProvider>
     </ConnectionContext.Provider>

@@ -2,7 +2,7 @@ import type { SessionListUpdate } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TRPCSubscriptionResult } from '@trpc/tanstack-react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { applySessionListUpdate } from '../api/apply-session-list-update';
@@ -24,6 +24,7 @@ function useSessionListRefresh(): SessionListRefresh {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const started = useRef(false);
+  const [mountedAt] = useState(Date.now);
 
   return useMemo((): SessionListRefresh => {
     const list = trpc.session.list.pathFilter();
@@ -33,7 +34,7 @@ function useSessionListRefresh(): SessionListRefresh {
     );
 
     /*
-     * The first start after mount rides the read that just ran, so a fresh or in-flight read is not asked again.
+     * The first start after mount rides a read made during this mount, so one that landed or is in flight is not asked again; a read kept from an earlier visit may predate changes, so it is.
      * The Server replays missed updates only to the first watcher, so every later start (a reconnect or a return to the foreground) asks again whatever the read's age.
      */
     const catchUp = (): void => {
@@ -41,10 +42,14 @@ function useSessionListRefresh(): SessionListRefresh {
       started.current = true;
 
       void queryClient.refetchQueries(
-        restart ? list : { ...list, stale: true },
-        {
-          cancelRefetch: restart,
-        },
+        restart
+          ? list
+          : {
+              ...list,
+              predicate: (query): boolean =>
+                query.state.dataUpdatedAt < mountedAt,
+            },
+        { cancelRefetch: restart },
       );
     };
 
@@ -54,7 +59,7 @@ function useSessionListRefresh(): SessionListRefresh {
     };
 
     return { catchUp, apply };
-  }, [queryClient, trpc, started]);
+  }, [queryClient, trpc, started, mountedAt]);
 }
 
 // Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
