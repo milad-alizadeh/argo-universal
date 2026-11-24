@@ -12,15 +12,8 @@ import {
 
 type Part = keyof BandRefs;
 
-// Where a part's box was laid out, ignoring any motion's transform.
-interface Span {
-  left: number;
-  width: number;
-}
-
 type Elements = Partial<Record<Part, HTMLElement>>;
-
-type Spans = Partial<Record<Part, Span>>;
+type Positions = Partial<Record<Part, number>>;
 
 interface BandElements {
   elements: Elements;
@@ -39,56 +32,41 @@ function createBandElements(): BandElements {
   return { elements, refs: { title: ref('title'), moving: ref('moving') } };
 }
 
-const spanOf = (element: HTMLElement | undefined): Span | undefined =>
-  element && { left: element.offsetLeft, width: element.offsetWidth };
-
-const laidOut = (elements: Elements): Spans => ({
-  title: spanOf(elements.title),
-  moving: spanOf(elements.moving),
+const laidOut = (elements: Elements): Positions => ({
+  title: elements.title?.offsetLeft,
+  moving: elements.moving?.offsetLeft,
 });
-
-const slide = (from: Span, to: Span): Keyframe[] => [
-  { transform: `translateX(${from.left - to.left}px)` },
-  { transform: 'translateX(0px)' },
-];
-
-/*
- * The heading slides with its start; a heading that widens shows its new room as its end moves, by a clip that closes
- * on the same curve, and one that narrows truncates at once inside the room it ends in.
- */
-function titleFrames(from: Span, to: Span): Keyframe[] {
-  const [start, end] = slide(from, to);
-  const hidden = Math.max(0, to.width - from.width);
-
-  return [
-    { ...start, clipPath: `inset(0px ${hidden}px 0px 0px)` },
-    { ...end, clipPath: 'inset(0px 0px 0px 0px)' },
-  ];
-}
 
 function partFrame(
   element: HTMLElement | undefined,
-  [from, to]: readonly [Span | undefined, Span | undefined],
-  frames: (from: Span, to: Span) => Keyframe[],
+  from: number | undefined,
+  to: number | undefined,
 ): ElementFrame[] {
-  if (!element || !from || !to) return [];
+  if (!element || from === undefined || to === undefined || from === to)
+    return [];
 
-  if (from.left === to.left && from.width === to.width) return [];
-
-  return [[element, frames(from, to)]];
+  return [
+    [
+      element,
+      [
+        { transform: `translateX(${from - to}px)` },
+        { transform: 'translateX(0px)' },
+      ],
+    ],
+  ];
 }
 
 const bandFrames = (
   elements: Elements,
-  from: Spans,
-  to: Spans,
+  from: Positions,
+  to: Positions,
 ): ElementFrame[] => [
-  ...partFrame(elements.title, [from.title, to.title], titleFrames),
-  ...partFrame(elements.moving, [from.moving, to.moving], slide),
+  ...partFrame(elements.title, from.title, to.title),
+  ...partFrame(elements.moving, from.moving, to.moving),
 ];
 
 /*
- * FLIP: the parts take their new place at once and play back from where they were laid out, by transform and clip
+ * FLIP: the parts take their new place at once and play back from where they were laid out, by transform
  * alone, so the title bar lays out once per change and nothing reflows while the panes move. The pinned toggles never
  * move, so they need no motion.
  */
@@ -96,16 +74,16 @@ export function useBandMotion(motion: FrameMotion): BandRefs {
   const [band] = useState(createBandElements);
   const playing = useRef<Animation[]>([]);
 
-  const last = useRef<{ key: string; spans: Spans }>({
+  const last = useRef<{ key: string; positions: Positions }>({
     key: motion.transitionKey,
-    spans: {},
+    positions: {},
   });
 
   useCancelOnUnmount(playing);
   useLayoutEffect(() => {
-    const spans = laidOut(band.elements);
+    const positions = laidOut(band.elements);
     const previous = last.current;
-    last.current = { key: motion.transitionKey, spans };
+    last.current = { key: motion.transitionKey, positions };
 
     // A resize or an unrelated render moves the parts at once.
     if (previous.key === motion.transitionKey) return;
@@ -113,7 +91,7 @@ export function useBandMotion(motion: FrameMotion): BandRefs {
     cancelMotion(playing.current);
     playing.current = mayAnimate(motion.animate)
       ? playFrames(
-          bandFrames(band.elements, previous.spans, spans),
+          bandFrames(band.elements, previous.positions, positions),
           motion.timing,
         )
       : [];

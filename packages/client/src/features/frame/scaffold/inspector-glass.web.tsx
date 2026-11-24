@@ -32,14 +32,13 @@ const glassBox = (box: InspectorBox): CSSProperties => ({
 });
 
 // The content shows inside the glass alone, so it never draws outside the capsule as the panel grows from it.
-const contentClip = (box: InspectorBox): CSSProperties & Keyframe => ({
+const contentClip = (box: InspectorBox): CSSProperties => ({
   clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${heightOf(box)} round ${pixels(box.radius)})`,
 });
 
 /*
  * The closed Inspector's capsule is the panel's own glass: as the Inspector opens, the capsule grows into the panel on
- * the panes' timing, its top becoming the panel's top row, and it shrinks back as the Inspector closes. The content
- * clips to the same box, so neither ever shows without the other.
+ * the panes' timing. The content clips to the Inspector's resting box as the pane slides in.
  */
 export function InspectorGlass({
   box,
@@ -47,7 +46,6 @@ export function InspectorGlass({
   ...motion
 }: InspectorGlassProps): ReactElement {
   const glass = useRef<HTMLDivElement>(null);
-  const clip = useRef<HTMLDivElement>(null);
   useFrameTransition({
     ...motion,
     value: box,
@@ -59,10 +57,7 @@ export function InspectorGlass({
         height: value.height ?? parentHeight - value.y - value.bottom,
       });
 
-      return [
-        [glass.current, surfaceFrames(bounds(from), bounds(to))],
-        [clip.current, [contentClip(from), contentClip(to)]],
-      ];
+      return [[glass.current, surfaceFrames(bounds(from), bounds(to))]];
     },
   });
 
@@ -79,7 +74,6 @@ export function InspectorGlass({
         style={glassBox(box)}
       />
       <div
-        ref={clip}
         className="pointer-events-none absolute inset-0"
         style={contentClip(box)}
       >
