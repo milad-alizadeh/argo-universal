@@ -9,7 +9,7 @@ import {
 } from '@repo/contracts/plugins/wire-node-key';
 import { Fragment, createElement, type ElementType } from 'react';
 import { pluginEntries } from './plugin-entries';
-import { listRowsOf } from './plugin-list-rows';
+import { listRowsOf, tableRowsOf } from './plugin-list-rows';
 import type * as Rendering from './plugin-rendering';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
@@ -60,7 +60,7 @@ function renderComponent(
   const { node, definition, context } = input;
   const props = context.controls(input);
 
-  const rows = listRowsOf(node);
+  const rows = listRowsOf(node) ?? tableRowsOf(node);
 
   if (rows) Object.assign(props, rows, { renderItem: rowRenderer(context) });
   else if (definition.children)

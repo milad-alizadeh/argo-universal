@@ -1,6 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
-import { listRowsOf } from './plugin-list-rows';
+import { listRowsOf, tableRowsOf } from './plugin-list-rows';
 
 const node = (
   type: string,
@@ -41,6 +41,13 @@ describe('listRowsOf', () => {
     ['a horizontal List', list(rows, { direction: 'horizontal' })],
   ])('leaves a List with %s to its children', (_name, tree) => {
     expect(listRowsOf(tree)).toBeUndefined();
+  });
+
+  it('hands a Table its row nodes as items, with no list identity of its own', () => {
+    const tableRows = [node('Table.Row', 'r1'), node('Table.Row', 'r2')];
+    const data = tableRowsOf(node('Table', 't', { children: tableRows }));
+
+    expect(data).toEqual({ items: tableRows });
   });
 
   it('leaves a node that is not a List alone', () => {

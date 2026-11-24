@@ -43,3 +43,9 @@ export function listRowsOf(node: WireNode): ListRows | undefined {
 
   return { ...rows, items: node.children };
 }
+
+// A Table reads its rows by the cells they hold, so it takes the row nodes alone: no key, type or recycling of its own.
+export const tableRowsOf = (
+  node: WireNode,
+): Pick<ListRows, 'items'> | undefined =>
+  node.type === 'Table' ? { items: node.children } : undefined;
