@@ -87,8 +87,8 @@ export function slowNetwork(
   open: OpenSocket,
   profile: NetworkProfile,
 ): OpenSocket {
-  return async (address) => {
-    const socket = slowed(await open(address), profile);
+  return async (address, headers) => {
+    const socket = slowed(await open(address, headers), profile);
     const connect = (profile.up.latencyMs ?? 0) + (profile.down.latencyMs ?? 0);
 
     await new Promise((resolve) => setTimeout(resolve, connect));

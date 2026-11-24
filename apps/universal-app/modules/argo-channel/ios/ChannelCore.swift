@@ -1,9 +1,10 @@
+import Compression
 import CryptoKit
 import Foundation
 
 // The channel's record path, with no sockets and no Expo in it, so it can be read and tested on its own (ADR-0045).
 // What arrives is one pipeline: outer WebSocket message -> records (two-byte length) -> decrypt -> inner HTTP upgrade and WebSocket frames -> message strings.
-// Compression (#2705) is one more step in `ChannelSession.receive` after a record is opened, and in `records(of:)` before one is sealed.
+// Once the Server has agreed to compress (ADR-0045), every record opens with a byte: 0 for the bytes as they are, 1 for raw deflate. Receiving inflates; what this side sends is always as it is.
 
 enum ChannelError: Error, Equatable {
   case authentication
@@ -14,6 +15,30 @@ enum ChannelError: Error, Equatable {
 private let tagBytes = 16
 private let maxRecordBytes = 65_535
 private let maxFrameBytes = 1 << 30
+// With the leading byte, a record holds one byte less of message.
+private let maxMessageBytes = maxRecordBytes - tagBytes - 1
+
+/// The leading byte of a record, undone: raw deflate is inflated by Apple's Compression framework, whose `COMPRESSION_ZLIB` is raw deflate (RFC 1951). A record never holds more than `maxMessageBytes` of message, so the output buffer is one byte larger and anything that fills it is refused rather than inflated.
+func unpack(_ record: Data) throws -> Data {
+  guard let lead = record.first else { throw ChannelError.malformed("compressed record") }
+  let body = record.dropFirst()
+  switch lead {
+  case 0:
+    return Data(body)
+  case 1:
+    let capacity = maxMessageBytes + 1
+    let output = UnsafeMutablePointer<UInt8>.allocate(capacity: capacity)
+    defer { output.deallocate() }
+    let size = body.withUnsafeBytes { (input: UnsafeRawBufferPointer) -> Int in
+      guard let base = input.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+      return compression_decode_buffer(output, capacity, base, body.count, nil, COMPRESSION_ZLIB)
+    }
+    guard size > 0, size <= maxMessageBytes else { throw ChannelError.malformed("compressed record") }
+    return Data(bytes: output, count: size)
+  default:
+    throw ChannelError.malformed("compressed record")
+  }
+}
 
 /// A byte queue that reads from the front without copying what is left, so a long stream is read in linear time.
 struct ByteQueue {
@@ -237,12 +262,13 @@ final class ChannelSession {
   private var reader = RecordReader()
   private var inner: InnerStream
   private let upgrade: String
+  private let compression: Bool
   private let deliver: (Data) -> Void
   private let randomMask: () -> [UInt8]
 
   init(
     sendKey: Data, sendRecords: UInt64, receiveKey: Data, receiveRecords: UInt64,
-    upgrade: String, accept: String,
+    upgrade: String, accept: String, compression: Bool = false,
     deliver: @escaping (Data) -> Void,
     randomMask: @escaping () -> [UInt8] = ChannelSession.secureMask
   ) {
@@ -250,6 +276,7 @@ final class ChannelSession {
     receiving = RecordCipher(key: receiveKey, records: receiveRecords)
     inner = InnerStream(accept: accept)
     self.upgrade = upgrade
+    self.compression = compression
     self.deliver = deliver
     self.randomMask = randomMask
   }
@@ -273,7 +300,8 @@ final class ChannelSession {
     defer { lock.unlock() }
     var events: [InnerEvent] = []
     for record in reader.push(outer) {
-      let output = try inner.push(try receiving.open(record))
+      let opened = try receiving.open(record)
+      let output = try inner.push(compression ? try unpack(opened) : opened)
       events += output.events
       for reply in output.replies {
         try send(bytes: clientFrame(opcode: reply.opcode, payload: reply.payload, mask: randomMask()))
@@ -297,11 +325,12 @@ final class ChannelSession {
 
   // Each message becomes one record when it fits, which is nearly always; a larger one is cut into records the Server reads back in order. Called with the lock held.
   private func send(bytes: Data) throws {
-    let largest = maxRecordBytes - tagBytes
+    let largest = compression ? maxMessageBytes : maxRecordBytes - tagBytes
     var start = bytes.startIndex
     repeat {
       let end = min(start + largest, bytes.endIndex)
-      let sealed = try sending.seal(Data(bytes[start..<end]))
+      let piece = Data(bytes[start..<end])
+      let sealed = try sending.seal(compression ? Data([0]) + piece : piece)
       deliver(Data([UInt8(sealed.count >> 8), UInt8(sealed.count & 0xff)]) + sealed)
       start = end
     } while start < bytes.endIndex
