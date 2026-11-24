@@ -59,8 +59,8 @@ function OpenInAList(): ReactElement {
   );
 }
 
-const frame = (): Promise<unknown> =>
-  new Promise((resolve) => requestAnimationFrame(resolve));
+const frame = (): Promise<void> =>
+  new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
 export const OpenAtRestDrawsOnceOnMount: Story = {
   render: () => <OpenInAList />,

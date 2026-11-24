@@ -12,8 +12,6 @@ interface ContentMeasurement {
   contentHeight: RefObject<number>;
   renderedHeight: number;
   measured: boolean;
-  // Whether the content is open and still, so a new height is only kept, for a drawing that does not use it yet.
-  resting: RefObject<boolean>;
   onLayout: (event: LayoutChangeEvent) => void;
   forget: () => void;
 }
@@ -31,13 +29,11 @@ function measureContent(
 
 function useMeasuredHeight(
   open: boolean,
-): Omit<
-  ContentMeasurement,
-  'content' | 'onLayout'
-> & { recordHeight: (height: number) => void } {
+  resting: RefObject<boolean>,
+): Omit<ContentMeasurement, 'content' | 'onLayout'> & {
+  recordHeight: (height: number) => void;
+} {
   const contentHeight = useRef(0);
-  // Opens at rest when it mounts open: it has no motion to size, so its first height costs no draw.
-  const resting = useRef(open);
   const [measured, setMeasured] = useState(false);
   const [renderedHeight, setRenderedHeight] = useState(0);
 
@@ -62,15 +58,21 @@ function useMeasuredHeight(
     contentHeight,
     measured,
     renderedHeight,
-    resting,
     recordHeight,
     forget,
   };
 }
 
-export function useContentMeasurement(open: boolean): ContentMeasurement {
+/*
+ * `resting` is whether the content is open and still. Then a new height is only kept, for a drawing that does not use it
+ * yet, so content that mounts open costs no second draw.
+ */
+export function useContentMeasurement(
+  open: boolean,
+  resting: RefObject<boolean>,
+): ContentMeasurement {
   const content = useRef<ViewInstance>(null);
-  const { recordHeight, ...measurement } = useMeasuredHeight(open);
+  const { recordHeight, ...measurement } = useMeasuredHeight(open, resting);
   useLayoutEffect(() => {
     if (open && !measurement.measured) measureContent(content, recordHeight);
   }, [open, measurement.measured, recordHeight]);
@@ -83,13 +85,4 @@ export function useContentMeasurement(open: boolean): ContentMeasurement {
       if (open) recordHeight(event.nativeEvent.layout.height);
     },
   };
-}
-
-export function useTrackResting(
-  { resting }: Pick<ContentMeasurement, 'resting'>,
-  isResting: boolean,
-): void {
-  useLayoutEffect(() => {
-    resting.current = isResting;
-  }, [resting, isResting]);
 }

@@ -2,6 +2,7 @@ import {
   useContext,
   useDeferredValue,
   useLayoutEffect,
+  useRef,
   type ReactElement,
 } from 'react';
 import { View } from 'react-native';
@@ -13,10 +14,7 @@ import {
   type CollapsibleLayoutSync,
 } from './collapsible-context';
 import { useLayoutMotion } from './collapsible-layout-motion';
-import {
-  useContentMeasurement,
-  useTrackResting,
-} from './collapsible-measurement';
+import { useContentMeasurement } from './collapsible-measurement';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
 import { CollapsibleRegion } from './collapsible-region';
 
@@ -47,13 +45,17 @@ function useLayoutContent(
   layoutSync: CollapsibleLayoutSync,
 ): LayoutContentState {
   const open = useDeferredValue(useContext(OpenContext));
-  const measurement = useContentMeasurement(open);
+  // Mounting open is rest: there is no motion to size.
+  const resting = useRef(open);
+  const measurement = useContentMeasurement(open, resting);
 
   const progress = useLayoutMotion(
     layoutMotionOptions(open, measurement, layoutSync),
   );
 
-  useTrackResting(measurement, open && progress === 1);
+  useLayoutEffect(() => {
+    resting.current = open && progress === 1;
+  }, [open, progress]);
   useForgetWhenHidden(!open && progress === 0, measurement.forget);
   useSyncAtRest(progress, measurement.measured, layoutSync.syncLayout);
 

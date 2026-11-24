@@ -1,7 +1,7 @@
 import type { DiagramPalette } from '@repo/contracts/kit-diagram';
 import { expect, it } from 'vitest';
-import { flowchartDiagram } from './diagram-fixtures';
 import { drawnState } from './diagram-drawn-state';
+import { flowchartDiagram } from './diagram-fixtures';
 
 const palette: DiagramPalette = {
   background: 'colour',

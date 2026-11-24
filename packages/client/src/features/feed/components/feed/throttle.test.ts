@@ -17,6 +17,7 @@ it('runs at most a few times a second while events keep coming every frame', () 
     throttled.call();
     vi.advanceTimersByTime(16);
   }
+
   // Two seconds of scrolling.
   vi.advanceTimersByTime(250);
 
