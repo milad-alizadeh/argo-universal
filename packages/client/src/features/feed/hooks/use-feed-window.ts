@@ -60,6 +60,8 @@ interface FeedWindowOptions {
   // The key of the Feed the App keeps; the Session's id unless a screen shows another Feed of it.
   cacheId: string | undefined;
   readPage: FeedPageReader;
+  // The tail comes from a page read, false while a subscription brings it.
+  readsPage?: boolean;
 }
 
 export interface FeedWindow {
@@ -75,7 +77,7 @@ export interface FeedWindow {
 export function useFeedWindow(
   sessionId: string | undefined,
   translate: FeedViewTranslator,
-  { cacheId = '', readPage }: FeedWindowOptions,
+  { cacheId = '', readPage, readsPage = true }: FeedWindowOptions,
 ): FeedWindow {
   const queryClient = useQueryClient();
 
@@ -90,7 +92,7 @@ export function useFeedWindow(
         page,
       );
     },
-    enabled: sessionId !== undefined,
+    enabled: sessionId !== undefined && readsPage,
   });
 
   const { data: snapshot = null } = useQuery<SessionSnapshot | null>({

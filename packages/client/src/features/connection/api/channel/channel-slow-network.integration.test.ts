@@ -1,6 +1,7 @@
 import { openAcpFeedSession } from '@repo/engine/mocks/acp-feed';
 import { afterEach, expect, it } from 'vitest';
 import {
+  coldOpenMs,
   firstPageMs,
   phoneOn,
   type Phone,
@@ -47,4 +48,24 @@ it('records how long the first page takes over bad Wi-Fi', async () => {
   expect(onBadWifi.rows).toBeGreaterThan(20);
   expect(onBadWifi.ms).toBeGreaterThanOrEqual(floorMs);
   expect(onBadWifi.ms).toBeLessThan(30_000);
+});
+
+// A cold open crosses the link once, for the subscription, not twice for a page and then a subscription.
+it('opens a Feed the App holds nothing of in one round trip over bad Wi-Fi', async () => {
+  const { host, sessionId } = await openAcpFeedSession(seeded);
+  const before = await phoneOn(host, badWifi);
+  const after = await phoneOn(host, badWifi);
+
+  phones.push(before, after);
+
+  const twoTrips = await coldOpenMs(before, sessionId, 'page-then-subscribe');
+  const oneTrip = await coldOpenMs(after, sessionId, 'subscription-only');
+
+  console.info(
+    `cold open over bad Wi-Fi: ${Math.round(twoTrips.ms)} ms with a page then a subscription, ${Math.round(oneTrip.ms)} ms with the subscription alone`,
+  );
+
+  expect(oneTrip.rows).toBe(twoTrips.rows);
+  expect(oneTrip.rows).toBeLessThanOrEqual(40);
+  expect(oneTrip.ms).toBeLessThan(twoTrips.ms);
 });

@@ -74,3 +74,42 @@ export async function firstPageMs(
 
   return { ms: performance.now() - started, rows: page.rows.length };
 }
+
+// How a Feed opens for an App that holds nothing of the Session: a `feed.page` read and then a subscription that brings the snapshot (before), or one subscription that opens with the tail and the snapshot.
+export type ColdOpen = 'page-then-subscribe' | 'subscription-only';
+
+export async function coldOpenMs(
+  phone: Phone,
+  sessionId: string,
+  how: ColdOpen,
+): Promise<{ ms: number; rows: number }> {
+  const started = performance.now();
+  const rows = Promise.withResolvers<number>();
+  const snapshot = Promise.withResolvers<void>();
+
+  const page =
+    how === 'page-then-subscribe'
+      ? await phone.client.feed.page.query({ sessionId, direction: 'tail' })
+      : undefined;
+
+  const subscription = phone.client.feed.subscribe.subscribe(
+    { sessionId, after: null, tail: page === undefined },
+    {
+      onData: (received) => {
+        const event = 'type' in received ? received : received.data;
+
+        if (event.type === 'tail') rows.resolve(event.page.rows.length);
+
+        if (event.type === 'snapshot') snapshot.resolve();
+      },
+      onError: snapshot.reject,
+    },
+  );
+
+  const count = page ? page.rows.length : await rows.promise;
+
+  await snapshot.promise;
+  subscription.unsubscribe();
+
+  return { ms: performance.now() - started, rows: count };
+}

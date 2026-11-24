@@ -65,20 +65,63 @@ export const DrawsASessionSeenBeforeFromTheCacheWithNoPageRead: Story = {
   },
 };
 
-export const OpensOnTheTailPageOfASessionNotSeenBefore: Story = {
+// A cold open is one subscription: no page is read first, and the tail and snapshot it opens with draw the Feed.
+export const OpensASessionNotSeenBeforeWithTheSubscriptionAlone: Story = {
   play: async ({ mount }) => {
     const fixture = feedLiveFixture({ seeded: false });
     await mount(<FeedLivePreview fixture={fixture} />);
 
-    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
-    await waitFor(() => expect(fixture.held()).toBeDefined());
-
-    // Nothing to open after until the first rows are held.
-    await expect(fixture.server.opened).toEqual([]);
+    await waitFor(() => expect(fixture.server.opened).toEqual([undefined]));
+    await expect(fixture.server.tailAsked).toEqual([true]);
+    await expect(fixture.held()?.ready).toBe(false);
 
     fixture.answerTail();
 
-    await waitFor(() => expect(fixture.server.opened).toEqual([seeded]));
+    await waitFor(() => expect(fixture.held()?.ready).toBe(true));
+    await expect(fixture.server.pageReads).toEqual([]);
+    // The rows it brought are held, and do not open the subscription again.
+    await expect(fixture.server.opened).toEqual([undefined]);
+  },
+};
+
+// The Server rebuilt the Feed: what is held goes, and a new open brings the new tail with no page read.
+export const OpensAgainOnTheTailWhenTheServerRebuildsTheFeed: Story = {
+  play: async ({ mount }) => {
+    const fixture = feedLiveFixture({ seeded: false });
+    await mount(<FeedLivePreview fixture={fixture} />);
+    fixture.answerTail();
+    await waitFor(() => expect(fixture.held()?.ready).toBe(true));
+
+    fixture.send({ type: 'reset', epoch: 1 });
+
+    await waitFor(() => expect(fixture.server.tailAsked).toEqual([true, true]));
+    await expect(fixture.server.pageReads).toEqual([]);
+  },
+};
+
+// A Server built before the tail and event ids refuses their keys. The Feed draws from the page, then opens again with the old input and receives a live row.
+export const OpensOnAServerThatRefusesTheNewKeys: Story = {
+  play: async ({ mount }) => {
+    const fixture = feedLiveFixture({ seeded: false, oldServer: true });
+    await mount(<FeedLivePreview fixture={fixture} />);
+
+    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+    await expect(fixture.server.refused).toBe(1);
+
+    fixture.answerTail();
+
+    await waitFor(() => expect(fixture.held()?.revision).toBe(0));
+    await waitFor(() => expect(fixture.server.legacyOpened).toHaveLength(1));
+    await expect(fixture.server.legacyOpened).toEqual([
+      { epoch: 0, revision: 0 },
+    ]);
+
+    await laterChange(fixture);
+
+    // Asked once more with the new keys, and not again.
+    await expect(fixture.server.refused).toBe(1);
+    // The refusal is not shown as a failure: the Feed goes live.
+    await expect(fixture.openErrors()).toEqual([]);
   },
 };
 
@@ -201,7 +244,7 @@ export const LoadsOlderHistoryIntoTheSameWindow: Story = {
   play: async ({ mount }) => {
     const fixture = feedLiveFixture({ seeded: false });
     await mount(<FeedLivePreview fixture={fixture} />);
-    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+    await waitFor(() => expect(fixture.server.tailAsked).toEqual([true]));
 
     fixture.answerTail({
       ...page(streamed.rows, newest.revision, { limit: 2 }),
@@ -215,6 +258,7 @@ export const LoadsOlderHistoryIntoTheSameWindow: Story = {
     const merged = fixture.window()?.rows ?? [];
     await expect(merged.length).toBeGreaterThan(2);
     await expect(merged.slice(-2)).toEqual(newer);
+    await expect(fixture.server.pageReads).toHaveLength(1);
     await expect(fixture.server.pageReads.at(-1)).toMatchObject({
       direction: 'before',
     });
