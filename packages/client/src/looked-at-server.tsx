@@ -2,11 +2,13 @@ import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
 import { type ReactNode, useEffect, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 import type { Connection, OpenConnection } from '#features/connection';
 import { ConnectionContext, holdCacheOnline } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
+import { followAppForegroundOnNative } from './follow-app-foreground';
 import { createQueryClient } from './query-cache';
 import { ServerUrls } from './server-urls';
 
@@ -25,6 +27,7 @@ export function LookedAtServer(
   props: LookedAtServerProps,
 ): React.JSX.Element | null {
   const [queryClient] = useState(createQueryClient);
+  useEffect(followsAppForeground, []);
   const looked = lookedAt(props);
 
   if (!looked) return null;
@@ -34,6 +37,10 @@ export function LookedAtServer(
       {props.children}
     </ConnectionProviders>
   );
+}
+
+function followsAppForeground(): (() => void) | undefined {
+  return followAppForegroundOnNative(Platform.OS, AppState);
 }
 
 // A Server with somewhere to open a Connection, and the Connection opened to it.
