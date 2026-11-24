@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   findLiveToolCall,
   findPermissionToolCall,
@@ -20,13 +21,23 @@ export function useSessionFeed(
 ): SessionFeed {
   const readPage = useSessionPages(sessionId);
 
-  const live = useFeedLive(sessionId, { cacheId: sessionId, shown });
+  // A Server built before the tail and event ids refuses their keys, so the Feed is read by page, and its subscription opens with `after` alone (`useFeedLive`).
+  const [refused, setRefused] = useState(false);
 
+  // A shown Session's tail comes with its subscription; a hidden one, or one on a Server that refused, reads its page.
   const { cacheId, feed, snapshot, view, query } = useFeedWindow(
     sessionId,
     translate,
-    { cacheId: sessionId, readPage, readsTail: !live.awaitingTail },
+    { cacheId: sessionId, readPage, readsPage: !shown || refused },
   );
+
+  const live = useFeedLive(sessionId, {
+    cacheId,
+    shown,
+    held: feed.epoch !== null,
+    refused,
+    onRefused: () => setRefused(true),
+  });
 
   const older = useOlderHistory(cacheId, readPage);
 

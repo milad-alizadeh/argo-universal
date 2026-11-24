@@ -4,6 +4,7 @@ import {
   type FeedSubscribeOutput,
   feedEventId,
   FeedSubscribeInput,
+  FeedSyncPoint,
   syncPointOfEventId,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
@@ -15,6 +16,7 @@ import {
 } from '@trpc/client';
 import { type Observer, observable } from '@trpc/server/observable';
 import { type JSX, useEffect, useState } from 'react';
+import { z } from 'zod';
 import {
   ConnectionContext,
   useConnectionState,
@@ -75,6 +77,10 @@ type Wire = Observer<
 interface Server {
   // The `lastEventId` of each `feed.subscribe` the App opened.
   opened: (string | undefined)[];
+  // The `after` of each `feed.subscribe` an old Server accepted: the input it knew, and plain events.
+  legacyOpened: (FeedSyncPoint | null)[];
+  // How many `feed.subscribe` an old Server refused for a key it did not know.
+  refused: number;
   // Whether each `feed.subscribe` the App opened asked for the tail.
   tailAsked: boolean[];
   // Each `feed.page` the App read.
@@ -84,6 +90,8 @@ interface Server {
   closed: number;
   // The tail page the Server answers; null holds the answer back.
   tail: Promise<FeedPageOutput>;
+  // A Server built before the tail and event ids.
+  old: boolean;
 }
 
 // Every change in the recorded stream above the revision the App holds, as the Server replays them; none once the App holds the newest.
@@ -158,6 +166,41 @@ function openSubscription(
     });
 }
 
+// What a Server built before the tail and event ids accepted: `feed.subscribe` took a strict `{ sessionId, after }` and sent plain events.
+const OldSubscribeInput = z.strictObject({
+  sessionId: z.string(),
+  after: FeedSyncPoint.nullable(),
+});
+
+// An old Server refuses a key it does not know as a bad request, as its strict input did.
+function openOldSubscription(server: Server, wire: Wire, input: unknown): void {
+  const parsed = OldSubscribeInput.safeParse(input);
+
+  if (!parsed.success) {
+    server.refused += 1;
+    wire.error(
+      TRPCClientError.from({
+        error: {
+          message: parsed.error.message,
+          code: -32600,
+          data: { code: 'BAD_REQUEST', httpStatus: 400 },
+        },
+      }),
+    );
+
+    return;
+  }
+
+  const { after } = parsed.data;
+
+  server.legacyOpened.push(after);
+  server.open = wire;
+  wire.next({ result: { type: 'started' } });
+
+  for (const data of replayAbove(after ? feedEventId(after) : undefined))
+    wire.next({ result: { type: 'data', data } });
+}
+
 function clientOf(server: Server): TRPCClient<AppRouter> {
   return createTRPCClient<AppRouter>({
     links: [
@@ -172,6 +215,14 @@ function clientOf(server: Server): TRPCClient<AppRouter> {
 
             if (op.path !== 'feed.subscribe')
               throw new Error(`Unexpected request: ${op.path}`);
+
+            if (server.old) {
+              openOldSubscription(server, wire, op.input);
+
+              return (): void => {
+                server.closed += 1;
+              };
+            }
 
             openSubscription(server, wire, FeedSubscribeInput.parse(op.input));
 
@@ -234,8 +285,11 @@ function seed(queryClient: ReturnType<typeof createQueryClient>): void {
   queryClient.setQueryData(snapshotKey(sessionId), streamed.snapshot);
 }
 
-const newServer = (tail: Promise<FeedPageOutput>): Server => ({
+const newServer = (tail: Promise<FeedPageOutput>, old: boolean): Server => ({
+  old,
   opened: [],
+  legacyOpened: [],
+  refused: 0,
   tailAsked: [],
   pageReads: [],
   open: undefined,
@@ -276,12 +330,13 @@ function watchConnection(link: Link): ConnectionWatch {
 // A Session's Feed as an App that opened it before holds it (unless `seeded` is false, and then its tail page waits for `answerTail`), with a Server whose answers a fake link gives.
 export function feedLiveFixture({
   seeded = true,
-}: { seeded?: boolean } = {}): FeedLiveFixture {
+  oldServer = false,
+}: { seeded?: boolean; oldServer?: boolean } = {}): FeedLiveFixture {
   const queryClient = createQueryClient();
   const link: Link = { state: 'open', listeners: new Set() };
   const answer = Promise.withResolvers<FeedPageOutput>();
 
-  const server = newServer(answer.promise);
+  const server = newServer(answer.promise, oldServer);
   const watching = watchConnection(link);
   let held: ReturnType<typeof useSessionFeed> | undefined;
   let setShown: ((shown: boolean) => void) | undefined;

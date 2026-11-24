@@ -14,7 +14,8 @@ export const FeedSyncPoint = z.strictObject({
 
 export type FeedSyncPoint = z.infer<typeof FeedSyncPoint>;
 
-export const FeedSubscribeInput = z.strictObject({
+// Not strict: a Server ignores a key it does not know, so a later App can ask for more without Servers built after this refusing it (ADR-0045). A Server built before this does refuse `lastEventId` and `tail`; the App opens such a Server again with `after` alone.
+export const FeedSubscribeInput = z.object({
   sessionId: sessionColumns.shape.id,
   after: FeedSyncPoint.nullable(),
   // tRPC's resume point: the id of the last event an App received, which its client sends again after a reconnect (`epoch:revision`, see `feedEventId`). It stands in for `after` when its revision is higher.

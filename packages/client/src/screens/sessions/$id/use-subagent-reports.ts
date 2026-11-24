@@ -1,5 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { type ClientError, useTRPCClient } from '#features/connection';
 import {
   toParentResults,
@@ -29,6 +29,7 @@ const isReport = (item: FeedViewItem): item is ParentResult =>
 // A subagent's reports are pages of the parent's Feed that its own Feed window holds, with the parent's live changes.
 export function useSubagentReports(parentId: string, childId: string): Reports {
   const client = useTRPCClient();
+  const [refused, setRefused] = useState(false);
 
   const translate = useCallback(
     (rows: readonly SessionUpdate[]) => toParentResults(rows, childId),
@@ -51,7 +52,10 @@ export function useSubagentReports(parentId: string, childId: string): Reports {
   const live = useFeedLive(parentId, {
     cacheId,
     shown: true,
-    loaded: feed.epoch !== null,
+    held: feed.epoch !== null,
+    coldOpen: false,
+    refused,
+    onRefused: () => setRefused(true),
   });
 
   const older = useOlderHistory(cacheId, readPage);

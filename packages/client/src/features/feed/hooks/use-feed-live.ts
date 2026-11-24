@@ -3,6 +3,7 @@ import {
   type FeedSubscribeOutput,
   feedEventId,
   type SessionUpdate,
+  syncPointOfEventId,
 } from '@repo/contracts';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
@@ -29,8 +30,13 @@ type Received = FeedSubscribeOutput | { id: string; data: FeedSubscribeOutput };
 interface LiveOptions {
   cacheId: string | undefined;
   shown: boolean;
-  // For a Feed that is not the Session's own and cannot open on its tail: whether it holds rows to resume after. Leave it out for the Session's Feed, which opens cold on the tail.
-  loaded?: boolean;
+  // The Feed's query holds rows, which a Feed that cannot open on its tail waits for.
+  held: boolean;
+  // The Session's own Feed opens cold on the tail while its query holds nothing. A Feed that is not the Session's own (a subagent's reports) sets this to false and opens after its rows.
+  coldOpen?: boolean;
+  // A Server built before event ids and the tail refuses their keys as a bad request. The Feed is then read by page and the subscription opens with `after` alone, once: `onRefused` is called for that first refusal, and `refused` is the caller's answer to it.
+  refused: boolean;
+  onRefused: () => void;
 }
 
 export interface FeedLive {
@@ -39,8 +45,6 @@ export interface FeedLive {
   closure: { error: Error | null } | null;
   // Opens live changes again, after a closure.
   retryOpen: () => void;
-  // The subscription opened cold and has not brought the tail yet: it, not a page read, fills the Feed.
-  awaitingTail: boolean;
 }
 
 const eventOf = (received: Received): FeedSubscribeOutput =>
@@ -50,7 +54,7 @@ const eventOf = (received: Received): FeedSubscribeOutput =>
 function useFrames(
   sessionId: string | undefined,
   { cacheId, shown }: { cacheId: string; shown: boolean },
-  onTail: () => void,
+  onReset: () => void,
 ): (event: Changes) => void {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -79,8 +83,8 @@ function useFrames(
     batch.current = [];
     applyFeedEvents({ queryClient, cacheId, fetchRow }, events);
 
-    // Said once the rows are held, so the Feed does not read a page in the gap.
-    if (events.some((event) => event.type === 'tail')) onTail();
+    // A rebuilt Feed has no rows until its tail comes again: a new open brings it.
+    if (events.some((event) => event.type === 'reset')) onReset();
   };
 
   return (event): void => {
@@ -89,15 +93,18 @@ function useFrames(
   };
 }
 
-type Opening = Pick<LiveOptions, 'shown' | 'loaded'>;
+type Opening = Pick<LiveOptions, 'shown'> & {
+  // The rows the open waits for: held when it needs them, or null when it does not.
+  rows: boolean | null;
+};
 
 // Where a subscription opening now resumes: after the newest revision the cache holds.
 function pointToOpen(
   queryClient: QueryClient,
   cacheId: string,
-  { shown, loaded }: Opening,
+  { shown, rows }: Opening,
 ): string | undefined {
-  if (!shown || loaded === false) return;
+  if (!shown || rows === false) return;
 
   const point = syncPointOf(
     queryClient.getQueryData<FeedState>(feedKey(cacheId)) ?? emptyFeed,
@@ -126,8 +133,12 @@ function useResumePoint(cacheId: string, opening: Opening): ResumePoint {
   const [reopened, setReopened] = useState<Reopened | null>(null);
 
   const opened = useMemo(
-    () => pointToOpen(queryClient, cacheId, { shown: opening.shown }),
-    [queryClient, cacheId, opening.shown],
+    () =>
+      pointToOpen(queryClient, cacheId, {
+        shown: opening.shown,
+        rows: opening.rows,
+      }),
+    [queryClient, cacheId, opening.shown, opening.rows],
   );
 
   return {
@@ -138,82 +149,101 @@ function useResumePoint(cacheId: string, opening: Opening): ResumePoint {
   };
 }
 
-// The Session's own Feed opens cold on the tail; a Feed that waits for `loaded` resumes after its rows.
-const opensCold = (
-  loaded: boolean | undefined,
-  id: string | undefined,
-): boolean => loaded === undefined && id === undefined;
+interface Opens {
+  // Which input the Server takes: event ids and the tail, or `after` alone.
+  refused: boolean;
+  coldOpen: boolean;
+  lastEventId: string | undefined;
+}
 
-const opensAt = (
-  loaded: boolean | undefined,
-  id: string | undefined,
-): boolean => loaded === undefined || id !== undefined;
+const canOpen = ({ refused, coldOpen, lastEventId }: Opens): boolean =>
+  (coldOpen && !refused) || lastEventId !== undefined;
 
-const subscribeInput = (
+// The input of a Server that takes event ids and the tail, or the one a Server built before them took.
+function subscribeInput(
   sessionId: string | undefined,
-  {
-    loaded,
+  { refused, coldOpen, lastEventId }: Opens,
+): FeedSubscribeInput {
+  const id = sessionId ?? '';
+
+  if (refused)
+    return {
+      sessionId: id,
+      after: lastEventId ? syncPointOfEventId(lastEventId) : null,
+    };
+
+  return {
+    sessionId: id,
+    after: null,
     lastEventId,
-  }: { loaded: boolean | undefined; lastEventId: string | undefined },
-): FeedSubscribeInput => ({
-  sessionId: sessionId ?? '',
-  after: null,
-  lastEventId,
-  tail: opensCold(loaded, lastEventId),
-});
+    tail: coldOpen && lastEventId === undefined ? true : undefined,
+  };
+}
+
+const isRefusal = (error: ClientError): boolean =>
+  error.data?.code === 'BAD_REQUEST';
 
 export function useFeedLive(
   sessionId: string | undefined,
-  { cacheId = '', shown, loaded }: LiveOptions,
+  {
+    cacheId = '',
+    shown,
+    held,
+    coldOpen = true,
+    refused,
+    onRefused,
+  }: LiveOptions,
 ): FeedLive {
   const trpc = useTRPC();
   const [closure, setClosure] = useState<FeedLive['closure']>(null);
-  const [tailed, setTailed] = useState<string | null>(null);
+  const waitsForRows = !coldOpen || refused;
 
-  const receive = useFrames(sessionId, { cacheId, shown }, () =>
-    setTailed(cacheId),
-  );
+  const receive = useFrames(sessionId, { cacheId, shown }, () => {
+    if (!waitsForRows) restartCold();
+  });
 
   const { lastEventId, read, reopenAt } = useResumePoint(cacheId, {
     shown,
-    loaded,
+    rows: waitsForRows ? held : null,
   });
 
-  const changes = useSubscription(
-    trpc.feed.subscribe.subscriptionOptions(
-      subscribeInput(sessionId, { loaded, lastEventId }),
-      {
-        enabled:
-          sessionId !== undefined && shown && opensAt(loaded, lastEventId),
-        onData: (received) => {
-          const event = eventOf(received);
+  const opens = { refused, coldOpen, lastEventId };
 
-          if (event.type === 'closed')
-            setClosure({ error: closedFeedError(event) });
-          else receive(event);
-        },
+  const changes = useSubscription(
+    trpc.feed.subscribe.subscriptionOptions(subscribeInput(sessionId, opens), {
+      enabled: sessionId !== undefined && shown && canOpen(opens),
+      onData: (received) => {
+        const event = eventOf(received);
+
+        if (event.type === 'closed')
+          setClosure({ error: closedFeedError(event) });
+        else receive(event);
       },
-    ),
+      onError: (error) => {
+        if (!refused && isRefusal(error)) onRefused();
+      },
+    }),
   );
 
-  // A new open starts after the newest revision the cache holds: a new id opens it by itself, the same one starts it again.
-  const reopen = (): void => {
+  // A new open starts after the newest revision the cache holds: a new id opens it by itself. With no id (a cold open: nothing is held, such as after a reset) the open has nothing new to tell the subscription apart, so it is reset, which opens it again with the same input.
+  function reopen(): void {
     const next = read();
 
     if (next === lastEventId) changes.reset();
     else reopenAt(next);
-  };
+  }
+
+  // The Server rebuilt the Feed: what is held goes, and a cold open brings the new tail.
+  function restartCold(): void {
+    if (lastEventId === undefined) changes.reset();
+    else reopenAt(undefined);
+  }
 
   useResubscribeOnReconnect({ status: changes.status, reset: reopen });
 
   return {
     changes,
     closure,
-    awaitingTail:
-      shown &&
-      opensCold(loaded, lastEventId) &&
-      tailed !== cacheId &&
-      changes.status !== 'error',
     retryOpen: (): void => {
       setClosure(null);
       reopen();

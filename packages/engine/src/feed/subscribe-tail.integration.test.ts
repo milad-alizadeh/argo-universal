@@ -10,7 +10,7 @@ import {
 import { identified, type Yielded } from '#mocks/plain-feed';
 
 async function open(
-  input: { tail?: boolean; lastEventId?: string } = {},
+  input: { tail?: boolean; lastEventId?: string; later?: number } = {},
 ): Promise<AsyncIterator<Yielded>> {
   const events: AsyncIterable<Yielded> =
     await createFeedRouterCaller().feed.subscribe({
@@ -42,7 +42,8 @@ it('opens a cold App with the tail of the Feed, then the snapshot, in the subscr
 
   if (event.type !== 'tail') throw new Error(`Opened with ${event.type}`);
 
-  expect(event.page.rows).toHaveLength(defaultPageRows);
+  expect(defaultPageRows).toBe(40);
+  expect(event.page.rows).toHaveLength(40);
   expect(event.page.hasOlder).toBe(true);
   expect(event.page.rows.at(-1)?.revision).toBe(event.page.maxRevision);
   expect(id).toBe(`${event.page.epoch}:${event.page.maxRevision}`);
@@ -78,4 +79,12 @@ it('does not repeat the tail for an App resuming with a last event id', async ()
   const updates = await open({ tail: true, lastEventId: '3:5' });
 
   expect((await next(updates)).event.type).not.toBe('tail');
+});
+
+it('ignores an input key it does not know, so a later App still opens', async (): Promise<void> => {
+  storeLongHistory();
+  await startFeedTestHost();
+  const updates = await open({ tail: true, later: 1 });
+
+  expect((await next(updates)).event.type).toBe('tail');
 });

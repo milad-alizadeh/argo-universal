@@ -84,6 +84,45 @@ export const OpensASessionNotSeenBeforeWithTheSubscriptionAlone: Story = {
   },
 };
 
+// The Server rebuilt the Feed: what is held goes, and a new open brings the new tail with no page read.
+export const OpensAgainOnTheTailWhenTheServerRebuildsTheFeed: Story = {
+  play: async ({ mount }) => {
+    const fixture = feedLiveFixture({ seeded: false });
+    await mount(<FeedLivePreview fixture={fixture} />);
+    fixture.answerTail();
+    await waitFor(() => expect(fixture.held()?.ready).toBe(true));
+
+    fixture.send({ type: 'reset', epoch: 1 });
+
+    await waitFor(() => expect(fixture.server.tailAsked).toEqual([true, true]));
+    await expect(fixture.server.pageReads).toEqual([]);
+  },
+};
+
+// A Server built before the tail and event ids refuses their keys. The Feed draws from the page, then opens again with the old input and receives a live row.
+export const OpensOnAServerThatRefusesTheNewKeys: Story = {
+  play: async ({ mount }) => {
+    const fixture = feedLiveFixture({ seeded: false, oldServer: true });
+    await mount(<FeedLivePreview fixture={fixture} />);
+
+    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+    await expect(fixture.server.refused).toBe(1);
+
+    fixture.answerTail();
+
+    await waitFor(() => expect(fixture.held()?.revision).toBe(0));
+    await waitFor(() => expect(fixture.server.legacyOpened).toHaveLength(1));
+    await expect(fixture.server.legacyOpened).toEqual([
+      { epoch: 0, revision: 0 },
+    ]);
+
+    await laterChange(fixture);
+
+    // Asked once more with the new keys, and not again.
+    await expect(fixture.server.refused).toBe(1);
+  },
+};
+
 // The Server replayed several changes on open: they are one write.
 export const WritesABurstOfLiveChangesOncePerFrame: Story = {
   play: async ({ mount }) => {
