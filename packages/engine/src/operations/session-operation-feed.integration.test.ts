@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { runOperation } from '#mocks/operations';
 import { sessionAccessHost, openAccessSession } from '#mocks/session-access';
 
@@ -14,28 +14,34 @@ it('records discovery and a refused Operation in the calling Session Feed withou
     }),
   ).rejects.toMatchObject({ data: { code: 'BAD_REQUEST' } });
 
-  const page = await fixture.host.caller.feed.page({
-    sessionId: session.sessionId,
-    direction: 'tail',
+  // A row whose output went to a Blob is stored once the Blob file is written, so it can come a moment after the call ends.
+  const page = await vi.waitFor(async () => {
+    const tail = await fixture.host.caller.feed.page({
+      sessionId: session.sessionId,
+      direction: 'tail',
+    });
+
+    expect(tail.rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sessionId: session.sessionId,
+          sessionUpdate: 'tool_call_update',
+          name: 'operations.list',
+          status: 'completed',
+          rawInput: { filter: 'project' },
+        }),
+        expect.objectContaining({
+          sessionId: session.sessionId,
+          sessionUpdate: 'tool_call_update',
+          name: 'project.list',
+          status: 'failed',
+          rawInput: { unexpected: 42 },
+        }),
+      ]),
+    );
+
+    return tail;
   });
 
-  expect(page.rows).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        sessionId: session.sessionId,
-        sessionUpdate: 'tool_call_update',
-        name: 'operations.list',
-        status: 'completed',
-        rawInput: { filter: 'project' },
-      }),
-      expect.objectContaining({
-        sessionId: session.sessionId,
-        sessionUpdate: 'tool_call_update',
-        name: 'project.list',
-        status: 'failed',
-        rawInput: { unexpected: 42 },
-      }),
-    ]),
-  );
   expect(JSON.stringify(page.rows)).not.toContain(session.token);
 }, 30_000);
