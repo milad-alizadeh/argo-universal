@@ -7,7 +7,6 @@ import {
   paneViewportClass,
   type PaneMaterialProps,
 } from './glass-pane.web';
-import { useEdgeClip } from './pane-edge-clip.web';
 import { type PaneGeometry, usePaneGeometry } from './pane-geometry';
 import type { PaneRefs } from './pane-motion.web';
 import { ReflowingText, SlidingText } from './pane-text.web';
@@ -131,15 +130,9 @@ function PaneViewport(
   );
 }
 
-/*
- * The edge clip is drawn only while the pane's edge moves. A resting clip, with a standing `will-change` on the
- * viewport inside it, keeps Chromium from drawing the Feed into the backdrop of the glass floating over it, so the
- * Changes pill and Jump to latest frosted nothing and the text behind showed through them sharp.
- */
 function BareFramePane(props: FramePaneProps): React.JSX.Element {
   return (
     <div
-      ref={useEdgeClip(props)}
       data-testid={props.testID}
       className="relative min-w-0 shrink-0"
       style={{ width: props.width }}
