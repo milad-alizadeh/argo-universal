@@ -12,6 +12,7 @@ import type { z } from 'zod';
 import type { WriterJob } from '../storage';
 import type { ListedSchedule } from './project-schedule-settings';
 import { nextProjectScheduleAt } from './project-schedule-timing';
+import { recordWrite } from './schedule-record';
 import type { NoticeWriter, ScheduleOccurrence } from './schedule-skip';
 import { announceScheduleWrite } from './schedule-skip';
 import { nextIntervalAt } from './schedule-timing';
@@ -158,17 +159,6 @@ const decodeSchedule = (row: ScheduleRow): Schedule => ({
   state: stateOf(row, Date.now()),
 });
 
-type OccurrenceRecord = Partial<
-  Pick<ScheduleRow, 'nextAt' | 'lastQueuedAt' | 'lastSkippedAt'>
->;
-
-const recordWrite = (id: string, record: OccurrenceRecord): WriterJob => ({
-  describe: () => 'Record scheduled Prompt',
-  commit: (tx) => {
-    tx.update(table).set(record).where(eq(table.id, id)).run();
-  },
-});
-
 // One store for every Schedule, made as a task in Scheduled or inside a Session (ADR-0067).
 export class ScheduleStore {
   public constructor(
@@ -214,14 +204,14 @@ export class ScheduleStore {
       at: row.nextAt,
       timeZone: calendarOf(row)?.timeZone,
       late: now - row.nextAt > lateGraceMs,
-      deliveryWrite: recordWrite(row.id, { nextAt, lastQueuedAt: now }),
-      coalescedWrite: recordWrite(row.id, coalesced),
-      skipWrite: recordWrite(row.id, { nextAt, lastSkippedAt: now }),
+      deliveryWrite: recordWrite(row, { nextAt, lastQueuedAt: now }),
+      coalescedWrite: recordWrite(row, coalesced),
+      skipWrite: recordWrite(row, { nextAt, lastSkippedAt: now }),
     };
   }
   // Run now keeps a repeating Schedule's next occurrence; a one-time Schedule is done once its Prompt is sent.
-  public sentNow(id: string): WriterJob {
-    return recordWrite(id, { lastQueuedAt: Date.now() });
+  public sentNow(row: Pick<ScheduleRow, 'id' | 'sessionId'>): WriterJob {
+    return recordWrite(row, { lastQueuedAt: Date.now() });
   }
   public row(id: string): ScheduleRow | undefined {
     return this.sources.database
@@ -287,7 +277,7 @@ export class ScheduleStore {
     id: string,
     { prompt, cadence, ...timing }: ScheduleEdit,
   ): Promise<void> {
-    await this.sources.open.write({
+    const edited: WriterJob = {
       describe: () => 'Edit Schedule',
       commit: (tx) =>
         tx
@@ -299,7 +289,13 @@ export class ScheduleStore {
           })
           .where(eq(table.id, id))
           .run(),
-    });
+    };
+
+    const sessionId = this.row(id)?.sessionId;
+
+    await this.sources.open.write(
+      sessionId ? announceScheduleWrite(sessionId, edited) : edited,
+    );
   }
   public async change(input: ManageSchedule): Promise<void> {
     const { sessionId, id, action } = input;
