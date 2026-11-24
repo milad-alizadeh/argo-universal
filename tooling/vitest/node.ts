@@ -39,7 +39,7 @@ const createUnitProject = ({
   ...options
 }: ProjectOptions): TestProjectInlineConfiguration => ({
   extends: false,
-  resolve,
+  ...(resolve && { resolve }),
   test: {
     ...nodeTest,
     ...options,
