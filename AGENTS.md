@@ -14,6 +14,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Designs: Storybook owns how built UI looks; Paper is for exploring a design before it is built, and its board is deleted once the design ships. Before drawing in Paper, read `docs/agents/paper.md`.
 - Slow networks: to prove a channel or transport change over latency and limited bandwidth in a test, read `docs/agents/slow-network-tests.md`.
 - Profiling: before chasing a slow screen or adding a render-count test, read `docs/agents/profiling.md`.
+- Remote testing: before testing the phone away from home or pairing over Tailscale, read `docs/agents/remote-testing.md`.
 - Android emulator: before booting or driving an Android emulator, read `docs/agents/android-emulator.md`.
 
 ## Agent skills

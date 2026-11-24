@@ -48,7 +48,10 @@ export const opener = (
   const deviceKey = once(platform.deviceKey);
   const route = new ChannelRoute(target.address, target.locate, target.others);
 
-  return async () => route.open(at(target, platform, await deviceKey()));
+  return async () =>
+    route.open(at(target, platform, await deviceKey()), (opened) => {
+      opened.stream.close();
+    });
 };
 
 // One try at one address the Server may answer on.
