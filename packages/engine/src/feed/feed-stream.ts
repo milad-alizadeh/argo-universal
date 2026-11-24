@@ -1,4 +1,5 @@
 import {
+  defaultPageRows,
   feedEventId,
   type FeedSubscribeInput,
   type FeedSubscribeOutput,
@@ -9,8 +10,12 @@ import { tracked, type TrackedEnvelope } from '@trpc/server';
 import type { FeedDeps } from './feed';
 import { FeedDelivery } from './feed-delivery';
 import { FeedListener } from './feed-listener';
+import { readFeedPage } from './feed-page';
 
-type SubscriptionStart = Pick<FeedSubscribeInput, 'sessionId' | 'after'> & {
+type SubscriptionStart = Pick<
+  FeedSubscribeInput,
+  'sessionId' | 'after' | 'tail'
+> & {
   epoch: number;
   maxRevision: number;
 };
@@ -88,6 +93,17 @@ async function* deliverSubscription(
 
   if (isReset(start)) yield { type: 'reset', epoch: start.epoch };
 
+  // An App with no rows opens on the newest ones, read with the sync point so no change falls between them.
+  if (start.tail && start.after === null)
+    yield {
+      type: 'tail',
+      page: readFeedPage(resources, {
+        sessionId: start.sessionId,
+        direction: 'tail',
+        limit: defaultPageRows,
+      }),
+    };
+
   const delivery = new FeedDelivery(resources, start.sessionId, {
     after: initialRevision(start),
     storedRevision: start.maxRevision,
@@ -141,6 +157,9 @@ function pointOfEvent(
 
   if (event.type === 'reset') return { epoch: event.epoch, revision: 0 };
 
+  if (event.type === 'tail')
+    return { epoch: event.page.epoch, revision: event.page.maxRevision };
+
   if (event.type === 'snapshot')
     return { epoch, revision: event.snapshot.maxRevision };
 
@@ -148,7 +167,7 @@ function pointOfEvent(
 }
 
 /*
- * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none. An App that gives no `lastEventId` is one from before event ids, which reads plain events.
+ * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none. An App that gives neither a `lastEventId` nor `tail` is one from before event ids, which reads plain events.
  */
 export async function* trackedFeed(
   resources: FeedDeps,
@@ -161,7 +180,7 @@ export async function* trackedFeed(
     const point = pointOfEvent(epoch, event);
 
     epoch = point?.epoch ?? epoch;
-    yield point && input.lastEventId !== undefined
+    yield point && (input.lastEventId !== undefined || input.tail)
       ? tracked(feedEventId(point), event)
       : event;
   }

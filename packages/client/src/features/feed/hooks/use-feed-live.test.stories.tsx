@@ -65,20 +65,22 @@ export const DrawsASessionSeenBeforeFromTheCacheWithNoPageRead: Story = {
   },
 };
 
-export const OpensOnTheTailPageOfASessionNotSeenBefore: Story = {
+// A cold open is one subscription: no page is read first, and the tail and snapshot it opens with draw the Feed.
+export const OpensASessionNotSeenBeforeWithTheSubscriptionAlone: Story = {
   play: async ({ mount }) => {
     const fixture = feedLiveFixture({ seeded: false });
     await mount(<FeedLivePreview fixture={fixture} />);
 
-    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
-    await waitFor(() => expect(fixture.held()).toBeDefined());
-
-    // Nothing to open after until the first rows are held.
-    await expect(fixture.server.opened).toEqual([]);
+    await waitFor(() => expect(fixture.server.opened).toEqual([undefined]));
+    await expect(fixture.server.tailAsked).toEqual([true]);
+    await expect(fixture.held()?.ready).toBe(false);
 
     fixture.answerTail();
 
-    await waitFor(() => expect(fixture.server.opened).toEqual([seeded]));
+    await waitFor(() => expect(fixture.held()?.ready).toBe(true));
+    await expect(fixture.server.pageReads).toEqual([]);
+    // The rows it brought are held, and do not open the subscription again.
+    await expect(fixture.server.opened).toEqual([undefined]);
   },
 };
 
@@ -201,7 +203,7 @@ export const LoadsOlderHistoryIntoTheSameWindow: Story = {
   play: async ({ mount }) => {
     const fixture = feedLiveFixture({ seeded: false });
     await mount(<FeedLivePreview fixture={fixture} />);
-    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+    await waitFor(() => expect(fixture.server.tailAsked).toEqual([true]));
 
     fixture.answerTail({
       ...page(streamed.rows, newest.revision, { limit: 2 }),
@@ -215,6 +217,7 @@ export const LoadsOlderHistoryIntoTheSameWindow: Story = {
     const merged = fixture.window()?.rows ?? [];
     await expect(merged.length).toBeGreaterThan(2);
     await expect(merged.slice(-2)).toEqual(newer);
+    await expect(fixture.server.pageReads).toHaveLength(1);
     await expect(fixture.server.pageReads.at(-1)).toMatchObject({
       direction: 'before',
     });

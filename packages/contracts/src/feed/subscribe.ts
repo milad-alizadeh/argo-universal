@@ -3,6 +3,7 @@ import { feedRowColumns, sessionColumns } from '../columns';
 import { SessionOpenError } from '../sessions/new';
 import { SessionSnapshot } from '../sessions/snapshot';
 import { FeedAppend, FeedPatch } from './change';
+import { FeedPageOutput } from './page';
 import { SessionUpdate } from './session-update';
 
 // The point an App has synced to; `null` asks for everything (ADR-0007).
@@ -18,6 +19,8 @@ export const FeedSubscribeInput = z.strictObject({
   after: FeedSyncPoint.nullable(),
   // tRPC's resume point: the id of the last event an App received, which its client sends again after a reconnect (`epoch:revision`, see `feedEventId`). It stands in for `after` when its revision is higher.
   lastEventId: z.string().optional(),
+  // An App with no rows for the Session asks to open with its newest rows and the snapshot, so it reads no `feed.page` first. An App from before this leaves it out.
+  tail: z.boolean().optional(),
 });
 
 export type FeedSubscribeInput = z.infer<typeof FeedSubscribeInput>;
@@ -55,6 +58,14 @@ export const FeedSnapshot = z.strictObject({
 
 export type FeedSnapshot = z.infer<typeof FeedSnapshot>;
 
+// The Feed's newest rows (`defaultPageRows`): the first event of a subscription opened with `tail`.
+export const FeedTail = z.strictObject({
+  type: z.literal('tail'),
+  page: FeedPageOutput,
+});
+
+export type FeedTail = z.infer<typeof FeedTail>;
+
 // The Server rebuilt the Session's rows; the App drops its cache for the Session.
 const FeedReset = z.strictObject({
   type: z.literal('reset'),
@@ -73,6 +84,7 @@ export const FeedSubscribeOutput = z.discriminatedUnion('type', [
   RowAppend,
   RowPatch,
   FeedSnapshot,
+  FeedTail,
   FeedReset,
   FeedClosed,
 ]);

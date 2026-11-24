@@ -20,17 +20,13 @@ export function useSessionFeed(
 ): SessionFeed {
   const readPage = useSessionPages(sessionId);
 
+  const live = useFeedLive(sessionId, { cacheId: sessionId, shown });
+
   const { cacheId, feed, snapshot, view, query } = useFeedWindow(
     sessionId,
     translate,
-    { cacheId: sessionId, readPage },
+    { cacheId: sessionId, readPage, readsTail: !live.awaitingTail },
   );
-
-  const live = useFeedLive(sessionId, {
-    cacheId,
-    shown,
-    loaded: feed.epoch !== null,
-  });
 
   const older = useOlderHistory(cacheId, readPage);
 

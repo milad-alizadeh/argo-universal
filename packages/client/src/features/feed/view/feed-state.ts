@@ -107,6 +107,8 @@ export function applySubscriptionEvent(
   feed: FeedState,
   event: Exclude<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>,
 ): SubscriptionEventResult {
+  if (event.type === 'tail') return { feed: mergeNewestPage(feed, event.page) };
+
   if (event.type === 'reset')
     return { feed: { ...emptyFeed, epoch: event.epoch }, reset: true };
 

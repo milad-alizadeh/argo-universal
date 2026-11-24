@@ -75,6 +75,8 @@ type Wire = Observer<
 interface Server {
   // The `lastEventId` of each `feed.subscribe` the App opened.
   opened: (string | undefined)[];
+  // Whether each `feed.subscribe` the App opened asked for the tail.
+  tailAsked: boolean[];
   // Each `feed.page` the App read.
   pageReads: FeedPageInput[];
   open: Wire | undefined;
@@ -116,11 +118,31 @@ function answerPage(server: Server, wire: Wire, input: FeedPageInput): void {
 function openSubscription(
   server: Server,
   wire: Wire,
-  { lastEventId }: FeedSubscribeInput,
+  { lastEventId, tail = false }: FeedSubscribeInput,
 ): void {
   server.opened.push(lastEventId);
+  server.tailAsked.push(tail);
   server.open = wire;
   wire.next({ result: { type: 'started' } });
+
+  // The tail waits for the test, then comes with the snapshot, as the Server opens a cold App.
+  if (tail)
+    void server.tail.then((page) => {
+      wire.next({
+        result: {
+          type: 'data',
+          data: { type: 'tail', page },
+          id: feedEventId({ epoch: page.epoch, revision: page.maxRevision }),
+        },
+      });
+      wire.next({
+        result: {
+          type: 'data',
+          data: { type: 'snapshot', snapshot: streamed.snapshot },
+          id: feedEventId({ epoch: page.epoch, revision: page.maxRevision }),
+        },
+      });
+    });
 
   // Each row event has the id tRPC's client resumes from.
   for (const data of replayAbove(lastEventId))
@@ -214,6 +236,7 @@ function seed(queryClient: ReturnType<typeof createQueryClient>): void {
 
 const newServer = (tail: Promise<FeedPageOutput>): Server => ({
   opened: [],
+  tailAsked: [],
   pageReads: [],
   open: undefined,
   closed: 0,
