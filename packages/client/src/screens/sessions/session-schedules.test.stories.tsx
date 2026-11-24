@@ -36,5 +36,6 @@ export const ShowsSchedulesTheServerPushes: Story = {
     await waitFor(() => expect(canvas.queryByText(build)).toBeNull());
 
     await expect(fixture.listReads()).toBe(1);
+    await expect(fixture.pollIntervals()).toEqual([]);
   },
 };

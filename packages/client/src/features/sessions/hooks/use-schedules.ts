@@ -57,26 +57,20 @@ export function useSchedules(
   useResubscribeOnReconnect(subscription);
   useResubscribeOnFocus(subscription);
 
-  const change = useChangeSchedule(sessionId, () => {
-    void query.refetch();
-  });
+  const change = useChangeSchedule(sessionId);
 
   return { items: query.data ?? [], canCreate, ...change };
 }
 
+// A change reaches the list through the Server's push, so a mutation does not read it again.
 function useChangeSchedule(
   sessionId: string,
-  refresh: () => void,
 ): Omit<ScheduleControls, 'items' | 'canCreate'> {
   const session = useTRPC().session;
 
-  const mutation = useMutation(
-    session.manageSchedule.mutationOptions({ onSuccess: refresh }),
-  );
+  const mutation = useMutation(session.manageSchedule.mutationOptions());
 
-  const create = useMutation(
-    session.schedulePrompt.mutationOptions({ onSuccess: refresh }),
-  );
+  const create = useMutation(session.schedulePrompt.mutationOptions());
 
   useErrorToast(
     scheduleError(

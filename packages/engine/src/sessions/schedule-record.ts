@@ -19,3 +19,10 @@ export const recordWrite = (
       tx.update(table).set(record).where(eq(table.id, id)).run();
     },
   });
+
+// A job that writes nothing: the writer announces it, so a watcher of the Session reads a change that no write made, such as a Schedule passing its end time.
+export const announceOnly = (sessionId: string): WriterJob =>
+  announceScheduleWrite(sessionId, {
+    describe: () => 'Announce Schedule expiry',
+    commit: () => {},
+  });

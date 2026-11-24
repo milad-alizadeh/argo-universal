@@ -8,6 +8,7 @@ import {
   type TRPCLink,
 } from '@trpc/client';
 import { observable, type Observer } from '@trpc/server/observable';
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import type { JSX } from 'react';
 import type { z } from 'zod';
 import {
@@ -45,6 +46,8 @@ export interface SessionSchedulesFixture {
   client: TRPCClient<AppRouter>;
   // How many `session.listSchedules` reads reached the Server.
   listReads: () => number;
+  // The refetch intervals set by the observers of the Session's Schedule list; none means nothing polls it.
+  pollIntervals: () => unknown[];
   // How many `session.scheduleUpdates` subscriptions started.
   updatesStarted: () => number;
   // The Server pushes its Schedules, as it does when another Device changes one.
@@ -96,9 +99,20 @@ export function sessionSchedulesFixture(
 
   const link: TRPCLink<AppRouter> = () => forward;
 
+  const queryClient = createQueryClient();
+  const client = createTRPCClient<AppRouter>({ links: [link] });
+  const trpc = createTRPCOptionsProxy<AppRouter>({ client, queryClient });
+
   return {
-    queryClient: createQueryClient(),
-    client: createTRPCClient<AppRouter>({ links: [link] }),
+    queryClient,
+    client,
+    pollIntervals: () =>
+      queryClient
+        .getQueryCache()
+        .find({ queryKey: trpc.session.listSchedules.queryKey({ sessionId }) })
+        ?.observers.map(({ options }) => options.refetchInterval)
+        .filter((interval) => interval !== undefined && interval !== false) ??
+      [],
     listReads: () => reads,
     updatesStarted: () => started,
     push: (list) => open?.next({ result: { type: 'data', data: list } }),
