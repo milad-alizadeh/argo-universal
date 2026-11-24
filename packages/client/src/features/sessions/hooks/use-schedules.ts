@@ -3,9 +3,11 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSubscription } from '@trpc/tanstack-react-query';
 import type { z } from 'zod';
-import { useTRPC } from '#features/connection';
+import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { useResubscribeOnFocus } from './use-resubscribe-on-focus';
 
 type ScheduleList = z.output<
   (typeof operations)['session.listSchedules']['result']
@@ -31,35 +33,52 @@ export function useSchedules(
   canCreate: boolean,
 ): ScheduleControls {
   const session = useTRPC().session;
-
-  const options = { enabled: shown, refetchInterval: refreshMs };
+  const queryClient = useQueryClient();
 
   const query = useQuery(
-    session.listSchedules.queryOptions({ sessionId }, options),
+    session.listSchedules.queryOptions({ sessionId }, { enabled: shown }),
   );
 
-  const change = useChangeSchedule(sessionId, () => {
-    void query.refetch();
-  });
+  // The Server pushes the list whenever a Schedule of this Session changes, from any Device; it first answers with the list as it is, which also catches up after a reconnect.
+  const subscription = useSubscription(
+    session.scheduleUpdates.subscriptionOptions(
+      { sessionId },
+      {
+        enabled: shown,
+        onData: (list) =>
+          queryClient.setQueryData(
+            session.listSchedules.queryKey({ sessionId }),
+            list,
+          ),
+      },
+    ),
+  );
+
+  useResubscribeOnReconnect(subscription);
+  useResubscribeOnFocus(subscription);
+
+  const change = useChangeSchedule(sessionId);
 
   return { items: query.data ?? [], canCreate, ...change };
 }
 
-const refreshMs = 5000;
-
+// A change reaches the list through the Server's push; marking the list stale also covers a push missed while the subscription was down.
 function useChangeSchedule(
   sessionId: string,
-  refresh: () => void,
 ): Omit<ScheduleControls, 'items' | 'canCreate'> {
   const session = useTRPC().session;
+  const queryClient = useQueryClient();
 
-  const mutation = useMutation(
-    session.manageSchedule.mutationOptions({ onSuccess: refresh }),
-  );
+  const changed = {
+    onSuccess: (): Promise<void> =>
+      queryClient.invalidateQueries({
+        queryKey: session.listSchedules.queryKey({ sessionId }),
+      }),
+  };
 
-  const create = useMutation(
-    session.schedulePrompt.mutationOptions({ onSuccess: refresh }),
-  );
+  const mutation = useMutation(session.manageSchedule.mutationOptions(changed));
+
+  const create = useMutation(session.schedulePrompt.mutationOptions(changed));
 
   useErrorToast(
     scheduleError(

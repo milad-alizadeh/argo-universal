@@ -4,6 +4,8 @@ interface ScheduleClock {
   now: () => number;
   nextAt: () => number | undefined;
   deliver: (signal: AbortSignal) => Promise<void>;
+  // The timer has no deadline left: delivered for good, or past its end time.
+  ended: () => void;
 }
 
 const maximumDelay = 2147483647;
@@ -56,7 +58,7 @@ const scheduleMachine = setup({
       always: { guard: 'inactive', target: 'inactive' },
       after: { retry: 'waiting' },
     },
-    inactive: { type: 'final' },
+    inactive: { type: 'final', entry: ({ context }) => context.ended() },
   },
 });
 
@@ -65,6 +67,7 @@ type ScheduleActor = ActorRefFrom<typeof scheduleMachine>;
 interface ScheduleDeadlines {
   nextAt: (id: string) => number | undefined;
   deliver: (id: string, signal: AbortSignal) => Promise<void>;
+  ended?: (id: string) => void;
   now?: () => number;
 }
 
@@ -90,6 +93,7 @@ export class ScheduleTimers {
         now: () => (this.deadlines.now ?? Date.now)(),
         nextAt: () => this.deadlines.nextAt(id),
         deliver: (signal) => this.deadlines.deliver(id, signal),
+        ended: () => this.deadlines.ended?.(id),
       },
     });
 

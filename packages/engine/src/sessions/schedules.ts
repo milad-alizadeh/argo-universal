@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import type { z } from 'zod';
 import type { WriterJob } from '../storage';
 import { ScheduleTimers } from './schedule-machine';
+import { announceOnly } from './schedule-record';
 import { recordScheduleSkip } from './schedule-skip';
 import {
   ScheduleStore,
@@ -12,6 +13,7 @@ import {
   type NewSchedule,
   type Schedule,
 } from './schedule-store';
+import { scheduleUpdates } from './schedule-updates';
 import { sendQueueCommand } from './sent-prompt/queue';
 import { requireWritableSession } from './session-command';
 import type { SessionActorRef } from './session-machine';
@@ -52,6 +54,7 @@ export class Schedules {
       {
         nextAt: (id): number | undefined => this.store.deadline(id),
         deliver: (id, signal): Promise<void> => this.deliver(id, signal),
+        ended: (id): void => this.announceExpiry(id),
       },
       stopping,
     );
@@ -60,6 +63,16 @@ export class Schedules {
   }
   public list(sessionId: string): Schedule[] {
     return this.store.list(sessionId);
+  }
+  public updates(
+    sessionId: string,
+    signal?: AbortSignal,
+  ): ReturnType<typeof scheduleUpdates> {
+    return scheduleUpdates(
+      this.sources,
+      { sessionId, read: () => this.list(sessionId) },
+      signal,
+    );
   }
   // A Schedule made inside a Session: `session.schedulePrompt`.
   public create(input: CreateSchedule): Promise<Schedule> {
@@ -122,7 +135,7 @@ export class Schedules {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found' });
 
     requireWritableSession(this.sources.readSession(row.sessionId));
-    const write = this.store.sentNow(id);
+    const write = this.store.sentNow(row);
     const session = await this.open(row.sessionId, signal);
 
     await this.enqueue(session, id, {
@@ -154,6 +167,14 @@ export class Schedules {
           advance: due.skipWrite,
         })
       : this.deliverDue(id, sessionId, signal));
+  }
+  // The timer also wakes at a Schedule's end time, when nothing is due and nothing is written: tell its watchers.
+  private announceExpiry(id: string): void {
+    const row = this.store.row(id);
+
+    if (row?.endsAt != null && row.endsAt <= Date.now())
+      // Best effort: a write refused while closing loses only this notice, and a watcher's next subscribe reads the list afresh.
+      this.sources.open.write(announceOnly(row.sessionId)).catch(() => {});
   }
   private async deliverDue(
     id: string,
