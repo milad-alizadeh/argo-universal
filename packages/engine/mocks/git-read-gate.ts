@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createServer, type AddressInfo, type Socket } from 'node:net';
+import { createServer, type Server, type Socket } from 'node:net';
 import { delimiter, join } from 'node:path';
 import { promisify } from 'node:util';
 import { onTestFinished, vi } from 'vitest';
@@ -23,13 +23,15 @@ export async function holdBranchReads(home: string): Promise<Gate> {
  */
 async function holdGitReads(home: string, argument: string): Promise<Gate> {
   const listener = await openListener();
-  const directory = await prepareGate(home, { argument, port: listener.port });
 
   onTestFinished(async () => {
     await listener.release();
     listener.close();
     vi.unstubAllEnvs();
   });
+
+  const directory = await prepareGate(home, { argument, port: listener.port });
+
   vi.stubEnv('PATH', `${directory}${delimiter}${process.env.PATH ?? ''}`);
 
   return { release: listener.release, started: () => listener.entered };
@@ -45,30 +47,45 @@ type Listener = {
 async function openListener(): Promise<Listener> {
   const held = new Set<Socket>();
   const entered = Promise.withResolvers<void>();
+
   let released = false;
+
   const server = createServer((socket): void => {
     entered.resolve();
+
     if (released) socket.end('released');
     else held.add(socket);
   });
 
-  await new Promise<void>((resolve): void => {
-    server.listen(0, '127.0.0.1', resolve);
-  });
-  server.unref();
-
   const release = async (): Promise<void> => {
     released = true;
+
     for (const socket of held) socket.end('released');
     held.clear();
   };
 
   return {
-    port: (server.address() as AddressInfo).port,
+    port: await listen(server),
     entered: entered.promise,
     release,
     close: (): void => void server.close(),
   };
+}
+
+// The loopback port `server` now listens on; it never keeps the test process alive.
+async function listen(server: Server): Promise<number> {
+  await new Promise<void>((resolve): void => {
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  server.unref();
+
+  const address = server.address();
+
+  if (address === null || typeof address === 'string') {
+    throw new Error('The git read gate is not listening on a port');
+  }
+
+  return address.port;
 }
 
 type GateInput = { argument: string; port: number };
