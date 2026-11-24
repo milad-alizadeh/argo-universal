@@ -1,6 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import type { PairingClaim, PairingRegistration } from '@repo/contracts';
 import type {
+  ByteSocket,
+  OpenSocket,
+} from '../src/features/connection/api/channel/byte-socket';
+import type {
   ChannelPlatform,
   DeviceClaim,
 } from '../src/features/connection/api/channel/channel-transport';
@@ -141,4 +145,58 @@ export async function pairedNodeDevice(
   (await openAs(host, nodeChannelPlatform(device), { ticket })).stream.close();
 
   return device;
+}
+
+const nobody = (): void => {};
+
+export interface Silenceable {
+  openSocket: OpenSocket;
+  sockets: ByteSocket[];
+  // From now on the first socket opened swallows everything in both directions and never closes, as one does after a Wi-Fi change.
+  silence: () => void;
+  // Closes every socket opened, the silenced one included.
+  close: () => void;
+}
+
+export function silenceable(open: OpenSocket): Silenceable {
+  const real: ByteSocket[] = [];
+  const sockets: ByteSocket[] = [];
+  let silent = false;
+
+  const openSocket: OpenSocket = async (to) => {
+    const socket = await open(to);
+    const first = real.length === 0;
+    const heard = (): boolean => !(first && silent);
+
+    const wrapper: ByteSocket = {
+      write: (data): void => {
+        if (heard()) socket.write(data);
+      },
+      close: (): void => socket.close(),
+      onData: nobody,
+      onClose: nobody,
+    };
+
+    socket.onData = (chunk): void => {
+      if (heard()) wrapper.onData(chunk);
+    };
+
+    socket.onClose = (error): void => wrapper.onClose(error);
+
+    real.push(socket);
+    sockets.push(wrapper);
+
+    return wrapper;
+  };
+
+  return {
+    openSocket,
+    sockets,
+    silence: (): void => {
+      silent = true;
+    },
+    close: (): void => {
+      for (const socket of real) socket.close();
+    },
+  };
 }
