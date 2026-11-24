@@ -102,11 +102,21 @@ function fixRead(step: Step, read: LinkRead): Promise<boolean> | false {
   return pull ? fixPull(step, pull, read) : false;
 }
 
+// Only a Session of the Project the Watch runs for can be prompted or have a Prompt taken back; the Server refuses any other.
+async function inProject(
+  sessions: Sessions,
+  { sessionId, projectId }: FixRecord,
+): Promise<boolean> {
+  return (await sessions.get(sessionId))?.projectId === projectId;
+}
+
 async function fixOne(
   fixing: Fixing,
   fresh: Fresh,
   record: FixRecord,
 ): Promise<boolean> {
+  if (!(await inProject(fixing.sessions, record))) return false;
+
   const read = await freshOf(fresh, record);
 
   return read ? fixRead({ ...fixing, record }, read) : false;

@@ -2,18 +2,11 @@ type Turn = PromiseSettledResult<boolean>;
 
 type TurnOf<Item> = (item: Item) => Promise<boolean>;
 
-// Each pull request takes its turn in order; one failing does not stop the others.
-async function inTurn<Item>(
+// Every pull request takes its turn at once, so one slow read of GitHub never holds the others back from the budget.
+const inTurn = <Item>(
   items: readonly Item[],
   turnOf: TurnOf<Item>,
-): Promise<Turn[]> {
-  const turns: Turn[] = [];
-
-  for (const item of items)
-    turns.push(...(await Promise.allSettled([turnOf(item)])));
-
-  return turns;
-}
+): Promise<Turn[]> => Promise.allSettled(items.map((item) => turnOf(item)));
 
 const acted = (turn: Turn): boolean =>
   turn.status === 'fulfilled' && turn.value;
@@ -38,7 +31,7 @@ async function runTurns<Item>(
 }
 
 /*
- * A Watch step over the pull requests that have an automation on: each takes its turn, and the turn says whether it
+ * A Watch step over the pull requests that have an automation on: each takes its turn at once, and the turn says whether it
  * acted. The Plugin's reads are made due first, and the lists redraw when any turn acted. The first failure is thrown
  * after all have had their turn.
  */
