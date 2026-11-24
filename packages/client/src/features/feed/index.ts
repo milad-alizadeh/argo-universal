@@ -6,7 +6,7 @@ export { useFeedLive } from './hooks/use-feed-live';
 
 export { useSessionFeed } from './hooks/use-session-feed';
 
-export { FullToolOutputProvider } from './hooks/use-full-tool-output';
+export { FullToolOutputProvider } from './hooks/use-full-tool-output-query';
 
 export {
   type FeedPageReader,

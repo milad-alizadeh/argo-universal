@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile, rm, stat } from 'node:fs/promises';
+import { readdir, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
-  type BlobTextInput,
   type BlobUploadInput,
   type BlobUploadOutput,
   maxBlobUploadBytes,
@@ -86,19 +85,6 @@ export async function uploadBlob(
   await saveMetadata(resources.databaseWriter, metadata);
 
   return { blobId, mime, bytes: bytes.length };
-}
-
-// A Blob's content as text. The id was checked as a sha256 hex string by the contract, so it names no path outside the folder.
-export async function readBlobText(
-  resources: Pick<BlobUploadDeps, 'blobsFolder'>,
-  { blobId }: BlobTextInput,
-): Promise<string> {
-  return readFile(join(resources.blobsFolder, blobId), 'utf8').catch(
-    (error: NodeJS.ErrnoException): never => {
-      if (error.code !== 'ENOENT') throw error;
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'No such Blob' });
-    },
-  );
 }
 
 const blobIdentity = (bytes: Buffer): string =>

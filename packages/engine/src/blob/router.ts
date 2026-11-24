@@ -1,11 +1,6 @@
-import {
-  BlobTextInput,
-  BlobTextOutput,
-  BlobUploadInput,
-  BlobUploadOutput,
-} from '@repo/contracts';
+import { BlobUploadInput, BlobUploadOutput } from '@repo/contracts';
 import { publicProcedure, router, routerFactory } from '../rpc';
-import { type BlobUploadDeps, readBlobText, uploadBlob } from './blob';
+import { type BlobUploadDeps, uploadBlob } from './blob';
 
 export const createBlobRouter = routerFactory((deps: BlobUploadDeps) =>
   router({
@@ -15,9 +10,5 @@ export const createBlobRouter = routerFactory((deps: BlobUploadDeps) =>
       .mutation(({ input }): Promise<BlobUploadOutput> =>
         uploadBlob(deps, input),
       ),
-    text: publicProcedure
-      .input(BlobTextInput)
-      .output(BlobTextOutput)
-      .query(({ input }): Promise<BlobTextOutput> => readBlobText(deps, input)),
   }),
 );

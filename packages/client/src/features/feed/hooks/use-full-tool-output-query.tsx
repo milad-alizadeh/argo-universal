@@ -1,26 +1,18 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useTRPC } from '#features/connection';
+import { useBlobRead } from '#features/connection';
+import { blobTextQuery, createBlobTextReader } from '../api/blob-text-query';
 import { fullOutputBlobIds, withFullOutput } from '../view/full-tool-output';
 import { FullToolOutputContext } from './full-tool-output-context';
 
-const minuteMs = 60_000,
-  minutesKept = 30;
-
-// A Blob is named by the hash of its content, so what a read brought never goes stale: it is kept for as long as the Feed's lists are.
-const keptFor = minutesKept * minuteMs;
-
-// The text of one Blob, read when an opened row asks and not before. An older Server has no `blob.text`: its read fails once and the row keeps its preview.
+// The text of one Blob, read when an opened row asks and not before.
 function useBlobText(blobId: string | undefined): string | undefined {
-  const trpc = useTRPC();
+  const read = createBlobTextReader(useBlobRead());
 
   return useQuery({
-    ...trpc.blob.text.queryOptions({ blobId: blobId ?? '' }),
+    ...blobTextQuery(read, blobId ?? ''),
     enabled: blobId !== undefined,
-    staleTime: Infinity,
-    gcTime: keptFor,
-    retry: false,
   }).data;
 }
 
