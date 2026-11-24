@@ -23,7 +23,8 @@ const batchKilobytes = 256;
 // A batch stays near this size once serialised, so the App never parses a message of megabytes on its JS thread while live events wait behind it.
 const batchBytes = batchKilobytes * kilobyte;
 
-const bytesOf = (row: SessionUpdate): number => JSON.stringify(row).length;
+const bytesOf = (row: SessionUpdate): number =>
+  Buffer.byteLength(JSON.stringify(row));
 
 // The page in runs of rows, each of about `batchBytes` or a single row.
 function* runsOfRows(
@@ -33,13 +34,15 @@ function* runsOfRows(
   let bytes = 0;
 
   for (const [index, row] of page.entries()) {
-    if (index > start && bytes + bytesOf(row) > batchBytes) {
+    const size = bytesOf(row);
+
+    if (index > start && bytes + size > batchBytes) {
       yield page.slice(start, index);
       start = index;
       bytes = 0;
     }
 
-    bytes += bytesOf(row);
+    bytes += size;
   }
 
   if (start < page.length) yield page.slice(start);
