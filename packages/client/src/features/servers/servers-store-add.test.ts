@@ -14,10 +14,12 @@ const studio = {
 const bench = { name: 'Workshop bench', key: 'bench-key' };
 
 // The store reads what is kept once, on its first reader.
-async function readingServers(): Promise<ServersStore> {
+async function readingServers(
+  forgetMedia?: (serverId: string) => void,
+): Promise<ServersStore> {
   vi.stubGlobal('window', { localStorage: memoryStorage() });
 
-  const store = createServersStore('ws://127.0.0.1:4000');
+  const store = createServersStore('ws://127.0.0.1:4000', forgetMedia);
 
   await new Promise<void>((read) => {
     const stop = store.subscribe(() => {
@@ -96,6 +98,18 @@ describe('removing a Server this Device has unpaired from', () => {
       expect(await loadKnownServers()).toEqual([studio]);
       expect(await loadLookedAtServer()).toBe(ownId);
     });
+  });
+
+  it('wipes the images kept on the Device for that Server alone', async () => {
+    const forgotten: string[] = [];
+    const store = await readingServers((id) => forgotten.push(id));
+
+    store.add(studio);
+    store.add(bench);
+    store.remove(bench.key);
+    store.remove(ownId);
+
+    expect(forgotten).toEqual([bench.key]);
   });
 
   it('never removes the Server on this Device', async () => {

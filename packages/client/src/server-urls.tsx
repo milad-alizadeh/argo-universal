@@ -25,7 +25,9 @@ export function ServerUrls({
   children,
 }: ServerUrlsProps): React.JSX.Element {
   return read ? (
-    <ChannelServerUrls read={read}>{children}</ChannelServerUrls>
+    <ChannelServerUrls read={read} serverId={server.id}>
+      {children}
+    </ChannelServerUrls>
   ) : (
     <LoopbackServerUrls serverUrl={server.url}>{children}</LoopbackServerUrls>
   );
@@ -33,12 +35,14 @@ export function ServerUrls({
 
 function ChannelServerUrls({
   read,
+  serverId,
   children,
 }: {
   read: typeof fetch;
+  serverId: string;
   children: ReactNode;
 }): React.JSX.Element {
-  const { blobUrl, mediaUrl } = useChannelUrls(read);
+  const { blobUrl, mediaUrl } = useChannelUrls(read, serverId);
 
   return (
     <UrlProviders blobUrl={blobUrl} mediaUrl={mediaUrl}>

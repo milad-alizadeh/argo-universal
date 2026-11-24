@@ -1,5 +1,20 @@
 import { expect, it, vi } from 'vitest';
 import { ChannelMedia } from './channel-media';
+import type { MediaStore } from './media-store';
+
+// The Device's storage, standing in for the App's cache directory: it outlives each ChannelMedia, as files outlive a restart.
+function deviceStore(): MediaStore {
+  const files = new Map<string, string>();
+
+  return {
+    find: (path) => files.get(path) ?? null,
+    keep: (path, _bytes, mime) => {
+      files.set(path, `file:///cache${path}.${mime}`);
+
+      return Promise.resolve(files.get(path) ?? '');
+    },
+  };
+}
 
 interface Pending {
   path: string;
@@ -98,4 +113,24 @@ it('reads ahead of a watcher when told to, and keeps it when no one watches', ()
 
   expect(server.pending).toHaveLength(1);
   expect(server.pending[0]?.signal?.aborted).toBe(false);
+});
+
+it('draws a Blob from the Device after a restart without asking the Server again', async () => {
+  const store = deviceStore();
+  const first = slowServer();
+  const media = new ChannelMedia(first.read, store);
+  const arrived = vi.fn<() => void>();
+
+  media.watch('/blobs/a', arrived);
+  first.pending[0]?.settle('png');
+  await vi.waitFor(() => expect(arrived).toHaveBeenCalledOnce());
+
+  const afterRestart = slowServer();
+  const restarted = new ChannelMedia(afterRestart.read, store);
+
+  expect(restarted.urlFor('/blobs/a')).toBe('file:///cache/blobs/a.image/png');
+  restarted.watch('/blobs/a', () => {});
+  restarted.preload('/blobs/a');
+
+  expect(afterRestart.pending).toHaveLength(0);
 });

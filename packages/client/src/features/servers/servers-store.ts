@@ -40,7 +40,10 @@ class AppServersStore implements ServersStore {
   private snapshot: ServersSnapshot;
   private loading: Promise<void> | undefined;
 
-  public constructor(ownServerUrl: string | undefined) {
+  public constructor(
+    ownServerUrl: string | undefined,
+    private readonly forgetMedia: ((serverId: string) => void) | undefined,
+  ) {
     this.own = ownServerUrl === undefined ? [] : [ownAppServer(ownServerUrl)];
     this.snapshot = {
       servers: this.own,
@@ -96,6 +99,7 @@ class AppServersStore implements ServersStore {
     });
     void forgetKnownServer(id);
     void forgetServerHistory(id);
+    this.forgetMedia?.(id);
   };
 
   private set(next: ServersSnapshot): void {
@@ -120,8 +124,11 @@ class AppServersStore implements ServersStore {
   }
 }
 
-export const createServersStore = (ownServerUrl?: string): ServersStore =>
-  new AppServersStore(ownServerUrl);
+export const createServersStore = (
+  ownServerUrl?: string,
+  // Wipes what the App has kept on the Device for a Server that is unpaired.
+  forgetMedia?: (serverId: string) => void,
+): ServersStore => new AppServersStore(ownServerUrl, forgetMedia);
 
 /*
  * A Server the App can show: one it holds with somewhere to open a Connection. A paired Server whose address this

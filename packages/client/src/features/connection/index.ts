@@ -17,6 +17,8 @@ export {
   type ServerEndpoint,
 } from './api/server-endpoint';
 
+export { forgetServerMedia } from './api/channel/media-store';
+
 export { pairWithServer } from './api/pair-with-server';
 
 export { requestServerKey } from './api/request-server-key';

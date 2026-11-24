@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { type ReactNode, useMemo, useSyncExternalStore } from 'react';
+import { forgetServerMedia } from '#features/connection';
 import {
   createServersStore,
   type OpenServerConnection,
@@ -28,7 +29,7 @@ export interface AppProvidersProps {
  */
 export function AppProviders(props: AppProvidersProps): React.JSX.Element {
   const store = useMemo(
-    () => createServersStore(props.serverUrl),
+    () => createServersStore(props.serverUrl, forgetServerMedia),
     [props.serverUrl],
   );
 
