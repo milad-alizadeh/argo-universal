@@ -1,19 +1,21 @@
-import { bytesBase64 } from './bytes';
+import { memoryMedia, objectUrls, type MediaStore } from './media-store';
 
 const fallbackMime = 'application/octet-stream';
 
 /*
- * The Blobs and Plugin assets of a paired Server, read inside its channel and held as data URIs.
+ * The Blobs and Plugin assets of a paired Server, read inside its channel and kept by a `MediaStore`.
  * The kit asks for a URL it can hand to an image, and a paired Server has no URL (ADR-0045), so this answers with an empty one until the bytes have come. A reader watches its own path: watching starts the read, tells that reader when the bytes arrive, and stops the read if every watcher leaves first, so a row that scrolled away does not keep the queue.
- * Where the bytes are kept is this class's one seam: the images cached on the Device (#2694) replace `dataUri` and what readers hear stays the same. `loaded` is unbounded until then.
+ * Where the bytes are kept is the `MediaStore`'s business: files in the App's cache directory on a phone, so a Blob is fetched once and survives a restart (#2694), and data URIs on web.
  */
 export class ChannelMedia {
-  private readonly loaded = new Map<string, string>();
   private readonly reading = new Map<string, AbortController>();
   private readonly preloaded = new Set<string>();
   private readonly listeners = new Map<string, Set<() => void>>();
 
-  public constructor(private readonly read: typeof fetch) {}
+  public constructor(
+    private readonly read: typeof fetch,
+    private readonly store: MediaStore = memoryMedia(objectUrls).store(''),
+  ) {}
 
   // Told when `path` has arrived, and only then: what is drawn from another path is not asked to draw again.
   public readonly watch = (path: string, changed: () => void): (() => void) => {
@@ -37,7 +39,7 @@ export class ChannelMedia {
 
   // What has arrived for `path`, or an empty URL. Asking changes nothing.
   public urlFor(path: string): string {
-    return this.loaded.get(path) ?? '';
+    return this.store.find(path) ?? '';
   }
 
   private abandon(path: string): void {
@@ -47,12 +49,17 @@ export class ChannelMedia {
   }
 
   private async load(path: string): Promise<void> {
-    if (this.loaded.has(path) || this.reading.has(path)) return;
+    if (this.reading.has(path)) return;
+
+    // Kept before, perhaps by an earlier run of the App: it is drawn from there and the Server is not asked.
+    if (this.store.find(path) !== null) return this.heard(path);
     const reading = new AbortController();
     this.reading.set(path, reading);
 
     try {
-      this.keep(path, await this.dataUri(path, reading.signal));
+      await this.fetchAndKeep(path, reading.signal);
+      this.reading.delete(path);
+      this.heard(path);
     } catch (cause) {
       // Forgotten, so the next watcher reads again. A read stopped on purpose is not an error.
       if (this.reading.get(path) === reading) this.reading.delete(path);
@@ -62,20 +69,17 @@ export class ChannelMedia {
     }
   }
 
-  private keep(path: string, uri: string): void {
-    this.loaded.set(path, uri);
-    this.reading.delete(path);
-
+  private heard(path: string): void {
     for (const listener of this.listeners.get(path) ?? []) listener();
   }
 
-  private async dataUri(path: string, signal: AbortSignal): Promise<string> {
+  private async fetchAndKeep(path: string, signal: AbortSignal): Promise<void> {
     const response = await this.read(path, { signal });
 
     if (!response.ok) throw new Error(`The Server answered ${response.status}`);
     const mime = response.headers.get('content-type') ?? fallbackMime;
     const bytes = new Uint8Array(await response.arrayBuffer());
 
-    return `data:${mime};base64,${bytesBase64(bytes)}`;
+    await this.store.keep(path, bytes, mime);
   }
 }

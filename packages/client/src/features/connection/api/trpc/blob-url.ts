@@ -6,6 +6,7 @@ import type {
 } from '@repo/kit/primitives/content/media-url';
 import { createContext, useContext, useMemo } from 'react';
 import { ChannelMedia } from '../channel/channel-media';
+import { createMediaStore } from '../channel/media-store';
 import { serverHttpUrl } from './create-trpc-client';
 
 /*
@@ -62,9 +63,18 @@ export interface ServerUrls {
   mediaUrl: MediaUrl;
 }
 
-// A paired Server has no URL for a Blob or an asset, so its images come out of its channel instead and read as empty until they have arrived (ADR-0045).
-export function useChannelUrls(read: typeof fetch): ServerUrls {
-  const media = useMemo(() => new ChannelMedia(read), [read]);
+/*
+ * A paired Server has no URL for a Blob or an asset, so its images come out of its channel instead and read as empty until they have arrived (ADR-0045).
+ * What arrives is kept on the Device under `serverId`, apart from every other Server's, until that Server is removed.
+ */
+export function useChannelUrls(
+  read: typeof fetch,
+  serverId: string,
+): ServerUrls {
+  const media = useMemo(
+    () => new ChannelMedia(read, createMediaStore(serverId)),
+    [read, serverId],
+  );
 
   // Stable, so an arriving image does not hand every reader new functions; each reader watches its own path.
   return useMemo(

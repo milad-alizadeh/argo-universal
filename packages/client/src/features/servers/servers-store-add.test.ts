@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '../../../mocks/memory-storage';
 import { loadKnownServers, loadLookedAtServer } from './known-servers';
-import { createServersStore, type ServersStore } from './servers-store';
+import {
+  createServersStore,
+  type ServersStore,
+  type ServersStoreHooks,
+} from './servers-store';
 
 const ownId = 'server-device';
 
@@ -14,10 +18,12 @@ const studio = {
 const bench = { name: 'Workshop bench', key: 'bench-key' };
 
 // The store reads what is kept once, on its first reader.
-async function readingServers(): Promise<ServersStore> {
+async function readingServers(
+  hooks?: ServersStoreHooks,
+): Promise<ServersStore> {
   vi.stubGlobal('window', { localStorage: memoryStorage() });
 
-  const store = createServersStore('ws://127.0.0.1:4000');
+  const store = createServersStore('ws://127.0.0.1:4000', hooks);
 
   await new Promise<void>((read) => {
     const stop = store.subscribe(() => {
@@ -96,6 +102,42 @@ describe('removing a Server this Device has unpaired from', () => {
       expect(await loadKnownServers()).toEqual([studio]);
       expect(await loadLookedAtServer()).toBe(ownId);
     });
+  });
+
+  it('wipes the images kept on the Device for that Server alone', async () => {
+    const forgotten: string[] = [];
+
+    const store = await readingServers({
+      onForgotten: [(id): void => void forgotten.push(id)],
+    });
+
+    store.add(studio);
+    store.add(bench);
+    store.remove(bench.key);
+    store.remove(ownId);
+
+    expect(forgotten).toEqual([bench.key]);
+  });
+
+  it('tells every forgetter, and lets each one hear a Server added again', async () => {
+    const heard: string[] = [];
+
+    const store = await readingServers({
+      onForgotten: [
+        (id): void => void heard.push(`first ${id}`),
+        (id): void => void heard.push(`second ${id}`),
+      ],
+      onAdded: [(id): void => void heard.push(`added ${id}`)],
+    });
+
+    store.add(bench);
+    store.remove(bench.key);
+
+    expect(heard).toEqual([
+      `added ${bench.key}`,
+      `first ${bench.key}`,
+      `second ${bench.key}`,
+    ]);
   });
 
   it('never removes the Server on this Device', async () => {
