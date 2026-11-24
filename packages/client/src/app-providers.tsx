@@ -29,7 +29,10 @@ export interface AppProvidersProps {
  */
 export function AppProviders(props: AppProvidersProps): React.JSX.Element {
   const store = useMemo(
-    () => createServersStore(props.serverUrl, forgetServerMedia),
+    () =>
+      createServersStore(props.serverUrl, {
+        onForgotten: [forgetServerMedia],
+      }),
     [props.serverUrl],
   );
 

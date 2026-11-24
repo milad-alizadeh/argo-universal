@@ -76,7 +76,7 @@ it('reads a path once for its watchers and tells only them when it arrives', asy
 
   expect(alsoA).toHaveBeenCalledOnce();
   expect(watchingB).not.toHaveBeenCalled();
-  expect(media.urlFor('/blobs/a')).toMatch(/^data:image\/png;base64,/);
+  expect(media.urlFor('/blobs/a')).toMatch(/^blob:/);
 });
 
 it('stops a read nobody watches any more, and reads again for the next watcher', () => {

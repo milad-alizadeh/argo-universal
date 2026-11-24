@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import {
   createFileMediaStore,
   forgetServerFiles,
+  maxNameLength,
   mediaCacheLimit,
   type MediaDisk,
   type MediaFile,
@@ -11,6 +12,8 @@ interface Stored {
   size: number;
   modificationTime: number;
 }
+
+const fileNameMax = 255;
 
 const urlOf = (serverId: string, name: string): string =>
   `file:///cache/${serverId}/${name}`;
@@ -34,9 +37,11 @@ function memoryDisk(): MediaDisk {
     },
     moveOver: (name) => {
       const moved = stored.get(url);
+
+      if (!moved) return Promise.reject(new Error('No such file'));
       const destination = `${url.slice(0, url.lastIndexOf('/') + 1)}${name}`;
 
-      if (moved) stored.set(destination, moved);
+      stored.set(destination, moved);
       stored.delete(url);
 
       return Promise.resolve();
@@ -63,7 +68,11 @@ function memoryDisk(): MediaDisk {
         },
       };
     },
-    file: (serverId, name) => fileAt(urlOf(serverId, name)),
+    file: (serverId, name) => {
+      if (name.length > fileNameMax) throw new Error('File name too long');
+
+      return fileAt(urlOf(serverId, name));
+    },
   };
 }
 
@@ -120,4 +129,70 @@ it('never mistakes a half-written copy for the image', async () => {
   await disk.file('server-a', '_2f_blobs_2f_a.part').write(bytes(5));
 
   expect(store.find('/blobs/a')).toBeNull();
+});
+
+it('writes nothing for a Server that was wiped while a copy was arriving, until it is paired again', async () => {
+  const disk = memoryDisk();
+  const store = createFileMediaStore(disk, 'server-a');
+
+  forgetServerFiles(disk, 'server-a');
+
+  await expect(store.keep('/blobs/a', bytes(10), 'image/png')).rejects.toThrow(
+    'removed',
+  );
+  expect(disk.folder('server-a').exists).toBe(false);
+
+  const again = createFileMediaStore(disk, 'server-a');
+
+  expect(await again.keep('/blobs/a', bytes(10), 'image/png')).toMatch(
+    /^file:/,
+  );
+});
+
+it('keeps two copies of one path arriving together', async () => {
+  const store = createFileMediaStore(memoryDisk(), 'server-a');
+
+  const urls = await Promise.all([
+    store.keep('/blobs/a', bytes(10), 'image/png'),
+    store.keep('/blobs/a', bytes(10), 'image/png'),
+  ]);
+
+  expect(urls[0]).toBe(urls[1]);
+  expect(store.find('/blobs/a')).toBe(urls[0]);
+});
+
+it('clears a copy cut short by the App closing when the store opens', async () => {
+  const disk = memoryDisk();
+
+  await disk.file('server-a', 'x.1.part').write(bytes(5));
+  createFileMediaStore(disk, 'server-a');
+
+  expect(disk.folder('server-a').list()).toHaveLength(0);
+});
+
+it('keeps a single image over the limit and drops the others first', async () => {
+  const store = createFileMediaStore(memoryDisk(), 'server-a');
+
+  await store.keep('/blobs/a', bytes(10), 'image/png');
+
+  const big = await store.keep(
+    '/blobs/big',
+    bytes(mediaCacheLimit + 1),
+    'image/png',
+  );
+
+  expect(store.find('/blobs/a')).toBeNull();
+  expect(store.find('/blobs/big')).toBe(big);
+});
+
+it('names a long path within the limit, apart from another long path that starts alike', async () => {
+  const store = createFileMediaStore(memoryDisk(), 'server-a');
+  const long = `/plugin-assets/${'p'.repeat(300)}`;
+
+  const first = await store.keep(`${long}a.png`, bytes(1), 'image/png');
+  const second = await store.keep(`${long}b.png`, bytes(1), 'image/png');
+
+  expect(first).not.toBe(second);
+  expect(first.split('/').at(-1)?.length).toBeLessThanOrEqual(maxNameLength);
+  expect(first.endsWith('.png')).toBe(true);
 });

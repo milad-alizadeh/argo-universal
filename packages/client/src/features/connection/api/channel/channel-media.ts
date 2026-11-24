@@ -1,4 +1,4 @@
-import { createMediaStore, type MediaStore } from './media-store';
+import { memoryMedia, objectUrls, type MediaStore } from './media-store';
 
 const fallbackMime = 'application/octet-stream';
 
@@ -14,7 +14,7 @@ export class ChannelMedia {
 
   public constructor(
     private readonly read: typeof fetch,
-    private readonly store: MediaStore = createMediaStore(''),
+    private readonly store: MediaStore = memoryMedia(objectUrls).store(''),
   ) {}
 
   // Told when `path` has arrived, and only then: what is drawn from another path is not asked to draw again.

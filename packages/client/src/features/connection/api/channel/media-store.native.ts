@@ -6,7 +6,12 @@ import {
   type MediaDisk,
   type MediaFile,
 } from './file-media-store';
-import type { MediaStore } from './media-store';
+import {
+  dataUrls,
+  memoryMedia,
+  type MediaStore,
+  withFallback,
+} from './media-store';
 
 const cacheFolderName = 'argo-media';
 
@@ -47,11 +52,18 @@ const appCache: MediaDisk = {
   file: (serverId, name) => mediaFile(new File(folderOf(serverId), name)),
 };
 
+// What the disk could not take is held in memory instead, as data URIs, until the Server is removed.
+const inMemory = memoryMedia(dataUrls);
+
 // Files in the App's cache directory on iOS and Android.
 export function createMediaStore(serverId: string): MediaStore {
-  return createFileMediaStore(appCache, serverId);
+  return withFallback(
+    createFileMediaStore(appCache, serverId),
+    inMemory.store(serverId),
+  );
 }
 
 export function forgetServerMedia(serverId: string): void {
   forgetServerFiles(appCache, serverId);
+  inMemory.forget(serverId);
 }
