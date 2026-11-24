@@ -71,11 +71,41 @@ const refusals = new Map<number, (subject: string) => string>([
 const refusalMessage = (status: number, subject: string): string =>
   refusals.get(status)?.(subject) ?? `GitHub answered ${status}.`;
 
+// GitHub's own words in the body of a refusal, when it sent any.
+function bodyMessage(body: string): string | undefined {
+  try {
+    const { message } = JSON.parse(body) as { message?: unknown };
+
+    return typeof message === 'string' && message.trim() !== ''
+      ? message.trim()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Why GitHub refused, in its own words: the body's message, the SSO step its header asks for, and the scopes it wanted.
+function reasonOf(reply: Reply): string {
+  const parts = [
+    bodyMessage(reply.body),
+    headerOf(reply, 'x-github-sso') &&
+      `SSO: ${headerOf(reply, 'x-github-sso')}`,
+    headerOf(reply, 'x-accepted-oauth-scopes') &&
+      `Accepted scopes: ${headerOf(reply, 'x-accepted-oauth-scopes')}`,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? ` ${parts.join('. ')}` : '';
+}
+
+// A 401 and a 404 already say what to do; any other refusal also says why GitHub gave it.
+const refusalText = (reply: Reply, subject: string): string =>
+  refusals.has(reply.status)
+    ? refusalMessage(reply.status, subject)
+    : `${refusalMessage(reply.status, subject)}${reasonOf(reply)}`;
+
 const refusalOf = (reply: Reply, subject: string): Error =>
   new Error(
-    isRateLimit(reply)
-      ? rateLimitMessage
-      : refusalMessage(reply.status, subject),
+    isRateLimit(reply) ? rateLimitMessage : refusalText(reply, subject),
   );
 
 export const call = (path: string, projectId: string): Parameters<Fetch> => [
