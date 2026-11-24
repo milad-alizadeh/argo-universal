@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { applySessionListUpdate } from '../api/apply-session-list-update';
+import { catchUpSessionList } from '../api/catch-up-session-list';
 import { createCoalescedRefetch } from '../api/coalesced-refetch';
 import { refreshSessionList } from '../api/refresh-session-list';
 import { useResubscribeOnFocus } from './use-resubscribe-on-focus';
@@ -16,7 +17,7 @@ type SessionListSubscription = TRPCSubscriptionResult<
 >;
 
 type SessionListRefresh = {
-  refetch: () => void;
+  catchUp: () => void;
   apply: (update: SessionListUpdate) => void;
 };
 
@@ -31,24 +32,26 @@ function useSessionListRefresh(): SessionListRefresh {
       refreshSessionList(queryClient, list),
     );
 
+    const catchUp = (): void => void catchUpSessionList(queryClient, list);
+
     // A row the list shows changes where it sits; only what the loaded pages cannot place asks the Server again.
     const apply = (update: SessionListUpdate): void => {
       if (applySessionListUpdate(queryClient, list, update)) refetch();
     };
 
-    return { refetch, apply };
+    return { catchUp, apply };
   }, [queryClient, trpc]);
 }
 
 // Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
 export function useSessionListUpdates(enabled = true): SessionListSubscription {
   const trpc = useTRPC();
-  const { refetch, apply } = useSessionListRefresh();
+  const { catchUp, apply } = useSessionListRefresh();
 
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
       enabled,
-      onStarted: refetch,
+      onStarted: catchUp,
       onData: apply,
     }),
   );
