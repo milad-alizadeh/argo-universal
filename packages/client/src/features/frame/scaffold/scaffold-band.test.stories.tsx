@@ -478,10 +478,13 @@ export const SidebarAndInspectorGlassKeepTheirBackdrop: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
     await settleLayout(1728);
     await controlled.render({ sidebarShown: false, inspectorState: 'closed' });
+
     const root = canvas.getByTestId('wide-frame');
+
     const glass = root.querySelectorAll(
       '[data-sidebar-glass-fill], [data-testid="inspector-glass"]',
     );
+
     await expect(glass).toHaveLength(2);
 
     for (const state of [

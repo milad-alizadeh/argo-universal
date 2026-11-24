@@ -90,6 +90,7 @@ function glassFrames(
   });
 
   const panel = surfaceFrames(bounds(from), bounds(to));
+
   const mask = panel.map(({ transform, transformOrigin }): Keyframe => ({
     transform,
     transformOrigin,
