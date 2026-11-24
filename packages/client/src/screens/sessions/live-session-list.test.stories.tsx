@@ -1,5 +1,6 @@
+import { activeSessions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import {
   LiveSessionListPreview,
   liveSessionListFixture,
@@ -44,5 +45,25 @@ export const ReadsTheListAgainWhenItsSubscriptionRestarts: Story = {
 
     await waitFor(() => expect(fixture.listUpdatesStarted()).toBe(2));
     await waitFor(() => expect(fixture.listReads()).toBe(2));
+  },
+};
+
+// The Agents are lookups the rows draw with, not part of what the list waits for.
+export const DrawsRowsBeforeTheAgentsArriveAndFillsInTheirLogos: Story = {
+  play: async ({ mount, canvasElement }) => {
+    const fixture = liveSessionListFixture();
+    fixture.holdAgents();
+    await mount(<LiveSessionListPreview fixture={fixture} />);
+    const canvas = within(canvasElement);
+
+    const title = activeSessions.sessions[0]?.title ?? '';
+    await expect(await canvas.findAllByText(title)).not.toHaveLength(0);
+    await expect(canvas.queryAllByTestId('session-logo')).toHaveLength(0);
+
+    fixture.releaseAgents();
+
+    await waitFor(() =>
+      expect(canvas.queryAllByTestId('session-logo').length).toBeGreaterThan(0),
+    );
   },
 };

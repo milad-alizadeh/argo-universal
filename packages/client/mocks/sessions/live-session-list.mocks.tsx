@@ -59,65 +59,92 @@ export interface LiveSessionListFixture {
   listUpdatesStarted: () => number;
   // Ends the open `session.listUpdates` subscription with an error, as a dropped socket does.
   dropListUpdates: () => void;
+  // Holds `agent.list` unanswered until `releaseAgents`, as a slow Server does.
+  holdAgents: () => void;
+  releaseAgents: () => void;
   // Moves the Connection to another state, as an outage and its recovery do.
   connect: (state: ConnectionState) => void;
 }
 
-// A Server whose `session.list`, `project.list`, `agent.list` and `session.listUpdates` a fake link answers, and which counts the reads.
-export function liveSessionListFixture(): LiveSessionListFixture {
-  const queryClient = createQueryClient();
-  const link: Link = { state: 'open', listeners: new Set() };
-  const reads = { list: 0, updates: 0 };
-  let updatesWire: Wire | undefined;
+interface ServerState {
+  listReads: number;
+  updatesStarted: number;
+  updatesWire: Wire | undefined;
+  agentsHeld: boolean;
+  waitingForAgents: Wire[];
+}
 
-  const answers = new Map<string, () => object>([
-    [
-      'session.list',
-      (): object => {
-        reads.list += 1;
+type Answer = typeof activeSessions | typeof projectsList | typeof agentsList;
 
-        return activeSessions;
-      },
-    ],
-    ['project.list', (): object => projectsList],
-    ['agent.list', (): object => agentsList],
-  ]);
+const answer = (wire: Wire, data: Answer): void => {
+  wire.next({ result: { type: 'data', data } });
+  wire.complete();
+};
 
+// The link a Server answers through: `session.list`, `project.list`, `agent.list` and `session.listUpdates`; anything else stays pending, as a slow Server leaves it.
+function serverLink(state: ServerState): TRPCLink<AppRouter> {
   const forward: OperationLink<AppRouter> = ({
     op,
   }): ReturnType<OperationLink<AppRouter>> =>
     observable((wire: Wire): void => {
-      if (op.path === 'session.listUpdates') {
-        reads.updates += 1;
-        updatesWire = wire;
-        wire.next({ result: { type: 'started' } });
-
-        return;
+      switch (op.path) {
+        case 'session.listUpdates':
+          state.updatesStarted += 1;
+          state.updatesWire = wire;
+          wire.next({ result: { type: 'started' } });
+          break;
+        case 'session.list':
+          state.listReads += 1;
+          answer(wire, activeSessions);
+          break;
+        case 'project.list':
+          answer(wire, projectsList);
+          break;
+        case 'agent.list':
+          if (state.agentsHeld) state.waitingForAgents.push(wire);
+          else answer(wire, agentsList);
+          break;
+        default:
       }
-
-      const answer = answers.get(op.path);
-
-      // Anything else the list reaches stays pending, as a slow Server leaves it.
-      if (!answer) return;
-
-      wire.next({ result: { type: 'data', data: answer() } });
-      wire.complete();
     });
 
-  const answering: TRPCLink<AppRouter> = () => forward;
+  return () => forward;
+}
 
-  const client = createTRPCClient<AppRouter>({ links: [answering] });
+function releaseAgents(state: ServerState): void {
+  state.agentsHeld = false;
+
+  for (const wire of state.waitingForAgents.splice(0)) answer(wire, agentsList);
+}
+
+// A Server whose answers a fake link gives, counting the reads that reach it.
+export function liveSessionListFixture(): LiveSessionListFixture {
+  const link: Link = { state: 'open', listeners: new Set() };
+
+  const state: ServerState = {
+    listReads: 0,
+    updatesStarted: 0,
+    updatesWire: undefined,
+    agentsHeld: false,
+    waitingForAgents: [],
+  };
+
+  const queryClient = createQueryClient();
 
   return {
     queryClient,
-    client,
+    client: createTRPCClient<AppRouter>({ links: [serverLink(state)] }),
     connection: connectionOf(link),
-    listReads: () => reads.list,
-    listUpdatesStarted: () => reads.updates,
+    listReads: () => state.listReads,
+    listUpdatesStarted: () => state.updatesStarted,
     dropListUpdates: () =>
-      updatesWire?.error(TRPCClientError.from(new Error('Socket lost'))),
-    connect: (state) => {
-      link.state = state;
+      state.updatesWire?.error(TRPCClientError.from(new Error('Socket lost'))),
+    holdAgents: () => {
+      state.agentsHeld = true;
+    },
+    releaseAgents: () => releaseAgents(state),
+    connect: (next) => {
+      link.state = next;
 
       for (const listener of link.listeners) listener();
     },
