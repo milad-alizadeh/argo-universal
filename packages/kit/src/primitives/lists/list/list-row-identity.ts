@@ -7,12 +7,17 @@ import {
 } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import { childRows } from '../../../list-tree';
+import { sectionNodeOf } from './list-entries';
 import type { ListProps } from './list-props';
 
 type Row = { id?: string; disabled?: boolean; children?: ReactNode };
 
 // A row with an id is one row, followed by any child ListItems nested under it.
 function childId(child: ReactNode): string[] {
+  const section = sectionNodeOf(child);
+
+  if (section) return childIds(section.props.children);
+
   if (!isValidElement<Row>(child)) return [];
 
   return [...ownIds(child.props), ...nestedIds(child)];
