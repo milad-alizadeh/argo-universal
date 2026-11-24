@@ -105,10 +105,12 @@ function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   useState(() => keepServerLists(queryClient, trpc));
+
   // This Server's own cache on the Device: each kept query draws from it first, then is caught up by the Connection.
   const [retrieve] = useState(() =>
     restoreFromDevice(queryClient, trpc, { serverId: props.server.id }),
   );
+
   useEffect(
     () => writeToDevice(queryClient, trpc, { serverId: props.server.id }),
     [queryClient, trpc, props.server.id],

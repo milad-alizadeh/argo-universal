@@ -1,3 +1,4 @@
+import type { SessionSnapshot } from '@repo/contracts';
 import type { PersistedQuery } from '@tanstack/query-persist-client-core';
 import {
   hashKey,
@@ -5,13 +6,14 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState } from 'react';
+import type { FeedState } from '../view/feed-state';
 import { feedKey, snapshotKey } from './feed-query';
 
 // Reads one query's copy off the Device by its hash, calling back with what it kept; the persister's own `retrieveQuery`. Not given where the Device keeps nothing.
 export type RetrieveKept = (
   queryHash: string,
   restored: (kept: PersistedQuery) => void,
-) => Promise<unknown>;
+) => Promise<FeedState | SessionSnapshot | undefined>;
 
 export const DeviceFeedContext = createContext<RetrieveKept | undefined>(
   undefined,

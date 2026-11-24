@@ -164,6 +164,7 @@ export function serverCacheFixture(
   const trpc = createTRPCOptionsProxy<AppRouter>({ client, queryClient });
 
   keepServerLists(queryClient, trpc);
+
   const retrieve = restoreFromDevice(queryClient, trpc, {
     serverId,
     storage: kept.storage,
