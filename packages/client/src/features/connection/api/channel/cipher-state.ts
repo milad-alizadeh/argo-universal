@@ -30,13 +30,31 @@ const nonceFor = (records: bigint): Uint8Array => {
   return nonce;
 };
 
+// Where a direction stands: its key and how many records it has sealed or opened. A cipher that carries on from here continues the same stream.
+export interface CipherPosition {
+  readonly key: Uint8Array;
+  readonly records: number;
+}
+
 /*
  * One direction's key and its record number, counted from zero and never reused (ADR-0045). The number is not on the wire: a record that does not open under the number this side has reached ends the Connection.
  */
 export class CipherState {
-  private records = 0n;
+  private records: bigint;
 
-  public constructor(private key?: Uint8Array) {}
+  // `records` is where to carry on from: zero for a new stream, or the number a handed-over one had reached.
+  public constructor(
+    private key?: Uint8Array,
+    records = 0,
+  ) {
+    this.records = BigInt(records);
+  }
+
+  public position(): CipherPosition {
+    if (!this.key) throw new Error('The channel has no key yet');
+
+    return { key: this.key, records: Number(this.records) };
+  }
 
   public rekey(key: Uint8Array): void {
     this.key = key;

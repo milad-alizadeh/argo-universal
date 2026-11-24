@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ArgoChannelModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.argochannel.ArgoChannelModule"]
+  }
+}
