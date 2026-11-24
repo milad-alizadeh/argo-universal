@@ -84,18 +84,14 @@ describe('ChannelRoute', () => {
 
   it('closes a channel that opens after another address has already won', async () => {
     const route = new ChannelRoute(kept, announcing(), [tailnet]);
-    const discard = vi.fn();
-    let answerLate: (channel: string) => void = () => {};
+    const discard = vi.fn<(channel: string) => void>();
+    const late = Promise.withResolvers<string>();
 
     const attempt = async (address: ChannelAddress): Promise<string> =>
-      address.host === kept.host
-        ? new Promise<string>((resolve) => {
-            answerLate = resolve;
-          })
-        : 'tailnet channel';
+      address.host === kept.host ? late.promise : 'tailnet channel';
 
     await route.open(attempt, discard);
-    answerLate('late lan channel');
+    late.resolve('late lan channel');
 
     await vi.waitFor(() => {
       expect(discard).toHaveBeenCalledWith('late lan channel');

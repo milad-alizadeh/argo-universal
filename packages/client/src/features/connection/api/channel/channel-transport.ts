@@ -48,7 +48,8 @@ export const opener = (
   const deviceKey = once(platform.deviceKey);
   const route = new ChannelRoute(target.address, target.locate, target.others);
 
-  return async () => route.open(at(target, platform, await deviceKey()), (opened) => {
+  return async () =>
+    route.open(at(target, platform, await deviceKey()), (opened) => {
       opened.stream.close();
     });
 };
