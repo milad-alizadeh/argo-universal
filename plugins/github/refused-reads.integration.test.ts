@@ -2,12 +2,7 @@ import { expect, it } from 'vitest';
 import { cliPath, cliTitle } from './github-cli-fixture';
 import { attach } from './journey-calls-fixture';
 import { caller, journey, rowSlot } from './journey-fixture';
-import {
-  changePull,
-  idOf,
-  openChanges,
-  tick,
-} from './journey-watch-fixture';
+import { changePull, idOf, openChanges, tick } from './journey-watch-fixture';
 
 const slow = 60_000;
 

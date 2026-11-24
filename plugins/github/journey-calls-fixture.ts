@@ -53,7 +53,6 @@ export async function detach(
   });
 }
 
-
 type SlotId = typeof changesSlot | typeof rowSlot;
 
 type Answer =

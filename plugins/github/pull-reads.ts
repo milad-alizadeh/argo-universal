@@ -1,4 +1,5 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
+import { valueAt, type Json } from './json';
 import { checksPageSize, parseChecks, type CheckInfo } from './pull-checks';
 import { parsePull, type PullInfo } from './pull-info';
 import type { PullReference } from './pull-reference';
@@ -74,7 +75,8 @@ const refusalMessage = (status: number, subject: string): string =>
 // GitHub's own words in the body of a refusal, when it sent any.
 function bodyMessage(body: string): string | undefined {
   try {
-    const { message } = JSON.parse(body) as { message?: unknown };
+    const json: Json = JSON.parse(body);
+    const message = valueAt(json, ['message']);
 
     return typeof message === 'string' && message.trim() !== ''
       ? message.trim()

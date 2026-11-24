@@ -1,10 +1,5 @@
 import { expect, it } from 'vitest';
-import {
-  cliCheck,
-  cliPath,
-  cliTitle,
-  repository,
-} from './github-cli-fixture';
+import { cliCheck, cliPath, cliTitle, repository } from './github-cli-fixture';
 import { attach, changesOf, discover } from './journey-calls-fixture';
 import { journey, signedOutJourney } from './journey-fixture';
 

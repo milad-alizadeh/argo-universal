@@ -24,12 +24,8 @@ const notFound = 404;
 export const refusal = (
   message: string,
   status: number,
-  headers?: Record<string, string>,
-): FixtureAnswer => ({
-  status,
-  json: { message },
-  ...(headers ? { headers } : {}),
-});
+  headers: Record<string, string> = {},
+): FixtureAnswer => ({ status, json: { message }, headers });
 
 const serverError = (status: number): FixtureAnswer =>
   refusal('Server Error', status);

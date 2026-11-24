@@ -5,6 +5,8 @@ import { onTestFinished } from 'vitest';
 import { pullOf, sha } from './github-fixture';
 import type { FixturePull } from './github-fixture-types';
 
+const number = 12;
+
 export const repository = 'owner/repository';
 
 export const cliCheck = 'Build from CLI';
@@ -16,7 +18,7 @@ export async function cliPath(
   answer: 'success' | 'denied' | 'checks-denied' | 'malformed',
   changes: Partial<FixturePull> = {},
 ): Promise<string[]> {
-  const pull = pullOf(repository, 12, { title: cliTitle, ...changes })[1];
+  const pull = pullOf(repository, number, { title: cliTitle, ...changes })[1];
 
   const directory = await mkdtemp(join(tmpdir(), 'argo-fixture-gh-'));
 
@@ -24,9 +26,9 @@ export async function cliPath(
 
   const responses = {
     [`repos/${repository}`]: {},
-    [`repos/${repository}/pulls?head=owner%3Afeature-12&state=all&per_page=100`]:
+    [`repos/${repository}/pulls?head=owner%3Afeature-${number}&state=all&per_page=100`]:
       [pull],
-    [`repos/${repository}/pulls/12`]: pull,
+    [`repos/${repository}/pulls/${number}`]: pull,
     [`repos/${repository}/commits/${sha}/check-runs?per_page=100`]: {
       total_count: 1,
       check_runs: [
