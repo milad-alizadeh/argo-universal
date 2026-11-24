@@ -1,12 +1,19 @@
-import type { PromptRequest } from '@agentclientprotocol/sdk';
+import { RequestError, type PromptRequest } from '@agentclientprotocol/sdk';
 import { ProjectSchedule } from '@repo/contracts/operations';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney } from '#mocks/session-delegation';
 
 const fixtureProjectId = 'project-1';
+
+const missingRollout = {
+  error: RequestError.internalError(
+    undefined,
+    'no rollout found for thread id owned-1',
+  ).toErrorResponse(),
+};
 
 const textPrompt = (text: string): { type: 'text'; text: string }[] => [
   { type: 'text', text },
@@ -183,6 +190,43 @@ it('queues an occurrence that fires while the Session is busy and sends it when 
   await expect.poll(() => received.length, { timeout: 8000 }).toBe(2);
 }, 30000);
 
+it('runs a weekday task Schedule on demand after restarting before its first Turn', async () => {
+  const host = await startAcpEngine();
+  const clock = vi
+    .spyOn(Date, 'now')
+    .mockReturnValue(Date.parse('2026-03-11T10:00:00Z'));
+  onTestFinished(() => clock.mockRestore());
+  const instructions = 'Write the weekday daily brief';
+  const saved = await host.caller.project.scheduleCreate({
+    projectId: fixtureProjectId,
+    agent: 'mock',
+    instructions,
+    cadence: { type: 'weekdays', localTime: '09:00', timeZone: 'UTC' },
+  });
+  await host.stop();
+
+  const received: PromptRequest[] = [];
+  const reopened = await startAcpEngine({
+    steps: [],
+    restartOver: host.home,
+    responses: {
+      'session/resume': [missingRollout],
+      'session/prompt': [{ prompt: instructions, requests: received }],
+    },
+  });
+  const { project } = reopened.caller;
+
+  await expect(
+    project.scheduleRunNow({ id: saved.id, projectId: saved.projectId }),
+  ).resolves.toMatchObject({ outcome: 'started', sessionId: saved.sessionId });
+  await expect
+    .poll(() => received[0]?.prompt)
+    .toEqual(textPrompt(instructions));
+  expect(await project.scheduleList({})).toMatchObject([
+    { id: saved.id, sessionId: saved.sessionId, nextAt: saved.nextAt },
+  ]);
+}, 30000);
+
 it('delivers a stored task Schedule into its Session after restart', async () => {
   const host = await startAcpEngine();
   const instructions = 'Check the main Checkout';
@@ -203,6 +247,7 @@ it('delivers a stored task Schedule into its Session after restart', async () =>
     steps: [],
     restartOver: host.home,
     responses: {
+      'session/resume': [missingRollout],
       'session/prompt': [{ prompt: instructions, requests: received }],
     },
   });
