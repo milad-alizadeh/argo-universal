@@ -32,7 +32,9 @@ export function useSubagentReports(parentId: string, childId: string): Reports {
   const [refused, setRefused] = useState(false);
 
   const translate = useCallback(
-    (rows: readonly SessionUpdate[]) => toParentResults(rows, childId),
+    (rows: readonly SessionUpdate[]) => ({
+      view: toParentResults(rows, childId),
+    }),
     [childId],
   );
 
