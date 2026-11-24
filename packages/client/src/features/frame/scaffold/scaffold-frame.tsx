@@ -58,9 +58,6 @@ const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   ...layout.motion,
 });
 
-// The panel's corner, as `rounded-2xl` draws it.
-const panelRadius = 16;
-
 /*
  * The Inspector's glass: the open panel, the closed Inspector's capsule round the title bar's buttons, or, with no
  * buttons to hold, the panel faded past the window's edge.
@@ -75,7 +72,6 @@ function inspectorBox(parts: InspectorReads): InspectorBox {
     width: inspector.width,
     height: null,
     bottom: measures.inset,
-    radius: panelRadius,
     opacity: 1,
   };
 
@@ -95,7 +91,6 @@ function inspectorBox(parts: InspectorReads): InspectorBox {
     ...pill,
     y: pill.y - top,
     bottom: 0,
-    radius: pill.height / 2,
     opacity: 1,
   };
 }

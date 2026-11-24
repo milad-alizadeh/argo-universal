@@ -115,7 +115,7 @@ describe('panes placed under the Workbench', () => {
     },
   );
 
-  it('gives up the list before letting a resized Inspector take the content floor', () => {
+  it('clamps a saved oversized Inspector to keep the list and content floor', () => {
     const layout = frameLayout({
       ...input,
       width: 1920,
@@ -123,7 +123,7 @@ describe('panes placed under the Workbench', () => {
       preferredInspectorWidth: 1500,
     });
 
-    expect(layout.page).toEqual({ offset: 0, width: 688, hidden: false });
-    expect(layout.inspector).toMatchObject({ offset: 696, width: 1216 });
+    expect(layout.page).toEqual({ offset: 384, width: 688, hidden: false });
+    expect(layout.inspector).toMatchObject({ offset: 1080, width: 832 });
   });
 });

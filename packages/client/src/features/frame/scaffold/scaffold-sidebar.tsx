@@ -56,7 +56,6 @@ const glassGeometry = ({
   layout,
 }: SidebarLayout): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
   width: layout.rail.width + layout.list.width,
-  expandedWidth: layout.measures.railWidth + layout.list.openWidth,
   railWidth: layout.measures.railWidth,
   barHeight: layout.measures.titleBarHeight,
   sidebarShown: !layout.list.folded,

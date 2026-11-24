@@ -27,13 +27,12 @@ const glassBox = (box: InspectorBox): CSSProperties => ({
   top: pixels(box.y),
   width: pixels(box.width),
   height: heightOf(box),
-  borderRadius: pixels(box.radius),
   opacity: box.opacity,
 });
 
 // The content shows inside the glass alone, so it never draws outside the capsule as the panel grows from it.
 const contentClip = (box: InspectorBox): CSSProperties => ({
-  clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${heightOf(box)} round ${pixels(box.radius)})`,
+  clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${heightOf(box)} round ${box.height === null ? 'var(--radius-2xl)' : '9999px'})`,
 });
 
 /*
@@ -69,7 +68,8 @@ export function InspectorGlass({
         aria-hidden
         className={cn(
           'pointer-events-none absolute',
-          box.height === null ? glassMaterialClass : 'bg-card shadow-capsule',
+          glassMaterialClass,
+          box.height === null ? 'rounded-2xl' : 'rounded-full',
         )}
         style={glassBox(box)}
       />

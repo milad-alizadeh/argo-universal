@@ -12,7 +12,7 @@ import {
 } from './use-frame-transition.web';
 
 // Whether the part eases its opacity as it moves, or holds it opaque until it rests.
-type OpacityMotion = 'fade' | 'hold';
+type OpacityMotion = 'fade' | 'glass';
 
 // Where a running motion has the element now: its translation and opacity, read before the motion is cancelled.
 interface VisualPlace {
@@ -42,6 +42,18 @@ function keyframes(
 ): Keyframe[] {
   const now = currentPlace(element);
   const from = now.shift + last.offset - next.offset;
+  const startTransform = `translateX(${from}px)`;
+  const endTransform = 'translateX(0px)';
+
+  // Visibility holds through the slide without making the ancestor a backdrop root.
+  if (opacity === 'glass')
+    return [
+      { transform: startTransform, visibility: 'visible' },
+      {
+        transform: endTransform,
+        visibility: next.visible ? 'visible' : 'hidden',
+      },
+    ];
 
   // At rest the element already holds its new opacity, so a fade starts from where it last showed.
   const moving = element
@@ -50,12 +62,9 @@ function keyframes(
 
   const shown = moving ? now.opacity : Number(last.visible);
 
-  const [start, end] =
-    opacity === 'fade' ? [shown, Number(next.visible)] : [1, 1];
-
   return [
-    { transform: `translateX(${from}px)`, opacity: start },
-    { transform: 'translateX(0px)', opacity: end },
+    { transform: startTransform, opacity: shown },
+    { transform: endTransform, opacity: Number(next.visible) },
   ];
 }
 
@@ -100,7 +109,16 @@ function useOffsetMotion(
   }, []);
 
   // The resting style: shown or gone; a running motion's keyframes draw over it.
-  return { ref, style: { opacity: Number(props.visible) } };
+  const style =
+    opacity === 'glass'
+      ? {
+          visibility: props.visible
+            ? ('visible' as const)
+            : ('hidden' as const),
+        }
+      : { opacity: Number(props.visible) };
+
+  return { ref, style };
 }
 
 // Take the destination layout immediately, then translate from the current visual position.
@@ -108,10 +126,7 @@ export function useFrameOffset(props: OffsetMotion): FrameSlide {
   return useOffsetMotion(props, 'fade');
 }
 
-/*
- * The same motion, opaque while the container shows, so the glass in it blurs the page under it, and fading as it
- * slides out, so nothing of it shows through a translucent pane it slides under.
- */
+// The Workbench slides without fading any ancestor of its glass.
 export function useFrameSlide(props: OffsetMotion): FrameSlide {
-  return useOffsetMotion(props, props.visible ? 'hold' : 'fade');
+  return useOffsetMotion(props, 'glass');
 }

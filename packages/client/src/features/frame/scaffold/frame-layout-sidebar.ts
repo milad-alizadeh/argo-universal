@@ -28,20 +28,21 @@ function listCapacity(input: FrameLayoutInput): number {
 const listAvailable = (input: FrameLayoutInput): boolean =>
   listCapacity(input) >= input.measures.listWidth;
 
-const requested = (input: FrameLayoutInput): boolean =>
-  input.sidebarShown && input.sidebarRequested === true && listAvailable(input);
+const protectsSidebar = (input: FrameLayoutInput): boolean =>
+  input.sidebarShown &&
+  (input.sidebarRequested === true || input.inspectorState === 'open');
 
 export const listOpenWidth = (input: FrameLayoutInput): number =>
-  requested(input)
+  protectsSidebar(input) && listAvailable(input)
     ? Math.min(preferredListWidth(input), listCapacity(input))
     : preferredListWidth(input);
 
-// An explicit sidebar request keeps the list open down to the content's floor. The Workbench takes no width, so its gutter threshold is unchanged.
+// Keep both panes at their minimum widths before folding the sidebar.
 export function requestedThresholds(
   input: FrameLayoutInput,
   thresholds: Thresholds,
 ): Thresholds {
-  if (!requested(input)) return thresholds;
+  if (!protectsSidebar(input)) return thresholds;
 
   return {
     listFold: input.width - listCapacity(input) + input.measures.listWidth,

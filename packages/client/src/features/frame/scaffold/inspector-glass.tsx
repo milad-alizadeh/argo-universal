@@ -12,7 +12,6 @@ export interface InspectorBox {
   width: number;
   height: number | null;
   bottom: number;
-  radius: number;
   opacity: number;
 }
 

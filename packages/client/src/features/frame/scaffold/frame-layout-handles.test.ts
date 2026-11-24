@@ -99,11 +99,11 @@ describe('the Inspector handle agrees with the layout', () => {
       preferredInspectorWidth: 600,
     });
 
-    expect(untouched.list.folded).toBe(true);
+    expect(untouched.list.folded).toBe(false);
     expect(untouched.page.width).toBeGreaterThanOrEqual(688);
   });
 
-  it('folds the list before the content a drag narrowed gives more', () => {
+  it('folds the list only when the reduced content floor and both pane minimums do not fit', () => {
     const dragged = {
       ...input,
       inspectorState: 'open' as const,
@@ -112,7 +112,8 @@ describe('the Inspector handle agrees with the layout', () => {
     };
 
     expect(frameLayout(dragged).page.width).toBe(440);
-    expect(frameLayout({ ...dragged, width: 1439 }).list.folded).toBe(true);
+    expect(frameLayout({ ...dragged, width: 1192 }).list.folded).toBe(false);
+    expect(frameLayout({ ...dragged, width: 1191 }).list.folded).toBe(true);
   });
 
   it('keeps the list when a drag past the minimum expands the Inspector', () => {

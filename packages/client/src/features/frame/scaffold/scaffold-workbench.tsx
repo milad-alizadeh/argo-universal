@@ -1,6 +1,6 @@
 import { Surface } from '@repo/kit/primitives/layout/surface';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-import { ScrollView, View, type ViewProps } from 'react-native';
+import { Platform, ScrollView, View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { bandWorkbench } from '#lib/product/window-band';
 import { useFrameSlide } from '../hooks/use-frame-offset';
@@ -40,7 +40,7 @@ function WorkbenchPanel({
 
 type PanelProps = ComponentProps<typeof Animated.View> & { inert: boolean };
 
-// The panel slides in without fading, since a translucent panel would stop its cards' frost blurring the page under them, and fades as it slides out.
+// Keep the moving wrapper opaque so glass can sample the page through it.
 function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
   const placement = workbenchPlacement(layout);
   const { visible } = placement.motion;
@@ -54,7 +54,11 @@ function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
     ...slide,
     testID: 'desktop-workbench',
     className: placement.className,
-    style: [placement.style, style, !visible && { opacity: 0 }],
+    style: [
+      placement.style,
+      style,
+      Platform.OS !== 'web' && !visible && { opacity: 0 },
+    ],
     ...visibilityProps(visible),
   };
 }
@@ -103,7 +107,7 @@ const scrollProps = {
 function WorkbenchScroll(props: { children: ReactNode }): ReactElement {
   return (
     <View pointerEvents="auto" className="max-h-full">
-      <Surface kind="glass" fill>
+      <Surface kind="glass">
         <View className="min-h-0 shrink overflow-hidden rounded-2xl">
           <ScrollView {...scrollProps}>{props.children}</ScrollView>
         </View>

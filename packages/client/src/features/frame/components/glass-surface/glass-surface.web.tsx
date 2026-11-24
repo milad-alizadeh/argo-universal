@@ -28,12 +28,8 @@ interface GlassBox {
   top: number;
   width: number;
   height: number | null;
-  radius: number;
   opacity: number;
 }
-
-// The panel's corner, as `rounded-2xl` draws it.
-const panelRadius = 16;
 
 interface GlassLayerProps {
   ref: Ref<HTMLDivElement>;
@@ -54,7 +50,6 @@ function glassBox(props: GlassSurfaceProps): GlassBox {
       top: pill.y,
       width: pill.width,
       height: pill.height,
-      radius: pill.height / 2,
       opacity: 1,
     };
 
@@ -63,7 +58,6 @@ function glassBox(props: GlassSurfaceProps): GlassBox {
     top: sidebarShown ? 0 : barHeight,
     width,
     height: null,
-    radius: panelRadius,
     opacity: width > 0 ? 1 : 0,
   };
 }
@@ -74,8 +68,6 @@ const boxStyle = (box: GlassBox, origin: number): React.CSSProperties => ({
   top: box.top,
   width: box.width,
   ...(box.height === null ? { bottom: 0 } : { height: box.height }),
-  borderRadius: box.radius,
-  opacity: box.opacity,
 });
 
 // The tint keeps the rail's place in the window while the panel's top moves past it.
@@ -98,6 +90,10 @@ function glassFrames(
   });
 
   const panel = surfaceFrames(bounds(from), bounds(to));
+  const mask = panel.map(({ transform, transformOrigin }): Keyframe => ({
+    transform,
+    transformOrigin,
+  }));
 
   const rail = [
     { transform: `translateY(${railTop(props, from) - railTop(props, to)}px)` },
@@ -105,7 +101,7 @@ function glassFrames(
   ];
 
   return [
-    [refs.mask.current, panel],
+    [refs.mask.current, mask],
     [refs.edge.current, panel],
     [refs.rail.current, rail],
   ];
@@ -159,32 +155,34 @@ function RailTint({
   );
 }
 
-// The shared glass material, split so the fill clips with the rail's tint and the edge draws outside the clip.
-function GlassFill({
-  props,
-  box,
-}: Pick<GlassMaskProps, 'props' | 'box'>): React.JSX.Element {
+// A native sidebar can replace the fill while using the same panel geometry.
+function GlassFill(): React.JSX.Element {
   return (
     <div
+      data-sidebar-glass-fill
       className={cn(
-        'absolute bottom-0 left-0 top-0',
-        box.height === null
-          ? cn(glassMaterial.fill, glassMaterial.frost)
-          : 'bg-card',
+        'absolute inset-0 bg-card',
+        glassMaterial.fill,
+        glassMaterial.frost,
       )}
-      style={{ width: Math.max(box.width, props.expandedWidth) }}
     />
   );
 }
 
 function GlassMask({ ref, ...layer }: GlassMaskProps): React.JSX.Element {
+  const panel = layer.box.height === null;
+
   return (
     <div
       ref={ref}
-      className="pointer-events-none absolute bottom-0 left-0 overflow-hidden rounded-2xl"
+      data-sidebar-glass-panel=""
+      className={cn(
+        'pointer-events-none absolute bottom-0 left-0 overflow-hidden',
+        panel ? 'rounded-2xl' : 'rounded-full',
+      )}
       style={boxStyle(layer.box, layer.props.origin)}
     >
-      <GlassFill {...layer} />
+      <GlassFill />
       <RailTint {...layer} />
     </div>
   );
@@ -198,9 +196,11 @@ function GlassEdge({
   return (
     <div
       ref={ref}
+      data-sidebar-glass-edge
       className={cn(
         'pointer-events-none absolute',
-        box.height === null ? glassMaterial.edge : 'shadow-capsule',
+        glassMaterial.edge,
+        box.height === null ? 'rounded-2xl' : 'rounded-full',
       )}
       style={boxStyle(box, origin)}
     />

@@ -1,9 +1,5 @@
 import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { bezierEasing } from '@repo/kit/bezier-easing';
-import {
-  LiquidGlass,
-  liquidGlassAvailable,
-} from '@repo/kit/primitives/content/liquid-glass';
 import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
 import { type ReactNode, useLayoutEffect, useRef } from 'react';
@@ -159,20 +155,12 @@ function PaneClip({ surface, ...props }: PaneDrawingProps): React.JSX.Element {
 function PaneMaterial(props: PaneDrawingProps): React.JSX.Element {
   const content = <PaneClip {...props} />;
 
-  if (!props.surface) return content;
-
-  // Liquid Glass needs the pane's height before its flex children can lay out.
-  if (liquidGlassAvailable)
-    return (
-      <LiquidGlass corners="container" className="flex-1">
-        {content}
-      </LiquidGlass>
-    );
-
-  return (
+  return props.surface ? (
     <Surface kind={props.surface} fill>
       {content}
     </Surface>
+  ) : (
+    content
   );
 }
 
