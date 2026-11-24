@@ -1,5 +1,7 @@
+import { randomBytes } from 'node:crypto';
+import type { FeedPageOutput } from '@repo/contracts';
 import { openAcpFeedSession } from '@repo/engine/mocks/acp-feed';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, assert, expect, it } from 'vitest';
 import {
   catchUpMs,
   coldOpenMs,
@@ -76,6 +78,64 @@ const manyShort = Array.from({ length: 400 }, (_, index) => ({
   messageId: `short-${index}`,
   content: { type: 'text' as const, text: `Short reply ${index}.` },
 }));
+
+const toolCallCount = 12;
+
+// Tool output that does not compress, as a build log does not: random bytes as text.
+const heavy = (index: number): string =>
+  `output-${index} ${randomBytes(150_000).toString('base64')}`;
+
+const toolCalls = Array.from({ length: toolCallCount }, (_, index) => ({
+  sessionUpdate: 'tool_call' as const,
+  toolCallId: `call-${index}`,
+  title: `Run ${index}`,
+  kind: 'execute' as const,
+  status: 'completed' as const,
+  content: [
+    {
+      type: 'content' as const,
+      content: { type: 'text' as const, text: heavy(index) },
+    },
+  ],
+}));
+
+const bytesOf = (value: FeedPageOutput): number =>
+  Buffer.byteLength(JSON.stringify(value));
+
+// A Feed of heavy tool output opens with previews, and one call's whole output is read when it is opened.
+it('opens a Feed of heavy tool output small over bad Wi-Fi, and reads one whole output when it is opened', async () => {
+  const { host, sessionId } = await openAcpFeedSession(toolCalls);
+  const phone = await phoneOn(host, badWifi);
+
+  phones.push(phone);
+
+  const started = performance.now();
+
+  const page = await phone.client.feed.page.query({
+    sessionId,
+    direction: 'tail',
+  });
+
+  const openMs = performance.now() - started;
+
+  const call = page.rows.find(
+    (row) => row.sessionUpdate === 'tool_call_update',
+  );
+
+  const blobId = call?._meta?.argo?.fullOutput?.content?.blobId;
+
+  assert(blobId);
+  const opened = performance.now();
+  const whole = await phone.client.blob.text.query({ blobId });
+  const openedMs = performance.now() - opened;
+
+  console.info(
+    `opening a Feed of ${toolCallCount} tool calls of about 200 KB each over bad Wi-Fi: ${bytesOf(page)} bytes in ${Math.round(openMs)} ms; opening one call then reads ${Buffer.byteLength(whole)} bytes in ${Math.round(openedMs)} ms`,
+  );
+
+  expect(bytesOf(page)).toBeLessThan(toolCallCount * 20_000);
+  expect(Buffer.byteLength(whole)).toBeGreaterThan(150_000);
+});
 
 // A reconnect that catches up on many rows sends batches, not a message per row.
 it('catches up on many rows in far fewer messages over bad Wi-Fi', async () => {

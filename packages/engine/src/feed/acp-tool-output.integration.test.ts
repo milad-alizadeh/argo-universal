@@ -15,7 +15,7 @@ import {
   readBlobText,
 } from '#mocks/feed-tool-output';
 
-it('large tool output keeps a 64 KB head and tail, marks the row truncated and stores the full output as Blobs', async () => {
+it('large tool output keeps a 16 KB head and tail, marks the row truncated and stores the full output as Blobs', async () => {
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: output } }],
     rawOutput: { stdout },
@@ -50,7 +50,28 @@ it('large tool output keeps a 64 KB head and tail, marks the row truncated and s
   ).toEqual({ stdout });
 });
 
-it('tool output within 64 KB is stored whole without a truncation mark', async () => {
+it('reads the whole output of a truncated row through blob.text, and only by Blob id', async () => {
+  const host = await startToolHost({
+    content: [{ type: 'content', content: { type: 'text', text: output } }],
+  });
+
+  const blobId = (await readToolRow(host))._meta?.argo?.fullOutput?.content
+    ?.blobId;
+
+  assert(blobId);
+
+  expect(JSON.parse(await host.caller.blob.text({ blobId }))).toEqual([
+    { type: 'content', content: { type: 'text', text: output } },
+  ]);
+  await expect(
+    host.caller.blob.text({ blobId: '../../etc/passwd' }),
+  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+  await expect(
+    host.caller.blob.text({ blobId: 'a'.repeat(64) }),
+  ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+});
+
+it('tool output within 16 KB is stored whole without a truncation mark', async () => {
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: 'Done' } }],
     rawOutput: { stdout: 'ok' },

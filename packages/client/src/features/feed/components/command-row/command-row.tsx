@@ -9,6 +9,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { use } from 'react';
 import { View } from 'react-native';
+import { useOpenedToolCall } from '../../hooks/full-tool-output-context';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import { ShellCode } from '../shell-code';
 import {
@@ -40,6 +41,9 @@ const destructiveClassName = 'text-danger';
 
 const nonTerminalContent = (row: ToolCallUpdate): ToolCallContent[] =>
   row.content.filter((block) => block.type !== 'terminal');
+
+const openedTerminal = (row: ToolCallUpdate): ToolCallTerminal | undefined =>
+  row.content.find((block) => block.type === 'terminal');
 
 function OutcomeIcon({ failed }: { failed: boolean }): React.JSX.Element {
   return (
@@ -76,14 +80,18 @@ function CommandFooter(props: CommandFooterState): React.JSX.Element {
 function CommandOutput(
   props: CommandDisclosureProps & { state: CommandState },
 ): React.JSX.Element {
+  // The previews stand in while the whole output comes.
+  const opened = useOpenedToolCall(props.row);
+  const terminal = openedTerminal(opened) ?? props.terminal;
+
   return (
     <>
       <ShellCode
-        command={props.terminal.command}
-        output={props.terminal.output}
+        command={terminal.command}
+        output={terminal.output}
         footer={<CommandFooter {...props.state.footer} />}
       />
-      <ToolOutput content={nonTerminalContent(props.row)} row={props.row} />
+      <ToolOutput content={nonTerminalContent(opened)} row={opened} />
     </>
   );
 }

@@ -10,6 +10,7 @@ import { AppState, Platform } from 'react-native';
 import type { Connection, OpenConnection } from '#features/connection';
 import { ConnectionContext, holdCacheOnline } from '#features/connection';
 import { TRPCProvider, useTRPC } from '#features/connection';
+import { FullToolOutputProvider } from '#features/feed';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
 import { createQueryClient, keepServerLists } from './query-cache';
@@ -117,7 +118,7 @@ function ServerContexts({
     <ServerScopeProvider server={server}>
       <ConnectionContext.Provider value={connection}>
         <ServerUrls server={server} read={fetch}>
-          {children}
+          <FullToolOutputProvider>{children}</FullToolOutputProvider>
         </ServerUrls>
       </ConnectionContext.Provider>
     </ServerScopeProvider>
