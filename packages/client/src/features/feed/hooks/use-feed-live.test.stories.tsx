@@ -1,18 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
+import { streamed } from '../../../../mocks/feed-state.mocks';
 import {
   FeedLivePreview,
+  restoreForeground,
   feedLiveFixture,
   type FeedLiveFixture,
 } from '../../../../mocks/feed/feed-live.mocks';
 
-const { snapshot, stream } = streamed;
+const { snapshot } = streamed;
 
 const newest = { epoch: 0, revision: snapshot.maxRevision };
 
 const meta = {
   title: 'Tests/Feed/UseFeedLive',
+  // Returning to the foreground changes the window's shared focus; the next story finds it as it was.
+  beforeEach: (): (() => void) => restoreForeground,
 } satisfies Meta;
 
 export default meta;
@@ -25,13 +28,12 @@ type Mount = Parameters<NonNullable<Story['play']>>[0]['mount'];
 const settled = (): Promise<void> =>
   new Promise((resolve) => void setTimeout(resolve, 50));
 
-// The screen has shown the Session, and the Server has sent every change in the recorded stream.
+// The screen has shown the Session, and the Server has replayed every change in the recorded stream above the cached revision.
 async function streamedSession(mount: Mount): Promise<FeedLiveFixture> {
   const fixture = feedLiveFixture();
   await mount(<FeedLivePreview fixture={fixture} />);
   await waitFor(() => expect(fixture.server.opened).toHaveLength(1));
 
-  for (const event of rowEvents(stream)) fixture.send(event);
   await waitFor(() =>
     expect(fixture.held()?.revision).toBe(snapshot.maxRevision),
   );

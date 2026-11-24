@@ -31,7 +31,7 @@ import {
 } from '../../src/features/feed/view/feed-state';
 import { toFeedView } from '../../src/features/feed/view/to-feed-view';
 import { createQueryClient } from '../../src/query-cache';
-import { page, streamed } from '../feed-state.mocks';
+import { page, rowEvents, streamed } from '../feed-state.mocks';
 
 const sessionId = 'session-1';
 
@@ -71,6 +71,16 @@ interface Server {
   // What the Server sends when a subscription opens after a point; nothing when the Session has finished.
   serve: (after: FeedSyncPoint | null) => FeedSubscribeOutput[];
 }
+
+// Every change in the recorded stream above the revision the App holds, as the Server replays them; none once the App holds the newest.
+function replayAbove(after: FeedSyncPoint | null): FeedSubscribeOutput[] {
+  return rowEvents(streamed.stream).filter(
+    (event) => !('rev' in event) || event.rev > (after?.revision ?? -1),
+  );
+}
+
+// Leaves the shared focus manager as it was found, for the stories after this one.
+export const restoreForeground = (): void => focusManager.setFocused(undefined);
 
 function clientOf(server: Server): TRPCClient<AppRouter> {
   return createTRPCClient<AppRouter>({
@@ -139,7 +149,7 @@ export function feedLiveFixture({
 }: { seeded?: boolean } = {}): FeedLiveFixture {
   const queryClient = createQueryClient();
   const link: Link = { state: 'open', listeners: new Set() };
-  const server: Server = { opened: [], open: undefined, serve: () => [] };
+  const server: Server = { opened: [], open: undefined, serve: replayAbove };
 
   let held: FeedLive | undefined;
 
