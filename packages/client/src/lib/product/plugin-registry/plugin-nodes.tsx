@@ -14,7 +14,6 @@ import {
   listRowsOf,
   tableRowsOf,
   type RowItem,
-  type SectionDrawing,
 } from './plugin-list-rows';
 import type * as Rendering from './plugin-rendering';
 
@@ -67,6 +66,7 @@ function renderComponent(
   const props = context.controls(input);
 
   const rows = listRowsOf(node) ?? tableRowsOf(node);
+
   const entries = rows
     ? undefined
     : listEntriesOf(node, context.key, sectionProps(context));
@@ -103,17 +103,20 @@ const entryRenderer =
   ({ node, key }: RowItem): React.JSX.Element | null =>
     RenderNode({ node, context: { ...context, key } });
 
+const isProps = (value: unknown): value is Rendering.PluginProps =>
+  typeof value === 'object' && value !== null;
+
 /*
  * A Section's own props, held as the element they draw, so a Section its node left as it was has the same props and
  * the kit keeps the header and footer it drew.
  */
 const sectionProps =
   (context: Rendering.RenderContext) =>
-  (node: WireNode, key: string): SectionDrawing => {
+  (node: WireNode, key: string): Rendering.PluginProps => {
     const scoped = { ...context, key };
     const held = scoped.drawn.get(key, node);
 
-    if (held) return held.props as SectionDrawing;
+    if (isProps(held?.props)) return held.props;
 
     const definition = kitComponent(node.type);
     const component = registry.get(node.type);
@@ -121,6 +124,7 @@ const sectionProps =
     if (!definition || !component) return {};
 
     const input = { node, definition, context: scoped, source: node.props };
+
     const props = {
       ...scoped.controls(input),
       ...renderedSlots(node, definition, scoped),
@@ -128,7 +132,7 @@ const sectionProps =
 
     scoped.drawn.set(key, node, createElement(component, props));
 
-    return props as SectionDrawing;
+    return props;
   };
 
 function renderedChildren(

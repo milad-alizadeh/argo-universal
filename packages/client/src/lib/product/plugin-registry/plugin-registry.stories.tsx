@@ -85,21 +85,23 @@ export const IconButton: Story = { args: iconButtonTree };
 
 export const SplitButton: Story = { args: splitButtonTree };
 
+const produce = [
+  { key: 'fruit', title: 'Fruit', rows: ['Apple', 'Pear'] },
+  { key: 'veg', title: 'Vegetables', rows: ['Leek', 'Kale'] },
+];
+
 // A List whose Sections hold rows, and which a person can search: the rows a search misses leave, and so do their Sections.
 const sectionedTree: WireNode = WireNode.parse({
   type: 'List',
   key: 'produce',
   props: { accessibilityLabel: 'Produce', searchMode: 'app' },
   slots: {},
-  children: [
-    ['fruit', 'Fruit', ['Apple', 'Pear']],
-    ['veg', 'Vegetables', ['Leek', 'Kale']],
-  ].map(([key, title, rows]) => ({
+  children: produce.map(({ key, title, rows }) => ({
     type: 'List.Section',
     key,
     props: { title },
     slots: {},
-    children: (rows as string[]).map((row) => ({
+    children: rows.map((row) => ({
       type: 'ListItem',
       key: row,
       props: { id: row, title: row },

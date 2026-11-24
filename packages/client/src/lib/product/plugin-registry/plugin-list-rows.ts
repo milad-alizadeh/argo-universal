@@ -1,9 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
-import type {
-  ListEntry,
-  ListSectionProps,
-} from '@repo/kit/primitives/lists/list';
 
 /*
  * What a List hands its list as data: the nodes the Server sent, keyed by node key and typed by node type, so a list
@@ -17,7 +13,9 @@ export interface ListRows {
 }
 
 // Rows the List reads as children for what they carry: Sections, nested rows, native rows and moves.
-const readAsChildren = new Set(['List.Section']);
+const sectionType = 'List.Section';
+
+const readAsChildren = new Set([sectionType]);
 
 const isNativeRow = (node: WireNode): boolean =>
   node.type.startsWith('FieldGroup');
@@ -61,31 +59,34 @@ export interface RowItem {
   key: string;
 }
 
-export type SectionDrawing = Omit<ListSectionProps, 'children'>;
+// The kit's entries, with a Section's props as the renderer drew them.
+export type PluginEntry<Section> =
+  | { key: string; item: RowItem }
+  | { key: string; section: Section; entries: PluginEntry<Section>[] };
 
 // A native grouped List draws FieldGroup rows from its children alone.
 const holdsNativeRow = (nodes: readonly WireNode[]): boolean =>
   nodes.some(
     (child) =>
       isNativeRow(child) ||
-      (child.type === 'List.Section' && holdsNativeRow(child.children)),
+      (child.type === sectionType && holdsNativeRow(child.children)),
   );
 
-interface Entries {
+interface Entries<Section> {
   nodes: readonly WireNode[];
   parent: string;
-  sectionProps: (section: WireNode, key: string) => SectionDrawing;
+  sectionProps: (section: WireNode, key: string) => Section;
 }
 
-function entriesIn({
+function entriesIn<Section>({
   nodes,
   parent,
   sectionProps,
-}: Entries): ListEntry<RowItem>[] {
+}: Entries<Section>): PluginEntry<Section>[] {
   return nodes.map((child) => {
     const key = childNodeKey(parent, child.key);
 
-    if (child.type !== 'List.Section')
+    if (child.type !== sectionType)
       return { key: child.key, item: { node: child, key } };
 
     return {
@@ -100,11 +101,11 @@ function entriesIn({
  * A List's Sections and rows as the kit's entries, the structure its children would spell, for a List that is not a
  * flat run of rows: Sections, nested rows, moves, grids and lanes. `sectionProps` draws a Section's own props.
  */
-export function listEntriesOf(
+export function listEntriesOf<Section>(
   node: WireNode,
   key: string,
-  sectionProps: Entries['sectionProps'],
-): ListEntry<RowItem>[] | undefined {
+  sectionProps: Entries<Section>['sectionProps'],
+): PluginEntry<Section>[] | undefined {
   if (node.type !== 'List' || holdsNativeRow(node.children)) return undefined;
 
   return entriesIn({ nodes: node.children, parent: key, sectionProps });

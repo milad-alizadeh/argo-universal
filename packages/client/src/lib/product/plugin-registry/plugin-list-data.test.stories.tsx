@@ -24,6 +24,10 @@ type Story = StoryObj<typeof meta>;
 
 const pageSize = 12;
 
+const changeList = 'Change list';
+
+const retitle = 'Retitled issue';
+
 const firstPage = issueListTree(pageSize);
 
 // The App keeps the nodes a new tree did not change, so a longer tree holds the first page's own objects.
@@ -39,7 +43,7 @@ const retitled: WireNode = {
   ...firstPage,
   children: firstPage.children.map((child, index) =>
     index === 2
-      ? { ...child, props: { ...child.props, title: 'Retitled issue' } }
+      ? { ...child, props: { ...child.props, title: retitle } }
       : child,
   ),
 };
@@ -51,7 +55,7 @@ function ChangingList({ next }: { next: WireNode }): React.JSX.Element {
 
   return (
     <View style={{ flex: 1 }}>
-      <Button label="Change list" onPress={() => setTree(next)} />
+      <Button label={changeList} onPress={() => setTree(next)} />
       <Profiler id={renders.id} onRender={renders.onRender}>
         <View style={{ height: 1200 }}>
           <PluginTree root={tree} onPageCall={fn(async () => {})} />
@@ -68,9 +72,7 @@ export const LoadMoreDrawsOnlyNewRows: Story = {
     await canvas.findByText('PROJ-1');
 
     const counts = await renders.during(canvasElement, async () => {
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Change list' }),
-      );
+      await userEvent.click(canvas.getByRole('button', { name: changeList }));
       await canvas.findByText('PROJ-20');
     });
 
@@ -87,10 +89,8 @@ export const ChangedRowDrawsAlone: Story = {
     await canvas.findByText('PROJ-1');
 
     const counts = await renders.during(canvasElement, async () => {
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Change list' }),
-      );
-      await canvas.findByText('Retitled issue');
+      await userEvent.click(canvas.getByRole('button', { name: changeList }));
+      await canvas.findByText(retitle);
     });
 
     await expect(counts.ListItem?.updates).toHaveLength(1);
@@ -106,29 +106,22 @@ const sectionOf = (key: string, rows: WireNode[]): WireNode => ({
   children: rows,
 });
 
+const retitledRow = (child: WireNode, index: number): WireNode =>
+  index === 2 ? { ...child, props: { ...child.props, title: retitle } } : child;
+
+const firstRows = firstPage.children.slice(0, 6);
+
+const sectionTwo = sectionOf('two', firstPage.children.slice(6));
+
 const sectioned: WireNode = {
   ...firstPage,
-  children: [
-    sectionOf('one', firstPage.children.slice(0, 6)),
-    sectionOf('two', firstPage.children.slice(6)),
-  ],
+  children: [sectionOf('one', firstRows), sectionTwo],
 };
 
 // The same change inside a Section: its row draws alone, and Sections and moves keep reading it as they did.
 const retitledInSection: WireNode = {
-  ...sectioned,
-  children: [
-    {
-      ...sectioned.children[0],
-      children:
-        sectioned.children[0]?.children.map((child, index) =>
-          index === 2
-            ? { ...child, props: { ...child.props, title: 'Retitled issue' } }
-            : child,
-        ) ?? [],
-    } as WireNode,
-    ...sectioned.children.slice(1),
-  ],
+  ...firstPage,
+  children: [sectionOf('one', firstRows.map(retitledRow)), sectionTwo],
 };
 
 function SectionedList(): React.JSX.Element {
@@ -136,7 +129,7 @@ function SectionedList(): React.JSX.Element {
 
   return (
     <View style={{ flex: 1 }}>
-      <Button label="Change list" onPress={() => setTree(retitledInSection)} />
+      <Button label={changeList} onPress={() => setTree(retitledInSection)} />
       <Profiler id={renders.id} onRender={renders.onRender}>
         <View style={{ height: 1200 }}>
           <PluginTree root={tree} onPageCall={fn(async () => {})} />
@@ -153,10 +146,8 @@ export const ChangedRowInSectionDrawsAlone: Story = {
     await canvas.findByText('Section two');
 
     const counts = await renders.during(canvasElement, async () => {
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Change list' }),
-      );
-      await canvas.findByText('Retitled issue');
+      await userEvent.click(canvas.getByRole('button', { name: changeList }));
+      await canvas.findByText(retitle);
     });
 
     await expect(counts.ListItem?.updates).toHaveLength(1);
