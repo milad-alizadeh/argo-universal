@@ -166,7 +166,7 @@ export class PluginDraws {
   public async load(
     pluginId: string,
     at: LoadAt,
-    limitMs: number,
+    limitMs: number | null,
   ): Promise<Loaded> {
     return loadedOf(await this.calls.call(pluginId, passAt(at), limitMs));
   }
