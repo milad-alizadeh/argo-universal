@@ -192,20 +192,25 @@ it('queues an occurrence that fires while the Session is busy and sends it when 
 
 it('runs a weekday task Schedule on demand after restarting before its first Turn', async () => {
   const host = await startAcpEngine();
+
   const clock = vi
     .spyOn(Date, 'now')
     .mockReturnValue(Date.parse('2026-03-11T10:00:00Z'));
+
   onTestFinished(() => clock.mockRestore());
   const instructions = 'Write the weekday daily brief';
+
   const saved = await host.caller.project.scheduleCreate({
     projectId: fixtureProjectId,
     agent: 'mock',
     instructions,
     cadence: { type: 'weekdays', localTime: '09:00', timeZone: 'UTC' },
   });
+
   await host.stop();
 
   const received: PromptRequest[] = [];
+
   const reopened = await startAcpEngine({
     steps: [],
     restartOver: host.home,
@@ -214,6 +219,7 @@ it('runs a weekday task Schedule on demand after restarting before its first Tur
       'session/prompt': [{ prompt: instructions, requests: received }],
     },
   });
+
   const { project } = reopened.caller;
 
   await expect(
