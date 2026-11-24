@@ -2,6 +2,11 @@ import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, type QueryKey } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import {
+  feedKeyPrefix,
+  feedQueryDefaults,
+  snapshotKeyPrefix,
+} from './features/feed/api/feed-cache';
 
 const minuteMs = 60_000,
   minutesKept = 30;
@@ -47,6 +52,10 @@ export function createQueryClient(): QueryClient {
     client.setQueryDefaults(key, { gcTime: keptFor, staleTime: listsFreshFor });
 
   client.setQueryDefaults(['pluginPageTree'], { gcTime: pageTreesKeptFor });
+
+  // A Feed is kept current by its subscription, so it is never stale on a clock.
+  client.setQueryDefaults(feedKeyPrefix, feedQueryDefaults);
+  client.setQueryDefaults(snapshotKeyPrefix, feedQueryDefaults);
 
   return client;
 }

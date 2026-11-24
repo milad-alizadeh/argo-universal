@@ -3,6 +3,7 @@ import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import { describe, expect, it } from 'vitest';
+import { feedKey, snapshotKey } from './features/feed/api/feed-cache';
 import { treeKey } from './features/plugins/utils/page-keys';
 import { createQueryClient } from './query-cache';
 
@@ -87,4 +88,16 @@ describe('a kept Server list', () => {
     expect(options.staleTime).toBeUndefined();
     expect(options.gcTime).toBeUndefined();
   });
+});
+
+it('keeps a Feed and its snapshot without ever going stale, far longer than ten minutes', () => {
+  const client = createQueryClient();
+
+  for (const key of [feedKey('session-1'), snapshotKey('session-1')]) {
+    const kept = client.getQueryDefaults(key);
+
+    expect(kept.staleTime).toBe(Infinity);
+    expect(kept.gcTime).toBeGreaterThan(10 * minuteMs);
+    expect(kept.structuralSharing).toBe(false);
+  }
 });

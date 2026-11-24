@@ -2,14 +2,13 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
-export {
-  useFeedHistoryPages,
-  useFeedLiveChanges,
-} from './hooks/use-feed-sources';
+export { useFeedHistoryPages } from './hooks/use-feed-history-pages';
+
+export { useFeedLive } from './hooks/use-feed-live';
 
 export { useSessionFeed } from './hooks/use-session-feed';
 
-export { useSessionFeedStore } from './hooks/use-session-feed-store';
+export { useFeedWindow } from './hooks/use-feed-window';
 
 export type { SessionFeed } from './hooks/session-feed';
 
