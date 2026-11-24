@@ -14,6 +14,7 @@ import type { FeedListProps, feedListProps } from './feed-scroll';
 import { rememberFeedPosition } from './feed-scroll-memory';
 import { WebFeedViewport } from './follow-web-feed';
 import { useFeedWheel } from './scroll-web-feed';
+import { useFeedPositionSave } from './use-feed-position-save';
 
 type ListRef = RefObject<LegendListRef | null>;
 
@@ -42,11 +43,12 @@ export function useFeedOnScroll(
   const focused = useScreenFocused();
   useWebViewport(list, sessionId, focused);
 
-  return useCallback(() => {
-    if (!focused) return;
+  const save = useCallback(
+    (id: string | undefined) => rememberFeedPosition(id, list),
+    [list],
+  );
 
-    rememberFeedPosition(sessionId, list);
-  }, [focused, sessionId, list]);
+  return useFeedPositionSave(sessionId, focused, save);
 }
 
 interface Drawing {
