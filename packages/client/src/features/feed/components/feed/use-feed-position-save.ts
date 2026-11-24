@@ -1,5 +1,11 @@
 import { LiteThrottler } from '@tanstack/pacer-lite';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 // A scroll event comes every frame; a few saves a second keep the read position close enough.
 const positionSaveWait = 250;
@@ -30,8 +36,11 @@ export function useFeedPositionSave(
     latest.current = throttler;
   });
 
-  // Declared first, so on unmount it saves before the next cleanup drops what is left.
-  useEffect(
+  /*
+   * A layout cleanup, so on unmount it saves while the list still answers: React detaches the list's ref before
+   * passive cleanups run. Declared first, so it saves before the next cleanup drops what is left.
+   */
+  useLayoutEffect(
     () => (): void => {
       latest.current.flush();
     },
