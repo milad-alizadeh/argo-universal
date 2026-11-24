@@ -24,19 +24,26 @@ type NodeTestOptions = Pick<
   integrationSetup?: string;
 };
 
-type ProjectOptions = Omit<NodeTestOptions, 'budget'> & { budget: string[] };
+type ProjectOptions = Omit<NodeTestOptions, 'budget'> & {
+  budget: string[];
+  name?: string;
+  resolve?: TestProjectInlineConfiguration['resolve'];
+};
 
 const createUnitProject = ({
   budget,
   exclude = [],
   integrationSetup: _unused,
+  name = 'unit',
+  resolve,
   ...options
 }: ProjectOptions): TestProjectInlineConfiguration => ({
   extends: false,
+  resolve,
   test: {
     ...nodeTest,
     ...options,
-    name: 'unit',
+    name,
     exclude: [
       ...configDefaults.exclude,
       '**/*.integration.test.*',
@@ -95,3 +102,10 @@ export const createNodeTestProjects = ({
     ? [...projects, createBudgetProject({ ...options, budget })]
     : projects;
 };
+
+// A unit project that resolves modules its own way, such as the phone's `.native.ts` files, and otherwise runs as the others do.
+export const createResolvedUnitProject = (
+  options: Pick<NodeTestOptions, 'include'> &
+    Pick<ProjectOptions, 'name' | 'resolve'>,
+): TestProjectInlineConfiguration =>
+  createUnitProject({ ...options, budget: [] });

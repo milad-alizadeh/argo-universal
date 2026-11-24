@@ -99,7 +99,10 @@ function ConnectionProviders({
 }
 
 function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
-  keepServerLists(useQueryClient(), useTRPC());
+  // Once, and before any cache restore: restored queries take the defaults in force when they are hydrated (#2703).
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  useState(() => keepServerLists(queryClient, trpc));
   useCacheOnline(props.connection.connection);
 
   return <ServerContexts {...props} />;
