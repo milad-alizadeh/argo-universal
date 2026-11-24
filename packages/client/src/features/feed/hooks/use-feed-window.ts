@@ -140,6 +140,8 @@ export function useOlderHistory(
 // What the last draw showed, and the Turns it was translated from.
 type Drawn = Pick<TranslatedFeed, 'view' | 'turns'>;
 
+const none: Partial<Drawn> = {};
+
 interface ViewInputs {
   feed: FeedState;
   snapshot: SessionSnapshot | null;
@@ -161,15 +163,15 @@ function useFeedView({
     if (!snapshot) return null;
 
     // eslint-disable-next-line react/refs -- the last draw is what the Turns and items are kept from
-    const previous = drawn.current;
+    const { view: lastView = null, turns: lastTurns } = drawn.current ?? none;
 
     const { view, turns } = translate(
       shownRows({ rows, plan }),
       snapshot,
-      previous?.turns,
+      lastTurns,
     );
 
-    return { view: keepUnchangedItems(previous?.view ?? null, view), turns };
+    return { view: keepUnchangedItems(lastView, view), turns };
   }, [rows, plan, snapshot, translate]);
 
   useEffect(() => {

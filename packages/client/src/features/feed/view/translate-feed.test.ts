@@ -1,17 +1,13 @@
 import type { SessionUpdate } from '@repo/contracts';
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 import { workMocks } from '../../../../mocks/feed-view.mocks';
-import { toFeedView, translateFeed } from './to-feed-view';
+import {
+  type FeedTranslator,
+  toFeedView,
+  translateFeed,
+  translatingFeed,
+} from './to-feed-view';
 import { translateTurn } from './translate-turn';
-
-// What the Feed is asked to translate, counted at the Turn translator the Feed calls for each Turn it draws again.
-vi.mock('./translate-turn', async (importOriginal) => {
-  const original = await importOriginal<typeof import('./translate-turn')>();
-
-  return {
-    translateTurn: vi.fn<typeof original.translateTurn>(original.translateTurn),
-  };
-});
 
 const recorded = workMocks[0];
 
@@ -37,10 +33,23 @@ const rows = Array.from({ length: copies }, (_unused, turn) =>
 
 const lastTurn = copy(copies - 1).length;
 
-const translatedRows = (): number =>
-  vi
-    .mocked(translateTurn)
-    .mock.calls.reduce((total, [turn]) => total + turn.length, 0);
+// The Feed's translator, and how many rows it has asked the Turn translator for: it asks of each Turn it draws again.
+interface CountingFeed {
+  translate: FeedTranslator;
+  translated: () => number;
+}
+
+function countingFeed(): CountingFeed {
+  let total = 0;
+
+  const translate = translatingFeed((turn, snapshot, folded) => {
+    total += turn.length;
+
+    return translateTurn(turn, snapshot, folded);
+  });
+
+  return { translate, translated: () => total };
+}
 
 // A chunk of streamed text replaces the newest row with a new object; the reducer keeps every other row as it was.
 function withStreamedChunk(text: string): SessionUpdate[] {
@@ -57,25 +66,25 @@ function withStreamedChunk(text: string): SessionUpdate[] {
 it('translates only the Turn a streamed chunk changed in a 1000-row Feed', () => {
   expect(rows.length).toBeGreaterThanOrEqual(1000);
   const first = translateFeed(rows, snapshot);
-  vi.mocked(translateTurn).mockClear();
+  const counting = countingFeed();
 
-  const next = translateFeed(
+  const next = counting.translate(
     withStreamedChunk('one more'),
     snapshot,
     first.turns,
   );
 
-  expect(translatedRows()).toBe(lastTurn);
+  expect(counting.translated()).toBe(lastTurn);
   expect(next.view.items).toHaveLength(first.view.items.length);
 });
 
 it('translates nothing when no row changed', () => {
   const first = translateFeed(rows, snapshot);
-  vi.mocked(translateTurn).mockClear();
+  const counting = countingFeed();
 
-  translateFeed([...rows], snapshot, first.turns);
+  counting.translate([...rows], snapshot, first.turns);
 
-  expect(translatedRows()).toBe(0);
+  expect(counting.translated()).toBe(0);
 });
 
 it('draws the same items as translating every row again', () => {

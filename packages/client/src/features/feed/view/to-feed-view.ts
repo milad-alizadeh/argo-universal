@@ -61,7 +61,7 @@ function foldedIdsOf(
   folded: ReadonlySet<string>,
 ): string[] {
   return folded.size
-    ? rows.filter(({ id }) => folded.has(id)).map(({ id }) => id)
+    ? rows.flatMap(({ id }) => (folded.has(id) ? [id] : []))
     : [];
 }
 
@@ -95,38 +95,45 @@ function presentedRows(
 /*
  * The rows as the Feed draws them. A Turn whose rows, Permission request, Subagents and folded prompts are what the last draw held keeps that draw's items, so a streamed chunk translates the Turn it landed in, not the whole Feed. The reducer keeps every row it did not change as the same object.
  */
-export function translateFeed(
+export type FeedTranslator = (
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
-  previous: readonly TranslatedTurn[] = [],
-): TranslatedFeed {
-  const folded = foldedPrompts(rows);
-  const shown = presentedRows(rows, snapshot);
-  const held = new Map(previous.map((turn) => [turn.rows[0]?.id, turn]));
+  previous?: readonly TranslatedTurn[],
+) => TranslatedFeed;
 
-  const turns = splitTurns(shown).map((turnRows): TranslatedTurn => {
-    const drawn = {
-      rows: turnRows,
-      pendingToolCallId: snapshot.pendingPermission?.toolCallId,
-      subagents: snapshot.subagents,
-      foldedIds: foldedIdsOf(turnRows, folded),
+// The Feed's translator over a Turn translator, which a test replaces to count what is translated.
+export const translatingFeed =
+  (translate: typeof translateTurn): FeedTranslator =>
+  (rows, snapshot, previous = []) => {
+    const folded = foldedPrompts(rows);
+    const shown = presentedRows(rows, snapshot);
+    const held = new Map(previous.map((turn) => [turn.rows[0]?.id, turn]));
+
+    const turns = splitTurns(shown).map((turnRows): TranslatedTurn => {
+      const drawn = {
+        rows: turnRows,
+        pendingToolCallId: snapshot.pendingPermission?.toolCallId,
+        subagents: snapshot.subagents,
+        foldedIds: foldedIdsOf(turnRows, folded),
+      };
+
+      const kept = held.get(turnRows[0]?.id);
+
+      if (kept && stillDrawn(kept, drawn)) return kept;
+
+      return { ...drawn, items: translate(turnRows, snapshot, folded) };
+    });
+
+    return {
+      view: {
+        items: turns.flatMap((turn) => turn.items),
+        plan: selectActivePlan(rows),
+      },
+      turns,
     };
-
-    const kept = held.get(turnRows[0]?.id);
-
-    if (kept && stillDrawn(kept, drawn)) return kept;
-
-    return { ...drawn, items: translateTurn(turnRows, snapshot, folded) };
-  });
-
-  return {
-    view: {
-      items: turns.flatMap((turn) => turn.items),
-      plan: selectActivePlan(rows),
-    },
-    turns,
   };
-}
+
+export const translateFeed = translatingFeed(translateTurn);
 
 export const toFeedView = (
   rows: readonly SessionUpdate[],

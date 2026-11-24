@@ -1,4 +1,3 @@
-import type { SessionUpdate } from '@repo/contracts';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
@@ -15,7 +14,9 @@ const drawn = fn<(rows: FeedRowData[]) => void>();
 
 const recording = 'edit-and-command';
 
-const asEntry = (row: SessionUpdate): FeedEntry => ({ type: 'row', row });
+type RowEntry = Extract<FeedEntry, { type: 'row' }>;
+
+const asEntry = (row: RowEntry['row']): RowEntry => ({ type: 'row', row });
 
 const prompt = asEntry(recordedUserMessage('agent-1', recording));
 
