@@ -45,11 +45,12 @@ private final class Channel {
     let session = ChannelSession(
       sendKey: sendKey, sendRecords: UInt64(record.sendRecords),
       receiveKey: receiveKey, receiveRecords: UInt64(record.receiveRecords),
-      upgrade: record.upgrade, accept: record.accept)
+      upgrade: record.upgrade, accept: record.accept,
+      deliver: { [socket] in socket.send($0) })
     lock.lock()
     self.session = session
     lock.unlock()
-    try session.start().forEach(socket.send)
+    try session.start()
   }
 
   /// A message from the Server's socket: bytes for JavaScript's handshake, or, once handed over, records to open.
@@ -62,9 +63,7 @@ private final class Channel {
       return
     }
     do {
-      let result = try session.receive(outer)
-      result.replies.forEach(socket.send)
-      for inner in result.events {
+      for inner in try session.receive(outer) {
         if case .close(let code, let reason) = inner {
           ended(code: code, reason: reason, error: nil)
           socket.close()
@@ -83,14 +82,14 @@ private final class Channel {
     let session = self.session
     lock.unlock()
     guard let session else { throw ChannelError.malformed("not handed over") }
-    try session.send(message: message).forEach(socket.send)
+    try session.send(message: message)
   }
 
   func close(code: Int, reason: String) {
     lock.lock()
     let session = self.session
     lock.unlock()
-    if let frames = try? session?.close(code: code, reason: reason) { frames.forEach(socket.send) }
+    try? session?.close(code: code, reason: reason)
     socket.close()
   }
 

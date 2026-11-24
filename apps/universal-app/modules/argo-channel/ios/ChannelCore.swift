@@ -228,8 +228,8 @@ func clientFrame(opcode: UInt8, payload: Data, mask: [UInt8]) -> Data {
   return frame
 }
 
-/// Everything a handed-over channel does, as data in and data out. The socket code feeds it outer messages and sends what it returns.
-/// The two ciphers count records, so every call that touches them runs under one lock: a receive, a send and a close never interleave and no record number is reused or skipped.
+/// Everything a handed-over channel does, as data in and data out. The socket code feeds it outer messages; what it has to send goes to `deliver`.
+/// The two ciphers count records, so every call that touches them runs under one lock, and each sealed record is handed to `deliver` inside that lock: a receive, a send and a close never interleave, no record number is reused or skipped, and records reach the socket in the order they were numbered. `deliver` must only enqueue (as `URLSessionWebSocketTask.send` does).
 final class ChannelSession {
   private let lock = NSLock()
   private var sending: RecordCipher
@@ -237,17 +237,20 @@ final class ChannelSession {
   private var reader = RecordReader()
   private var inner: InnerStream
   private let upgrade: String
+  private let deliver: (Data) -> Void
   private let randomMask: () -> [UInt8]
 
   init(
     sendKey: Data, sendRecords: UInt64, receiveKey: Data, receiveRecords: UInt64,
     upgrade: String, accept: String,
+    deliver: @escaping (Data) -> Void,
     randomMask: @escaping () -> [UInt8] = ChannelSession.secureMask
   ) {
     sending = RecordCipher(key: sendKey, records: sendRecords)
     receiving = RecordCipher(key: receiveKey, records: receiveRecords)
     inner = InnerStream(accept: accept)
     self.upgrade = upgrade
+    self.deliver = deliver
     self.randomMask = randomMask
   }
 
@@ -257,56 +260,50 @@ final class ChannelSession {
     return mask
   }
 
-  /// The first outer message: the upgrade request, sealed.
-  func start() throws -> [Data] {
+  /// Sends the upgrade request, sealed.
+  func start() throws {
     lock.lock()
     defer { lock.unlock() }
-    return try records(of: Data(upgrade.utf8))
+    try send(bytes: Data(upgrade.utf8))
   }
 
-  /// One outer message in: the events it completes, and the outer messages to send in answer.
-  func receive(_ outer: Data) throws -> (events: [InnerEvent], replies: [Data]) {
+  /// One outer message in: the events it completes. What the Server must be sent in answer (a pong, the echo of a close) is delivered.
+  func receive(_ outer: Data) throws -> [InnerEvent] {
     lock.lock()
     defer { lock.unlock() }
     var events: [InnerEvent] = []
-    var replies: [Data] = []
     for record in reader.push(outer) {
       let output = try inner.push(try receiving.open(record))
       events += output.events
       for reply in output.replies {
-        replies += try frames(opcode: reply.opcode, payload: reply.payload)
+        try send(bytes: clientFrame(opcode: reply.opcode, payload: reply.payload, mask: randomMask()))
       }
     }
-    return (events, replies)
+    return events
   }
 
-  func send(message: String) throws -> [Data] {
+  func send(message: String) throws {
     lock.lock()
     defer { lock.unlock() }
-    return try frames(opcode: 1, payload: Data(message.utf8))
+    try send(bytes: clientFrame(opcode: 1, payload: Data(message.utf8), mask: randomMask()))
   }
 
-  func close(code: Int, reason: String) throws -> [Data] {
+  func close(code: Int, reason: String) throws {
     lock.lock()
     defer { lock.unlock() }
-    return try frames(opcode: 8, payload: Data([UInt8(code >> 8), UInt8(code & 0xff)]) + Data(reason.utf8))
+    let payload = Data([UInt8(code >> 8), UInt8(code & 0xff)]) + Data(reason.utf8)
+    try send(bytes: clientFrame(opcode: 8, payload: payload, mask: randomMask()))
   }
 
-  private func frames(opcode: UInt8, payload: Data) throws -> [Data] {
-    try records(of: clientFrame(opcode: opcode, payload: payload, mask: randomMask()))
-  }
-
-  // Each message becomes one record when it fits, which is nearly always; a larger one is cut into records the Server reads back in order.
-  private func records(of bytes: Data) throws -> [Data] {
+  // Each message becomes one record when it fits, which is nearly always; a larger one is cut into records the Server reads back in order. Called with the lock held.
+  private func send(bytes: Data) throws {
     let largest = maxRecordBytes - tagBytes
-    var outer: [Data] = []
     var start = bytes.startIndex
     repeat {
       let end = min(start + largest, bytes.endIndex)
       let sealed = try sending.seal(Data(bytes[start..<end]))
-      outer.append(Data([UInt8(sealed.count >> 8), UInt8(sealed.count & 0xff)]) + sealed)
+      deliver(Data([UInt8(sealed.count >> 8), UInt8(sealed.count & 0xff)]) + sealed)
       start = end
     } while start < bytes.endIndex
-    return outer
   }
 }

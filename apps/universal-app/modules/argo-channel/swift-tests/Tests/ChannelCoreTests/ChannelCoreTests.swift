@@ -56,10 +56,10 @@ private let fixedMask: [UInt8] = [1, 2, 3, 4]
 
 final class ChannelCoreTests: XCTestCase {
   // The channel as JavaScript hands it over: each direction has sealed or opened the vector's record 0.
-  private func session(_ vectors: Vectors) -> ChannelSession {
+  private func session(_ vectors: Vectors, deliver: @escaping (Data) -> Void = { _ in }) -> ChannelSession {
     ChannelSession(
       sendKey: bytes(vectors.sendKey), sendRecords: 1, receiveKey: bytes(vectors.receiveKey), receiveRecords: 1,
-      upgrade: "GET / HTTP/1.1\r\n\r\n", accept: vectors.accept, randomMask: { fixedMask })
+      upgrade: "GET / HTTP/1.1\r\n\r\n", accept: vectors.accept, deliver: deliver, randomMask: { fixedMask })
   }
 
   func testTheCipherAgreesWithThePublishedVectorRecords() throws {
@@ -83,7 +83,7 @@ final class ChannelCoreTests: XCTestCase {
     var start = stream.startIndex
     while start < stream.endIndex {
       let end = min(start + 3, stream.endIndex)
-      events += try session.receive(stream[start..<end]).events
+      events += try session.receive(stream[start..<end])
       start = end
     }
 
@@ -109,7 +109,8 @@ final class ChannelCoreTests: XCTestCase {
   func testAClientFrameIsMaskedAndOpensToTheMessage() throws {
     let vectors = try loadVectors()
     var server = RecordCipher(key: bytes(vectors.sendKey), records: 1)
-    let outer = try session(vectors).send(message: "hi")
+    var outer: [Data] = []
+    try session(vectors) { outer.append($0) }.send(message: "hi")
     XCTAssertEqual(outer.count, 1)
 
     let frame = [UInt8](try server.open(outer[0].dropFirst(2)))
@@ -125,11 +126,12 @@ final class ChannelCoreTests: XCTestCase {
     var server = RecordCipher(key: bytes(vectors.sendKey), records: 1)
     let stream = joined(vectors.upgradeThenPing)
 
-    let result = try session(vectors).receive(stream)
+    var replies: [Data] = []
+    let events = try session(vectors) { replies.append($0) }.receive(stream)
 
-    XCTAssertEqual(result.events, [.open])
-    XCTAssertEqual(result.replies.count, 1)
-    let frame = [UInt8](try server.open(result.replies[0].dropFirst(2)))
+    XCTAssertEqual(events, [.open])
+    XCTAssertEqual(replies.count, 1)
+    let frame = [UInt8](try server.open(replies[0].dropFirst(2)))
     XCTAssertEqual(frame[0], 0x8a)
     XCTAssertEqual(frame[1] & 0x80, 0x80)
   }
@@ -143,4 +145,65 @@ final class ChannelCoreTests: XCTestCase {
       XCTAssertEqual($0 as? ChannelError, .malformed("frame length"))
     }
   }
+
+  // A send from one thread and a pong for a ping on another are numbered and delivered under one lock, so the Server reads the records in the order it counts them.
+  func testSendsAndPongsReachTheSocketInRecordOrder() throws {
+    let vectors = try loadVectors()
+    let delivered = DeliveredRecords()
+    let session = session(vectors) { delivered.append($0) }
+    let pings = 200
+    var server = RecordCipher(key: bytes(vectors.receiveKey), records: 1)
+    var incoming = Data()
+    incoming.append(framed(try server.seal(Data(upgradeAnswer(vectors.accept).utf8))))
+    for _ in 0..<pings { incoming.append(framed(try server.seal(Data([0x89, 0])))) }
+
+    let receiving = DispatchQueue(label: "receive")
+    let group = DispatchGroup()
+    receiving.async(group: group) {
+      var at = incoming.startIndex
+      while at < incoming.endIndex {
+        let end = min(at + 20, incoming.endIndex)
+        _ = try? session.receive(incoming[at..<end])
+        at = end
+      }
+    }
+    DispatchQueue.global().async(group: group) {
+      for index in 0..<pings { try? session.send(message: "m\(index)") }
+    }
+    group.wait()
+
+    var opening = RecordCipher(key: bytes(vectors.sendKey), records: 1)
+    let records = delivered.all()
+    XCTAssertEqual(records.count, pings * 2)
+    for record in records {
+      XCTAssertNoThrow(try opening.open(record.dropFirst(2)))
+    }
+  }
+}
+
+private final class DeliveredRecords {
+  private let lock = NSLock()
+  private var records: [Data] = []
+
+  func append(_ record: Data) {
+    lock.lock()
+    records.append(record)
+    lock.unlock()
+  }
+
+  func all() -> [Data] {
+    lock.lock()
+    defer { lock.unlock() }
+    return records
+  }
+}
+
+private func framed(_ record: Data) -> Data {
+  var data = Data([UInt8(record.count >> 8), UInt8(record.count & 0xff)])
+  data.append(record)
+  return data
+}
+
+private func upgradeAnswer(_ accept: String) -> String {
+  "HTTP/1.1 101 Switching Protocols\r\nSec-WebSocket-Accept: \(accept)\r\n\r\n"
 }

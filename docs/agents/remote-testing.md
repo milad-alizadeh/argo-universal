@@ -28,4 +28,6 @@ For a repeatable slow link in CI, see `docs/agents/slow-network-tests.md`.
 
 ## Why the iOS App allows `ts.net` over `ws://`
 
-The channel's socket on iOS is `URLSessionWebSocketTask`, which App Transport Security polices (React Native's own WebSocket was not). `app.json` therefore sets `NSAllowsLocalNetworking` for LAN and IP addresses and an exception for `ts.net` (`NSIncludesSubdomains`, `NSExceptionAllowsInsecureHTTPLoads`), so a typed `<computer>.<tailnet>.ts.net:<port>` is not blocked. The outer transport is plaintext, but everything inside is encrypted and authenticated by the Noise channel (ADR-0045).
+The channel's socket on iOS is `URLSessionWebSocketTask`, which App Transport Security polices (React Native's own WebSocket was not). `app.json` therefore sets `NSAllowsLocalNetworking` for LAN and IP addresses and an exception for `ts.net` (`NSIncludesSubdomains`, `NSExceptionAllowsInsecureHTTPLoads`), so a typed `<computer>.<tailnet>.ts.net:<port>` is not blocked. A bare `100.x` tailnet IP has no host name to match, so it depends on `NSAllowsLocalNetworking` alone; whether iOS treats it as local networking needs a check on a device.
+
+The outer transport is plaintext, but everything inside is encrypted and authenticated by the Noise channel (ADR-0045).
