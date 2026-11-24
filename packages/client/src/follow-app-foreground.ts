@@ -18,6 +18,7 @@ function followsTabVisibility(
   const listener = (): void => {
     handleFocus();
   };
+
   window.addEventListener('visibilitychange', listener, false);
 
   return (): void => {

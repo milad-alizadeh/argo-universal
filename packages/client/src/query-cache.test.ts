@@ -1,5 +1,5 @@
 import type { AppRouter } from '@repo/engine/router';
-import type { QueryClient } from '@tanstack/react-query';
+import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import { describe, expect, it } from 'vitest';
@@ -20,6 +20,10 @@ function procedures(
 
 type Procedures = ReturnType<typeof procedures>;
 
+interface ScreenQuery {
+  queryKey: QueryKey;
+}
+
 it('keeps a Plugin page tree in memory far longer than the default five minutes after its page is left', () => {
   const key = treeKey({
     pluginId: 'tracker',
@@ -35,14 +39,27 @@ it('keeps a Plugin page tree in memory far longer than the default five minutes 
 describe('a kept Server list', () => {
   // Each list is read as its screen reads it, so the times are those the screen's own query gets.
   const kept = [
-    ['agents', (trpc: Procedures) => trpc.agent.list.queryOptions()],
-    ['registry', (trpc: Procedures) => trpc.registry.get.queryOptions()],
-    ['projects', (trpc: Procedures) => trpc.project.list.queryOptions()],
+    [
+      'agents',
+      (trpc: Procedures): ScreenQuery => trpc.agent.list.queryOptions(),
+    ],
+    [
+      'registry',
+      (trpc: Procedures): ScreenQuery => trpc.registry.get.queryOptions(),
+    ],
+    [
+      'projects',
+      (trpc: Procedures): ScreenQuery => trpc.project.list.queryOptions(),
+    ],
     [
       'Session list',
-      (trpc: Procedures) => trpc.session.list.queryOptions({ archived: false }),
+      (trpc: Procedures): ScreenQuery =>
+        trpc.session.list.queryOptions({ archived: false }),
     ],
-    ['System info', (trpc: Procedures) => trpc.system.info.queryOptions()],
+    [
+      'System info',
+      (trpc: Procedures): ScreenQuery => trpc.system.info.queryOptions(),
+    ],
   ] as const;
 
   it.each(kept)(
@@ -50,15 +67,13 @@ describe('a kept Server list', () => {
     (_name, screenQuery) => {
       const client = createQueryClient();
 
-      const query = client
-        .getQueryCache()
-        .build(
-          client,
-          client.defaultQueryOptions(screenQuery(procedures(client))),
-        );
+      // The key a screen's own query carries is the key the defaults must match.
+      const defaults = client.getQueryDefaults(
+        screenQuery(procedures(client)).queryKey,
+      );
 
-      expect(query.options.staleTime).toBe(30_000);
-      expect(query.options.gcTime).toBe(30 * minuteMs);
+      expect(defaults.staleTime).toBe(30_000);
+      expect(defaults.gcTime).toBe(30 * minuteMs);
     },
   );
 
