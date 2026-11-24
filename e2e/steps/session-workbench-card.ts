@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { requests } from './agent-requests';
 import { Given, Then, When } from './fixtures';
+import { openHeaderMenu } from './session-header-menu';
 
 // The fixture Plugins' cards in the Workbench column, keyed by the Plugin and the card each declares.
 const cardIds = new Map([
@@ -59,15 +60,12 @@ Then(
   },
 );
 
-// Every action past the first, and every action on a phone, waits in the header's ⋯ menu.
+// On the wide Frame, further Plugin actions are in the Session title's menu.
 When(
   'I press {string} in the Session header menu',
   async ({ page }, name: string): Promise<void> => {
-    await page.getByRole('button', { name: 'More', exact: true }).click();
-    await page
-      .getByRole('menu')
-      .getByRole('menuitem', { name, exact: true })
-      .click();
+    const menu = await openHeaderMenu(page);
+    await menu.getByRole('menuitem', { name, exact: true }).click();
   },
 );
 

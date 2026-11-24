@@ -10,17 +10,17 @@ export interface WindowBox {
 }
 
 // The title bar's buttons, the gap between neighbours, and the capsule's room around them.
-export const bandButton = 32;
+const bandButton = 32;
 
-export const bandButtonGap = 4;
+const bandButtonGap = 4;
 
-export const capsulePadding = 2;
+const capsulePadding = 2;
 
 // The page's heading starts this far in from the page's edge beside an open sidebar, and this far after a capsule.
 const titleGaps = { besidePanel: 16, afterCapsule: 10, beforeControls: 8 };
 
 // The open Inspector's top row keeps its first button this far inside the panel's leading edge.
-export const inspectorRowPadding = 8;
+const inspectorRowPadding = 8;
 
 export interface BandGeometryInput {
   layout: Pick<
@@ -43,7 +43,7 @@ export interface BandGeometryInput {
 }
 
 // The buttons pinned at the trailing end: Expand, then the Inspector toggle.
-export const pinnedWidth = (session: boolean): number =>
+const pinnedWidth = (session: boolean): number =>
   session ? bandButton * 2 + bandButtonGap : 0;
 
 type RowInput = {
@@ -86,10 +86,7 @@ export const leadingPill = (
   );
 
 // The buttons on the closed Inspector's capsule: the page's and the Workbench's, then the pinned pair.
-export function trailingButtons({
-  session,
-  movingWidth,
-}: BandGeometryInput): number {
+function trailingButtons({ session, movingWidth }: BandGeometryInput): number {
   const pinned = pinnedWidth(session);
   const gap = pinned > 0 && movingWidth > 0 ? bandButtonGap : 0;
 

@@ -63,7 +63,10 @@ Then(
   'the delegated Session appears under its calling Session',
   async ({ page }) => {
     await expect(sessionRow(page, childTitle)).toBeVisible();
-    const fold = page.getByRole('button', { name: parentTitle, exact: true });
+
+    const fold = page
+      .getByTestId('sessions-scroll')
+      .getByRole('button', { name: parentTitle, exact: true });
 
     await expect(fold).toHaveAttribute('aria-expanded', 'true');
     await fold.click();
