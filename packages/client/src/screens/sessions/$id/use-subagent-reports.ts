@@ -1,9 +1,13 @@
 import type { SessionUpdate } from '@repo/contracts';
-import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect } from 'react';
 import type { ClientError } from '#features/connection';
 import {
+  emptyFeed,
+  feedKey,
+  type FeedState,
+  mergeHistoryPages,
   toParentResults,
-  useFeedHistoryPages,
   useFeedLive,
   useFeedWindow,
   type FeedViewItem,
@@ -36,11 +40,7 @@ function useReportFeed(parentId: string, childId: string): Window {
 
   const cacheId = JSON.stringify(['reports', parentId, childId]);
 
-  return useFeedWindow(parentId, translate, {
-    cacheId,
-    shown: true,
-    tail: false,
-  });
+  return useFeedWindow(parentId, translate, { cacheId, tail: false });
 }
 
 const noItems: readonly FeedViewItem[] = [];
@@ -83,8 +83,27 @@ export function useSubagentReports(parentId: string, childId: string): Reports {
     window.feed.epoch ?? undefined,
   );
 
-  useFeedHistoryPages(window.cache, pages.data);
-  const live = useFeedLive(parentId, window.cache, true);
+  useReportPages(window.cacheId, pages);
+
+  const live = useFeedLive(parentId, {
+    cacheId: window.cacheId,
+    shown: true,
+    loaded: window.feed.epoch !== null,
+  });
 
   return reportControls(pages, window, live);
+}
+
+// The report pages merge into the Feed window as they load.
+function useReportPages(cacheId: string, pages: ReportQuery): void {
+  const queryClient = useQueryClient();
+  const { data } = pages;
+
+  useEffect(() => {
+    if (data)
+      queryClient.setQueryData<FeedState>(
+        feedKey(cacheId),
+        (held = emptyFeed) => mergeHistoryPages(held, data.pages),
+      );
+  }, [queryClient, cacheId, data]);
 }

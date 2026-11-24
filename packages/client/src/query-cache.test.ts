@@ -3,7 +3,7 @@ import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import { describe, expect, it } from 'vitest';
-import { feedKey, snapshotKey } from './features/feed/api/feed-cache';
+import { feedKey, snapshotKey } from './features/feed/api/feed-query';
 import { treeKey } from './features/plugins/utils/page-keys';
 import { createQueryClient } from './query-cache';
 
@@ -98,6 +98,9 @@ it('keeps a Feed and its snapshot without ever going stale, far longer than ten 
 
     expect(kept.staleTime).toBe(Infinity);
     expect(kept.gcTime).toBeGreaterThan(10 * minuteMs);
-    expect(kept.structuralSharing).toBe(false);
   }
+
+  expect(client.getQueryDefaults(feedKey('session-1')).structuralSharing).toBe(
+    false,
+  );
 });

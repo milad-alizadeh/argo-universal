@@ -6,7 +6,9 @@ import {
   feedKeyPrefix,
   feedQueryDefaults,
   snapshotKeyPrefix,
-} from './features/feed/api/feed-cache';
+  snapshotQueryDefaults,
+  viewKeyPrefix,
+} from './features/feed/api/feed-query';
 
 const minuteMs = 60_000,
   minutesKept = 30;
@@ -55,7 +57,8 @@ export function createQueryClient(): QueryClient {
 
   // A Feed is kept current by its subscription, so it is never stale on a clock.
   client.setQueryDefaults(feedKeyPrefix, feedQueryDefaults);
-  client.setQueryDefaults(snapshotKeyPrefix, feedQueryDefaults);
+  client.setQueryDefaults(snapshotKeyPrefix, snapshotQueryDefaults);
+  client.setQueryDefaults(viewKeyPrefix, feedQueryDefaults);
 
   return client;
 }

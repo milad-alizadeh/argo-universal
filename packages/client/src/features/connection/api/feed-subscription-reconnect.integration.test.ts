@@ -105,8 +105,9 @@ it('opens one Feed subscription after the revision held when the socket is lost,
   });
 
   const first = { epoch: page.epoch, revision: page.maxRevision };
-  // What the cache holds: where the screen's own resume reopens, as the hook does when the subscription fails.
+  // What the cache holds, which is where the hook reopens: it ends the subscription when tRPC reports the socket lost, and opens a new one after this.
   let held = first;
+  let pending = false;
 
   const follow = (after: FeedSyncPoint): void => {
     const subscription = trpc.client.feed.subscribe.subscribe(
@@ -118,7 +119,15 @@ it('opens one Feed subscription after the revision held when the socket is lost,
             revision: Math.max(held.revision, newestOf([event])),
           };
         },
-        onError: () => follow(held),
+        onConnectionStateChange: ({ state }) => {
+          if (state === 'connecting' && pending) {
+            pending = false;
+            subscription.unsubscribe();
+            follow(held);
+          }
+
+          pending = state === 'pending';
+        },
       },
     );
 

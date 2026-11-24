@@ -2,7 +2,11 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
-export { useFeedHistoryPages } from './hooks/use-feed-history-pages';
+export { feedKey } from './api/feed-query';
+
+export { emptyFeed, type FeedState } from './view/feed-state';
+
+export { mergeHistoryPages } from './view/feed-history';
 
 export { useFeedLive } from './hooks/use-feed-live';
 
