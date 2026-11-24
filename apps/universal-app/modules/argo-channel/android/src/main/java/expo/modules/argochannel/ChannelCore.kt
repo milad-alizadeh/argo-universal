@@ -3,19 +3,52 @@ package expo.modules.argochannel
 import java.io.ByteArrayOutputStream
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
+import java.util.zip.DataFormatException
+import java.util.zip.Inflater
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 // The channel's record path, with no sockets and no Expo in it, so it can be read and tested on its own (ADR-0045).
 // What arrives is one pipeline: outer WebSocket message -> records (two-byte length) -> decrypt -> inner HTTP upgrade and WebSocket frames -> message strings.
-// Compression (#2705) is one more step in `ChannelSession.receive` after a record is opened, and in `records` before one is sealed.
+// Once the Server has agreed to compress (ADR-0045), every record opens with a byte: 0 for the bytes as they are, 1 for raw deflate. Receiving inflates; what this side sends is always as it is.
 
 class ChannelException(message: String) : Exception(message)
 
 private const val TAG_BYTES = 16
 private const val MAX_RECORD_BYTES = 65_535
 private const val MAX_FRAME_BYTES = 1L shl 30
+
+// With the leading byte, a record holds one byte less of message.
+private const val MAX_MESSAGE_BYTES = MAX_RECORD_BYTES - TAG_BYTES - 1
+
+/**
+ * The leading byte of a record, undone: raw deflate is inflated by `java.util.zip.Inflater(true)`, which is deflate without the zlib header (RFC 1951).
+ * A record never holds more than [MAX_MESSAGE_BYTES] of message, so the output buffer is one byte larger and anything that fills it is refused rather than inflated.
+ */
+fun unpack(record: ByteArray): ByteArray {
+  if (record.isEmpty()) throw ChannelException("malformed compressed record")
+  return when (record[0].toInt()) {
+    0 -> record.copyOfRange(1, record.size)
+    1 -> inflate(record.copyOfRange(1, record.size))
+    else -> throw ChannelException("malformed compressed record")
+  }
+}
+
+private fun inflate(body: ByteArray): ByteArray {
+  val inflater = Inflater(true)
+  try {
+    inflater.setInput(body)
+    val output = ByteArray(MAX_MESSAGE_BYTES + 1)
+    val size = inflater.inflate(output)
+    if (!inflater.finished() || size == 0 || size > MAX_MESSAGE_BYTES) throw ChannelException("malformed compressed record")
+    return output.copyOf(size)
+  } catch (error: DataFormatException) {
+    throw ChannelException("malformed compressed record")
+  } finally {
+    inflater.end()
+  }
+}
 
 /** A byte queue that reads from the front without copying what is left, so a long stream is read in linear time. */
 class ByteQueue {
@@ -242,6 +275,7 @@ class ChannelSession(
   private val upgrade: String,
   accept: String,
   private val mask: () -> ByteArray = ::secureMask,
+  private val compression: Boolean = false,
 ) {
   private val sending = RecordCipher(sendKey, sendRecords)
   private val receiving = RecordCipher(receiveKey, receiveRecords)
@@ -258,7 +292,8 @@ class ChannelSession(
     val events = mutableListOf<InnerEvent>()
     val replies = mutableListOf<ByteArray>()
     for (record in reader.push(outer)) {
-      val output = inner.push(receiving.open(record))
+      val opened = receiving.open(record)
+      val output = inner.push(if (compression) unpack(opened) else opened)
       events += output.events
       for ((opcode, payload) in output.replies) replies += frames(opcode, payload)
     }
@@ -276,12 +311,13 @@ class ChannelSession(
 
   // Each message becomes one record when it fits, which is nearly always; a larger one is cut into records the Server reads back in order.
   private fun records(bytes: ByteArray): List<ByteArray> {
-    val largest = MAX_RECORD_BYTES - TAG_BYTES
+    val largest = if (compression) MAX_MESSAGE_BYTES else MAX_RECORD_BYTES - TAG_BYTES
     val outer = mutableListOf<ByteArray>()
     var start = 0
     do {
       val end = minOf(start + largest, bytes.size)
-      val sealed = sending.seal(bytes.copyOfRange(start, end))
+      val piece = bytes.copyOfRange(start, end)
+      val sealed = sending.seal(if (compression) byteArrayOf(0) + piece else piece)
       outer.add(byteArrayOf((sealed.size ushr 8).toByte(), sealed.size.toByte()) + sealed)
       start = end
     } while (start < bytes.size)

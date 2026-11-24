@@ -7,4 +7,6 @@ import type { Duplex } from 'node:stream';
 export type ChannelCarrier = Duplex & {
   readonly remoteAddress?: string;
   readonly localAddress?: string;
+  // Whether the App offered compression in the headers of the WebSocket upgrade it arrived on. A raw TCP socket has no headers to offer in (ADR-0045).
+  readonly offersCompression?: boolean;
 };

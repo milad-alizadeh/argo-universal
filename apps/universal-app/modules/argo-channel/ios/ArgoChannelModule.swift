@@ -1,5 +1,11 @@
 import ExpoModulesCore
 
+struct OpenRecord: Record {
+  @Field var url: String = ""
+  @Field var timeoutMs: Double = 0
+  @Field var headers: [String: String] = [:]
+}
+
 struct HandOverRecord: Record {
   @Field var sendKey: String = ""
   @Field var sendRecords: Double = 0
@@ -7,6 +13,7 @@ struct HandOverRecord: Record {
   @Field var receiveRecords: Double = 0
   @Field var upgrade: String = ""
   @Field var accept: String = ""
+  @Field var compression: Bool = false
 }
 
 /// One socket the module owns. Before the hand-over its bytes go to JavaScript as base64 for the handshake; after it, `session` opens every record and only finished message strings leave.
@@ -45,7 +52,7 @@ private final class Channel {
     let session = ChannelSession(
       sendKey: sendKey, sendRecords: UInt64(record.sendRecords),
       receiveKey: receiveKey, receiveRecords: UInt64(record.receiveRecords),
-      upgrade: record.upgrade, accept: record.accept,
+      upgrade: record.upgrade, accept: record.accept, compression: record.compression,
       deliver: { [socket] in socket.send($0) })
     lock.lock()
     self.session = session
@@ -112,9 +119,12 @@ public final class ArgoChannelModule: Module {
 
     Events("channel")
 
-    AsyncFunction("open") { (id: String, url: String, timeoutMs: Double) async throws in
+    AsyncFunction("open") { (id: String, request: OpenRecord) async throws in
+      let url = request.url
+      let timeoutMs = request.timeoutMs
+      let headers = request.headers
       guard let address = URL(string: url) else { throw ChannelError.malformed("url") }
-      let socket = ChannelSocket(url: address)
+      let socket = ChannelSocket(url: address, headers: headers)
       let channel = Channel(socket: socket) { [weak self] event in
         var tagged = event
         tagged["id"] = id

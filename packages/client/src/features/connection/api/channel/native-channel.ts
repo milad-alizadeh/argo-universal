@@ -1,4 +1,10 @@
-import type { ByteSocket, ChannelAddress, OpenSocket } from './byte-socket';
+import { channelCompressionHeader } from '@repo/contracts';
+import type {
+  ByteSocket,
+  ChannelAddress,
+  OpenSocket,
+  UpgradeHeaders,
+} from './byte-socket';
 import { base64Bytes } from './bytes';
 import { channelUrl } from './web-socket-carrier';
 
@@ -6,6 +12,11 @@ import { channelUrl } from './web-socket-carrier';
 const connectTimeoutMs = 4000;
 
 const normalClosure = 1000;
+
+// The module inflates raw deflate, so every socket it opens offers compression on its upgrade. A Server built before this never reads the header, and says in its welcome whether it agreed (ADR-0045).
+const upgradeHeaders: UpgradeHeaders = {
+  [channelCompressionHeader]: 'deflate-raw',
+};
 
 // The channel as the module takes it over: the two keys, where each direction's record numbers stand, and the WebSocket upgrade that goes inside it. Keys are base64.
 export interface ChannelHandOver {
@@ -16,6 +27,8 @@ export interface ChannelHandOver {
   // The HTTP upgrade request the module seals and sends first, and the `Sec-WebSocket-Accept` its answer must carry.
   readonly upgrade: string;
   readonly accept: string;
+  // Whether every record opens with the byte that says whether the rest is raw deflate, which the module inflates (ADR-0045).
+  readonly compression: boolean;
 }
 
 /*
@@ -33,6 +46,13 @@ export type NativeChannelEvent = { readonly id: string } & (
     }
 );
 
+// Where the module connects, how long it waits, and what its WebSocket upgrade carries.
+export interface OpenRequest {
+  readonly url: string;
+  readonly timeoutMs: number;
+  readonly headers: UpgradeHeaders;
+}
+
 export interface ChannelSubscription {
   readonly remove: () => void;
 }
@@ -42,7 +62,7 @@ export interface ChannelSubscription {
  * JavaScript names each socket, so it is listening before `open` can raise an event. The module is an Expo module: its events arrive through `addListener`.
  */
 export interface ChannelNative {
-  open: (id: string, url: string, timeoutMs: number) => Promise<void>;
+  open: (id: string, request: OpenRequest) => Promise<void>;
   // Handshake bytes to the Server. A `Uint8Array` is an Expo module's `Data` or `ByteArray`.
   write: (id: string, bytes: Uint8Array) => void;
   handOver: (id: string, handOver: ChannelHandOver) => void;
@@ -109,7 +129,11 @@ export class NativeChannel {
     const socket = new NativeByteSocket(id, this);
 
     try {
-      await this.native.open(id, channelUrl(address), connectTimeoutMs);
+      await this.native.open(id, {
+        url: channelUrl(address),
+        timeoutMs: connectTimeoutMs,
+        headers: upgradeHeaders,
+      });
     } catch (cause) {
       this.forget(id);
       throw cause;

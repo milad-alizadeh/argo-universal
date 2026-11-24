@@ -1,5 +1,10 @@
 import { channelPath } from '@repo/contracts';
-import type { ByteSocket, ChannelAddress } from './byte-socket';
+import type {
+  ByteSocket,
+  ChannelAddress,
+  OpenSocket,
+  UpgradeHeaders,
+} from './byte-socket';
 
 // A Server on the local network answers in milliseconds; one that has not in this long is not at that address, and the next one is tried. The platform's own wait is over a minute.
 const connectTimeoutMs = 4000;
@@ -47,19 +52,24 @@ function giveUpAfterTimeout(
 
 /*
  * The channel's bytes over a WebSocket at the Server's channel path (ADR-0045). The WebSocket only carries; the Noise handshake inside it proves the Server.
+ * `connect` makes the WebSocket, so a platform whose WebSocket takes upgrade headers can pass them; the browser's takes none, and the module sets its own.
  */
-export function openWebSocketCarrier(
-  address: ChannelAddress,
-): Promise<ByteSocket> {
-  const opening = Promise.withResolvers<ByteSocket>();
-  const url = channelUrl(address);
-  const webSocket = new WebSocket(url);
+export const webSocketCarrierWith =
+  (connect: (url: string, headers?: UpgradeHeaders) => WebSocket): OpenSocket =>
+  (address, headers) => {
+    const opening = Promise.withResolvers<ByteSocket>();
+    const url = channelUrl(address);
+    const webSocket = connect(url, headers);
 
-  webSocket.binaryType = 'arraybuffer';
-  settleWhenOpen(webSocket, url, opening);
+    webSocket.binaryType = 'arraybuffer';
+    settleWhenOpen(webSocket, url, opening);
 
-  return opening.promise;
-}
+    return opening.promise;
+  };
+
+export const openWebSocketCarrier: OpenSocket = webSocketCarrierWith(
+  (url) => new WebSocket(url),
+);
 
 function settleWhenOpen(
   webSocket: WebSocket,
