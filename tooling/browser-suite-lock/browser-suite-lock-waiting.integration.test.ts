@@ -82,3 +82,32 @@ describe('what a waiting suite is told', () => {
     (await acquired)();
   });
 });
+
+it('admits two processes and makes the next wait for either slot to open', async (): Promise<void> => {
+  const port = await freePort();
+  const extra = await freePort();
+  const options = { port, additionalPorts: [extra], pollMs: POLL_MS };
+  const releaseFirst = await acquireBrowserSuiteLock(options);
+  const second = holdInAnotherProcess(port, true, [extra]);
+
+  try {
+    const [secondStatus] = await once(second.stdout, 'data');
+    expect(String(secondStatus)).toBe('held');
+
+    const third = holdInAnotherProcess(port, true, [extra]);
+    const [thirdStatus] = await once(third.stdout, 'data');
+
+    expect(String(thirdStatus)).toBe('waiting');
+
+    const thirdHeld = once(third.stdout, 'data');
+
+    second.kill('SIGKILL');
+
+    const [admitted] = await thirdHeld;
+
+    expect(String(admitted)).toBe('held');
+    third.stdin.end();
+  } finally {
+    releaseFirst();
+  }
+});

@@ -13,9 +13,13 @@ export type OtherSuite = ChildProcessByStdio<Writable, Readable, null>;
 
 const others: OtherSuite[] = [];
 
-const holderScript = (port: number, announceWait: boolean): string =>
+const holderScript = (
+  port: number,
+  announceWait: boolean,
+  additionalPorts: number[],
+): string =>
   `const { acquireBrowserSuiteLock } = await import(${JSON.stringify(lockModule)});
-   const release = await acquireBrowserSuiteLock({ port: ${port}, pollMs: ${POLL_MS},
+   const release = await acquireBrowserSuiteLock({ port: ${port}, additionalPorts: ${JSON.stringify(additionalPorts)}, pollMs: ${POLL_MS},
      onWait: () => { if (${announceWait}) process.stdout.write('waiting'); } });
    process.stdout.write('held');
    process.stdin.on('end', release).resume();`;
@@ -34,8 +38,9 @@ const childArgs = (script: string): string[] => [
 export const holdInAnotherProcess = (
   port: number,
   announceWait = false,
+  additionalPorts: number[] = [],
 ): OtherSuite => {
-  const script = holderScript(port, announceWait);
+  const script = holderScript(port, announceWait, additionalPorts);
 
   const other = spawn(process.execPath, childArgs(script), {
     stdio: ['pipe', 'pipe', 'inherit'],
