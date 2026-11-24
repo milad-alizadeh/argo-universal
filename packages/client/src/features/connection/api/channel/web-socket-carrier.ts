@@ -14,7 +14,7 @@ const bytesOf = (data: Message): Uint8Array =>
 const bracketedIfIPv6 = (host: string): string =>
   host.includes(':') ? `[${host}]` : host;
 
-const channelUrl = ({ host, port }: ChannelAddress): string =>
+export const channelUrl = ({ host, port }: ChannelAddress): string =>
   `ws://${bracketedIfIPv6(host)}:${port}${channelPath}`;
 
 function adapter(webSocket: WebSocket): ByteSocket {
