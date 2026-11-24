@@ -26,18 +26,35 @@ interface Wire {
 }
 
 /*
- * A one-way pipe that keeps order. A chunk first occupies the link for length / bandwidth, behind any chunk already on it, then flies for the latency. Closes ride the same pipe with zero length, so none overtakes the bytes before it.
+ * A one-way pipe that keeps order. A chunk first occupies the link for length / bandwidth, behind any chunk already on it, then flies for the latency. Closes ride the same pipe with zero length. Deliveries leave one queue, one at a time, so none overtakes another even when two are due in the same millisecond.
  */
 function wire({ latencyMs = 0, bytesPerSecond }: Link): Wire {
+  const queue: { dueAt: number; deliver: () => void }[] = [];
   let freeAt = 0;
+  let lastDueAt = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const deliverNext = (): void => {
+    timer = undefined;
+    queue.shift()?.deliver();
+    arm();
+  };
+
+  const arm = (): void => {
+    const next = queue[0];
+
+    if (next && timer === undefined)
+      timer = setTimeout(deliverNext, Math.max(0, next.dueAt - Date.now()));
+  };
 
   return {
     send: (deliver, bytes) => {
-      const now = Date.now();
       const onWire = bytesPerSecond ? (bytes / bytesPerSecond) * 1000 : 0;
 
-      freeAt = Math.max(freeAt, now) + onWire;
-      setTimeout(deliver, freeAt - now + latencyMs);
+      freeAt = Math.max(freeAt, Date.now()) + onWire;
+      lastDueAt = Math.max(lastDueAt, freeAt + latencyMs);
+      queue.push({ dueAt: lastDueAt, deliver });
+      arm();
     },
   };
 }

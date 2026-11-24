@@ -27,10 +27,68 @@ async function opened(
   const open = slowNetwork(async () => inner, profile);
   const opening = open({ host: 'h', port: 1 });
 
-  await vi.advanceTimersByTimeAsync(10_000);
+  await vi.advanceTimersByTimeAsync(
+    (profile.up.latencyMs ?? 0) + (profile.down.latencyMs ?? 0),
+  );
 
   return { inner, slow: await opening };
 }
+
+it('opens after one round trip: the up latency plus the down latency', async () => {
+  const open = slowNetwork(async () => fakeSocket(), {
+    up: { latencyMs: 30 },
+    down: { latencyMs: 70 },
+  });
+
+  const settled = vi.fn<() => void>();
+
+  void open({ host: 'h', port: 1 }).then(settled);
+  await vi.advanceTimersByTimeAsync(99);
+  expect(settled).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(settled).toHaveBeenCalledOnce();
+});
+
+it('adds the bandwidth time and the latency together', async () => {
+  const { inner, slow } = await opened({
+    up: { latencyMs: 100, bytesPerSecond: 1000 },
+    down: {},
+  });
+
+  slow.write(bytes(500));
+  await vi.advanceTimersByTimeAsync(599);
+  expect(inner.written).toHaveLength(0);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(inner.written).toHaveLength(1);
+});
+
+it('frees the link again after an idle gap, so a later chunk does not queue behind old ones', async () => {
+  const { inner, slow } = await opened({
+    up: { bytesPerSecond: 1000 },
+    down: {},
+  });
+
+  slow.write(bytes(100));
+  await vi.advanceTimersByTimeAsync(10_000);
+  expect(inner.written).toHaveLength(1);
+  slow.write(bytes(100));
+  await vi.advanceTimersByTimeAsync(99);
+  expect(inner.written).toHaveLength(1);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(inner.written).toHaveLength(2);
+});
+
+it('closes up after the bytes written before it, even when both are due together', async () => {
+  const { inner, slow } = await opened({ up: { latencyMs: 20 }, down: {} });
+  const events: string[] = [];
+
+  inner.write = (): number => events.push('write');
+  inner.close = (): number => events.push('close');
+  slow.write(bytes(10));
+  slow.close();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(events).toEqual(['write', 'close']);
+});
 
 it('holds bytes sent up for the up latency, and no longer', async () => {
   const { inner, slow } = await opened({ up: { latencyMs: 100 }, down: {} });
