@@ -5,13 +5,23 @@ import {
   DialogTitle,
 } from '@repo/kit/primitives/overlays/dialog';
 import type * as React from 'react';
-import { createContext, useContext, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { Image, Pressable, View } from 'react-native';
 import { useOpenImageStyle } from '../hooks/use-open-image-style';
 import { imageLabel } from '../view/image-label';
 import type { KeyedImage } from '../view/keyed-image';
 
-type ImageUrl = (blob: BlobRef) => string;
+// `watch` is there when an image's URL arrives later: it starts the read and tells the readers of that one Blob, and no others, to ask again.
+export interface ImageUrl {
+  (blob: BlobRef): string;
+  watch?: (blobId: string, changed: () => void) => () => void;
+}
 
 export const FeedImageUrlContext = createContext<ImageUrl | null>(null);
 
@@ -28,6 +38,22 @@ function useImageUrl(imageUrl: ImageUrl | undefined): ImageUrl {
     throw new Error('Feed images need the Server Blob URL resolver.');
 
   return loadImage;
+}
+
+const nobody = (): void => {};
+
+// One image's URL. When it arrives, only the images of this Blob draw again, not every row of the Feed.
+function useBlobUri(loadImage: ImageUrl, image: ImageContent): string {
+  const { blob } = image;
+  const { blobId } = blob;
+
+  const subscribe = useCallback(
+    (changed: () => void): (() => void) =>
+      loadImage.watch?.(blobId, changed) ?? nobody,
+    [loadImage, blobId],
+  );
+
+  return useSyncExternalStore(subscribe, () => loadImage(blob));
 }
 
 interface ImageSourceProps {
@@ -167,7 +193,7 @@ export function FeedImage({
   size = 'feed',
 }: FeedImageProps): React.JSX.Element {
   const openInFeed = useOpenInFeed(image, imageKey);
-  const source = { image, uri: useImageUrl(imageUrl)(image.blob), size };
+  const source = { image, uri: useBlobUri(useImageUrl(imageUrl), image), size };
 
   return openInFeed ? (
     <ImageThumbnail {...source} onPress={openInFeed} />

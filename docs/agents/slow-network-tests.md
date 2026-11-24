@@ -14,6 +14,8 @@ const { ms, rows } = await firstPageMs(phone, sessionId);
 await phone.close();
 ```
 
+A `Phone` also has `handshakes()` (sockets opened so far, so Noise handshakes), `fetch` (one channel per call), `media` (Blobs and Plugin assets on one kept channel) and `mediaWindow(n)` (the same reader with `n` reads on the way, to compare windows). `channel-media.integration.test.ts` prints a three-way comparison of them over `badWifi`.
+
 To build a platform by hand, wrap its `openSocket`:
 
 ```ts
@@ -31,7 +33,7 @@ A `NetworkProfile` is `{ up, down }`, where each side is a `Link`:
 - `latencyMs`: how long a byte takes to cross.
 - `bytesPerSecond`: the link's bandwidth. A chunk occupies the link for `length / bytesPerSecond`, and the next chunk queues behind it. An idle link is free again.
 
-Leave a field out for none. `up` is App to Server. `badWifi` is 60 ms each way, 250 KB/s up and 500 KB/s down. Opening the socket costs one round trip (`up + down` latency). Each direction delivers from one queue, so bytes and closes keep their order.
+Leave a field out for none. `up` is App to Server. `badWifi` is 60 ms each way, 250 KB/s up and 500 KB/s down. Every socket opened through one `slowNetwork(open, profile)` shares its two links, as a phone's sockets share one radio: twelve sockets get no more bandwidth than one, and their chunks queue behind each other. Open the sockets of one phone through one wrapper (`phoneOn` does), and wrap again for a second phone. Opening the socket costs one round trip (`up + down` latency). Each direction delivers from one queue, so bytes and closes keep their order.
 
 ## Chaining with other socket wrappers
 

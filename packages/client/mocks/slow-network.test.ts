@@ -169,3 +169,30 @@ it('delivers a close after the bytes that came before it', async () => {
   await vi.advanceTimersByTimeAsync(1000);
   expect(events).toEqual(['data', 'close']);
 });
+
+it('shares one bandwidth between every socket opened through it, as a phone has one radio', async () => {
+  const first = fakeSocket();
+  const second = fakeSocket();
+  const sockets = [first, second];
+
+  const open = slowNetwork(async () => sockets.shift() ?? fakeSocket(), {
+    up: { bytesPerSecond: 1000 },
+    down: {},
+  });
+
+  const opening = Promise.all([
+    open({ host: 'h', port: 1 }),
+    open({ host: 'h', port: 1 }),
+  ]);
+
+  await vi.advanceTimersByTimeAsync(0);
+  const [one, other] = await opening;
+
+  one.write(bytes(500));
+  other.write(bytes(500));
+  await vi.advanceTimersByTimeAsync(500);
+  expect(first.written).toHaveLength(1);
+  expect(second.written).toHaveLength(0);
+  await vi.advanceTimersByTimeAsync(500);
+  expect(second.written).toHaveLength(1);
+});

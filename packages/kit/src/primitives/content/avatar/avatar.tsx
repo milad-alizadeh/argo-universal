@@ -3,7 +3,7 @@ import { useContext, useState, type JSX, type ReactNode } from 'react';
 import { Image, type ViewProps, View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
-import { useMediaUrl } from '#primitives/content/media-url';
+import { useMediaUri } from '#primitives/content/media-url';
 import { Text } from '#primitives/content/text';
 import { AvatarMetaSize } from './avatar-meta-size';
 import type { AvatarProps } from './avatar-props';
@@ -106,8 +106,8 @@ function avatarContent(props: AvatarProps): ReactNode {
 }
 
 function ResolvedAvatarImage(props: AvatarProps): JSX.Element {
-  const url = useMediaUrl();
-  const source = props.src ? avatarSource(url(props.src)) : undefined;
+  const url = useMediaUri(props.src);
+  const source = url === undefined ? undefined : avatarSource(url);
 
   return (
     <AvatarFallback key={JSON.stringify(source)} {...props} source={source} />

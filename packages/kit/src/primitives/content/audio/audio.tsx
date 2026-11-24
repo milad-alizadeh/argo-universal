@@ -7,7 +7,7 @@ import {
 } from 'expo-audio';
 import type * as React from 'react';
 import { useEffect } from 'react';
-import { useMediaUrl } from '#primitives/content/media-url';
+import { useMediaUri } from '#primitives/content/media-url';
 import type { AudioProps } from './audio-props';
 import { type AudioPhase, AudioTransport } from './audio-transport';
 import { forget, playOnly } from './one-clip';
@@ -16,9 +16,9 @@ const updateInterval = 250;
 
 // expo-audio plays the clip on every platform: AVPlayer on iOS, Media3 on Android, an audio element on the web.
 export function Audio(props: AudioProps): React.JSX.Element {
-  const mediaUrl = useMediaUrl();
-  const url = (): string | number => mediaUrl(props.source);
-  const { player, status } = useClip(url());
+  const source = useMediaUri(props.source) ?? '';
+  const url = (): string | number => source;
+  const { player, status } = useClip(source);
 
   return (
     <AudioTransport
