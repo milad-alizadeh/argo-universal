@@ -15,7 +15,9 @@ import { isSection } from './list-level-entries';
 import type { ListProps, ListSectionProps } from './list-props';
 
 // The Plugin wire already validated the symbol names before preparing the row.
-function isSystemSymbol(node: unknown): node is SystemSymbolSource {
+function isSystemSymbol(
+  node: ListItemProps['leading'] | SystemSymbolSource,
+): node is SystemSymbolSource {
   return (
     node !== null &&
     typeof node === 'object' &&
@@ -28,7 +30,9 @@ function isSystemSymbol(node: unknown): node is SystemSymbolSource {
 
 function iconOf(node: ListItemProps['leading']): DrawnIcon | undefined {
   if (typeof node === 'string' && isIconName(node)) return node;
+
   if (isSystemSymbol(node)) return node;
+
   if (!isValidElement(node) && !Array.isArray(node)) return undefined;
 
   const [leading] = flattenedChildren(node);
