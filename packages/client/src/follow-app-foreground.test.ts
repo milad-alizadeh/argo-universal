@@ -1,4 +1,8 @@
-import { focusManager, QueryClient, QueryObserver } from '@tanstack/react-query';
+import {
+  focusManager,
+  QueryClient,
+  QueryObserver,
+} from '@tanstack/react-query';
 import { afterEach, expect, it, vi } from 'vitest';
 import {
   type AppStateSource,
