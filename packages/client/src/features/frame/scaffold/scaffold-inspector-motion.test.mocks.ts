@@ -9,13 +9,14 @@ export interface Box {
   bottom: number;
 }
 
-const boxOf = (element: Element): Box => {
+export const boxOf = (element: Element): Box => {
   const { left, top, right, bottom } = element.getBoundingClientRect();
 
   return { left, top, right, bottom };
 };
 
-export function intersection(a: Box, b: Box): Box | undefined {
+// Where two boxes overlap by more than `slack` pixels either way, which the browser's rounding may not.
+export function intersection(a: Box, b: Box, slack = 1): Box | undefined {
   const box = {
     left: Math.max(a.left, b.left),
     top: Math.max(a.top, b.top),
@@ -23,7 +24,9 @@ export function intersection(a: Box, b: Box): Box | undefined {
     bottom: Math.min(a.bottom, b.bottom),
   };
 
-  return box.right > box.left && box.bottom > box.top ? box : undefined;
+  return box.right - box.left > slack && box.bottom - box.top > slack
+    ? box
+    : undefined;
 }
 
 // Whether `inner` lies inside `outer`, to a pixel the browser's rounding may take.
@@ -90,15 +93,44 @@ export function clipBox(element: Element): Box {
   };
 }
 
-// The part of the Workbench that shows: its box inside its clip.
-export function shownWorkbench(
-  workbench: Element,
-  clip: Element,
-): Box | undefined {
-  return intersection(boxOf(workbench), boxOf(clip));
+export function ancestorsOf(element: Element): HTMLElement[] {
+  const ancestors: HTMLElement[] = [];
+
+  for (
+    let parent = element.parentElement;
+    parent;
+    parent = parent.parentElement
+  )
+    ancestors.push(parent);
+
+  return ancestors;
 }
 
-export const glassBox = boxOf;
+// The part of an element that shows: its box inside every ancestor that clips it, none while it is hidden.
+export function shownBox(element: Element): Box | undefined {
+  if (getComputedStyle(element).visibility === 'hidden') return undefined;
+  let shown: Box | undefined = boxOf(element);
+
+  for (const ancestor of ancestorsOf(element)) {
+    const { overflowX, overflowY } = getComputedStyle(ancestor);
+
+    if (shown && (overflowX !== 'visible' || overflowY !== 'visible'))
+      shown = intersection(shown, boxOf(ancestor), 0);
+  }
+
+  return shown;
+}
+
+// Whether an ancestor would make the element's glass sample only what its ancestor draws, not the page behind it.
+export function isBackdropRoot(ancestor: Element): boolean {
+  const { opacity, clipPath, mask, filter, backdropFilter } =
+    getComputedStyle(ancestor);
+
+  return (
+    Number(opacity) < 1 ||
+    [clipPath, mask, filter, backdropFilter].some((value) => value !== 'none')
+  );
+}
 
 /*
  * Pause the animations the action starts on `targets`, then step them through the motion and measure at each step, so a

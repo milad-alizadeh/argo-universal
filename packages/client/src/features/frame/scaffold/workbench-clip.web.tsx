@@ -4,16 +4,16 @@ import type { WorkbenchClipProps } from './workbench-clip';
 
 export type { WorkbenchClipProps } from './workbench-clip';
 
-// Room round the Workbench for its glass's shadow, which the clip must not cut at the overlay's top and leading edges.
+// Room on every side of the Workbench for its glass's shadow, which reaches past its box, so the clip never cuts it at rest.
 const shadowRoom = 48;
 
 const pixels = (value: number): string => `${value}px`;
 
 // The edge at rest, which the motion reads as the glass's own motion reads its resting box, so a capsule that settles in a new place moves the clip with it.
-const restingEdge = '--workbench-clip-edge';
+const restingEdgeVariable = '--workbench-clip-edge';
 
 const widthFrom = (shift: number): string =>
-  `calc(var(${restingEdge}) + ${pixels(shift + shadowRoom)})`;
+  `calc(var(${restingEdgeVariable}) + ${pixels(shift + shadowRoom)})`;
 
 /*
  * The Workbench slides out from under the Inspector and back, and never draws over its glass. The clip's trailing edge
@@ -29,9 +29,9 @@ export function WorkbenchClip({
 }: WorkbenchClipProps): ReactElement {
   const clip = useRef<HTMLDivElement>(null);
 
-  // Before the motion's first frame reads it, and ahead of the paint of the render that moved it.
+  // Declared before the motion: the variable must hold this render's edge when the motion's keyframes first resolve it.
   useLayoutEffect(() => {
-    clip.current?.style.setProperty(restingEdge, pixels(edge));
+    clip.current?.style.setProperty(restingEdgeVariable, pixels(edge));
   }, [edge]);
 
   useFrameTransition({
@@ -56,19 +56,20 @@ export function WorkbenchClip({
     <div
       ref={clip}
       data-testid="workbench-clip"
-      className="absolute bottom-0 overflow-hidden"
+      className="absolute overflow-hidden"
       style={{
         pointerEvents: 'none',
         top: -shadowRoom,
         left: -shadowRoom,
+        bottom: -shadowRoom,
         width: inspectorOpen
           ? widthFrom(0)
-          : `calc(100% + ${pixels(shadowRoom)})`,
+          : `calc(100% + ${pixels(shadowRoom * 2)})`,
       }}
     >
       <div
-        className="absolute bottom-0"
-        style={{ top: shadowRoom, left: shadowRoom }}
+        className="absolute"
+        style={{ top: shadowRoom, left: shadowRoom, bottom: shadowRoom }}
       >
         {children}
       </div>

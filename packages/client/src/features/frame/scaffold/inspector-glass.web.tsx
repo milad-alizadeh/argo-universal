@@ -30,14 +30,20 @@ const glassBox = (box: InspectorBox): CSSProperties => ({
   opacity: box.opacity,
 });
 
-// The content shows inside the glass alone, so it never draws outside the capsule as the panel grows from it.
+/*
+ * The content shows inside the glass alone, so it never draws outside the capsule as the panel grows from it. The
+ * resting style and the motion's keyframes both build the clip here, so the motion hands back to the resting style
+ * with nothing to jump: the panel rounds as the glass does, the capsule to half its height.
+ */
+const clipOf = (box: InspectorBox, height: string): string =>
+  `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${height} round ${box.height === null ? 'var(--radius-2xl)' : pixels(box.height / 2)})`;
+
 const contentClip = (box: InspectorBox): CSSProperties => ({
-  clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${heightOf(box)} round ${box.height === null ? 'var(--radius-2xl)' : '9999px'})`,
+  clipPath: clipOf(box, heightOf(box)),
 });
 
-// The same clip in pixels throughout, so it eases from the capsule's box to the panel's with the glass.
 const clipFrame = (box: InspectorBox, height: number): Keyframe => ({
-  clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${pixels(height)} round ${box.height === null ? 'var(--radius-2xl)' : pixels(height / 2)})`,
+  clipPath: clipOf(box, pixels(height)),
 });
 
 /*
