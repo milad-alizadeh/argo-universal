@@ -57,7 +57,7 @@ export class ChannelRoute {
 
   public async open<T>(
     attempt: (address: ChannelAddress) => Promise<T>,
-    discard: (channel: T) => void = () => {},
+    discard: (channel: T) => void,
   ): Promise<T> {
     const causes: unknown[] = [];
 
@@ -131,13 +131,18 @@ function throwIfRefused(cause: unknown): void {
   if (cause instanceof PairingRefused) throw cause;
 }
 
-// The first attempt to open wins and the rest are let go: one that opens later is discarded. A Server that refused this Device ends it. When none opens, there is no winner.
+// The first attempt to open wins and the rest are let go: one that opens later is discarded. A Server that refused this Device ends the race at once, whatever the other addresses are still doing. When none opens, there is no winner.
 async function firstOf<T>(
   tries: readonly Promise<Opened<T> | undefined>[],
   discard: (channel: T) => void,
 ): Promise<Opened<T> | undefined> {
+  const refusal = Promise.withResolvers<never>();
+
   const opens = tries.map(async (attempt) => {
-    const opened = await attempt;
+    const opened = await attempt.catch((cause: unknown) => {
+      refusal.reject(cause);
+      throw cause;
+    });
 
     if (!opened) throw new Error('Did not open');
 
@@ -145,7 +150,7 @@ async function firstOf<T>(
   });
 
   try {
-    const winner = await Promise.any(opens);
+    const winner = await Promise.race([Promise.any(opens), refusal.promise]);
 
     for (const attempt of tries) {
       void attempt.then((opened) => {
@@ -155,11 +160,7 @@ async function firstOf<T>(
 
     return winner;
   } catch (cause) {
-    if (!(cause instanceof AggregateError)) throw cause;
-    const refused = cause.errors.find((e) => e instanceof PairingRefused);
-
-    if (refused) throw refused;
-
-    return;
+    if (cause instanceof AggregateError) return;
+    throw cause;
   }
 }
