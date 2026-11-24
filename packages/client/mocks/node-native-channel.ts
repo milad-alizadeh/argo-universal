@@ -1,4 +1,3 @@
-import { aead } from '../src/features/connection/api/channel/aead';
 import type {
   ByteSocket,
   OpenSocket,
@@ -48,12 +47,8 @@ const rawBytes = (id: string, chunk: Uint8Array): NativeChannelEvent => ({
 
 const cipherOf = (handed: ChannelHandOver): ChannelCipher =>
   new ChannelCipher(
-    new CipherState(base64Bytes(handed.sendKey), aead, handed.sendRecords),
-    new CipherState(
-      base64Bytes(handed.receiveKey),
-      aead,
-      handed.receiveRecords,
-    ),
+    new CipherState(base64Bytes(handed.sendKey), handed.sendRecords),
+    new CipherState(base64Bytes(handed.receiveKey), handed.receiveRecords),
   );
 
 /*

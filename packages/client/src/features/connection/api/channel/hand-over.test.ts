@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { aead } from './aead';
 import { ChannelCipher } from './channel-cipher';
 import { CipherState } from './cipher-state';
 
@@ -7,13 +6,13 @@ const key = (fill: number): Uint8Array => new Uint8Array(32).fill(fill);
 
 it('says which record number each direction has reached, so the module carries on from it', () => {
   const server = new ChannelCipher(
-    new CipherState(key(2), aead),
-    new CipherState(key(1), aead),
+    new CipherState(key(2)),
+    new CipherState(key(1)),
   );
 
   const app = new ChannelCipher(
-    new CipherState(key(1), aead),
-    new CipherState(key(2), aead),
+    new CipherState(key(1)),
+    new CipherState(key(2)),
   );
 
   app.open(server.seal(new Uint8Array([1])));

@@ -1,6 +1,6 @@
 import { hmac } from '@noble/hashes/hmac.js';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { aead as platformAead, type Aead, type AeadParams } from './aead';
+import { aead, type AeadParams } from './aead';
 import { concatBytes } from './bytes';
 
 export const tagBytes = 16;
@@ -45,7 +45,6 @@ export class CipherState {
   // `records` is where to carry on from: zero for a new stream, or the number a handed-over one had reached.
   public constructor(
     private key?: Uint8Array,
-    private readonly aead: Aead = platformAead,
     records = 0,
   ) {
     this.records = BigInt(records);
@@ -63,11 +62,11 @@ export class CipherState {
   }
 
   public seal(associated: Uint8Array, plaintext: Uint8Array): Uint8Array {
-    return this.aead.seal(this.next(associated), plaintext);
+    return aead.seal(this.next(associated), plaintext);
   }
 
   public open(associated: Uint8Array, record: Uint8Array): Uint8Array {
-    return this.aead.open(this.next(associated), record);
+    return aead.open(this.next(associated), record);
   }
 
   private next(associated: Uint8Array): AeadParams {

@@ -3,23 +3,22 @@ import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import { describe, expect, it } from 'vitest';
+import type { TRPC } from '#features/connection';
 import { feedKey, snapshotKey } from './features/feed/api/feed-cache';
 import { treeKey } from './features/plugins/utils/page-keys';
-import { createQueryClient } from './query-cache';
+import { createQueryClient, keepServerLists } from './query-cache';
 
 const minuteMs = 60_000;
 
 // Only the paths are read, so no Server is reached.
-function procedures(
-  queryClient: QueryClient,
-): ReturnType<typeof createTRPCOptionsProxy<AppRouter>> {
+function procedures(queryClient: QueryClient): TRPC {
   return createTRPCOptionsProxy<AppRouter>({
     client: createTRPCClient<AppRouter>({ links: [] }),
     queryClient,
   });
 }
 
-type Procedures = ReturnType<typeof procedures>;
+type Procedures = TRPC;
 
 interface ScreenQuery {
   queryKey: QueryKey;
@@ -67,6 +66,7 @@ describe('a kept Server list', () => {
     'the %s is fresh for 30 seconds and kept for 30 minutes after its screen is left',
     (_name, screenQuery) => {
       const client = createQueryClient();
+      keepServerLists(client, procedures(client));
 
       // The key a screen's own query carries is the key the defaults must match.
       const defaults = client.getQueryDefaults(
@@ -80,6 +80,7 @@ describe('a kept Server list', () => {
 
   it('does not change a query outside the kept lists', () => {
     const client = createQueryClient();
+    keepServerLists(client, procedures(client));
 
     const options = client.defaultQueryOptions(
       procedures(client).project.listBranches.queryOptions({ projectId: 'p' }),

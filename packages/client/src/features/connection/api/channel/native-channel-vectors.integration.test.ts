@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { noiseIkVector } from '@repo/engine/pairing-vector';
 import { expect, it } from 'vitest';
-import { aead } from './aead';
 import { bytesHex, hexBytes, textBytes } from './bytes';
 import { ChannelCipher } from './channel-cipher';
 import { CipherState } from './cipher-state';
@@ -87,8 +86,8 @@ function generated(): Fixture {
   // The Server's side of the same channel, from record 1 on: each scenario starts from record 1 on a cipher of its own.
   const serverCipher = (): ChannelCipher =>
     new ChannelCipher(
-      new CipherState(receiving.key, aead, 1),
-      new CipherState(sending.key, aead, 1),
+      new CipherState(receiving.key, 1),
+      new CipherState(sending.key, 1),
     );
 
   const text = textBytes('{"hello":"wörld"}');
