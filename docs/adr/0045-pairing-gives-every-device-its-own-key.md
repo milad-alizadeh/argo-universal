@@ -4,6 +4,8 @@ This is the pairing and authentication protocol that [ADR-0002](0002-a-local-ser
 
 Amended 2026-11-18 (owner, #2393): the channel's bytes ride inside a WebSocket at `/channel` on the Server's one port rather than on a raw TCP socket, and the QR carries the Server's URLs. A phone reaches a Server the way it reaches an Expo dev server: by a URL in the code, over anything that carries HTTP, which includes a tailnet. The Noise handshake inside is unchanged and is still the only gate. Android release builds declare `usesCleartextTraffic` for it. The WebSocket is a carrier, not a credential; what it carries is encrypted end to end. See [the research](../research/expo-dev-server-connection.md).
 
+Amended 2026-11-24 (owner, #2685): an App keeps a read-only cache of what it has been sent, on the Device; see "No offline mode" under the trust model.
+
 The owner cannot open Argo on their phone. The Server binds `127.0.0.1` and has no authentication, so the only App that can reach it is one on the Server Device itself; a phone on the same Wi-Fi has no route in and no way to prove who it is. Pairing is therefore not a feature added to an authenticated Server. It is the first authentication the whole API has ever had, and the transport that carries every tRPC call has no path for a credential at all.
 
 ## What this replaces
@@ -18,6 +20,8 @@ The owner cannot open Argo on their phone. The Server binds `127.0.0.1` and has 
 - **The local network only.** No relay, no Tailscale, no internet reachability. Remote access stays a later spec, as ADR-0022 says.
 - **One owner, no accounts, no roles.** A paired Device is the owner, minus ADR-0022's Server-Device-only list. There are no per-Device scopes and no permissions to configure, because there is nobody to configure them against.
 - **No offline mode.** An App is a view onto a Server. Unreachable is a drawn state, not a local copy.
+
+  > **Amended 2026-11-24 (owner, #2685).** An App keeps a read-only copy of what it has already been sent, and may keep it on the Device, so that a Session list or Feed seen before draws at once — after a restart and on a bad Connection — and only newer changes wait on the Server. It is a cache, not an offline mode: nothing can be changed while the Server is unreachable, a write still goes to the Server, and the Server stays the one source of truth. A Feed's copy is keyed by its Session and epoch and catches up from its revision (ADR-0007); a new epoch drops it. The copy is kept per Server, inside the App's own storage, and is wiped when the Device is unpaired from that Server or the Server is removed from the App. This replaces the in-memory-only rule the App's query cache followed (owner, 2026-10-21). Considered and rejected: memory only. It makes every cold start, and every Session reopened after a short grace, wait on the network, which on a phone over Wi-Fi left the App barely usable.
 
 ## The channel, and why the ticket is not the credential
 
