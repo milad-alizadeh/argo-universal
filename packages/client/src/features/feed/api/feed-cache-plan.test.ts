@@ -1,7 +1,7 @@
 import type { PlanUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { page, streamed, upsert } from '../../../../mocks/feed-state.mocks';
-import { sessionFeedHarness } from '../../../../mocks/feed/session-feed-store.mocks';
+import { feedCacheHarness } from '../../../../mocks/feed/feed-cache.mocks';
 
 const { rows, snapshot } = streamed;
 
@@ -48,33 +48,31 @@ const tail = {
   plan: todos,
 };
 
-describe('SessionFeedStore checklist outside the held rows', () => {
-  it('shows the checklist a tail page carries beside its rows', () => {
-    const h = sessionFeedHarness();
-    h.store.start();
-    h.store.mergeHistory([tail]);
-    h.store.receive({ type: 'snapshot', snapshot });
-    h.drawFrame();
+describe('FeedCache checklist outside the held rows', () => {
+  it('holds the checklist a tail page carries beside its rows', async () => {
+    const h = feedCacheHarness();
+    h.cache.start();
+    h.answer('tail', tail);
+    await h.queryClient.fetchQuery(h.cache.tailOptions());
 
-    expect(h.store.getState().view?.plan).toEqual(todos.plan);
-    expect(h.store.getState().feed.startCursor).toBe(tail.startCursor);
+    expect(h.cache.read().plan).toEqual(todos);
+    expect(h.cache.read().startCursor).toBe(tail.startCursor);
   });
 
-  it('shows a revision of the checklist that lands before the held rows', () => {
-    const h = sessionFeedHarness();
-    h.store.start();
-    h.store.mergeHistory([{ ...tail, plan: undefined }]);
-    h.store.receive({ type: 'snapshot', snapshot });
-    h.drawFrame();
+  it('holds a revision of the checklist that lands before the held rows', async () => {
+    const h = feedCacheHarness();
+    h.cache.start();
+    h.answer('tail', { ...tail, plan: undefined });
+    await h.queryClient.fetchQuery(h.cache.tailOptions());
 
-    h.store.receive({
+    h.cache.receive({
       type: upsert,
       row: steppedTodos,
       rev: steppedTodos.revision,
     });
     h.drawFrame();
 
-    expect(h.store.getState().view?.plan).toEqual(steppedTodos.plan);
-    expect(h.store.getState().feed.startCursor).toBe(tail.startCursor);
+    expect(h.cache.read().plan).toEqual(steppedTodos);
+    expect(h.cache.read().startCursor).toBe(tail.startCursor);
   });
 });

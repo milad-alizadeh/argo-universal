@@ -1,6 +1,6 @@
-import { chacha20poly1305 } from '@noble/ciphers/chacha.js';
 import { hmac } from '@noble/hashes/hmac.js';
 import { sha256 } from '@noble/hashes/sha2.js';
+import { aead as platformAead, type Aead, type AeadParams } from './aead';
 import { concatBytes } from './bytes';
 
 export const tagBytes = 16;
@@ -36,7 +36,10 @@ const nonceFor = (records: bigint): Uint8Array => {
 export class CipherState {
   private records = 0n;
 
-  public constructor(private key?: Uint8Array) {}
+  public constructor(
+    private key?: Uint8Array,
+    private readonly aead: Aead = platformAead,
+  ) {}
 
   public rekey(key: Uint8Array): void {
     this.key = key;
@@ -44,18 +47,18 @@ export class CipherState {
   }
 
   public seal(associated: Uint8Array, plaintext: Uint8Array): Uint8Array {
-    return this.cipher(associated).encrypt(plaintext);
+    return this.aead.seal(this.next(associated), plaintext);
   }
 
   public open(associated: Uint8Array, record: Uint8Array): Uint8Array {
-    return this.cipher(associated).decrypt(record);
+    return this.aead.open(this.next(associated), record);
   }
 
-  private cipher(associated: Uint8Array): ReturnType<typeof chacha20poly1305> {
+  private next(associated: Uint8Array): AeadParams {
     if (!this.key) throw new Error('The channel has no key yet');
     const nonce = nonceFor(this.records);
     this.records += 1n;
 
-    return chacha20poly1305(this.key, nonce, associated);
+    return { key: this.key, nonce, associated };
   }
 }

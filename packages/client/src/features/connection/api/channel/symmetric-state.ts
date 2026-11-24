@@ -1,5 +1,6 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { productCompatibility } from '@repo/contracts/product-identity';
+import type { Aead } from './aead';
 import { concatBytes, textBytes } from './bytes';
 import { CipherState, deriveKeys } from './cipher-state';
 
@@ -15,12 +16,14 @@ const pairingPrologue = textBytes(productCompatibility.pairingPrologue);
 export class SymmetricState {
   private hash: Uint8Array = protocolName;
   private chainingKey: Uint8Array = protocolName;
-  private readonly cipher = new CipherState();
+  private readonly cipher: CipherState;
 
   public constructor(
     serverPublicKey: Uint8Array,
     prologue: Uint8Array = pairingPrologue,
+    private readonly aead?: Aead,
   ) {
+    this.cipher = new CipherState(undefined, aead);
     this.mixHash(prologue);
     this.mixHash(serverPublicKey);
   }
@@ -56,6 +59,9 @@ export class SymmetricState {
       new Uint8Array(0),
     );
 
-    return [new CipherState(sending), new CipherState(receiving)];
+    return [
+      new CipherState(sending, this.aead),
+      new CipherState(receiving, this.aead),
+    ];
   }
 }
