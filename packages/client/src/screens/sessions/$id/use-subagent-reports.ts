@@ -3,18 +3,18 @@ import { useCallback } from 'react';
 import type { ClientError } from '#features/connection';
 import {
   toParentResults,
-  useSessionFeedStore,
   useFeedHistoryPages,
-  useFeedLiveChanges,
+  useFeedLive,
+  useFeedWindow,
   type FeedViewItem,
 } from '#features/feed';
 import { useReportsPages, type ReportQuery } from './subagent-report-query';
 
 type ParentResult = Extract<FeedViewItem, { type: 'parent_result' }>;
 
-type LiveReports = ReturnType<typeof useSessionFeedStore>;
+type Window = ReturnType<typeof useFeedWindow>;
 
-type Changes = ReturnType<typeof useFeedLiveChanges>;
+type Live = ReturnType<typeof useFeedLive>;
 
 type Reports = {
   items: ParentResult[];
@@ -28,7 +28,7 @@ type Reports = {
 const isReport = (item: FeedViewItem): item is ParentResult =>
   item.type === 'parent_result';
 
-function useReportFeed(parentId: string, childId: string): LiveReports {
+function useReportFeed(parentId: string, childId: string): Window {
   const translate = useCallback(
     (rows: readonly SessionUpdate[]) => toParentResults(rows, childId),
     [childId],
@@ -36,65 +36,55 @@ function useReportFeed(parentId: string, childId: string): LiveReports {
 
   const cacheId = JSON.stringify(['reports', parentId, childId]);
 
-  return useSessionFeedStore(parentId, translate, { cacheId, shown: true });
+  return useFeedWindow(parentId, translate, {
+    cacheId,
+    shown: true,
+    tail: false,
+  });
 }
 
 const noItems: readonly FeedViewItem[] = [];
 
-function reportItems(live: LiveReports): ParentResult[] {
-  return (live.state.view?.items ?? noItems)
+function reportItems(window: Window): ParentResult[] {
+  return (window.view?.items ?? noItems)
     .filter(isReport)
     .filter((item) => item.content.length > 0);
 }
 
-function useReportChanges(
-  parentId: string,
-  live: LiveReports,
-  pages: ReportQuery,
-): Changes {
-  useFeedHistoryPages(live.store, pages.data);
-
-  return useFeedLiveChanges(parentId, live.store, live.state.syncPoint);
-}
-
-function retryReports(
-  pages: ReportQuery,
-  live: LiveReports,
-  changes: Changes,
-): void {
+function retryReports(pages: ReportQuery, live: Live): void {
   void pages.refetch();
-
-  if (live.store.retryOpen()) changes.reset();
+  live.retryOpen();
 }
 
-const reportError = (live: LiveReports, changes: Changes): Reports['error'] =>
-  live.state.closure?.error ?? changes.error;
+const reportError = (live: Live): Reports['error'] =>
+  live.closure?.error ?? live.changes.error;
 
 function reportControls(
   pages: ReportQuery,
-  live: LiveReports,
-  changes: Changes,
+  window: Window,
+  live: Live,
 ): Reports {
   return {
-    items: reportItems(live),
+    items: reportItems(window),
     hasOlder: pages.hasNextPage,
     loading: pages.isFetchingNextPage,
     loadOlder: (): void => void pages.fetchNextPage(),
-    error: pages.error ?? reportError(live, changes),
-    retry: (): void => retryReports(pages, live, changes),
+    error: pages.error ?? reportError(live),
+    retry: (): void => retryReports(pages, live),
   };
 }
 
 export function useSubagentReports(parentId: string, childId: string): Reports {
-  const live = useReportFeed(parentId, childId);
+  const window = useReportFeed(parentId, childId);
 
   const pages = useReportsPages(
     parentId,
     childId,
-    live.state.feed.epoch ?? undefined,
+    window.feed.epoch ?? undefined,
   );
 
-  const changes = useReportChanges(parentId, live, pages);
+  useFeedHistoryPages(window.cache, pages.data);
+  const live = useFeedLive(parentId, window.cache, true);
 
-  return reportControls(pages, live, changes);
+  return reportControls(pages, window, live);
 }

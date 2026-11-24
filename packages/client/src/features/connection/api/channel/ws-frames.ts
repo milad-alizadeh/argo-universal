@@ -1,3 +1,4 @@
+import { ByteQueue } from './byte-queue';
 import { concatBytes } from './bytes';
 
 export const opcodes = {
@@ -38,6 +39,8 @@ const maxSixteenBits = 65_535;
 const sixteenBitExtra = 2;
 
 const sixtyFourBitExtra = 8;
+
+const maxHeaderBytes = prefixBytes + sixtyFourBitExtra;
 
 const extraByMarker = new Map([
   [sixteenBitMarker, sixteenBitExtra],
@@ -147,10 +150,10 @@ function readHeader(bytes: Uint8Array): Header | undefined {
  * Frames as the Server sends them, which are never masked. TCP hands over whatever has arrived, so a frame is read once all of it is here.
  */
 export class FrameParser {
-  private pending: Uint8Array = new Uint8Array(0);
+  private readonly pending = new ByteQueue();
 
   public push(chunk: Uint8Array): WebSocketFrame[] {
-    this.pending = concatBytes(this.pending, chunk);
+    this.pending.push(chunk);
     const frames: WebSocketFrame[] = [];
 
     for (let frame = this.take(); frame; frame = this.take())
@@ -160,14 +163,13 @@ export class FrameParser {
   }
 
   private take(): WebSocketFrame | undefined {
-    const header = readHeader(this.pending);
+    const header = readHeader(this.pending.peek(maxHeaderBytes));
 
     if (!header) return undefined;
     const end = header.size + header.length;
 
     if (this.pending.length < end) return undefined;
-    const payload = this.pending.slice(header.size, end);
-    this.pending = this.pending.subarray(end);
+    const payload = this.pending.take(end).subarray(header.size);
 
     return { fin: header.fin, opcode: header.opcode, payload };
   }

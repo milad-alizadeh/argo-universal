@@ -95,6 +95,20 @@ describe('createTRPCClient', () => {
     });
   });
 
+  it('pings the Server on its own, so a Connection that went silent is noticed', async () => {
+    const server = await startTransportTestServer();
+    const send = vi.spyOn(nativeSocketPrototype, 'send');
+    const { client, close } = createTRPCClient(server.url);
+
+    closers.push(close);
+
+    await client.system.info.query();
+
+    const pinged = (): boolean => send.mock.calls.some(([d]) => d === 'PING');
+
+    await expect.poll(pinged, { timeout: 8000 }).toBe(true);
+  }, 15_000);
+
   it('reports an updated surface when the App reconnects', async () => {
     const server = await startTransportTestServer();
     const send = vi.spyOn(nativeSocketPrototype, 'send');

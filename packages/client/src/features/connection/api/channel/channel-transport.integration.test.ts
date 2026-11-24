@@ -5,12 +5,13 @@ import {
   startAcpEngine,
 } from '@repo/engine/mocks/acp-engine';
 import { waitForAcpSessionIdle } from '@repo/engine/mocks/acp-feed';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import {
   endpointOf,
   nodeChannelPlatform,
   openAs,
   pairedNodeDevice,
+  silenceable,
 } from '../../../../../mocks/node-channel-platform';
 import { channelServerUrl, createTRPCClient } from '../trpc/create-trpc-client';
 import { createChannelTransport } from './channel-transport';
@@ -153,4 +154,33 @@ it('names the reason when the Pairing Ticket was already spent', async () => {
   await expect(openAs(host, nodeChannelPlatform(), { ticket })).rejects.toEqual(
     new PairingRefused('ticket-spent'),
   );
+});
+
+it('reconnects when the Connection goes silent without closing', async () => {
+  const host = await startEngineTestHost();
+  const platform = nodeChannelPlatform(await pairedNodeDevice(host));
+  const quiet = silenceable(platform.openSocket);
+  const { host: address, port, serverPublicKey } = await endpointOf(host);
+
+  const transport = createChannelTransport(
+    { address: { host: address, port }, serverPublicKey },
+    { ...platform, openSocket: quiet.openSocket },
+  );
+
+  const trpc = createTRPCClient(channelServerUrl, undefined, {
+    channel: transport,
+    keepAlive: { intervalMs: 50, pongTimeoutMs: 50 },
+  });
+
+  closers.push(trpc.close, quiet.close);
+
+  await trpc.client.system.info.query();
+  quiet.silence();
+
+  await vi.waitFor(() => expect(quiet.sockets).toHaveLength(2), {
+    timeout: 5000,
+  });
+  expect(await trpc.client.system.info.query()).toMatchObject({
+    version: '1.2.3',
+  });
 });
