@@ -1,14 +1,18 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { focusManager, QueryClientProvider } from '@tanstack/react-query';
+import {
+  focusManager,
+  QueryClientProvider,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type * as React from 'react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import type { Connection, OpenConnection } from '#features/connection';
 import { ConnectionContext, holdCacheOnline } from '#features/connection';
-import { TRPCProvider } from '#features/connection';
+import { TRPCProvider, useTRPC } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
-import { createQueryClient } from './query-cache';
+import { createQueryClient, keepServerLists } from './query-cache';
 import { ServerUrls } from './server-urls';
 
 export interface LookedAtServerProps {
@@ -95,6 +99,7 @@ function ConnectionProviders({
 }
 
 function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
+  keepServerLists(useQueryClient(), useTRPC());
   useCacheOnline(props.connection.connection);
 
   return <ServerContexts {...props} />;
