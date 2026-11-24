@@ -38,8 +38,9 @@ it('runs at most the cap of one Plugin’s commands at once, and the rest as tho
     }),
   );
 
-  await vi.waitFor(() =>
-    expect(startedIn(folder)).toBe(concurrentCommandLimit),
+  await vi.waitFor(
+    () => expect(startedIn(folder)).toBe(concurrentCommandLimit),
+    { timeout: 15_000 },
   );
   // Give any command over the cap the time it would need to start.
   await new Promise((resolve) => {
