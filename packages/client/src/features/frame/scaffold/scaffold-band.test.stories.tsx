@@ -250,14 +250,19 @@ export const HistoryButtonsJumpBetweenFixedPositions: ScaffoldStory = {
   play: controlledPlay(async ({ canvas }, controlled) => {
     await settleLayout(1440);
 
-    const history = (): HTMLElement[] =>
-      [backLabel, 'Forward'].map((name) =>
-        canvas.getByRole('button', { name }),
-      );
+    const history = (): [HTMLElement, HTMLElement] => [
+      canvas.getByRole('button', { name: backLabel }),
+      canvas.getByRole('button', { name: 'Forward' }),
+    ];
+    const positions = (): [Box, Box] => {
+      const [back, forward] = history();
+
+      return [box(back), box(forward)];
+    };
 
     await controlled.render({ sidebarShown: true });
     await settleMotion();
-    const open = history().map(box);
+    const open = positions();
     const list = canvas.getByTestId('desktop-list').getBoundingClientRect();
     await expect(open[0].x).toBeGreaterThan(list.left);
     const trailingGap = list.right - open[1].x - open[1].width;
@@ -266,7 +271,7 @@ export const HistoryButtonsJumpBetweenFixedPositions: ScaffoldStory = {
 
     await controlled.render({ sidebarShown: false });
     await settleMotion();
-    const closed = history().map(box);
+    const closed = positions();
     const capsule = canvas.getByTestId(leadingCapsule);
 
     for (const button of history())

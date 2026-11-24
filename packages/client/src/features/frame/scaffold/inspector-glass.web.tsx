@@ -53,6 +53,7 @@ export function InspectorGlass({
     value: box,
     frames: (from, to) => {
       const parentHeight = glass.current?.parentElement?.clientHeight ?? 0;
+
       const bounds = (value: InspectorBox): SurfaceBounds => ({
         ...value,
         height: value.height ?? parentHeight - value.y - value.bottom,

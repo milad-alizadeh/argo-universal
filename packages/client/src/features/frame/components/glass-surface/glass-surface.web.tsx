@@ -98,6 +98,7 @@ function glassFrames(
   });
 
   const panel = surfaceFrames(bounds(from), bounds(to));
+
   const rail = [
     { transform: `translateY(${railTop(props, from) - railTop(props, to)}px)` },
     { transform: 'translateY(0px)' },
