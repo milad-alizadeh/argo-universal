@@ -71,7 +71,7 @@ function Reading({
     );
 
     return (): void => clearTimeout(landed);
-  }, [position.settled]);
+  }, [position.settled, landing]);
 
   return (
     <View>
