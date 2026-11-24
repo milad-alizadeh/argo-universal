@@ -57,6 +57,54 @@ describe('applyFeedEvents', () => {
     expect(readFeed(queryClient)?.rows).toEqual(rows);
   });
 
+  it('writes a batch of rows once, to the same Feed as the rows one by one', () => {
+    const upserts = events.filter((event) => event.type === upsert);
+
+    const batch = upserts.flatMap((event) =>
+      event.type === upsert ? [event.row] : [],
+    );
+
+    const batched = createQueryClient();
+
+    heldFeed(batched, mergeNewestPage(emptyFeed, page([], 0)));
+    const writes = writesOf(batched);
+
+    applyFeedEvents({ queryClient: batched, cacheId: id, fetchRow: never }, [
+      {
+        type: 'rows.upsert',
+        rev: Math.max(...batch.map((row) => row.revision)),
+        rows: batch,
+      },
+    ]);
+
+    const single = createQueryClient();
+
+    heldFeed(single, mergeNewestPage(emptyFeed, page([], 0)));
+    applyFeedEvents(
+      { queryClient: single, cacheId: id, fetchRow: never },
+      upserts,
+    );
+
+    expect(writes()).toBe(1);
+    expect(readFeed(batched)).toEqual(readFeed(single));
+  });
+
+  it('keeps a held row whose revision is higher than the one in a batch', () => {
+    const queryClient = createQueryClient();
+    const [row] = rows;
+
+    if (!row) throw new Error('No streamed rows');
+    const newer = { ...row, revision: row.revision + 10 };
+
+    heldFeed(queryClient, mergeNewestPage(emptyFeed, page([newer], 0)));
+
+    applyFeedEvents({ queryClient, cacheId: id, fetchRow: never }, [
+      { type: 'rows.upsert', rev: row.revision, rows: [row] },
+    ]);
+
+    expect(readFeed(queryClient)?.rows).toEqual([newer]);
+  });
+
   it('keeps the snapshot it holds when the next one is equal', () => {
     const queryClient = createQueryClient();
     applyFeedEvents({ queryClient, cacheId: id, fetchRow: never }, [

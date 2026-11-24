@@ -1,4 +1,9 @@
-import type { FeedSubscribeOutput, RowUpsert } from '@repo/contracts';
+import type {
+  FeedSubscribeOutput,
+  RowsUpsert,
+  RowUpsert,
+  SessionUpdate,
+} from '@repo/contracts';
 import type { FeedDeps } from './feed';
 import { FeedCatchUp } from './feed-catch-up';
 import type { ClosedFeed } from './feed-listener';
@@ -8,14 +13,35 @@ import { MovedRowDelivery } from './moved-row-delivery';
 
 type SyncPoint = { after: number; storedRevision: number };
 
-function* catchUpRows(catchUp: FeedCatchUp): Generator<RowUpsert> {
+// Where a subscriber resumes, and whether it reads a catch-up in batches of rows.
+type Start = SyncPoint & { batched: boolean };
+
+// A page of rows as one event for an App that reads batches (its last row's revision names the event), or one per row.
+function* pageEvents(
+  page: readonly SessionUpdate[],
+  batched: boolean,
+): Generator<RowUpsert | RowsUpsert> {
+  const last = page.at(-1);
+
+  if (batched && last) {
+    yield { type: 'rows.upsert', rev: last.revision, rows: [...page] };
+
+    return;
+  }
+
+  for (const row of page) yield { type: 'row.upsert', rev: row.revision, row };
+}
+
+function* catchUpRows(
+  catchUp: FeedCatchUp,
+  batched: boolean,
+): Generator<RowUpsert | RowsUpsert> {
   for (
     let page = catchUp.readNextPage();
     page.length > 0;
     page = catchUp.readNextPage()
   )
-    for (const row of page)
-      yield { type: 'row.upsert', rev: row.revision, row };
+    yield* pageEvents(page, batched);
 }
 
 export class FeedDelivery {
@@ -23,13 +49,15 @@ export class FeedDelivery {
   private movedRows = new MovedRowDelivery([]);
   private delivered = 0;
   private readonly marks = new VoiceMarkerFilter();
+  private readonly batched: boolean;
 
   public constructor(
     private readonly sources: FeedDeps,
     private readonly sessionId: string,
-    syncPoint: SyncPoint,
+    start: Start,
   ) {
-    this.catchUp = new FeedCatchUp(sources, sessionId, syncPoint);
+    this.batched = start.batched;
+    this.catchUp = new FeedCatchUp(sources, sessionId, start);
   }
 
   // Everything delivered leaves without the voice marks of Agent messages.
@@ -56,7 +84,7 @@ export class FeedDelivery {
   }
 
   private *readCaughtUp(): Generator<FeedSubscribeOutput> {
-    yield* catchUpRows(this.catchUp);
+    yield* catchUpRows(this.catchUp, this.batched);
     this.movedRows = new MovedRowDelivery(this.catchUp.readMovedRows());
     this.delivered = Math.max(this.delivered, this.catchUp.highWaterMark);
   }
