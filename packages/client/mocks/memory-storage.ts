@@ -1,7 +1,7 @@
 // Browser storage, which AsyncStorage uses on the web, held in memory.
 export function memoryStorage(): Pick<
   Storage,
-  'getItem' | 'setItem' | 'removeItem' | 'clear'
+  'getItem' | 'setItem' | 'removeItem' | 'clear' | 'key' | 'length'
 > {
   const values = new Map<string, string>();
 
@@ -10,5 +10,9 @@ export function memoryStorage(): Pick<
     setItem: (key, value) => values.set(key, value) && undefined,
     removeItem: (key) => values.delete(key) && undefined,
     clear: () => values.clear(),
+    key: (index) => [...values.keys()][index] ?? null,
+    get length() {
+      return values.size;
+    },
   };
 }

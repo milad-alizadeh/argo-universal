@@ -137,9 +137,8 @@ type StartedSessions = UseInfiniteQueryResult<
 
 function useStartedSessions(enabled: boolean): StartedSessions {
   const list = useTRPC().session.list;
-  useSessionListUpdates(enabled);
 
-  return useInfiniteQuery(
+  const started = useInfiniteQuery(
     list.infiniteQueryOptions(
       { taskSessions: 'started' },
       {
@@ -148,6 +147,11 @@ function useStartedSessions(enabled: boolean): StartedSessions {
       },
     ),
   );
+
+  // Live updates start once the list holds rows, from the Device or the Server, for them to land on.
+  useSessionListUpdates(enabled && !started.isPending);
+
+  return started;
 }
 
 function listStatus(
