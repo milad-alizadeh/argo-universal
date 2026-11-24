@@ -4,6 +4,7 @@ import type {
   PersistedQuery,
 } from '@tanstack/query-persist-client-core';
 import {
+  hashKey,
   type Query,
   type QueryClient,
   partialMatchKey,
@@ -11,7 +12,9 @@ import {
 import type { TRPC } from '#features/connection';
 import {
   feedKeyPrefix,
+  feedKey,
   feedPageSize,
+  snapshotKey,
   snapshotKeyPrefix,
 } from './features/feed/api/feed-query';
 import { keptOnDevice } from './features/feed/api/restore-feed';
@@ -20,8 +23,11 @@ import {
   keepNewestRows,
 } from './features/feed/view/feed-state';
 import {
+  noteFeedWritten,
+  serverCacheKey,
   serverCacheStorage,
   serverQueryPersister,
+  takeOldFeeds,
 } from './features/servers/server-cache-store';
 
 /*
@@ -84,49 +90,16 @@ const persisterOf = ({
 }: DeviceCache): ReturnType<typeof serverQueryPersister> =>
   serverQueryPersister(serverId, { storage, serialize: trimmed });
 
-interface KeptEntry {
-  key: string;
-  queryKey: readonly unknown[];
-  at: number;
-}
-
-async function keptEntries(storage: PersisterStorage): Promise<KeptEntry[]> {
-  const entries = (await storage.entries?.()) ?? [];
-
-  return entries.flatMap(([key, value]): KeptEntry[] => {
-    try {
-      const kept: PersistedQuery = JSON.parse(value);
-
-      return [{ key, queryKey: kept.queryKey, at: kept.state.dataUpdatedAt }];
-    } catch {
-      return [];
-    }
-  });
-}
-
-// Drops the Feeds beyond the newest `feedsKept`, and the snapshot kept beside each.
+// Drops the Feeds beyond the newest `feedsKept`, and the snapshot kept beside each; which they are comes from the Server's index, without reading a Feed.
 async function keepNewestFeeds({
   serverId,
   storage = serverCacheStorage(serverId),
 }: DeviceCache): Promise<void> {
-  const entries = await keptEntries(storage);
+  const dropped = await takeOldFeeds(serverId, feedsKept, Date.now());
 
-  const dropped = [...entries]
-    .filter(({ queryKey }) => partialMatchKey(queryKey, feedKeyPrefix))
-    .sort((a, b) => b.at - a.at)
-
-    .slice(feedsKept)
-    .map(({ queryKey }) => queryKey[2]);
-
-  const gone = new Set(dropped);
-
-  for (const entry of entries)
-    if (
-      (partialMatchKey(entry.queryKey, feedKeyPrefix) ||
-        partialMatchKey(entry.queryKey, snapshotKeyPrefix)) &&
-      gone.has(entry.queryKey[2])
-    )
-      await storage.removeItem(entry.key);
+  for (const cacheId of dropped)
+    for (const key of [feedKey(cacheId), snapshotKey(cacheId)])
+      await storage.removeItem(serverCacheKey(serverId, hashKey(key)));
 }
 
 /*
@@ -142,14 +115,17 @@ export function restoreFromDevice(
 ): void {
   const persister = persisterOf(cache);
 
-  for (const key of keptKeys(trpc))
+  for (const key of keptKeys(trpc)) {
+    const defaults = queryClient.getQueryDefaults(key);
+
     queryClient.setQueryDefaults(key, {
-      ...queryClient.getQueryDefaults(key),
+      ...defaults,
       persister: persister.persisterFn,
-      meta: { [keptOnDevice]: persister.retrieveQuery },
+      meta: { ...defaults.meta, [keptOnDevice]: persister.retrieveQuery },
       // The first read restores from the Device, so it runs with the Connection down; only a read of the Server waits for it.
       networkMode: 'offlineFirst',
     });
+  }
 
   void persister.persisterGc().then(() => keepNewestFeeds(cache));
 }
@@ -164,17 +140,24 @@ export function writeToDevice(
   const kept = keptKeys(trpc);
   const writers = new Map<string, LiteThrottler<() => void>>();
 
+  const written = new Set<string>();
+
   // The first write of a Feed is the one that can take a Server past its limit.
   const write = async (query: Query): Promise<void> => {
     const first = !written.has(query.queryHash);
     written.add(query.queryHash);
     await persister.persistQuery(query);
 
-    if (first && partialMatchKey(query.queryKey, feedKeyPrefix))
-      await keepNewestFeeds(cache);
-  };
+    if (!partialMatchKey(query.queryKey, feedKeyPrefix)) return;
 
-  const written = new Set<string>();
+    await noteFeedWritten(
+      cache.serverId,
+      String(query.queryKey[2]),
+      Date.now(),
+    );
+
+    if (first) await keepNewestFeeds(cache);
+  };
 
   const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
     if (event.type !== 'updated' || event.action.type !== 'success') return;
