@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { useMediaUrl } from '#primitives/content/media-url';
+import { useMediaUri } from '#primitives/content/media-url';
 import {
   useMutedAutoPlay,
   useVideoControls,
@@ -94,11 +94,12 @@ function useBrowserPlayer(props: BrowserPlayerProps): BrowserPlayer {
 }
 
 function useSourceAttributes(props: BrowserPlayerProps): VideoAttributes {
-  const mediaUrl = useMediaUrl();
+  const src = useMediaUri(props.source);
+  const poster = useMediaUri(props.poster);
 
   return {
-    src: String(mediaUrl(props.source)),
-    poster: props.poster && String(mediaUrl(props.poster)),
+    src: String(src),
+    poster: poster === undefined ? undefined : String(poster),
     'aria-label': props.accessibilityLabel,
     className: 'size-full object-contain',
     onError: props.onError,

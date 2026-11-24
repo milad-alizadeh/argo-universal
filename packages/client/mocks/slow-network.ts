@@ -62,10 +62,12 @@ function wire({ latencyMs = 0, bytesPerSecond }: Link): Wire {
   };
 }
 
-function slowed(inner: ByteSocket, profile: NetworkProfile): ByteSocket {
-  const up = wire(profile.up);
-  const down = wire(profile.down);
+interface Wires {
+  up: Wire;
+  down: Wire;
+}
 
+function slowed(inner: ByteSocket, { up, down }: Wires): ByteSocket {
   const slow: ByteSocket = {
     write: (data) => up.send(() => inner.write(data), data.length),
     close: () => up.send(() => inner.close(), 0),
@@ -82,13 +84,16 @@ function slowed(inner: ByteSocket, profile: NetworkProfile): ByteSocket {
 
 /*
  * A test wrapper on `ChannelPlatform.openSocket` that adds latency and a bandwidth limit to each direction, so an integration test can run the real channel over a slow Connection and measure what a transport change gains. Opening the socket costs one round trip, as a TCP and upgrade would.
+ * Every socket opened through one wrapper shares its two links, as a phone's sockets share one radio: twelve sockets get no more bandwidth than one.
  */
 export function slowNetwork(
   open: OpenSocket,
   profile: NetworkProfile,
 ): OpenSocket {
+  const wires = { up: wire(profile.up), down: wire(profile.down) };
+
   return async (address, headers) => {
-    const socket = slowed(await open(address, headers), profile);
+    const socket = slowed(await open(address, headers), wires);
     const connect = (profile.up.latencyMs ?? 0) + (profile.down.latencyMs ?? 0);
 
     await new Promise((resolve) => setTimeout(resolve, connect));
