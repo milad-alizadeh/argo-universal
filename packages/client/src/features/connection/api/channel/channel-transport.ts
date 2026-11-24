@@ -4,6 +4,7 @@ import type { ChannelAddress, OpenSocket } from './byte-socket';
 import { channelFetch } from './channel-fetch';
 import { ChannelRoute, type LocateServer } from './channel-route';
 import { channelWebSocket } from './channel-web-socket';
+import { mediaFetch } from './media-fetch';
 import type { NativeChannel } from './native-channel';
 import { nativeChannelWebSocket } from './native-channel-web-socket';
 import {
@@ -121,6 +122,11 @@ export function createChannelTransport(
   const open = opener(target, platform, shared);
   const { nativeChannel } = platform;
 
+  const fetch = channelFetch({
+    openChannel: open,
+    randomBytes: platform.randomBytes,
+  });
+
   const socketDeps = {
     openChannel: open,
     randomBytes: platform.randomBytes,
@@ -139,9 +145,11 @@ export function createChannelTransport(
           native: nativeChannel,
         })
       : channelWebSocket(socketDeps),
-    fetch: channelFetch({
+    fetch,
+    media: mediaFetch({
       openChannel: open,
       randomBytes: platform.randomBytes,
+      fallback: fetch,
     }),
   };
 }
