@@ -78,10 +78,10 @@ function Scrim(props: {
   const press = useScrimPress(props.dismissible);
 
   return (
-    <RadixDialog.Overlay>
-      <Pressable className={scrimClass} {...press}>
-        {props.children}
-      </Pressable>
+    <RadixDialog.Overlay className={scrimClass}>
+      {/* A click that crosses the card edge targets the endpoints' common ancestor. */}
+      <Pressable className="absolute inset-0" {...press} />
+      {props.children}
     </RadixDialog.Overlay>
   );
 }
@@ -91,7 +91,7 @@ type ScrimPress = Pick<
   'onPointerDown' | 'onPress'
 >;
 
-// The press must begin and end on the bare scrim; every pointer down inside the modal, the card's included, is read.
+// The dismiss target only takes a press that begins and ends on the scrim.
 function useScrimPress(dismissible: boolean | undefined): ScrimPress {
   const { onOpenChange } = useCentredModalState();
   const began = useRef(false);

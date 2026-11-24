@@ -173,7 +173,7 @@ Then('New Session is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions\/new(\?|$)/);
 });
 
-const settingsModal = (page: Page): Locator =>
+export const settingsModal = (page: Page): Locator =>
   page.getByRole('dialog', { name: 'Settings', exact: true });
 
 export async function closeSettingsModal(page: Page): Promise<void> {
