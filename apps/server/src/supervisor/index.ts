@@ -2,6 +2,7 @@ import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { writeLog } from '@repo/machine-log';
 import { createActor, type ActorRefFrom, type SnapshotFrom } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
+import { startLoadRecorder } from './load-recorder';
 import { supervisorMachine } from './machine';
 
 export function startSupervisor(options: {
@@ -13,7 +14,12 @@ export function startSupervisor(options: {
   const log = (line: string): void =>
     writeLog({ home, label: 'supervisor', line });
 
-  const supervisor = createSupervisor(home, options);
+  const loadRecorder = startLoadRecorder(home);
+  const supervisor = createSupervisor(home, options, loadRecorder);
+  supervisor.subscribe({
+    complete: (): void => loadRecorder.stop(),
+    error: (): void => loadRecorder.stop(),
+  });
 
   observeSupervisor(supervisor, log);
   listenForStop(supervisor, log);
@@ -23,10 +29,12 @@ export function startSupervisor(options: {
 const createSupervisor = (
   home: string,
   options: { watch: boolean; engineEntry?: string },
+  loadRecorder: ReturnType<typeof startLoadRecorder>,
 ): ActorRefFrom<typeof supervisorMachine> =>
   createActor(supervisorMachine, {
     input: {
       home,
+      loadRecorder,
       now: Date.now,
       version: packageJson.version,
       startedAt: new Date().toISOString(),
