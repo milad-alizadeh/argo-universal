@@ -4,7 +4,6 @@ import {
   type FeedSubscribeOutput,
   feedEventId,
   FeedSubscribeInput,
-  FeedSyncPoint,
   syncPointOfEventId,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
@@ -16,7 +15,6 @@ import {
 } from '@trpc/client';
 import { type Observer, observable } from '@trpc/server/observable';
 import { type JSX, useEffect, useState } from 'react';
-import { z } from 'zod';
 import {
   ConnectionContext,
   useConnectionState,
@@ -33,32 +31,10 @@ import {
 } from '../../src/features/feed/view/feed-state';
 import { createQueryClient } from '../../src/query-cache';
 import { page, rowEvents, streamed } from '../feed-state.mocks';
+import { type Link, connectionOf, watchConnection } from './connection-link';
+import { OldSubscribeInput, refusalOf } from './old-feed-server';
 
 const sessionId = 'session-1';
-
-const noop = (): void => {};
-
-interface Link {
-  state: ConnectionState;
-  listeners: Set<() => void>;
-}
-
-function connectionOf(link: Link): Connection {
-  return {
-    state: () => link.state,
-    subscribe: (listener) => {
-      link.listeners.add(listener);
-
-      return () => void link.listeners.delete(listener);
-    },
-    nextAttempt: () => Promise.resolve(),
-    watch: noop,
-    foreground: noop,
-    retry: noop,
-    refuse: noop,
-    stop: noop,
-  };
-}
 
 type Wire = Observer<
   {
@@ -78,7 +54,7 @@ interface Server {
   // The `lastEventId` of each `feed.subscribe` the App opened.
   opened: (string | undefined)[];
   // The `after` of each `feed.subscribe` an old Server accepted: the input it knew, and plain events.
-  legacyOpened: (FeedSyncPoint | null)[];
+  legacyOpened: FeedSubscribeInput['after'][];
   // How many `feed.subscribe` an old Server refused for a key it did not know.
   refused: number;
   // Whether each `feed.subscribe` the App opened asked for the tail.
@@ -166,32 +142,20 @@ function openSubscription(
     });
 }
 
-// What a Server built before the tail and event ids accepted: `feed.subscribe` took a strict `{ sessionId, after }` and sent plain events.
-const OldSubscribeInput = z.strictObject({
-  sessionId: z.string(),
-  after: FeedSyncPoint.nullable(),
-});
-
 // An old Server refuses a key it does not know as a bad request, as its strict input did.
-function openOldSubscription(server: Server, wire: Wire, input: unknown): void {
-  const parsed = OldSubscribeInput.safeParse(input);
-
-  if (!parsed.success) {
+function openOldSubscription(
+  server: Server,
+  wire: Wire,
+  input: ReturnType<typeof OldSubscribeInput.safeParse>,
+): void {
+  if (!input.success) {
     server.refused += 1;
-    wire.error(
-      TRPCClientError.from({
-        error: {
-          message: parsed.error.message,
-          code: -32600,
-          data: { code: 'BAD_REQUEST', httpStatus: 400 },
-        },
-      }),
-    );
+    wire.error(refusalOf(input.error));
 
     return;
   }
 
-  const { after } = parsed.data;
+  const { after } = input.data;
 
   server.legacyOpened.push(after);
   server.open = wire;
@@ -217,7 +181,11 @@ function clientOf(server: Server): TRPCClient<AppRouter> {
               throw new Error(`Unexpected request: ${op.path}`);
 
             if (server.old) {
-              openOldSubscription(server, wire, op.input);
+              openOldSubscription(
+                server,
+                wire,
+                OldSubscribeInput.safeParse(op.input),
+              );
 
               return (): void => {
                 server.closed += 1;
@@ -296,36 +264,6 @@ const newServer = (tail: Promise<FeedPageOutput>, old: boolean): Server => ({
   closed: 0,
   tail,
 });
-
-interface ConnectionWatch {
-  connect: (state: ConnectionState) => Promise<void>;
-  note: (state: ConnectionState) => void;
-}
-
-// Moves the Connection, and settles once the screen has drawn the state it moved to.
-function watchConnection(link: Link): ConnectionWatch {
-  let drawn: ConnectionState = 'open';
-  const waiting: [ConnectionState, () => void][] = [];
-
-  return {
-    connect: (state) => {
-      link.state = state;
-
-      for (const listener of link.listeners) listener();
-
-      return drawn === state
-        ? Promise.resolve()
-        : new Promise((resolve) => void waiting.push([state, resolve]));
-    },
-    note: (state) => {
-      drawn = state;
-
-      for (const [wanted, resolve] of waiting.splice(0))
-        if (wanted === state) resolve();
-        else waiting.push([wanted, resolve]);
-    },
-  };
-}
 
 // A Session's Feed as an App that opened it before holds it (unless `seeded` is false, and then its tail page waits for `answerTail`), with a Server whose answers a fake link gives.
 export function feedLiveFixture({

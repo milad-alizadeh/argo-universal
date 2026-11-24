@@ -125,6 +125,8 @@ interface ResumePoint {
   read: () => string | undefined;
   // Opens again with `id`, which the cache holds a newer revision than the id it opened with.
   reopenAt: (id: string | undefined) => void;
+  // Opens again cold, on the tail.
+  reopenCold: () => void;
 }
 
 // The id the subscription opens with, read when it opens (on showing the Session), not on every row, and read again for a reopen. No id is a cold open: the subscription brings the tail itself. From then on tRPC's client sends the id of the last event it received when its socket reconnects.
@@ -146,6 +148,7 @@ function useResumePoint(cacheId: string, opening: Opening): ResumePoint {
       reopened !== null && reopened.opening === opened ? reopened.id : opened,
     read: (): string | undefined => pointToOpen(queryClient, cacheId, opening),
     reopenAt: (id): void => setReopened({ opening: opened, id }),
+    reopenCold: (): void => setReopened({ opening: opened, id: undefined }),
   };
 }
 
@@ -172,16 +175,77 @@ function subscribeInput(
       after: lastEventId ? syncPointOfEventId(lastEventId) : null,
     };
 
-  return {
-    sessionId: id,
-    after: null,
-    lastEventId,
-    tail: coldOpen && lastEventId === undefined ? true : undefined,
-  };
+  const input: FeedSubscribeInput = { sessionId: id, after: null, lastEventId };
+
+  if (coldOpen && lastEventId === undefined) input.tail = true;
+
+  return input;
 }
 
 const isRefusal = (error: ClientError): boolean =>
   error.data?.code === 'BAD_REQUEST';
+
+interface Subscribing {
+  opens: Opens;
+  shown: boolean;
+  onRefused: () => void;
+  onEvent: (event: FeedSubscribeOutput) => void;
+}
+
+function useFeedChanges(
+  sessionId: string | undefined,
+  { opens, shown, onRefused, onEvent }: Subscribing,
+): TRPCSubscriptionResult<Received, ClientError> {
+  const trpc = useTRPC();
+
+  return useSubscription(
+    trpc.feed.subscribe.subscriptionOptions(subscribeInput(sessionId, opens), {
+      enabled: sessionId !== undefined && shown && canOpen(opens),
+      onData: (received) => onEvent(eventOf(received)),
+      onError: (error) => {
+        if (!opens.refused && isRefusal(error)) onRefused();
+      },
+    }),
+  );
+}
+
+interface Reopening {
+  changes: TRPCSubscriptionResult<Received, ClientError>;
+  resume: ResumePoint;
+  // How many times the Server has rebuilt the Feed.
+  rebuilt: number;
+  // A rebuilt Feed has no rows until a cold open brings its tail.
+  coldOnRebuild: boolean;
+}
+
+// Opens the subscription again where the cache is now, and again on the tail when the Server rebuilt the Feed.
+function useReopen({
+  changes,
+  resume: { lastEventId, read, reopenAt, reopenCold },
+  rebuilt,
+  coldOnRebuild,
+}: Reopening): () => void {
+  const { reset } = changes;
+  const seen = useRef(rebuilt);
+
+  useEffect(() => {
+    if (rebuilt === seen.current) return;
+    seen.current = rebuilt;
+
+    if (!coldOnRebuild) return;
+
+    if (lastEventId === undefined) reset();
+    else reopenCold();
+  });
+
+  // A new open starts after the newest revision the cache holds: a new id opens it by itself. The same one (none, for a cold open, which is also what a Feed with nothing held opens with) would not re-key the subscription, so it is reset instead, which opens it again with the same input.
+  return (): void => {
+    const next = read();
+
+    if (next === lastEventId) reset();
+    else reopenAt(next);
+  };
+}
 
 export function useFeedLive(
   sessionId: string | undefined,
@@ -194,50 +258,36 @@ export function useFeedLive(
     onRefused,
   }: LiveOptions,
 ): FeedLive {
-  const trpc = useTRPC();
   const [closure, setClosure] = useState<FeedLive['closure']>(null);
+  const [rebuilt, setRebuilt] = useState(0);
   const waitsForRows = !coldOpen || refused;
 
-  const receive = useFrames(sessionId, { cacheId, shown }, () => {
-    if (!waitsForRows) restartCold();
-  });
+  const receive = useFrames(sessionId, { cacheId, shown }, () =>
+    setRebuilt((count) => count + 1),
+  );
 
-  const { lastEventId, read, reopenAt } = useResumePoint(cacheId, {
+  const resume = useResumePoint(cacheId, {
     shown,
     rows: waitsForRows ? held : null,
   });
 
-  const opens = { refused, coldOpen, lastEventId };
+  const changes = useFeedChanges(sessionId, {
+    opens: { refused, coldOpen, lastEventId: resume.lastEventId },
+    shown,
+    onRefused,
+    onEvent: (event) => {
+      if (event.type === 'closed')
+        setClosure({ error: closedFeedError(event) });
+      else receive(event);
+    },
+  });
 
-  const changes = useSubscription(
-    trpc.feed.subscribe.subscriptionOptions(subscribeInput(sessionId, opens), {
-      enabled: sessionId !== undefined && shown && canOpen(opens),
-      onData: (received) => {
-        const event = eventOf(received);
-
-        if (event.type === 'closed')
-          setClosure({ error: closedFeedError(event) });
-        else receive(event);
-      },
-      onError: (error) => {
-        if (!refused && isRefusal(error)) onRefused();
-      },
-    }),
-  );
-
-  // A new open starts after the newest revision the cache holds: a new id opens it by itself. With no id (a cold open: nothing is held, such as after a reset) the open has nothing new to tell the subscription apart, so it is reset, which opens it again with the same input.
-  function reopen(): void {
-    const next = read();
-
-    if (next === lastEventId) changes.reset();
-    else reopenAt(next);
-  }
-
-  // The Server rebuilt the Feed: what is held goes, and a cold open brings the new tail.
-  function restartCold(): void {
-    if (lastEventId === undefined) changes.reset();
-    else reopenAt(undefined);
-  }
+  const reopen = useReopen({
+    changes,
+    resume,
+    rebuilt,
+    coldOnRebuild: !waitsForRows,
+  });
 
   useResubscribeOnReconnect({ status: changes.status, reset: reopen });
 
