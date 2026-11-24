@@ -74,10 +74,12 @@ When(
       exact: true,
       includeHidden: true,
     });
+
     const [dim, box] = await Promise.all([
       tile.boundingBox(),
       picker(page, title).boundingBox(),
     ]);
+
     if (!dim || !box) throw new Error('The rail tile or picker has no bounds.');
 
     await page.mouse.move(dim.x + dim.width / 2, dim.y + dim.height / 2);
