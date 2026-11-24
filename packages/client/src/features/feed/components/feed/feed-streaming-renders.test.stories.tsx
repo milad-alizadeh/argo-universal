@@ -6,9 +6,10 @@ import {
 } from '@repo/kit/mocks/render-counts';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Lexer } from 'marked';
 import type * as React from 'react';
 import { Profiler, useEffect, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, spyOn, waitFor } from 'storybook/test';
 import { recordedAgentMessage } from '../../../../lib/product/feed-message.mocks';
 import type { FeedView } from '../../view/feed-view';
 import { keepUnchangedItems } from '../../view/keep-unchanged-items';
@@ -38,7 +39,9 @@ type FeedRowUpdate = RenderCount['updates'][number];
 
 const streamedId = 'streamed-answer';
 
+// Inline syntax ahead of the words, so the answer takes the lexer's path for a line that may hold an unfinished span.
 const chunkWords = (chunks: number): string =>
+  '`code` [link](http://example.com) ' +
   Array.from({ length: chunks }, (_unused, index) => `chunk${index}`).join(' ');
 
 const answerAfter = (chunks: number): SessionUpdate => ({
@@ -115,14 +118,24 @@ export const ChunkDrawsOnlyTheStreamedRowAndLiveHeader: Story = {
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
     await waitFor(() => expect(stream.send).not.toBeNull(), settleWait);
-    await canvas.findByText(chunkWords(1));
+    await waitFor(() => expect(canvasElement.textContent).toContain('chunk0'));
+    const lex = spyOn(Lexer.prototype, 'lex');
+    const lexed: number[] = [];
 
     const counts = await renders.during(canvasElement, async () => {
       for (let chunk = 2; chunk <= sentChunks + 1; chunk += 1) {
+        lex.mockClear();
         stream.send?.();
-        await canvas.findByText(chunkWords(chunk));
+
+        await waitFor(() =>
+          expect(canvasElement.textContent).toContain(`chunk${chunk - 1}`),
+        );
+        lexed.push(lex.mock.calls.length);
       }
     });
+
+    lex.mockRestore();
+    await expect(lexed).toEqual(Array.from({ length: sentChunks }, () => 1));
 
     await expect(rowsThatUpdated(counts, isStreamed)).toHaveLength(sentChunks);
     await expect(
