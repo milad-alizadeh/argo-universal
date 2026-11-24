@@ -56,7 +56,7 @@ const saysSpent = (reply: Reply): boolean =>
   headerOf(reply, 'retry-after') !== undefined ||
   headerOf(reply, 'x-ratelimit-remaining') === '0';
 
-const isRateLimit = (reply: Reply): boolean =>
+export const isRateLimit = (reply: Reply): boolean =>
   reply.status === tooManyStatus ||
   (reply.status === forbiddenStatus && saysSpent(reply));
 

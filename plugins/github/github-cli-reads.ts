@@ -1,6 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Json } from './json';
-import { githubHost } from './pull-reads';
+import { githubHost, isRateLimit } from './pull-reads';
 
 type Fetch = Argo['fetch'];
 
@@ -74,11 +74,9 @@ const notFoundStatus = 404;
  * approved Argo's app answers 403, or 404 to hide the repository. A spent rate limit is no such refusal, and is left to
  * the fetch gate that honours `retry-after` and `x-ratelimit-reset`.
  */
-const refusedToAccount = ({ status, headers }: Reply): boolean =>
-  (status === forbiddenStatus || status === notFoundStatus) &&
-  !Object.keys(headers).some((name) =>
-    ['retry-after', 'x-ratelimit-remaining'].includes(name.toLowerCase()),
-  );
+const refusedToAccount = (reply: Reply): boolean =>
+  (reply.status === forbiddenStatus || reply.status === notFoundStatus) &&
+  !isRateLimit(reply);
 
 /*
  * This transport is used only by the GitHub Plugin's Project-scoped PR reads. "Prefer GitHub CLI for reads" makes the

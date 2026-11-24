@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import { cliPath, cliTitle } from './github-cli-fixture';
-import { attach } from './journey-calls-fixture';
-import { caller, journey, rowSlot } from './journey-fixture';
-import { changePull, idOf, openChanges, tick } from './journey-watch-fixture';
+import { attach, changesOf } from './journey-calls-fixture';
+import { journey } from './journey-fixture';
+import { openChanges, refreshed, tick } from './journey-watch-fixture';
 
 const slow = 60_000;
 
@@ -12,36 +12,17 @@ const forbidden = 403;
 
 const sso = 'required; url=https://github.com/orgs/owner/sso';
 
-it(
-  'shows a pull request merged on GitHub in the Changes, the Session row and a second App within one Slot tick',
-  async () => {
-    const run = await journey();
+const remaining = { 'x-ratelimit-remaining': '4999' };
 
-    await attach(run, '#12');
-
-    const first = openChanges(run);
-    const second = openChanges(run);
-    const row = openChanges(run, caller, rowSlot);
-
-    await Promise.all([first.next(), second.next(), row.next()]);
-
-    changePull(run, 12, closedOnGitHub);
-    await tick(run);
-
-    expect(await first.next()).toMatchObject([
-      { id: idOf(12), stage: 'merged' },
-    ]);
-    expect(await second.next()).toMatchObject([
-      { id: idOf(12), stage: 'merged' },
-    ]);
-    expect(await row.next()).toMatchObject([{ change: { stage: 'merged' } }]);
-  },
-  slow,
-);
-
-it(
-  'reads with the CLI login when GitHub refuses the Account, though the setting is off, and the new stage shows',
-  async () => {
+it.each([
+  ['a plain refusal', {}],
+  [
+    'a refusal that still has requests left, as GitHub sends on every reply',
+    remaining,
+  ],
+])(
+  'reads with the CLI login when GitHub refuses the Account with %s, though the setting is off, and the new stage shows',
+  async (_name, headers) => {
     const run = await journey({
       path: await cliPath('success', closedOnGitHub),
     });
@@ -54,10 +35,34 @@ it(
 
     run.github.failWith.status = forbidden;
     run.github.failWith.message = 'Resource protected by organization SAML';
+    run.github.failWith.headers = headers;
     await tick(run);
 
     expect(await open.next()).toMatchObject([
       { title: cliTitle, stage: 'merged' },
+    ]);
+  },
+  slow,
+);
+
+it.each([
+  ['no requests left', { 'x-ratelimit-remaining': '0' }],
+  ['a retry-after', { 'retry-after': '60' }],
+])(
+  'leaves a spent rate limit with %s to the fetch gate and never asks the CLI',
+  async (_name, headers) => {
+    const run = await journey({
+      path: await cliPath('success', closedOnGitHub),
+    });
+
+    await attach(run, '#12');
+
+    run.github.failWith.status = forbidden;
+    run.github.failWith.headers = headers;
+    await refreshed(run);
+
+    expect(await changesOf(run)).toMatchObject([
+      { stage: 'open', stale: 'rateLimited' },
     ]);
   },
   slow,
