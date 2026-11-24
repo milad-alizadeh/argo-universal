@@ -44,7 +44,7 @@ function useMeasuredHeight(
 
     setRenderedHeight(height);
     setMeasured(true);
-  }, []);
+  }, [resting]);
 
   const forget = useCallback((): void => setMeasured(false), []);
 
