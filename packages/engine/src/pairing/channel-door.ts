@@ -90,9 +90,13 @@ export class ChannelDoor {
       ? await this.admit(received.deviceKey, claim, { socket, reply })
       : replayed;
 
-    const answered = reply.welcome(admission.welcome);
+    const welcome = agreed(claim, admission.welcome);
+    const answered = reply.welcome(welcome);
 
-    this.open({ socket, message, answered }, admission.identity);
+    this.open(
+      { socket, message, answered, compression: 'compression' in welcome },
+      admission.identity,
+    );
   }
 
   // The address a Device knocks from is the one thing about it the Server learns before it proves anything, and what a Ticket's wrong guesses are held against.
@@ -108,13 +112,13 @@ export class ChannelDoor {
   }
 
   private open(
-    { socket, message, answered }: AnsweredSocket,
+    { socket, message, answered, compression }: AnsweredSocket,
     identity: RpcIdentity | undefined,
   ): void {
     if (!identity) return void socket.end();
 
     if (message.rest.length > 0) socket.unshift(message.rest);
-    const channel = new ChannelSocket(socket, answered.cipher);
+    const channel = new ChannelSocket(socket, answered.cipher, compression);
     admitAs(channel, identity);
     this.track(identity, channel);
     this.deps.serve(channel);
@@ -137,7 +141,17 @@ type AnsweredSocket = {
   socket: ChannelCarrier;
   message: FirstMessage;
   answered: ReturnType<ReturnType<typeof receiveHandshake>['answer']>;
+  compression: boolean;
 };
+
+// The Server compresses only for a Device that offered it, and says so in the welcome so the App knows every record carries the leading byte.
+const agreed = (
+  claim: PairingClaim,
+  welcome: Admission['welcome'],
+): Admission['welcome'] =>
+  claim.compression && welcome.paired
+    ? { ...welcome, compression: claim.compression }
+    : welcome;
 
 const replayed: Admission = {
   welcome: { paired: false, refusal: 'replayed' },

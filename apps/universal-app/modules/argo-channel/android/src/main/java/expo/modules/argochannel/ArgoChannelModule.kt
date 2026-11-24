@@ -23,6 +23,7 @@ class HandOverRecord : Record {
   @Field val receiveRecords: Double = 0.0
   @Field val upgrade: String = ""
   @Field val accept: String = ""
+  @Field val compression: Boolean = false
 }
 
 /**
@@ -49,7 +50,7 @@ private class Channel(private val id: String, private val emit: (Map<String, Any
     val session = ChannelSession(
       Base64.decode(record.sendKey, Base64.NO_WRAP), record.sendRecords.toLong(),
       Base64.decode(record.receiveKey, Base64.NO_WRAP), record.receiveRecords.toLong(),
-      record.upgrade, record.accept,
+      record.upgrade, record.accept, compression = record.compression,
     )
     this.session = session
     session.start().forEach(::sendOuter)

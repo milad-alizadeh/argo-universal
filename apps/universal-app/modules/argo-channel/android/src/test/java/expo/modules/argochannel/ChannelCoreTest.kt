@@ -21,9 +21,9 @@ class ChannelCoreTest {
   private val fixedMask = byteArrayOf(1, 2, 3, 4)
 
   // The channel as JavaScript hands it over: each direction has sealed or opened the vector's record 0.
-  private fun session() = ChannelSession(
+  private fun session(compression: Boolean = false) = ChannelSession(
     bytes(vectors.getString("sendKey")), 1, bytes(vectors.getString("receiveKey")), 1,
-    "GET / HTTP/1.1\r\n\r\n", vectors.getString("accept"), { fixedMask },
+    "GET / HTTP/1.1\r\n\r\n", vectors.getString("accept"), { fixedMask }, compression,
   )
 
   @Test
@@ -92,6 +92,50 @@ class ChannelCoreTest {
     val frame = server.open(result.replies[0].copyOfRange(2, result.replies[0].size))
     assertEquals(0x8a, frame[0].toInt() and 0xff)
     assertEquals(0x80, frame[1].toInt() and 0x80)
+  }
+
+  // With compression agreed every record opens with a byte: the Server's raw deflate is inflated, and a message it sent as it is passes through.
+  @Test
+  fun aDeflatedRecordArrivesAsItsMessage() {
+    val events = session(compression = true).receive(joined(vectors.getJSONArray("upgradeThenCompressedMessage"))).events
+
+    assertEquals(listOf(InnerEvent.Open, InnerEvent.Message(vectors.getString("compressedMessage"))), events)
+  }
+
+  @Test
+  fun aStoredRecordArrivesAsItsMessage() {
+    val events = session(compression = true).receive(joined(vectors.getJSONArray("upgradeThenStoredMessage"))).events
+
+    assertEquals(listOf(InnerEvent.Open, InnerEvent.Message(vectors.getString("message"))), events)
+  }
+
+  @Test
+  fun aRecordThatInflatesBeyondWhatARecordHoldsIsRefused() {
+    val error = assertThrows(ChannelException::class.java) {
+      session(compression = true).receive(joined(vectors.getJSONArray("upgradeThenOversizedRecord")))
+    }
+
+    assertEquals("malformed compressed record", error.message)
+  }
+
+  @Test
+  fun anUnknownLeadingByteIsRefused() {
+    val error = assertThrows(ChannelException::class.java) {
+      session(compression = true).receive(joined(vectors.getJSONArray("upgradeThenUnknownLeadingByte")))
+    }
+
+    assertEquals("malformed compressed record", error.message)
+  }
+
+  @Test
+  fun withCompressionAgreedWhatIsSentGoesBehindAZeroByte() {
+    val server = RecordCipher(bytes(vectors.getString("sendKey")), 1)
+    val outer = session(compression = true).send("hi")
+
+    val record = server.open(outer[0].copyOfRange(2, outer[0].size))
+
+    assertEquals(0, record[0].toInt())
+    assertEquals(0x81, record[1].toInt() and 0xff)
   }
 
   @Test

@@ -25,6 +25,8 @@ export interface ChannelPlatform {
   readonly claim: () => DeviceClaim;
   // On iOS and Android, the native module that carries tRPC's socket once the handshake is done. Fetch, and the web, keep `openSocket`.
   readonly nativeChannel?: NativeChannel;
+  // Whether what carries the channel can inflate what the Server compresses, so the handshake offers it (ADR-0045). Only the native module can; the JavaScript stream cannot.
+  readonly compression?: boolean;
 }
 
 export type DeviceClaim = Omit<PairingClaim, 'ticket'>;
@@ -92,6 +94,7 @@ const inputOf = (
   deviceKey,
   claim: { ...platform.claim(), ticket: target.ticket },
   randomBytes: platform.randomBytes,
+  compression: platform.compression,
   onAsked: target.onAsked,
 });
 
@@ -133,7 +136,11 @@ export function createChannelTransport(
           ...socketDeps,
           openChannel: opener(
             target,
-            { ...platform, openSocket: nativeChannel.openSocket },
+            {
+              ...platform,
+              openSocket: nativeChannel.openSocket,
+              compression: true,
+            },
             shared,
           ),
           native: nativeChannel,

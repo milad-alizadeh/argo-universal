@@ -7,6 +7,7 @@ struct HandOverRecord: Record {
   @Field var receiveRecords: Double = 0
   @Field var upgrade: String = ""
   @Field var accept: String = ""
+  @Field var compression: Bool = false
 }
 
 /// One socket the module owns. Before the hand-over its bytes go to JavaScript as base64 for the handshake; after it, `session` opens every record and only finished message strings leave.
@@ -45,7 +46,7 @@ private final class Channel {
     let session = ChannelSession(
       sendKey: sendKey, sendRecords: UInt64(record.sendRecords),
       receiveKey: receiveKey, receiveRecords: UInt64(record.receiveRecords),
-      upgrade: record.upgrade, accept: record.accept,
+      upgrade: record.upgrade, accept: record.accept, compression: record.compression,
       deliver: { [socket] in socket.send($0) })
     lock.lock()
     self.session = session

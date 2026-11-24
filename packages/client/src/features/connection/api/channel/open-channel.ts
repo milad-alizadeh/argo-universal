@@ -30,6 +30,8 @@ export interface ChannelInput {
   readonly deviceKey: Keypair;
   readonly claim: PairingClaim;
   readonly randomBytes: (length: number) => Uint8Array;
+  // Whether this carrier can inflate what the Server compresses, which is offered in the handshake. The native module can; the JavaScript stream cannot, and is sent every record as it is (ADR-0045).
+  readonly compression?: boolean;
   // Called when the Server says the request is with the owner, before the owner has answered.
   readonly onAsked?: () => void;
 }
@@ -37,13 +39,18 @@ export interface ChannelInput {
 export interface OpenedChannel {
   readonly stream: SecureStream;
   readonly deviceId: string;
+  // Whether the Server agreed to compress: every record from here on opens with a byte that says whether the rest is deflated, which only the module reads.
+  readonly compressed: boolean;
 }
+
+const claimOf = ({ claim, compression }: ChannelInput): PairingClaim =>
+  compression ? { ...claim, compression: 'deflate-raw' } : claim;
 
 const handshakeOf = (input: ChannelInput): InitiatorHandshake =>
   startHandshake({
     deviceKey: input.deviceKey,
     serverPublicKey: rawFromStoredPublicKey(input.serverPublicKey),
-    claim: textBytes(JSON.stringify(input.claim)),
+    claim: textBytes(JSON.stringify(claimOf(input))),
     randomBytes: input.randomBytes,
   });
 
@@ -120,5 +127,6 @@ function opened(
   return {
     stream: new SecureStream(socket, cipher, inbox.rest()),
     deviceId: welcome.deviceId,
+    compressed: welcome.compression !== undefined,
   };
 }

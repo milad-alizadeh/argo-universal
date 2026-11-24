@@ -69,6 +69,11 @@ export type PairingInvite = z.infer<typeof PairingInvite>;
  */
 export const channelPath = '/channel';
 
+// Raw deflate (RFC 1951), each record alone with no dictionary carried over.
+export const ChannelCompression = z.literal('deflate-raw');
+
+export type ChannelCompression = z.infer<typeof ChannelCompression>;
+
 /*
  * What a connecting Device says inside the completed handshake. Pre-authentication and untrusted: the name is shown for recognition and decides nothing.
  * The Device Key's public half is not here. It is the static key the handshake itself carries, so no Device can claim one it has no private half for.
@@ -77,13 +82,20 @@ export const PairingClaim = z.strictObject({
   ticket: z.string().optional(),
   name: z.string(),
   platform: DevicePlatform,
+  // Offered by an App that can inflate: the Server may then compress what it sends (ADR-0045, amended 2026-11-24). Absent from an App built before it, which is sent every record as it is.
+  compression: ChannelCompression.optional(),
 });
 
 export type PairingClaim = z.infer<typeof PairingClaim>;
 
 // The Server's answer: the Device's own row, or why it got none.
 export const PairingWelcome = z.discriminatedUnion('paired', [
-  z.strictObject({ paired: z.literal(true), deviceId: z.string() }),
+  z.strictObject({
+    paired: z.literal(true),
+    deviceId: z.string(),
+    // Present only when the App offered compression and the Server agreed: every record the channel carries then opens with a byte that says whether the rest is deflated.
+    compression: ChannelCompression.optional(),
+  }),
   z.strictObject({ paired: z.literal(false), refusal: PairingRefusal }),
 ]);
 

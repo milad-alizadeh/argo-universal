@@ -1,3 +1,4 @@
+import { inflateRawSync } from 'node:zlib';
 import type {
   ByteSocket,
   OpenSocket,
@@ -45,11 +46,71 @@ const rawBytes = (id: string, chunk: Uint8Array): NativeChannelEvent => ({
   data: bytesBase64(chunk),
 });
 
-const cipherOf = (handed: ChannelHandOver): ChannelCipher =>
-  new ChannelCipher(
-    new CipherState(base64Bytes(handed.sendKey), handed.sendRecords),
-    new CipherState(base64Bytes(handed.receiveKey), handed.receiveRecords),
+// What the module does with a record once compression is agreed: the leading byte says whether the rest is raw deflate, and it inflates it with the platform's own zlib. What it sends is always as it is, behind a zero byte.
+class CompressedChannelCipher extends ChannelCipher {
+  public override seal(plaintext: Uint8Array): Uint8Array {
+    return super.seal(Uint8Array.of(0, ...plaintext));
+  }
+
+  public override open(record: Uint8Array): Uint8Array {
+    const [lead, ...body] = super.open(record);
+
+    return lead === 1
+      ? inflateRawSync(Uint8Array.from(body))
+      : Uint8Array.from(body);
+  }
+}
+
+const cipherOf = (handed: ChannelHandOver): ChannelCipher => {
+  const sending = new CipherState(
+    base64Bytes(handed.sendKey),
+    handed.sendRecords,
   );
+
+  const receiving = new CipherState(
+    base64Bytes(handed.receiveKey),
+    handed.receiveRecords,
+  );
+
+  return handed.compression
+    ? new CompressedChannelCipher(sending, receiving)
+    : new ChannelCipher(sending, receiving);
+};
+
+// Counts what the Server's socket delivers, which is what crosses the network.
+class CountingSocket implements ByteSocket {
+  public constructor(
+    private readonly socket: ByteSocket,
+    private readonly count: (bytes: number) => void,
+  ) {}
+
+  public set onData(handler: (chunk: Uint8Array) => void) {
+    this.socket.onData = (chunk): void => {
+      this.count(chunk.length);
+      handler(chunk);
+    };
+  }
+
+  public get onData(): (chunk: Uint8Array) => void {
+    return this.socket.onData;
+  }
+
+  public set onClose(handler: (error?: Error) => void) {
+    this.socket.onClose = handler;
+  }
+
+  public get onClose(): (error?: Error) => void {
+    return this.socket.onClose;
+  }
+
+  public write(data: Uint8Array): void {
+    this.socket.write(data);
+  }
+
+  public close(): void {
+    this.socket.close();
+  }
+}
 
 /*
  * The native module's contract, kept in Node. It tests the JavaScript side of the hand-over (the keys, the record numbers, one string per message), not Swift or Kotlin: after the hand-over it reuses the JavaScript framing, so the native record paths have tests of their own (`apps/universal-app/modules/argo-channel`).
@@ -61,6 +122,7 @@ export class NodeNativeModule implements ChannelNative {
   private readonly entries = new Map<string, Entry>();
   private readonly listeners = new Set<(event: NativeChannelEvent) => void>();
   private rawEventsAfterHandOver = 0;
+  private wireAfterHandOver = 0;
   private count = 0;
 
   public constructor(private readonly openSocket: OpenSocket) {}
@@ -68,6 +130,11 @@ export class NodeNativeModule implements ChannelNative {
   // Handshake bytes the module passed up after the hand-over; there should be none.
   public bytesAfterHandOver(): number {
     return this.rawEventsAfterHandOver;
+  }
+
+  // What the Server's socket delivered after the hand-over: the bytes that crossed the network for the messages the module handed up.
+  public wireBytesAfterHandOver(): number {
+    return this.wireAfterHandOver;
   }
 
   public opened(): number {
@@ -107,10 +174,21 @@ export class NodeNativeModule implements ChannelNative {
 
   public handOver(id: string, handed: ChannelHandOver): void {
     const entry = this.entryOf(id);
-    const stream = new SecureStream(entry.socket, cipherOf(handed), noRest);
+
+    const stream = new SecureStream(
+      new CountingSocket(entry.socket, (bytes) => {
+        this.wireAfterHandOver += bytes;
+      }),
+      cipherOf(handed),
+      noRest,
+    );
 
     const Socket = channelWebSocket({
-      openChannel: async () => ({ stream, deviceId: 'native' }),
+      openChannel: async () => ({
+        stream,
+        deviceId: 'native',
+        compressed: handed.compression,
+      }),
       randomBytes: nodeRandomBytes,
     });
 

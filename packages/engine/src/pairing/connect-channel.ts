@@ -146,7 +146,7 @@ function settled(
   if (!welcome.paired) return refuse(socket, welcome.refusal);
 
   return {
-    socket: resumed(socket, channel.rest, channel.cipher),
+    socket: resumed(socket, channel, 'compression' in welcome),
     deviceId: welcome.deviceId,
   };
 }
@@ -159,13 +159,13 @@ function refuse(socket: Socket, refusal: PairingRefusal): never {
 
 function resumed(
   socket: Socket,
-  rest: Buffer,
-  cipher: ChannelCipher,
+  { rest, cipher }: { rest: Buffer; cipher: ChannelCipher },
+  compression: boolean,
 ): ChannelSocket {
   socket.pause();
 
   if (rest.length > 0) socket.unshift(rest);
-  const channel = new ChannelSocket(socket, cipher);
+  const channel = new ChannelSocket(socket, cipher, compression);
   socket.resume();
 
   return channel;

@@ -16,6 +16,8 @@ export interface ChannelHandOver {
   // The HTTP upgrade request the module seals and sends first, and the `Sec-WebSocket-Accept` its answer must carry.
   readonly upgrade: string;
   readonly accept: string;
+  // Whether every record opens with the byte that says whether the rest is raw deflate, which the module inflates (ADR-0045).
+  readonly compression: boolean;
 }
 
 /*

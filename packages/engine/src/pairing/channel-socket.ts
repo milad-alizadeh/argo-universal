@@ -4,6 +4,7 @@ import type { ChannelCipher } from './channel-cipher';
 import { channelFailure } from './channel-failure';
 import { tagBytes } from './cipher-state';
 import { FrameReader, frameRecord, maxRecordBytes } from './frames';
+import { leadingBytes, packRecord, unpackRecord } from './record-compression';
 
 const maxPlaintextBytes = maxRecordBytes - tagBytes;
 
@@ -15,10 +16,13 @@ export class ChannelSocket extends Duplex {
   public readonly remoteAddress: string | undefined;
   public readonly localAddress: string | undefined;
   private readonly records = new FrameReader();
+  private received = 0;
 
   public constructor(
     private readonly socket: ChannelCarrier,
     private readonly cipher: ChannelCipher,
+    // Whether the App offered compression and this Server agreed: every record then opens with the byte that says which (ADR-0045).
+    private readonly compression = false,
   ) {
     super();
     this.remoteAddress = socket.remoteAddress;
@@ -26,6 +30,11 @@ export class ChannelSocket extends Duplex {
     socket.on('data', (chunk: Buffer): void => this.receive(chunk));
     socket.once('close', (): void => this.finish());
     socket.once('error', (error: Error): void => void this.destroy(error));
+  }
+
+  // Bytes that have crossed the socket underneath, which is what a test counts to see what compression saved.
+  public get wireBytesRead(): number {
+    return this.received;
   }
 
   public setNoDelay(): this {
@@ -59,8 +68,8 @@ export class ChannelSocket extends Duplex {
     done: (error?: Error | null) => void,
   ): void {
     try {
-      for (const piece of pieces(chunk))
-        this.socket.write(frameRecord(this.cipher.seal(piece)));
+      for (const piece of pieces(chunk, this.pieceBytes()))
+        this.socket.write(frameRecord(this.cipher.seal(this.pack(piece))));
       done();
     } catch (error) {
       done(channelFailure(error));
@@ -99,6 +108,8 @@ export class ChannelSocket extends Duplex {
 
   // A record that does not open with this channel's key is not from the Device that opened it, so the Connection ends rather than carrying on.
   private receive(chunk: Buffer): void {
+    this.received += chunk.length;
+
     try {
       for (const record of this.records.push(chunk)) this.pushRecord(record);
     } catch (error) {
@@ -107,11 +118,30 @@ export class ChannelSocket extends Duplex {
   }
 
   private pushRecord(record: Buffer): void {
-    if (!this.push(this.cipher.open(record))) this.socket.pause();
+    const plaintext = this.cipher.open(record);
+
+    if (!this.push(this.unpack(plaintext))) this.socket.pause();
+  }
+
+  // The leading byte takes a byte of every record, so a piece is one byte shorter.
+  private pieceBytes(): number {
+    return this.compression
+      ? maxPlaintextBytes - leadingBytes
+      : maxPlaintextBytes;
+  }
+
+  private pack(piece: Buffer): Buffer {
+    return this.compression ? packRecord(piece) : piece;
+  }
+
+  private unpack(plaintext: Buffer): Buffer {
+    return this.compression
+      ? unpackRecord(plaintext, this.pieceBytes())
+      : plaintext;
   }
 }
 
-function* pieces(chunk: Buffer): Generator<Buffer> {
-  for (let start = 0; start < chunk.length; start += maxPlaintextBytes)
-    yield chunk.subarray(start, start + maxPlaintextBytes);
+function* pieces(chunk: Buffer, size: number): Generator<Buffer> {
+  for (let start = 0; start < chunk.length; start += size)
+    yield chunk.subarray(start, start + size);
 }

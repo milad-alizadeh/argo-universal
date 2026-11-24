@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
 import { noiseIkVector } from '@repo/engine/pairing-vector';
 import { expect, it } from 'vitest';
 import { bytesHex, hexBytes, textBytes } from './bytes';
@@ -40,6 +41,21 @@ function serverFrame(
   return Uint8Array.of((fin ? 0x80 : 0) | opcode, payload.length, ...payload);
 }
 
+// An unmasked server text frame whose length needs two bytes.
+function longServerFrame(payload: Uint8Array): Uint8Array {
+  return Uint8Array.of(
+    0x81,
+    126,
+    payload.length >> 8,
+    payload.length & 0xff,
+    ...payload,
+  );
+}
+
+// With compression agreed, every record opens with a byte: 0 for the bytes as they are, 1 for raw deflate (ADR-0045).
+const behind = (lead: number, bytes: Uint8Array): Uint8Array =>
+  Uint8Array.of(lead, ...bytes);
+
 function flippedLast(bytes: Uint8Array): Uint8Array {
   const flipped = Uint8Array.from(bytes);
 
@@ -58,6 +74,11 @@ interface Fixture {
   readonly upgradeThenPing: string[];
   readonly badAcceptUpgrade: string;
   readonly tamperedRecord: string;
+  readonly compressedMessage: string;
+  readonly upgradeThenCompressedMessage: string[];
+  readonly upgradeThenStoredMessage: string[];
+  readonly upgradeThenOversizedRecord: string[];
+  readonly upgradeThenUnknownLeadingByte: string[];
 }
 
 function generated(): Fixture {
@@ -103,6 +124,24 @@ function generated(): Fixture {
 
   const goodAnswer = upgradeAnswer(acceptFor(upgradeKey));
 
+  const compressedScenario = (...records: Uint8Array[]): string[] => {
+    const server = serverCipher();
+
+    return [behind(0, textBytes(goodAnswer)), ...records].map((bytes) =>
+      bytesHex(frameRecord(server.seal(bytes))),
+    );
+  };
+
+  const large = JSON.stringify({
+    rows: Array.from({ length: 80 }, (_, id) => ({
+      id,
+      text: 'The quick brown fox jumps over the lazy dog',
+    })),
+  });
+
+  const largeFrame = longServerFrame(textBytes(large));
+  const stored = serverFrame(1, text);
+
   return {
     sendKey: bytesHex(sending.key),
     receiveKey: bytesHex(receiving.key),
@@ -126,6 +165,17 @@ function generated(): Fixture {
     tamperedRecord: bytesHex(
       flippedLast(hexBytes(scenario(goodAnswer)[0] ?? '')),
     ),
+    // A large message that the Server deflated, behind a 1; a small one it sent as it is, behind a 0.
+    compressedMessage: large,
+    upgradeThenCompressedMessage: compressedScenario(
+      behind(1, deflateRawSync(largeFrame)),
+    ),
+    upgradeThenStoredMessage: compressedScenario(behind(0, stored)),
+    // A record that inflates past what one record holds, and one that leads with a byte that means nothing.
+    upgradeThenOversizedRecord: compressedScenario(
+      behind(1, deflateRawSync(new Uint8Array(1_000_000))),
+    ),
+    upgradeThenUnknownLeadingByte: compressedScenario(behind(2, stored)),
   };
 }
 
