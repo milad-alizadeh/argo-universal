@@ -61,7 +61,7 @@ function Reading({ sessionId }: { sessionId: string }): React.JSX.Element {
 
     const landed = setTimeout(
       () => setEntries((rows) => [group(rememberedRow), ...rows]),
-      50,
+      200,
     );
 
     return (): void => clearTimeout(landed);
@@ -126,6 +126,9 @@ export const SeeksARememberedRowOnceAfterSettlingAndFindingIt: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: 'Settle' }));
     await waitFor(() => expect(olderRowsAsked).toHaveBeenCalled());
+    await nextFrames();
+    // The seek asks for the page; the near-top ask stands down while it is pending.
+    await expect(olderRowsAsked).toHaveBeenCalledOnce();
 
     await waitFor(() => expect(scrollToKey).toHaveBeenCalledOnce());
     await nextFrames();

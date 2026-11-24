@@ -27,17 +27,18 @@ const endThreshold = 0.02;
 const startThreshold = 2;
 
 /*
- * What a row that has not been measured is worth. The recorded Feeds average 91px a row in the 800px
- * column and 138px on a phone. A phone is the native App, so it takes its own average and the opening
- * view lands where it will settle; web keeps a number between the two. It only places rows above the
- * opening view; each kind takes its own measured average after that.
+ * What a row that has not been measured is worth. The recorded Feeds average 138px a row on a phone and
+ * 91px in the 800px column of a wide window. The native App is drawn on phones, so it takes the phone's
+ * average (a tablet's wider column measures shorter rows and corrects as they measure); web keeps a
+ * number between the two. The kit takes only one number, and a feature does not read the size class. It
+ * only places rows above the opening view; each kind takes its own measured average after that.
  */
-const wideRowHeight = 112;
+const nativeEstimatedRowHeight = 138;
 
-const phoneRowHeight = 138;
+const webEstimatedRowHeight = 112;
 
 const estimatedRowHeight =
-  Platform.OS === 'web' ? wideRowHeight : phoneRowHeight;
+  Platform.OS === 'web' ? webEstimatedRowHeight : nativeEstimatedRowHeight;
 
 // Keep rows ready for a reversal while limiting how many mount in a fling frame.
 const nativeDrawDistance = 1600;
@@ -186,9 +187,7 @@ function getInitialScrollProps({
   FeedListProps,
   'initialScrollIndex' | 'initialScrollAtEnd'
 > {
-  return Platform.OS === 'ios' &&
-    !opensAtStart &&
-    typeof initialIndex === 'number'
+  return Platform.OS === 'ios' && !opensAtStart
     ? { initialScrollAtEnd: true }
     : { initialScrollIndex: initialIndex };
 }

@@ -97,6 +97,8 @@ function useScrollsToEndWhenShown(
 interface Opening {
   initialIndex: number;
   cancelRestore: () => void;
+  // The remembered row is still above the rows loaded, so the seek owns asking for older ones.
+  seeking: boolean;
 }
 
 function useOpensAtEnd(
@@ -113,7 +115,9 @@ function useOpensAtEnd(
 
   const cancelRestore = useScrollsToEndWhenShown(list, anchor, input);
 
-  return { initialIndex, cancelRestore };
+  const seeking = anchor !== null && !containsAnchor(input.entries, anchor);
+
+  return { initialIndex, cancelRestore, seeking };
 }
 
 const keyOf = (entry: FeedEntry | undefined): string | undefined =>
@@ -123,7 +127,11 @@ const keyOf = (entry: FeedEntry | undefined): string | undefined =>
 function useRequestsOlderNearTop(
   list: ListRef,
   oldestKey: string | undefined,
-  { settled, onStartReached }: { settled: boolean; onStartReached: () => void },
+  {
+    settled,
+    seeking,
+    onStartReached,
+  }: { settled: boolean; seeking: boolean; onStartReached: () => void },
 ): void {
   const requestOlderIfNearTop = useEffectEvent(() => {
     if (list.current?.getState().isNearStart) onStartReached();
@@ -133,10 +141,10 @@ function useRequestsOlderNearTop(
   const askedAtOldestKey = useRef<string | null | undefined>(null);
   useEffect(() => {
     // Nothing is asked for before the list has settled; settling asks once for the rows it opened on.
-    if (!settled || askedAtOldestKey.current === oldestKey) return;
+    if (!settled || seeking || askedAtOldestKey.current === oldestKey) return;
     askedAtOldestKey.current = oldestKey;
     requestOlderIfNearTop();
-  }, [oldestKey, settled]);
+  }, [oldestKey, settled, seeking]);
 }
 
 // Tells `onAtEndChange` whether the end is shown, as the Feed mounts and whenever that changes.
@@ -159,7 +167,7 @@ export interface FeedScrollPosition {
 }
 
 const positionAt = (
-  opening: Opening,
+  opening: Omit<Opening, 'seeking'>,
   settling: Pick<FeedScrollPosition, 'settled' | 'onReady'>,
   newestKeyWhenLeftEnd: string | null,
 ): FeedScrollPosition => ({
@@ -191,13 +199,16 @@ export function useFeedScrollPosition(
 
   const opening = useOpensAtEnd(list, { ...input, settled });
 
+  const { seeking, ...opened } = opening;
+
   useRequestsOlderNearTop(list, keyOf(entries[0]), {
     settled,
+    seeking,
     onStartReached: input.onStartReached,
   });
 
   return positionAt(
-    opening,
+    opened,
     { settled, onReady },
     useNewestKeyWhenLeftEnd(list, newestKey),
   );
