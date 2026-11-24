@@ -50,7 +50,11 @@ const seekWindow = (
 });
 
 function seekInput(
-  input: PositionInput & { shown: boolean; settled: boolean },
+  input: PositionInput & {
+    shown: boolean;
+    settled: boolean;
+    onCancel: () => void;
+  },
   anchor: FeedAnchor | null,
   open: (anchor: FeedAnchor | null) => void,
 ): Parameters<typeof useSeekFeedAnchor>[0] {
@@ -63,6 +67,7 @@ function seekInput(
     open: (present): void => {
       if (present && anchor) open(anchor);
     },
+    onCancel: input.onCancel,
   };
 }
 
@@ -79,7 +84,7 @@ function useCancelRestoration(
 function useScrollsToEndWhenShown(
   list: ListRef,
   anchor: FeedAnchor | null,
-  input: PositionInput & { settled: boolean },
+  input: PositionInput & { settled: boolean; onCancel: () => void },
 ): () => void {
   const shown = useScreenFocused() && !input.opensAtStart;
   const restoration = useRestoreFeedAnchor(list, shown);
@@ -113,9 +118,20 @@ function useOpensAtEnd(
     input.opensAtStart ? 0 : input.entries.length - 1,
   );
 
-  const cancelRestore = useScrollsToEndWhenShown(list, anchor, input);
+  // Once the reader takes over, the seek has let go and the remembered row is no longer sought.
+  const [tookOver, setTookOver] = useState(false);
+  const onCancel = useCallback(() => setTookOver(true), []);
 
-  const seeking = anchor !== null && !containsAnchor(input.entries, anchor);
+  const cancelRestore = useScrollsToEndWhenShown(list, anchor, {
+    ...input,
+    onCancel,
+  });
+
+  const seeking =
+    !input.opensAtStart &&
+    !tookOver &&
+    anchor !== null &&
+    !containsAnchor(input.entries, anchor);
 
   return { initialIndex, cancelRestore, seeking };
 }

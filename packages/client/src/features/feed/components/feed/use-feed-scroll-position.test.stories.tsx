@@ -42,7 +42,13 @@ const nearStart: PositionList = {
   }),
 };
 
-function Reading({ sessionId }: { sessionId: string }): React.JSX.Element {
+function Reading({
+  sessionId,
+  landing,
+}: {
+  sessionId: string;
+  landing: string;
+}): React.JSX.Element {
   const list = useRef<PositionList | null>(nearStart);
   const [entries, setEntries] = useState<FeedEntry[]>([group('newest')]);
 
@@ -60,7 +66,7 @@ function Reading({ sessionId }: { sessionId: string }): React.JSX.Element {
     if (olderRowsAsked.mock.calls.length === 0) return;
 
     const landed = setTimeout(
-      () => setEntries((rows) => [group(rememberedRow), ...rows]),
+      () => setEntries((rows) => [group(landing), ...rows]),
       200,
     );
 
@@ -78,7 +84,7 @@ const meta = {
   title: 'Tests/Feed/UseFeedScrollPosition',
   component: Reading,
   tags: ['!autodocs'],
-  args: { sessionId: 'opened-fresh' },
+  args: { sessionId: 'opened-fresh', landing: rememberedRow },
   beforeEach: (): void => {
     scrollToEnd.mockClear();
     scrollToKey.mockClear();
@@ -134,5 +140,22 @@ export const SeeksARememberedRowOnceAfterSettlingAndFindingIt: Story = {
     await nextFrames();
     await expect(scrollToKey).toHaveBeenCalledOnce();
     await expect(scrollToEnd).not.toHaveBeenCalled();
+  },
+};
+
+export const AsksForOlderRowsAfterTheReaderTakesOverMidSeek: Story = {
+  args: { sessionId: 'reader-mid-seek', landing: 'another-older-row' },
+  beforeEach: (): void => {
+    scrollMemory.write('reader-mid-seek', { key: rememberedRow, offset: 40 });
+  },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Settle' }));
+    await waitFor(() => expect(olderRowsAsked).toHaveBeenCalledOnce());
+
+    // The reader scrolls before the remembered row is found, so the seek lets go.
+    window.dispatchEvent(new Event('wheel'));
+
+    // A page lands that still does not hold the remembered row, and the reader is at the top of it.
+    await waitFor(() => expect(olderRowsAsked).toHaveBeenCalledTimes(2));
   },
 };
