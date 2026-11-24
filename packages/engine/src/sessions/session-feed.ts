@@ -1,11 +1,10 @@
-import { readChangesSummary } from '@repo/git';
 import {
   readQueuedFeedRow,
   readUnaddressedPlan,
   readWrittenRow,
   type FeedInput,
 } from '../feed';
-import { sessionChangesSelection } from './changes-selection';
+import { readSessionChanges } from './session-changes';
 import type { SessionContext } from './session-context';
 
 type FeedPosition = Pick<
@@ -49,8 +48,11 @@ const findUnaddressedPlan = (
 
 const refreshChanges = (
   context: SessionContext,
-): ReturnType<typeof readChangesSummary> =>
-  readChangesSummary(sessionChangesSelection(context.input.database, context));
+): ReturnType<typeof readSessionChanges> => {
+  const { database, writer } = context.input;
+
+  return readSessionChanges({ database, writer }, context.sessionId, context);
+};
 
 // The Session's Feed reads stored and queued rows from its opened position.
 export const sessionFeedInput = (

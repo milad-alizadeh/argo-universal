@@ -119,3 +119,7 @@ Spec #1300 proposed a core Change module with a Forge port and a `gh` adapter, p
 ## Reviews under ADR-0061
 
 Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) keeps GitHub transport and pull request records in the GitHub Plugin. The Engine consumes Change invalidations and the shared refresh lifecycle without an App to run Reviews. A new typed Change-provider contract supplies fresh Review context and an internal `mergeReviewed` handler. This adds explicit reviewed merge through the GitHub Plugin, guarded by Argo readiness, person-only Approval and `expectedHeadOid`. Existing GitHub Auto-merge keeps its existing policy. A separate Review Inspector tab holds Reviews; the wide Changes tab keeps the Checkout alone. These amendments replace the earlier deferral of Reviews under “Reconciling #1300”.
+
+## The Checkout's totals stand in the Session row
+
+- Owner amendment, 2026-11-24: with no PR, the Session row's Change slot shows the Checkout's line totals (additions and deletions, default comparison) where the PR would be. A PR replaces them, and zero, unread or archived totals show nothing. The Engine keeps the last read totals on the Session row from its existing reads, so listing adds no git read. The totals are never shown as a PR's.

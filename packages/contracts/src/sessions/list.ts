@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
+import { ChangesSummary } from './changes';
 import { CheckoutChoice } from './new';
 
 /*
@@ -74,6 +75,8 @@ export const SessionInfo = z.strictObject({
   subagents: SessionWorkCount,
   shells: SessionWorkCount,
   archivedAt: sessionColumns.shape.archivedAt,
+  // The Checkout's totals as last read; null until one is.
+  changes: ChangesSummary.nullable(),
   pullRequest: z.null(),
 });
 

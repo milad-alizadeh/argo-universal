@@ -17,6 +17,8 @@ import {
 } from './session-row-call-fixtures';
 import {
   archivedSession,
+  checkoutChangesSession,
+  checkoutChangesShellSession,
   compactSession,
   failedSession,
   idleSession,
@@ -129,6 +131,23 @@ export const Unread: Story = { args: unreadSession };
 
 // The selected row on a wide layout.
 export const Selected: Story = { args: selectedSession };
+
+// The meta's default args carry a Change, and Storybook keeps a default an `undefined` arg would clear.
+const noChange: Story['render'] = (args) => (
+  <SessionRow {...args} pullRequest={undefined} />
+);
+
+// With no Change, the Checkout's line totals end the meta line: green additions, red deletions.
+export const CheckoutChanges: Story = {
+  args: checkoutChangesSession,
+  render: noChange,
+};
+
+// A running Shell's count follows the totals.
+export const CheckoutChangesWithShell: Story = {
+  args: checkoutChangesShellSession,
+  render: noChange,
+};
 
 // An archived Session ends its meta line on the Archived pill.
 export const Archived: Story = { args: archivedSession };

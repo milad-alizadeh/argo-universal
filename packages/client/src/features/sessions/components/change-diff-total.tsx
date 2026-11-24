@@ -16,7 +16,7 @@ export function ChangeDiffTotal(
   );
 }
 
-function DiffDeltas(props: ChangesSummary): ReactElement {
+export function DiffDeltas(props: ChangesSummary): ReactElement {
   return (
     <>
       <Text role="secondary" tone="success">
