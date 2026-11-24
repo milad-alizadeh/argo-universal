@@ -248,6 +248,25 @@ it('drops a copy older than a day', async () => {
   await expect(second.read(feedKey('session-1'))).rejects.toThrow(serverAsked);
 });
 
+it('does not make a copy younger by restoring it', async () => {
+  const first = startApp('studio');
+  first.queryClient.setQueryData(feedKey('session-1'), heldFeed);
+  await first.quit();
+
+  await vi.advanceTimersByTimeAsync(23 * hourMs);
+  const second = startApp('studio');
+  await second.read(feedKey('session-1'));
+  // The persister sets the age the copy had a moment after it restores it.
+  await vi.advanceTimersByTimeAsync(10);
+  await second.quit();
+
+  await vi.advanceTimersByTimeAsync(2 * hourMs);
+  const third = startApp('studio');
+  await vi.advanceTimersByTimeAsync(writeWindowMs);
+
+  await expect(third.read(feedKey('session-1'))).rejects.toThrow(serverAsked);
+});
+
 it('wipes one Server when the Device is unpaired from it, though a write was queued, and no other', async () => {
   const studio = startApp('studio');
   studio.queryClient.setQueryData(feedKey('session-1'), heldFeed);

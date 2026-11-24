@@ -150,6 +150,23 @@ describe('applySubscriptionEvent', () => {
     expect(result.feed.revision).toBe(streamed.snapshot.maxRevision + 1);
   });
 
+  it('holds the tail a subscription opens with as the newest window', () => {
+    const tail = page(streamed.rows, streamed.snapshot.maxRevision, {
+      limit: 2,
+    });
+
+    const result = applySubscriptionEvent(emptyFeed, {
+      type: 'tail',
+      page: tail,
+    });
+
+    expect(result.feed).toEqual(mergeNewestPage(emptyFeed, tail));
+    expect(syncPointOf(result.feed)).toEqual({
+      epoch: tail.epoch,
+      revision: tail.maxRevision,
+    });
+  });
+
   it('drops every row on a reset and waits for a new tail', () => {
     const result = applySubscriptionEvent(
       mergeNewestPage(emptyFeed, page(streamed.rows, 9)),

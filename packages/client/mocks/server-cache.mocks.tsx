@@ -18,6 +18,10 @@ import {
 import { useSessionListUpdates } from '#features/sessions';
 import { ConnectionBanner } from '../src/features/connection/components/connection-banner/connection-banner';
 import { feedKey, snapshotKey } from '../src/features/feed/api/feed-query';
+import {
+  DeviceFeedContext,
+  type RetrieveKept,
+} from '../src/features/feed/api/restore-feed';
 import { useSessionFeed } from '../src/features/feed/hooks/use-session-feed';
 import {
   emptyFeed,
@@ -103,6 +107,8 @@ export interface ServerCacheFixture {
   opened: string[];
   // How many `session.listUpdates` subscriptions the App opened.
   listUpdates: () => number;
+  // How a Feed is read off the Device.
+  retrieve: RetrieveKept;
   // The Device answers what it kept.
   release: () => void;
 }
@@ -158,7 +164,10 @@ export function serverCacheFixture(
   const trpc = createTRPCOptionsProxy<AppRouter>({ client, queryClient });
 
   keepServerLists(queryClient, trpc);
-  restoreFromDevice(queryClient, trpc, { serverId, storage: kept.storage });
+  const retrieve = restoreFromDevice(queryClient, trpc, {
+    serverId,
+    storage: kept.storage,
+  });
 
   return {
     queryClient,
@@ -166,6 +175,7 @@ export function serverCacheFixture(
     connection: connectionIn(state),
     opened: asked.opened,
     listUpdates: () => asked.listUpdates,
+    retrieve,
     release: kept.release,
   };
 }
@@ -208,7 +218,9 @@ export function ServerCachePreview({
           trpcClient={fixture.client}
           queryClient={fixture.queryClient}
         >
-          <Screens />
+          <DeviceFeedContext.Provider value={fixture.retrieve}>
+            <Screens />
+          </DeviceFeedContext.Provider>
         </TRPCProvider>
       </QueryClientProvider>
     </ConnectionContext.Provider>

@@ -12,6 +12,7 @@ import { ConnectionContext, holdCacheOnline } from '#features/connection';
 import { TRPCProvider, useTRPC } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
+import { DeviceFeedContext } from './features/feed/api/restore-feed';
 import { createQueryClient, keepServerLists } from './query-cache';
 import { restoreFromDevice, writeToDevice } from './server-cache';
 import { ServerUrls } from './server-urls';
@@ -105,7 +106,7 @@ function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
   const trpc = useTRPC();
   useState(() => keepServerLists(queryClient, trpc));
   // This Server's own cache on the Device: each kept query draws from it first, then is caught up by the Connection.
-  useState(() =>
+  const [retrieve] = useState(() =>
     restoreFromDevice(queryClient, trpc, { serverId: props.server.id }),
   );
   useEffect(
@@ -114,7 +115,11 @@ function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
   );
   useCacheOnline(props.connection.connection);
 
-  return <ServerContexts {...props} />;
+  return (
+    <DeviceFeedContext.Provider value={retrieve}>
+      <ServerContexts {...props} />
+    </DeviceFeedContext.Provider>
+  );
 }
 
 function ServerContexts({

@@ -8,6 +8,7 @@ import {
   type UseMutationResult,
   type UseQueryResult,
   useMutation,
+  skipToken,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
@@ -59,6 +60,8 @@ interface FeedWindowOptions {
   // The key of the Feed the App keeps; the Session's id unless a screen shows another Feed of it.
   cacheId: string | undefined;
   readPage: FeedPageReader;
+  // The tail comes from a page read, false while a subscription brings it.
+  readsPage?: boolean;
 }
 
 export interface FeedWindow {
@@ -68,15 +71,13 @@ export interface FeedWindow {
   view: FeedView | null;
   // The query that holds the window.
   query: UseQueryResult<FeedState>;
-  // The snapshot is still being restored from the Device, so a subscription opened now could be overwritten by it.
-  restoring: boolean;
 }
 
 // The Session's Feed from the query cache, drawn as a view: a Session seen before draws at once, with no page read.
 export function useFeedWindow(
   sessionId: string | undefined,
   translate: FeedViewTranslator,
-  { cacheId = '', readPage }: FeedWindowOptions,
+  { cacheId = '', readPage, readsPage = true }: FeedWindowOptions,
 ): FeedWindow {
   const queryClient = useQueryClient();
 
@@ -91,24 +92,19 @@ export function useFeedWindow(
         page,
       );
     },
-    enabled: sessionId !== undefined,
+    enabled: sessionId !== undefined && readsPage,
   });
 
-  /*
-   * Nothing reads a snapshot from the Server: the subscription writes it. The read is for the Device's copy, which a
-   * persisted query restores in place of it, and answers null when there is none.
-   */
-  const { data: snapshot = null, isFetching: restoringSnapshot } =
-    useQuery<SessionSnapshot | null>({
-      ...snapshotQueryDefaults,
-      queryKey: snapshotKey(cacheId),
-      queryFn: () => null,
-    });
+  const { data: snapshot = null } = useQuery<SessionSnapshot | null>({
+    ...snapshotQueryDefaults,
+    queryKey: snapshotKey(cacheId),
+    queryFn: skipToken,
+  });
 
   const feed = query.data ?? emptyFeed;
   const view = useFeedView({ feed, snapshot, translate });
 
-  return { cacheId, feed, snapshot, view, query, restoring: restoringSnapshot };
+  return { cacheId, feed, snapshot, view, query };
 }
 
 // Older rows merge into the same query; a failed page is not a Feed error, and scrolling asks again.

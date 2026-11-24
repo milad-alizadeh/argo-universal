@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useRestoreFeed } from '../api/restore-feed';
 import {
   findLiveToolCall,
   findPermissionToolCall,
@@ -20,17 +22,25 @@ export function useSessionFeed(
 ): SessionFeed {
   const readPage = useSessionPages(sessionId);
 
-  const { cacheId, feed, snapshot, view, query, restoring } = useFeedWindow(
+  // A Server built before the tail and event ids refuses their keys, so the Feed is read by page, and its subscription opens with `after` alone (`useFeedLive`).
+  const [refused, setRefused] = useState(false);
+
+  // A shown Session's tail comes with its subscription; a hidden one, or one on a Server that refused, reads its page.
+  const { cacheId, feed, snapshot, view, query } = useFeedWindow(
     sessionId,
     translate,
-    { cacheId: sessionId, readPage },
+    { cacheId: sessionId, readPage, readsPage: !shown || refused },
   );
+
+  // The subscription opens once what the Device kept of this Feed is in the cache, so it resumes after the stored revision, not cold.
+  const restoring = useRestoreFeed(cacheId, feed.epoch !== null);
 
   const live = useFeedLive(sessionId, {
     cacheId,
-    shown,
-    // Open only once the Feed, and its snapshot, hold what the Device kept, so the subscription resumes after the revision it stored.
-    loaded: feed.epoch !== null && !restoring,
+    shown: shown && !restoring,
+    held: feed.epoch !== null,
+    refused,
+    onRefused: () => setRefused(true),
   });
 
   const older = useOlderHistory(cacheId, readPage);
@@ -51,7 +61,7 @@ export function useSessionFeed(
     loadOlder: async () => {
       if (!older.isPending) await older.mutateAsync().catch(() => {});
     },
-    openError: live.closure?.error ?? live.changes.error,
+    openError: live.openError,
     retryOpen: live.retryOpen,
     resumeAfterCommand: () => {
       if (live.closure) live.retryOpen();

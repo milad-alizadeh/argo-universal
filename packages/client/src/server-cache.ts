@@ -10,6 +10,7 @@ import {
   feedKeyPrefix,
   snapshotKeyPrefix,
 } from './features/feed/api/feed-query';
+import type { RetrieveKept } from './features/feed/api/restore-feed';
 import { serverQueryPersister } from './features/servers/server-cache-store';
 
 /*
@@ -50,13 +51,14 @@ interface DeviceCache {
 
 /*
  * Makes the kept queries restore from this Server's cache on the Device the first time each is read. Run once, after
- * `keepServerLists` and before any query is read: a query takes the defaults in force when it first runs.
+ * `keepServerLists` and before any query is read: a query takes the defaults in force when it first runs. Returns how a
+ * Feed is read off the Device ahead of its subscription (`useRestoreFeed`).
  */
 export function restoreFromDevice(
   queryClient: QueryClient,
   trpc: TRPC,
   { serverId, storage }: DeviceCache,
-): void {
+): RetrieveKept {
   const persister = serverQueryPersister(serverId, storage);
 
   for (const key of keptKeys(trpc))
@@ -68,6 +70,8 @@ export function restoreFromDevice(
     });
 
   void persister.persisterGc();
+
+  return persister.retrieveQuery;
 }
 
 // Writes each kept query to the Device as it changes; the returned function stops, saving what was still waiting.
@@ -95,7 +99,8 @@ export function writeToDevice(
       writers.get(query.queryHash) ??
       new LiteThrottler<() => void>(() => void persister.persistQuery(query), {
         wait: writeEveryMs,
-        leading: true,
+        // Not at once: a restored query is written with the age the Device kept it at, which the persister sets just after the restore.
+        leading: false,
         trailing: true,
       });
 
