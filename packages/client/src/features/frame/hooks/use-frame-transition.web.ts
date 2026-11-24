@@ -59,3 +59,33 @@ export function useFrameTransition<T>(transition: FrameTransition<T>): void {
       : [];
   });
 }
+
+export interface SurfaceBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+}
+
+// The surface lays out once at its destination. Its first frame maps that box onto the preceding bounds.
+export function surfaceFrames(
+  from: SurfaceBounds,
+  to: SurfaceBounds,
+): Keyframe[] {
+  const scaleX = from.width / Math.max(1, to.width);
+  const scaleY = from.height / Math.max(1, to.height);
+
+  return [
+    {
+      transformOrigin: 'top left',
+      transform: `translate(${from.x - to.x}px, ${from.y - to.y}px) scale(${scaleX}, ${scaleY})`,
+      opacity: from.opacity,
+    },
+    {
+      transformOrigin: 'top left',
+      transform: 'translate(0px, 0px) scale(1, 1)',
+      opacity: to.opacity,
+    },
+  ];
+}

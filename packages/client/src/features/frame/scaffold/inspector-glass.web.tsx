@@ -2,7 +2,11 @@ import { glassMaterialClass } from '@repo/kit/primitives/content/liquid-glass';
 import { cn } from '@repo/kit/utils';
 import { type CSSProperties, type ReactElement, useRef } from 'react';
 import type { FramePaneProps } from '../components/frame-pane/frame-pane';
-import { useFrameTransition } from '../hooks/use-frame-transition.web';
+import {
+  surfaceFrames,
+  type SurfaceBounds,
+  useFrameTransition,
+} from '../hooks/use-frame-transition.web';
 import type { InspectorBox, InspectorGlassProps } from './inspector-glass';
 
 export type { InspectorBox } from './inspector-glass';
@@ -17,8 +21,8 @@ const heightOf = (box: InspectorBox): string =>
     ? `calc(100% - ${pixels(box.y + box.bottom)})`
     : pixels(box.height);
 
-// The glass's box, as its style draws it at rest and as a keyframe while it moves.
-const glassBox = (box: InspectorBox): CSSProperties & Keyframe => ({
+// The glass's layout box at rest.
+const glassBox = (box: InspectorBox): CSSProperties => ({
   left: pixels(box.x),
   top: pixels(box.y),
   width: pixels(box.width),
@@ -47,10 +51,18 @@ export function InspectorGlass({
   useFrameTransition({
     ...motion,
     value: box,
-    frames: (from, to) => [
-      [glass.current, [glassBox(from), glassBox(to)]],
-      [clip.current, [contentClip(from), contentClip(to)]],
-    ],
+    frames: (from, to) => {
+      const parentHeight = glass.current?.parentElement?.clientHeight ?? 0;
+      const bounds = (value: InspectorBox): SurfaceBounds => ({
+        ...value,
+        height: value.height ?? parentHeight - value.y - value.bottom,
+      });
+
+      return [
+        [glass.current, surfaceFrames(bounds(from), bounds(to))],
+        [clip.current, [contentClip(from), contentClip(to)]],
+      ];
+    },
   });
 
   return (
@@ -59,7 +71,10 @@ export function InspectorGlass({
         ref={glass}
         data-testid="inspector-glass"
         aria-hidden
-        className={cn('pointer-events-none absolute', glassMaterialClass)}
+        className={cn(
+          'pointer-events-none absolute',
+          box.height === null ? glassMaterialClass : 'bg-card shadow-capsule',
+        )}
         style={glassBox(box)}
       />
       <div

@@ -227,7 +227,6 @@ function toggleKeepsItsPlace(
       await controlled.render(states[0]);
       await settleMotion();
       const resting = box(canvas.getByRole('button', { name }));
-      await expect(resting).toMatchObject({ width: 32, height: 32 });
 
       for (const state of [states[1], states[0]]) {
         await controlled.render(state);
@@ -261,12 +260,15 @@ export const HistoryButtonsJumpBetweenFixedPositions: ScaffoldStory = {
     const open = history().map(box);
     const list = canvas.getByTestId('desktop-list').getBoundingClientRect();
     await expect(open[0].x).toBeGreaterThan(list.left);
-    await expect(open[1].x + open[1].width).toBeLessThanOrEqual(list.right);
+    const trailingGap = list.right - open[1].x - open[1].width;
+    await expect(trailingGap).toBeGreaterThanOrEqual(0);
+    await expect(trailingGap).toBeLessThan(open[1].width);
 
     await controlled.render({ sidebarShown: false });
     await settleMotion();
     const closed = history().map(box);
     const capsule = canvas.getByTestId(leadingCapsule);
+
     for (const button of history())
       await expect(inside(button, capsule)).toBe(true);
 

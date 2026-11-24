@@ -4,6 +4,8 @@ import type * as React from 'react';
 import { type Ref, type RefObject, useRef } from 'react';
 import {
   type ElementFrame,
+  type SurfaceBounds,
+  surfaceFrames,
   useFrameTransition,
 } from '../../hooks/use-frame-transition.web';
 import type { GlassSurfaceProps } from './glass-surface';
@@ -80,20 +82,6 @@ const boxStyle = (box: GlassBox, origin: number): React.CSSProperties => ({
 const railTop = (props: GlassSurfaceProps, box: GlassBox): number =>
   props.barHeight - box.top;
 
-// A keyframe spells the height out, so the box grows from the capsule to the column's bottom.
-const panelFrame = (
-  box: GlassBox,
-  origin: number,
-  columnHeight: number,
-): Keyframe => ({
-  left: `${box.left - origin}px`,
-  top: `${box.top}px`,
-  width: `${box.width}px`,
-  height: `${box.height ?? columnHeight - box.top}px`,
-  borderRadius: `${box.radius}px`,
-  opacity: box.opacity,
-});
-
 function glassFrames(
   refs: GlassRefs,
   props: GlassSurfaceProps,
@@ -101,11 +89,19 @@ function glassFrames(
 ): readonly ElementFrame[] {
   const columnHeight = refs.mask.current?.parentElement?.offsetHeight ?? 0;
 
-  const panel = [from, to].map((box) =>
-    panelFrame(box, props.origin, columnHeight),
-  );
+  const bounds = (box: GlassBox): SurfaceBounds => ({
+    x: box.left,
+    y: box.top,
+    width: box.width,
+    height: box.height ?? columnHeight - box.top,
+    opacity: box.opacity,
+  });
 
-  const rail = [from, to].map((box) => ({ top: `${railTop(props, box)}px` }));
+  const panel = surfaceFrames(bounds(from), bounds(to));
+  const rail = [
+    { transform: `translateY(${railTop(props, from) - railTop(props, to)}px)` },
+    { transform: 'translateY(0px)' },
+  ];
 
   return [
     [refs.mask.current, panel],
@@ -114,7 +110,7 @@ function glassFrames(
   ];
 }
 
-// The panel holds no content, so resizing it reflows nothing else.
+// The glass and rail tint have their own layers apart from the pane content.
 function useGlassMotion(props: GlassSurfaceProps, box: GlassBox): GlassRefs {
   const mask = useRef<HTMLDivElement>(null);
   const edge = useRef<HTMLDivElement>(null);
@@ -171,8 +167,9 @@ function GlassFill({
     <div
       className={cn(
         'absolute bottom-0 left-0 top-0',
-        glassMaterial.fill,
-        glassMaterial.frost,
+        box.height === null
+          ? cn(glassMaterial.fill, glassMaterial.frost)
+          : 'bg-card',
       )}
       style={{ width: Math.max(box.width, props.expandedWidth) }}
     />
@@ -200,7 +197,10 @@ function GlassEdge({
   return (
     <div
       ref={ref}
-      className={cn('pointer-events-none absolute', glassMaterial.edge)}
+      className={cn(
+        'pointer-events-none absolute',
+        box.height === null ? glassMaterial.edge : 'shadow-capsule',
+      )}
       style={boxStyle(box, origin)}
     />
   );
