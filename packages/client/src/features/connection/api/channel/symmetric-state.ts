@@ -15,12 +15,13 @@ const pairingPrologue = textBytes(productCompatibility.pairingPrologue);
 export class SymmetricState {
   private hash: Uint8Array = protocolName;
   private chainingKey: Uint8Array = protocolName;
-  private readonly cipher = new CipherState();
+  private readonly cipher: CipherState;
 
   public constructor(
     serverPublicKey: Uint8Array,
     prologue: Uint8Array = pairingPrologue,
   ) {
+    this.cipher = new CipherState();
     this.mixHash(prologue);
     this.mixHash(serverPublicKey);
   }

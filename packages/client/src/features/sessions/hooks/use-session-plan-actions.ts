@@ -4,7 +4,7 @@ import type {
   SessionSnapshot,
 } from '@repo/contracts';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type ClientError, useTRPC } from '#features/connection';
 import type { PermissionRequestProps } from '#features/requests';
 import { sessionHref } from '#lib/product/navigation/navigation';
@@ -60,11 +60,16 @@ function useSavePlan(): (input: { sessionId: string; plan: string }) => void {
 
 function useStartSession(): (input: SessionNewInput) => void {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const navigate = useNavigateFromShown();
 
   return useMutation(
     trpc.session.new.mutationOptions({
-      onSuccess: ({ sessionId }) => navigate(sessionHref(sessionId)),
+      onSuccess: ({ sessionId }) => {
+        // A new Session remembers its Checkout choice on the Project, so the kept Project list is refetched.
+        void queryClient.invalidateQueries(trpc.project.list.queryFilter());
+        navigate(sessionHref(sessionId));
+      },
       onError: failed("Couldn't start a new Session"),
     }),
   ).mutate;

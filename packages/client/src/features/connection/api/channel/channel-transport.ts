@@ -4,6 +4,8 @@ import type { ChannelAddress, OpenSocket } from './byte-socket';
 import { channelFetch } from './channel-fetch';
 import { ChannelRoute, type LocateServer } from './channel-route';
 import { channelWebSocket } from './channel-web-socket';
+import type { NativeChannel } from './native-channel';
+import { nativeChannelWebSocket } from './native-channel-web-socket';
 import {
   type ChannelInput,
   openChannel,
@@ -21,6 +23,8 @@ export interface ChannelPlatform {
   readonly deviceKey: () => Promise<Keypair>;
   // What the Device says of itself in the handshake. The Pairing Ticket is not here: it belongs to the one Connection that spends it (`ChannelTarget`).
   readonly claim: () => DeviceClaim;
+  // On iOS and Android, the native module that carries tRPC's socket once the handshake is done. Fetch, and the web, keep `openSocket`.
+  readonly nativeChannel?: NativeChannel;
 }
 
 export type DeviceClaim = Omit<PairingClaim, 'ticket'>;
@@ -44,12 +48,30 @@ export interface ChannelTarget {
 export const opener = (
   target: ChannelTarget,
   platform: ChannelPlatform,
+  shared: SharedOpening = sharedOpening(target, platform),
 ): (() => Promise<OpenedChannel>) => {
-  const deviceKey = once(platform.deviceKey);
-  const route = new ChannelRoute(target.address, target.locate, target.others);
-
-  return async () => route.open(at(target, platform, await deviceKey()));
+  return async () =>
+    shared.route.open(
+      at(target, platform, await shared.deviceKey()),
+      (opened) => {
+        opened.stream.close();
+      },
+    );
 };
+
+// What every channel to one Server shares, whichever socket carries it: where the Server answers, and the one read of the Device Key.
+interface SharedOpening {
+  readonly route: ChannelRoute;
+  readonly deviceKey: () => Promise<Keypair>;
+}
+
+const sharedOpening = (
+  target: ChannelTarget,
+  platform: ChannelPlatform,
+): SharedOpening => ({
+  route: new ChannelRoute(target.address, target.locate, target.others),
+  deviceKey: once(platform.deviceKey),
+});
 
 // One try at one address the Server may answer on.
 const at =
@@ -95,14 +117,28 @@ export function createChannelTransport(
   platform: ChannelPlatform,
   onRefused?: () => void,
 ): ChannelTransport {
-  const open = opener(target, platform);
+  const shared = sharedOpening(target, platform);
+  const open = opener(target, platform, shared);
+  const { nativeChannel } = platform;
+
+  const socketDeps = {
+    openChannel: open,
+    randomBytes: platform.randomBytes,
+    onRefused,
+  };
 
   return {
-    WebSocket: channelWebSocket({
-      openChannel: open,
-      randomBytes: platform.randomBytes,
-      onRefused,
-    }),
+    WebSocket: nativeChannel
+      ? nativeChannelWebSocket({
+          ...socketDeps,
+          openChannel: opener(
+            target,
+            { ...platform, openSocket: nativeChannel.openSocket },
+            shared,
+          ),
+          native: nativeChannel,
+        })
+      : channelWebSocket(socketDeps),
     fetch: channelFetch({
       openChannel: open,
       randomBytes: platform.randomBytes,

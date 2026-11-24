@@ -24,6 +24,8 @@ const unreachable = 'The Server did not answer';
 
 const opened = 'channel';
 
+const noDiscard = (): void => {};
+
 interface FakeServer {
   attempt: (address: ChannelAddress) => Promise<string>;
   // Every address a channel was opened to, in order.
@@ -54,7 +56,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, () => new Promise(() => {}));
     const server = serverOn(kept);
 
-    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    await expect(route.open(server.attempt, noDiscard)).resolves.toBe(opened);
     expect(server.tried).toEqual([kept]);
   });
 
@@ -65,7 +67,59 @@ describe('ChannelRoute', () => {
 
     const server = serverOn(tailnet);
 
-    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    await expect(route.open(server.attempt, noDiscard)).resolves.toBe(opened);
+    expect(server.tried).toEqual([kept, tailnet]);
+  });
+
+  it('keeps the first kept address that answers, without waiting on a dead one that never does', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+
+    const attempt = async (address: ChannelAddress): Promise<string> =>
+      address.host === kept.host
+        ? new Promise<string>(() => {})
+        : `channel at ${address.host}`;
+
+    await expect(route.open(attempt, noDiscard)).resolves.toBe(
+      `channel at ${tailnet.host}`,
+    );
+  });
+
+  it('closes a channel that opens after another address has already won', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+    const discard = vi.fn<(channel: string) => void>();
+    const late = Promise.withResolvers<string>();
+
+    const attempt = async (address: ChannelAddress): Promise<string> =>
+      address.host === kept.host ? late.promise : 'tailnet channel';
+
+    await route.open(attempt, discard);
+    late.resolve('late lan channel');
+
+    await vi.waitFor(() => {
+      expect(discard).toHaveBeenCalledWith('late lan channel');
+    });
+  });
+
+  it('stops at once when a Server refuses this Device, without waiting on a dead address', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+
+    const attempt = async (address: ChannelAddress): Promise<string> => {
+      if (address.host === kept.host) return new Promise<string>(() => {});
+      throw new PairingRefused('ticket-required');
+    };
+
+    await expect(route.open(attempt, noDiscard)).rejects.toBeInstanceOf(
+      PairingRefused,
+    );
+  });
+
+  it('says the Server is unreachable once every kept address has failed', async () => {
+    const route = new ChannelRoute(kept, announcing(), [tailnet]);
+    const server = serverOn();
+
+    await expect(route.open(server.attempt, noDiscard)).rejects.toThrow(
+      unreachable,
+    );
     expect(server.tried).toEqual([kept, tailnet]);
   });
 
@@ -74,7 +128,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(now), [tailnet]);
     const server = serverOn(now);
 
-    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    await expect(route.open(server.attempt, noDiscard)).resolves.toBe(opened);
     expect(server.tried).toEqual([kept, tailnet, now]);
   });
 
@@ -84,8 +138,8 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, locate);
     const server = serverOn(now);
 
-    await route.open(server.attempt);
-    await route.open(server.attempt);
+    await route.open(server.attempt, noDiscard);
+    await route.open(server.attempt, noDiscard);
 
     expect(locate).toHaveBeenCalledTimes(1);
     expect(server.tried).toEqual([kept, now, now]);
@@ -97,11 +151,11 @@ describe('ChannelRoute', () => {
     const announced = [before];
     const route = new ChannelRoute(kept, async () => announced);
 
-    await route.open(serverOn(before).attempt);
+    await route.open(serverOn(before).attempt, noDiscard);
     announced.splice(0, 1, after);
     const moved = serverOn(after);
 
-    await expect(route.open(moved.attempt)).resolves.toBe(opened);
+    await expect(route.open(moved.attempt, noDiscard)).resolves.toBe(opened);
     expect(moved.tried).toEqual([before, kept, after]);
   });
 
@@ -110,7 +164,9 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(), [wire, tailnet]);
     const server = serverOn();
 
-    await expect(route.open(server.attempt)).rejects.toThrow(unreachable);
+    await expect(route.open(server.attempt, noDiscard)).rejects.toThrow(
+      unreachable,
+    );
 
     expect(server.tried).toEqual([kept, tailnet, wire]);
   });
@@ -121,7 +177,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(wire, wifi));
     const server = serverOn(wire);
 
-    await route.open(server.attempt);
+    await route.open(server.attempt, noDiscard);
 
     expect(server.tried).toEqual([kept, wifi, wire]);
   });
@@ -130,7 +186,9 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(kept, kept));
     const server = serverOn();
 
-    await expect(route.open(server.attempt)).rejects.toThrow(unreachable);
+    await expect(route.open(server.attempt, noDiscard)).rejects.toThrow(
+      unreachable,
+    );
     expect(server.tried).toEqual([kept]);
   });
 
@@ -142,7 +200,7 @@ describe('ChannelRoute', () => {
     const refused = route.open(async (address) => {
       tried.push(address);
       throw new PairingRefused('ticket-required');
-    });
+    }, noDiscard);
 
     await expect(refused).rejects.toBeInstanceOf(PairingRefused);
     expect(tried).toEqual([kept]);
@@ -151,7 +209,9 @@ describe('ChannelRoute', () => {
   it('says the Server is unreachable when no address answers', async () => {
     const route = new ChannelRoute(kept, announcing(lan(40)));
 
-    await expect(route.open(serverOn().attempt)).rejects.toThrow(unreachable);
+    await expect(route.open(serverOn().attempt, noDiscard)).rejects.toThrow(
+      unreachable,
+    );
   });
 
   it('asks the network once for channels that open together', async () => {
@@ -159,7 +219,10 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, locate);
     const server = serverOn(kept);
 
-    await Promise.all([route.open(server.attempt), route.open(server.attempt)]);
+    await Promise.all([
+      route.open(server.attempt, noDiscard),
+      route.open(server.attempt, noDiscard),
+    ]);
 
     expect(locate).toHaveBeenCalledTimes(1);
   });
@@ -168,7 +231,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept);
     const server = serverOn(kept);
 
-    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    await expect(route.open(server.attempt, noDiscard)).resolves.toBe(opened);
     expect(server.tried).toEqual([kept]);
   });
 });

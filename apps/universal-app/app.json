@@ -14,6 +14,15 @@
       "infoPlist": {
         "UIBackgroundModes": ["audio"],
         "NSBonjourServices": ["_argo._tcp"],
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "ts.net": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        },
         "NSLocalNetworkUsageDescription": "Argo finds your Server on the local network.",
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
         "UISupportedInterfaceOrientations~ipad": [
@@ -55,7 +64,8 @@
             "deploymentTarget": "18.0"
           },
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "minSdkVersion": 28
           }
         }
       ],
