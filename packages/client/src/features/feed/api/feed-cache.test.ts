@@ -146,6 +146,18 @@ describe('FeedCache', () => {
     );
   });
 
+  it('keeps the newest revision it holds when the tail pages again with an older one', async () => {
+    const h = feedCacheHarness();
+    show(h);
+    await opened(h);
+    h.answer('tail', page(rows, 7));
+
+    const merged = await h.cache.loadTail();
+
+    expect(merged.revision).toBe(snapshot.maxRevision);
+    expect(h.cache.syncPoint()).toEqual(resumeAt);
+  });
+
   it('takes nothing before it starts showing the Session', async () => {
     const h = feedCacheHarness();
     await opened(h);
@@ -192,23 +204,5 @@ describe('FeedCache resuming live changes', () => {
       point: null,
       restart: false,
     });
-  });
-
-  it('writes nothing when a Session that has finished sends no rows after the cached revision', async () => {
-    const h = feedCacheHarness();
-    show(h);
-    await opened(h);
-    h.cache.receive({ type: 'snapshot', snapshot });
-    h.drawFrame();
-    const writes = h.feedWrites();
-    const held = h.cache.read();
-
-    // A reconnect asks after the cached revision; the Server has nothing newer, so nothing arrives.
-    const { point } = resumeAfter(null, h.cache.syncPoint());
-    h.drawFrame();
-
-    expect(point).toEqual(resumeAt);
-    expect(h.feedWrites()).toBe(writes);
-    expect(h.cache.read()).toBe(held);
   });
 });

@@ -73,6 +73,23 @@ describe('FeedCache while a screen shows the Session', () => {
   });
 });
 
+// The old store held rows that arrived after a stop and committed them on the next start. The cache holds none: the subscription reopens after the rows written and the Server sends them again.
+describe('FeedCache when shown again after a stop', () => {
+  it('writes only what the frame wrote and resumes after that revision, not the one it dropped', async () => {
+    const h = feedCacheHarness();
+    const stop = h.cache.start();
+    await holding(h);
+
+    for (const event of events) h.cache.receive(event);
+    stop();
+    h.cache.start();
+    h.drawFrame();
+
+    expect(h.cache.read().rows).toEqual([]);
+    expect(h.cache.syncPoint()).toEqual({ epoch: 0, revision: 0 });
+  });
+});
+
 describe('FeedCache while its page is hidden', () => {
   it('writes nothing while the Session streams', async () => {
     const h = feedCacheHarness();

@@ -4,10 +4,10 @@ import {
   type TRPCSubscriptionResult,
   useSubscription,
 } from '@trpc/tanstack-react-query';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import {
   type ClientError,
-  useResubscribeOnReconnect,
+  useConnectionState,
   useTRPC,
 } from '#features/connection';
 import { type FeedCache, resumeAfter, samePoint } from '../api/feed-cache';
@@ -83,34 +83,45 @@ export function useFeedLive(
     },
   });
 
+  // Read the point from the ref: a reconnect can land before the render that shows the last one.
+  const openedAt = useRef(live.openAt);
+  useEffect(() => {
+    openedAt.current = live.openAt;
+  });
+
   const retryOpen = (): void => {
+    if (!shown) return;
+
     setLive({ closure: null });
-    const { point, restart } = resumeAfter(live.openAt, cache.syncPoint());
+    const { point, restart } = resumeAfter(openedAt.current, cache.syncPoint());
 
     if (restart) changes.reset();
-    else setLive({ openAt: point });
+    else {
+      openedAt.current = point;
+      setLive({ openAt: point });
+    }
   };
 
-  useResumeOnReconnect(changes, retryOpen);
+  useResumeOnReturn(retryOpen);
 
   return { changes, closure: live.closure, retryOpen };
 }
 
-// A stopped subscription reopens after the rows held on reconnect and when the window regains focus.
-function useResumeOnReconnect(
-  changes: LiveChanges,
-  retryOpen: () => void,
-): void {
-  useResubscribeOnReconnect(changes, retryOpen);
+// Live changes reopen after the rows held whenever the Connection reopens or the window regains focus, whether or not the subscription noticed it died.
+function useResumeOnReturn(retryOpen: () => void): void {
+  const state = useConnectionState();
+  const previous = useRef(state);
+  const resume = useEffectEvent(retryOpen);
 
-  const reopenIfStopped = useEffectEvent(() => {
-    if (changes.status === 'error') retryOpen();
-  });
+  useEffect(() => {
+    if (previous.current !== 'open' && state === 'open') resume();
+    previous.current = state;
+  }, [state]);
 
   useEffect(
     () =>
       focusManager.subscribe((focused) => {
-        if (focused) reopenIfStopped();
+        if (focused) resume();
       }),
     [],
   );
