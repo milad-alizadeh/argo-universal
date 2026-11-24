@@ -12,6 +12,13 @@ afterEach(async () => {
 
 const imageCount = 12;
 
+const rounds = 3;
+
+const median = (values: number[]): number =>
+  [...values].sort((left, right) => left - right)[
+    Math.floor(values.length / 2)
+  ] ?? 0;
+
 const bodyOf = (index: number): string => `image ${index} `.repeat(2000);
 
 async function feedWithImages(
@@ -83,27 +90,36 @@ it('records what a Feed of images costs over bad Wi-Fi, a channel each and on on
     };
   };
 
-  // Alternated, so neither pays alone for a cold cipher.
-  const runs = [phone.fetch, phone.media, phone.fetch, phone.media];
-  const results: Awaited<ReturnType<typeof timed>>[] = [];
+  // Each reader is new, so each starts from a cold channel; the three take turns, three times, so none pays alone for a cold cipher.
+  const readers = {
+    'a channel each': (): typeof fetch => phone.fetch,
+    'one channel, one at a time': (): typeof fetch => phone.mediaWindow(1),
+    'one channel, four at a time': (): typeof fetch => phone.mediaWindow(4),
+  };
 
-  for (const read of runs) results.push(await timed(read));
+  const times: Record<string, number[]> = {};
+  const handshakes: Record<string, number> = {};
 
-  const lines = results.map(
-    ({ ms, handshakes }) => `${Math.round(ms)} ms, ${handshakes} handshakes`,
-  );
+  for (let round = 0; round < rounds; round += 1)
+    for (const [name, reader] of Object.entries(readers)) {
+      const run = await timed(reader());
+      (times[name] ??= []).push(run.ms);
+      handshakes[name] = run.handshakes;
+    }
 
-  // The harness gives each socket a link of its own, so twelve sockets have twelve times the bandwidth a phone's one radio has: read the handshakes, not the milliseconds, as the saving.
+  // One bandwidth is shared by every socket (`slowNetwork`), as a phone's one radio is.
   console.info(
-    `${imageCount} images over bad Wi-Fi, runs alternating a channel each and one shared channel: ${lines.join(' | ')}`,
+    `${imageCount} images over bad Wi-Fi, median of ${rounds}: ${Object.entries(
+      times,
+    )
+      .map(
+        ([name, values]) =>
+          `${name} ${Math.round(median(values))} ms, ${handshakes[name]} handshakes`,
+      )
+      .join(' | ')}`,
   );
 
-  const [firstEach, firstShared, secondEach, secondShared] = results.map(
-    ({ handshakes }) => handshakes,
-  );
-
-  expect([firstEach, secondEach]).toEqual([imageCount, imageCount]);
-  // The channel the first shared run opened is still there for the second unless the Server closed it for being idle.
-  expect(firstShared).toBe(1);
-  expect(secondShared).toBeLessThanOrEqual(1);
-});
+  expect(handshakes['a channel each']).toBe(imageCount);
+  expect(handshakes['one channel, one at a time']).toBe(1);
+  expect(handshakes['one channel, four at a time']).toBe(1);
+}, 120_000);

@@ -55,10 +55,10 @@ const waiting = new Map<string, Set<() => void>>();
 const lateImageUrl: ImageUrl = Object.assign(
   (blob: BlobRef): string => (arrived.has(blob.blobId) ? redSquareDataUrl : ''),
   {
-    watch: (blob: BlobRef, changed: () => void): (() => void) => {
-      const readers = waiting.get(blob.blobId) ?? new Set<() => void>();
+    watch: (blobId: string, changed: () => void): (() => void) => {
+      const readers = waiting.get(blobId) ?? new Set<() => void>();
       readers.add(changed);
-      waiting.set(blob.blobId, readers);
+      waiting.set(blobId, readers);
 
       return (): void => void readers.delete(changed);
     },

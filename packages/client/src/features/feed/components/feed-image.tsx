@@ -17,10 +17,10 @@ import { useOpenImageStyle } from '../hooks/use-open-image-style';
 import { imageLabel } from '../view/image-label';
 import type { KeyedImage } from '../view/keyed-image';
 
-// `watch` is there when an image's URL arrives later: it tells the readers of that one Blob, and no others, to ask again.
+// `watch` is there when an image's URL arrives later: it starts the read and tells the readers of that one Blob, and no others, to ask again.
 export interface ImageUrl {
   (blob: BlobRef): string;
-  watch?: (blob: BlobRef, changed: () => void) => () => void;
+  watch?: (blobId: string, changed: () => void) => () => void;
 }
 
 export const FeedImageUrlContext = createContext<ImageUrl | null>(null);
@@ -45,11 +45,12 @@ const nobody = (): void => {};
 // One image's URL. When it arrives, only the images of this Blob draw again, not every row of the Feed.
 function useBlobUri(loadImage: ImageUrl, image: ImageContent): string {
   const { blob } = image;
+  const { blobId } = blob;
 
   const subscribe = useCallback(
     (changed: () => void): (() => void) =>
-      loadImage.watch?.(blob, changed) ?? nobody,
-    [loadImage, blob],
+      loadImage.watch?.(blobId, changed) ?? nobody,
+    [loadImage, blobId],
   );
 
   return useSyncExternalStore(subscribe, () => loadImage(blob));

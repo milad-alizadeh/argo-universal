@@ -8,10 +8,14 @@ import { createContext, useContext, useMemo } from 'react';
 import { ChannelMedia } from '../channel/channel-media';
 import { serverHttpUrl } from './create-trpc-client';
 
-// `watch` is there when the URL arrives later; it tells the readers of this one Blob, and no others, to ask again.
+/*
+ * `watch` is there when the URL arrives later: it starts the read, tells the readers of this one Blob, and no others, to ask again, and stops the read when the last of them leaves.
+ * `preload` is for a caller that cannot watch, such as a card drawn once.
+ */
 export interface BlobUrl {
   (blob: BlobRef): string;
-  watch?: (blob: BlobRef, changed: () => void) => () => void;
+  watch?: (blobId: string, changed: () => void) => () => void;
+  preload?: (blob: BlobRef) => void;
 }
 
 export const BlobUrlContext = createContext<BlobUrl | null>(null);
@@ -50,8 +54,9 @@ export function useChannelUrls(read: typeof fetch): ServerUrls {
       blobUrl: Object.assign(
         (blob: BlobRef) => media.urlFor(blobPath(blob.blobId)),
         {
-          watch: (blob: BlobRef, changed: () => void) =>
-            media.watch(blobPath(blob.blobId), changed),
+          watch: (blobId: string, changed: () => void) =>
+            media.watch(blobPath(blobId), changed),
+          preload: (blob: BlobRef) => media.preload(blobPath(blob.blobId)),
         },
       ),
       mediaUrl: Object.assign(

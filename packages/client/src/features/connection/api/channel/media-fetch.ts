@@ -22,6 +22,8 @@ export interface MediaFetchDeps {
   readonly randomBytes: (length: number) => Uint8Array;
   // Answers what one shared channel cannot: a call that is not a read, and a response with no length to frame it by. It opens a channel of its own.
   readonly fallback: typeof fetch;
+  // How many reads are on the way at once; `maxConcurrentDownloads` unless a test measures another.
+  readonly window?: number;
 }
 
 interface Job {
@@ -30,6 +32,8 @@ interface Job {
   readonly reject: (error: Error) => void;
   // How many channels this read was written to; one the Server closed while the read waited is tried once more.
   sent: number;
+  // The caller gave up on it. A read still waiting is never sent; one on the wire is read to its end and thrown away, since the channel's next response follows it.
+  aborted: boolean;
 }
 
 interface Answered {
@@ -47,7 +51,10 @@ const lengthOf = (head: HttpResponseHead): number | undefined => {
   if (noBody.has(head.status)) return 0;
   const length = head.headers.get('content-length');
 
-  return length === undefined ? undefined : Number(length);
+  // Anything but digits is no length to frame a body by.
+  return length !== undefined && /^\d+$/.test(length)
+    ? Number(length)
+    : undefined;
 };
 
 const errorOf = (cause: unknown): Error =>
@@ -167,12 +174,15 @@ interface Queue {
 }
 
 function pump(queue: Queue): void {
-  while (queue.running < maxConcurrentDownloads) {
+  while (queue.running < (queue.deps.window ?? maxConcurrentDownloads)) {
     const job = queue.waiting.shift();
 
     if (!job) return;
-    queue.running += 1;
-    start(queue, job);
+
+    if (!job.aborted) {
+      queue.running += 1;
+      start(queue, job);
+    }
   }
 }
 
@@ -257,10 +267,26 @@ export const mediaFetch = (deps: MediaFetchDeps): typeof fetch => {
   const queue: Queue = { deps, waiting: [], running: 0, lane: undefined };
 
   return async (input, init) => {
+    const signal = init?.signal ?? undefined;
+
+    signal?.throwIfAborted();
     const request = await channelRequest(input, init, deps.randomBytes);
 
     return new Promise<Response>((resolve, reject): void => {
-      queue.waiting.push({ request, resolve, reject, sent: 0 });
+      const job: Job = { request, resolve, reject, sent: 0, aborted: false };
+
+      signal?.addEventListener(
+        'abort',
+        () => {
+          job.aborted = true;
+          const waiting = queue.waiting.indexOf(job);
+
+          if (waiting >= 0) queue.waiting.splice(waiting, 1);
+          reject(errorOf(signal.reason));
+        },
+        { once: true },
+      );
+      queue.waiting.push(job);
       pump(queue);
     });
   };

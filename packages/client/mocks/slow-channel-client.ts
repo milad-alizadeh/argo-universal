@@ -1,5 +1,9 @@
 import type { OpenSocket } from '../src/features/connection/api/channel/byte-socket';
-import { createChannelTransport } from '../src/features/connection/api/channel/channel-transport';
+import {
+  createChannelTransport,
+  opener,
+} from '../src/features/connection/api/channel/channel-transport';
+import { mediaFetch } from '../src/features/connection/api/channel/media-fetch';
 import {
   channelServerUrl,
   createTRPCClient,
@@ -16,6 +20,8 @@ export interface Phone {
   client: ReturnType<typeof createTRPCClient>['client'];
   // How a Blob or Plugin asset is read, and how the App read one before media shared a channel.
   media: typeof fetch;
+  // The same reader with its own window: how many reads are on the way on its one channel.
+  mediaWindow: (window: number) => typeof fetch;
   fetch: typeof fetch;
   // How many sockets, and so Noise handshakes, the phone has opened so far.
   handshakes: () => number;
@@ -39,13 +45,14 @@ export async function phoneOn(
     return platform.openSocket(to, headers);
   };
 
-  const transport = createChannelTransport(
-    { address: { host: address, port }, serverPublicKey },
-    {
-      ...platform,
-      openSocket: network ? slowNetwork(counting, network) : counting,
-    },
-  );
+  const target = { address: { host: address, port }, serverPublicKey };
+
+  const slowPlatform = {
+    ...platform,
+    openSocket: network ? slowNetwork(counting, network) : counting,
+  };
+
+  const transport = createChannelTransport(target, slowPlatform);
 
   const trpc = createTRPCClient(channelServerUrl, undefined, {
     channel: transport,
@@ -54,6 +61,13 @@ export async function phoneOn(
   return {
     client: trpc.client,
     media: transport.media,
+    mediaWindow: (window) =>
+      mediaFetch({
+        openChannel: opener(target, slowPlatform),
+        randomBytes: platform.randomBytes,
+        fallback: transport.fetch,
+        window,
+      }),
     fetch: transport.fetch,
     handshakes: () => opened,
     close: trpc.close,

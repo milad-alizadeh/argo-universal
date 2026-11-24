@@ -41,13 +41,18 @@ export function useMediaUri(
   asset: MediaAsset | undefined,
 ): string | number | undefined {
   const mediaUrl = useMediaUrl();
+  // An asset is a small plain object, new on each render; what it names is what keeps the subscription.
+  const key = asset === undefined ? undefined : JSON.stringify(asset);
 
   const subscribe = useCallback(
     (changed: () => void): (() => void) =>
-      asset && mediaUrl.watch ? mediaUrl.watch(asset, changed) : nobody,
-    [mediaUrl, asset],
+      key !== undefined && mediaUrl.watch
+        ? mediaUrl.watch(JSON.parse(key), changed)
+        : nobody,
+    [mediaUrl, key],
   );
 
+  // Reading the URL starts nothing: watching does.
   return useSyncExternalStore(subscribe, () =>
     asset === undefined ? undefined : mediaUrl(asset),
   );

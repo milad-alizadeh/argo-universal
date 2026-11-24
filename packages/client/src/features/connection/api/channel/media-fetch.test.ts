@@ -206,6 +206,74 @@ it('leaves a response with no length to a channel of its own', async () => {
   expect(fallback).toHaveBeenCalledOnce();
 });
 
+it('treats a Content-Length that is not a number as no length', async () => {
+  const server = fakeChannel();
+  const fallback = vi.fn<typeof fetch>(async () => new Response('streamed'));
+  const { read } = mediaOver([server], fallback);
+
+  const pending = read('/blobs/a');
+  await vi.waitFor(() => expect(server.requests).toHaveLength(1));
+
+  server.send(textBytes('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\nxyz'));
+
+  expect(await (await pending).text()).toBe('streamed');
+});
+
+it('drops a read that is aborted while it waits, so it never holds the queue', async () => {
+  const server = fakeChannel();
+  const { read } = mediaOver([server]);
+  const gone = new AbortController();
+
+  const first = Array.from({ length: maxConcurrentDownloads }, (_, index) =>
+    read(`/blobs/${index}`),
+  );
+
+  const dropped = read('/blobs/gone', { signal: gone.signal });
+  const kept = read('/blobs/kept');
+
+  await vi.waitFor(() =>
+    expect(server.requests).toHaveLength(maxConcurrentDownloads),
+  );
+  gone.abort();
+  await expect(dropped).rejects.toMatchObject({ name: 'AbortError' });
+
+  for (let index = 0; index < maxConcurrentDownloads; index += 1)
+    server.answer(String(index));
+  await Promise.all(first);
+
+  await vi.waitFor(() => expect(server.requests).toHaveLength(5));
+  expect(paths(server.requests).at(-1)).toBe('/blobs/kept');
+  server.answer('kept');
+  expect(await (await kept).text()).toBe('kept');
+});
+
+it('rejects a read that was aborted before it began', async () => {
+  const { read, openCount } = mediaOver([fakeChannel()]);
+  const gone = new AbortController();
+  gone.abort();
+
+  await expect(read('/blobs/a', { signal: gone.signal })).rejects.toMatchObject(
+    { name: 'AbortError' },
+  );
+  expect(openCount()).toBe(0);
+});
+
+it('sends reads again in the order they were first sent', async () => {
+  const dying = fakeChannel();
+  const fresh = fakeChannel();
+  const { read } = mediaOver([dying, fresh]);
+
+  const all = ['a', 'b', 'c'].map((name) => read(`/blobs/${name}`));
+  await vi.waitFor(() => expect(dying.requests).toHaveLength(3));
+  dying.hangUp();
+
+  await vi.waitFor(() => expect(fresh.requests).toHaveLength(3));
+  expect(paths(fresh.requests)).toEqual(['/blobs/a', '/blobs/b', '/blobs/c']);
+
+  for (const body of ['a', 'b', 'c']) fresh.answer(body);
+  await Promise.all(all);
+});
+
 it('sends a call that is not a read on a channel of its own', async () => {
   const fallback = vi.fn<typeof fetch>(async () => new Response('stored'));
   const { read, openCount } = mediaOver([], fallback);
