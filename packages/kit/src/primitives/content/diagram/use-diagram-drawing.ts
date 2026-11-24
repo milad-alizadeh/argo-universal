@@ -1,21 +1,8 @@
-import {
-  type DiagramDrawing,
-  type DiagramPalette,
-  drawDiagram,
-} from '@repo/contracts/kit-diagram';
 import { useMemo } from 'react';
+import { type DiagramState, drawnState } from './diagram-drawn-state';
 import { useDiagramPalette } from './use-diagram-palette';
 
-export type DiagramState =
-  | { kind: 'pending' }
-  | { kind: 'drawn'; drawing: DiagramDrawing }
-  | { kind: 'failed' };
-
-function drawnState(source: string, palette: DiagramPalette): DiagramState {
-  const drawing = drawDiagram(source, palette);
-
-  return drawing ? { kind: 'drawn', drawing } : { kind: 'failed' };
-}
+export type { DiagramState };
 
 /*
  * Drawing lays the graph out, the one costly step, so it waits for the fence to close and then runs once per

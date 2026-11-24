@@ -87,6 +87,7 @@
     "expo-symbols": "catalog:",
     "expo-video": "catalog:",
     "lexical": "catalog:",
+    "lru-cache": "catalog:",
     "marked": "catalog:",
     "prismjs": "catalog:",
     "react-native-gesture-handler": "catalog:",
