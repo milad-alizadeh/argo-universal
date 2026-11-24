@@ -22,6 +22,7 @@ import type { writerMachine } from '../storage';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
 import { createFeedSources } from './feed-sources';
+import { sendEngineMessage } from './ipc';
 import { requireRegistry } from './registry-input';
 import {
   openDatabaseOf,
@@ -110,7 +111,11 @@ const sessionPolicies = (
 const conversationProviderOf = (
   given: EngineContext['conversationProvider'],
 ): ConversationInput['provider'] =>
-  given === undefined ? defaultConversationProvider(process.env) : given;
+  given === undefined
+    ? defaultConversationProvider(process.env, undefined, (): void =>
+        sendEngineMessage({ type: 'missed-voice-pong' }),
+      )
+    : given;
 
 const conversationLogOf =
   (home: string) =>
