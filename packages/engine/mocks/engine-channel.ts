@@ -27,8 +27,10 @@ export interface TestDeviceOptions {
   deviceKey?: Keypair;
   name?: string;
   platform?: PairingClaim['platform'];
-  // Offer the Server compression in the handshake, as an App that can inflate does.
-  compression?: boolean;
+  // What carries the channel: a raw TCP socket unless a test gives a WebSocket, which can offer compression in its upgrade headers.
+  carrier?: ChannelInput['carrier'];
+  // Keys a later App would add to its claim, which this Server does not know.
+  claimExtras?: Record<string, string>;
   // Which of this computer's addresses to knock on; loopback unless a test wants the Server reached the way another Device would.
   host?: string;
   // What the App was told the Server's static public key is; the Server's own unless a test gives it another.
@@ -150,6 +152,7 @@ async function channelInput(
     serverPublicKey: await staticKeyFor(host, options),
     deviceKey: options.deviceKey ?? generateKeypair(),
     claim: claimFrom(options),
+    carrier: options.carrier,
     onAsked: options.onAsked,
   };
 }
@@ -161,10 +164,10 @@ const staticKeyFor = async (
   options.serverPublicKey ?? (await host.caller.devices.serverKey()).publicKey;
 
 const claimFrom = (options: TestDeviceOptions): PairingClaim => ({
+  ...options.claimExtras,
   ticket: options.ticket,
   name: options.name ?? 'Test iPhone',
   platform: options.platform ?? 'ios',
-  ...(options.compression && { compression: 'deflate-raw' as const }),
 });
 
 // The same Device reading a path the Server answers with bytes, such as a Blob, inside a channel of its own.

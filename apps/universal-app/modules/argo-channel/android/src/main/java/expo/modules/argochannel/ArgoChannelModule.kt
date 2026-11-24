@@ -16,6 +16,12 @@ import okhttp3.WebSocketListener
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
+class OpenRecord : Record {
+  @Field val url: String = ""
+  @Field val timeoutMs: Double = 0.0
+  @Field val headers: Map<String, String> = emptyMap()
+}
+
 class HandOverRecord : Record {
   @Field val sendKey: String = ""
   @Field val sendRecords: Double = 0.0
@@ -129,7 +135,10 @@ class ArgoChannelModule : Module() {
 
     Events("channel")
 
-    AsyncFunction("open") { id: String, url: String, timeoutMs: Double, promise: Promise ->
+    AsyncFunction("open") { id: String, request: OpenRecord, promise: Promise ->
+      val url = request.url
+      val timeoutMs = request.timeoutMs
+      val headers = request.headers
       val channel = Channel(id) { event -> sendEvent("channel", event) }
       var settled = false
 
@@ -169,7 +178,9 @@ class ArgoChannelModule : Module() {
       }
 
       val timed = client.newBuilder().connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS).build()
-      synchronized(channel) { channel.attach(timed.newWebSocket(Request.Builder().url(url).build(), listener)) }
+      // `headers` ride on the WebSocket upgrade request, which is where the App offers compression: a Server built before it never reads them.
+      val request = Request.Builder().url(url).apply { headers.forEach { (name, value) -> header(name, value) } }.build()
+      synchronized(channel) { channel.attach(timed.newWebSocket(request, listener)) }
     }
 
     // A `ByteArray` is a `Uint8Array` on the JavaScript side.

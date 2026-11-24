@@ -1,4 +1,7 @@
-import { deflateRawSync, inflateRawSync } from 'node:zlib';
+import { promisify } from 'node:util';
+import { deflateRaw, inflateRawSync } from 'node:zlib';
+
+const deflateRawAsync = promisify(deflateRaw);
 
 // A message under this many bytes is not worth the trouble of deflating (ADR-0045).
 export const compressionThreshold = 1024;
@@ -11,11 +14,11 @@ const deflated = 1;
 export const leadingBytes = 1;
 
 /*
- * One record's plaintext, packed: deflated alone, with no dictionary carried over, unless it is small or does not shrink (an image, or anything already compressed), in which case it goes as it is.
+ * One record's plaintext, packed, off the event loop: deflated alone, with no dictionary carried over, unless it is small or does not shrink (an image, or anything already compressed), in which case it goes as it is.
  */
-export function packRecord(message: Buffer): Buffer {
+export async function packRecord(message: Buffer): Promise<Buffer> {
   if (message.length >= compressionThreshold) {
-    const smaller = deflateRawSync(message);
+    const smaller = await deflateRawAsync(message);
 
     if (smaller.length < message.length)
       return Buffer.concat([Buffer.of(deflated), smaller]);

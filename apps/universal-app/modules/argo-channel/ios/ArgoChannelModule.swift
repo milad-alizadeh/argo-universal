@@ -1,5 +1,11 @@
 import ExpoModulesCore
 
+struct OpenRecord: Record {
+  @Field var url: String = ""
+  @Field var timeoutMs: Double = 0
+  @Field var headers: [String: String] = [:]
+}
+
 struct HandOverRecord: Record {
   @Field var sendKey: String = ""
   @Field var sendRecords: Double = 0
@@ -113,9 +119,12 @@ public final class ArgoChannelModule: Module {
 
     Events("channel")
 
-    AsyncFunction("open") { (id: String, url: String, timeoutMs: Double) async throws in
+    AsyncFunction("open") { (id: String, request: OpenRecord) async throws in
+      let url = request.url
+      let timeoutMs = request.timeoutMs
+      let headers = request.headers
       guard let address = URL(string: url) else { throw ChannelError.malformed("url") }
-      let socket = ChannelSocket(url: address)
+      let socket = ChannelSocket(url: address, headers: headers)
       let channel = Channel(socket: socket) { [weak self] event in
         var tagged = event
         tagged["id"] = id

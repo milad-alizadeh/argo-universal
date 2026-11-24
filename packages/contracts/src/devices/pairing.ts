@@ -69,6 +69,11 @@ export type PairingInvite = z.infer<typeof PairingInvite>;
  */
 export const channelPath = '/channel';
 
+/*
+ * The header an App puts on the channel's WebSocket upgrade to offer compression (ADR-0045, amended 2026-11-24). It rides outside the handshake, where a Server built before it never reads it, so such a Server answers as it always did and the welcome, which only a Server that agreed adds `compression` to, tells the App whether records are compressed.
+ */
+export const channelCompressionHeader = 'x-argo-compression';
+
 // Raw deflate (RFC 1951), each record alone with no dictionary carried over.
 export const ChannelCompression = z.literal('deflate-raw');
 
@@ -78,12 +83,11 @@ export type ChannelCompression = z.infer<typeof ChannelCompression>;
  * What a connecting Device says inside the completed handshake. Pre-authentication and untrusted: the name is shown for recognition and decides nothing.
  * The Device Key's public half is not here. It is the static key the handshake itself carries, so no Device can claim one it has no private half for.
  */
-export const PairingClaim = z.strictObject({
+// Not strict: a Server ignores a key it does not know, so a later App can say more in its claim without Servers built before it refusing to pair (ADR-0045).
+export const PairingClaim = z.object({
   ticket: z.string().optional(),
   name: z.string(),
   platform: DevicePlatform,
-  // Offered by an App that can inflate: the Server may then compress what it sends (ADR-0045, amended 2026-11-24). Absent from an App built before it, which is sent every record as it is.
-  compression: ChannelCompression.optional(),
 });
 
 export type PairingClaim = z.infer<typeof PairingClaim>;

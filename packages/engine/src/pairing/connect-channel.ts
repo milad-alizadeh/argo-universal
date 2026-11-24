@@ -1,4 +1,5 @@
-import { connect, type Socket } from 'node:net';
+import { connect } from 'node:net';
+import type { Duplex } from 'node:stream';
 import {
   PairingAnswer,
   PairingWelcome,
@@ -32,6 +33,8 @@ export interface ChannelInput {
   readonly claim: PairingClaim;
   // Called when the Server says the request is with the owner, before the owner answers.
   readonly onAsked?: () => void;
+  // What carries the channel's bytes. A raw TCP socket unless a test gives another, such as a WebSocket that offers compression in its upgrade headers.
+  readonly carrier?: (address: ChannelAddress) => Promise<Duplex>;
 }
 
 export interface OpenedChannel {
@@ -52,14 +55,17 @@ export async function connectChannel(
     claim: Buffer.from(JSON.stringify(input.claim)),
   });
 
-  const socket = await opened(input.address);
+  const socket = input.carrier
+    ? await input.carrier(input.address)
+    : await opened(input.address);
+
   socket.write(Buffer.concat([channelMagic, frameRecord(handshake.message)]));
 
   return accept({ socket, handshake, input }, await firstRecord(socket));
 }
 
-const opened = (address: ChannelAddress): Promise<Socket> =>
-  new Promise<Socket>((resolve, reject): void => {
+const opened = (address: ChannelAddress): Promise<Duplex> =>
+  new Promise<Duplex>((resolve, reject): void => {
     const socket = connect(address.port, address.host, (): void =>
       resolve(socket),
     );
@@ -70,7 +76,7 @@ const opened = (address: ChannelAddress): Promise<Socket> =>
 type Records = { record: Buffer; rest: Buffer };
 
 function firstRecord(
-  socket: Socket,
+  socket: Duplex,
   earlier: Buffer = Buffer.alloc(0),
 ): Promise<Records> {
   return new Promise<Records>((resolve, reject): void => {
@@ -82,13 +88,16 @@ function firstRecord(
     );
 
     if (earlier.length > 0) read(earlier);
-    else socket.once('data', read);
+    else {
+      socket.once('data', read);
+      socket.resume();
+    }
   });
 }
 
 // Reads until the Server's first whole record has arrived, and hands back whatever followed it in the same chunk.
 function recordReader(
-  socket: Socket,
+  socket: Duplex,
   resolve: (records: Records) => void,
 ): (chunk: Buffer) => void {
   const records = new FrameReader();
@@ -96,15 +105,18 @@ function recordReader(
   const read = (chunk: Buffer): void => {
     const [record, ...rest] = records.push(chunk);
 
-    if (record) resolve({ record, rest: Buffer.concat(rest.map(frameRecord)) });
-    else socket.once('data', read);
+    // Paused, so a carrier that delivers each record as a message of its own, such as a WebSocket, holds the next one until it is asked for.
+    if (record) {
+      socket.pause();
+      resolve({ record, rest: Buffer.concat(rest.map(frameRecord)) });
+    } else socket.once('data', read);
   };
 
   return read;
 }
 
 interface Connecting {
-  socket: Socket;
+  socket: Duplex;
   handshake: ReturnType<typeof startHandshake>;
   input: ChannelInput;
 }
@@ -127,7 +139,7 @@ async function accept(
 
 // The welcome that followed the early answer, sealed by the channel's own cipher.
 function welcomed(
-  socket: Socket,
+  socket: Duplex,
   cipher: ChannelCipher,
   { record, rest }: Records,
 ): OpenedChannel {
@@ -139,7 +151,7 @@ function welcomed(
 }
 
 function settled(
-  socket: Socket,
+  socket: Duplex,
   welcome: PairingWelcome,
   channel: { rest: Buffer; cipher: ChannelCipher },
 ): OpenedChannel {
@@ -151,14 +163,14 @@ function settled(
   };
 }
 
-function refuse(socket: Socket, refusal: PairingRefusal): never {
+function refuse(socket: Duplex, refusal: PairingRefusal): never {
   socket.destroy();
 
   throw new PairingRefused(refusal);
 }
 
 function resumed(
-  socket: Socket,
+  socket: Duplex,
   { rest, cipher }: { rest: Buffer; cipher: ChannelCipher },
   compression: boolean,
 ): ChannelSocket {

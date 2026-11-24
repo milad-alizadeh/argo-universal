@@ -25,12 +25,20 @@ afterEach(async () => {
   for (const close of closers.splice(0)) await close();
 });
 
-async function nativeClientTo(host: PairableHost): Promise<{
+async function nativeClientTo(
+  host: PairableHost,
+  keepOffer = true,
+): Promise<{
   client: ReturnType<typeof createTRPCClient>['client'];
   native: NodeNativeModule;
 }> {
   const platform = nodeChannelPlatform(await pairedNodeDevice(host));
-  const { channel, module: native } = nodeNativeChannel(platform.openSocket);
+
+  const { channel, module: native } = nodeNativeChannel(
+    platform.openSocket,
+    keepOffer,
+  );
+
   const { host: address, port, serverPublicKey } = await endpointOf(host);
 
   const transport = createChannelTransport(
@@ -78,6 +86,17 @@ it('reads a large Feed page through the module at a fraction of its size', async
   expect(native.wireBytesAfterHandOver()).toBeLessThan(
     (message?.length ?? 0) / 10,
   );
+});
+
+it('still pairs and reads the same page, uncompressed, when the Server never sees the offer', async () => {
+  const { host, sessionId } = await openAcpFeedSession(seededFeed);
+  const { client, native } = await nativeClientTo(host, false);
+
+  const page = await client.feed.page.query({ sessionId, direction: 'tail' });
+  const message = native.messages.find((m) => m.includes('message-59'));
+
+  expect(page.rows.length).toBeGreaterThan(20);
+  expect(native.wireBytesAfterHandOver()).toBeGreaterThan(message?.length ?? 0);
 });
 
 it('still reads the same page through a carrier that did not offer compression', async () => {

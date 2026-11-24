@@ -16,6 +16,7 @@ import {
   type ChannelNative,
   type ChannelSubscription,
   type NativeChannelEvent,
+  type OpenRequest,
 } from '../src/features/connection/api/channel/native-channel';
 import { SecureStream } from '../src/features/connection/api/channel/secure-stream';
 import { nodeRandomBytes } from './node-channel-platform';
@@ -49,15 +50,14 @@ const rawBytes = (id: string, chunk: Uint8Array): NativeChannelEvent => ({
 // What the module does with a record once compression is agreed: the leading byte says whether the rest is raw deflate, and it inflates it with the platform's own zlib. What it sends is always as it is, behind a zero byte.
 class CompressedChannelCipher extends ChannelCipher {
   public override seal(plaintext: Uint8Array): Uint8Array {
-    return super.seal(Uint8Array.of(0, ...plaintext));
+    return super.seal(Buffer.concat([Buffer.of(0), plaintext]));
   }
 
   public override open(record: Uint8Array): Uint8Array {
-    const [lead, ...body] = super.open(record);
+    const opened = super.open(record);
+    const body = opened.subarray(1);
 
-    return lead === 1
-      ? inflateRawSync(Uint8Array.from(body))
-      : Uint8Array.from(body);
+    return opened[0] === 1 ? inflateRawSync(body) : body;
   }
 }
 
@@ -125,7 +125,11 @@ export class NodeNativeModule implements ChannelNative {
   private wireAfterHandOver = 0;
   private count = 0;
 
-  public constructor(private readonly openSocket: OpenSocket) {}
+  // `keepOffer` false is a Server that never sees the compression offer, as one built before it does not: the header is dropped before the socket opens.
+  public constructor(
+    private readonly openSocket: OpenSocket,
+    private readonly keepOffer = true,
+  ) {}
 
   // Handshake bytes the module passed up after the hand-over; there should be none.
   public bytesAfterHandOver(): number {
@@ -146,13 +150,13 @@ export class NodeNativeModule implements ChannelNative {
     for (const entry of this.entries.values()) entry.socket.close();
   }
 
-  public async open(id: string, url: string): Promise<void> {
-    const { hostname, port } = new URL(url);
+  public async open(id: string, request: OpenRequest): Promise<void> {
+    const { hostname, port } = new URL(request.url);
 
-    const socket = await this.openSocket({
-      host: hostname,
-      port: Number(port),
-    });
+    const socket = await this.openSocket(
+      { host: hostname, port: Number(port) },
+      this.keepOffer ? request.headers : {},
+    );
 
     this.count += 1;
     this.entries.set(id, { socket });
@@ -254,8 +258,11 @@ export interface NodeNative {
   readonly module: NodeNativeModule;
 }
 
-export function nodeNativeChannel(openSocket: OpenSocket): NodeNative {
-  const module = new NodeNativeModule(openSocket);
+export function nodeNativeChannel(
+  openSocket: OpenSocket,
+  keepOffer = true,
+): NodeNative {
+  const module = new NodeNativeModule(openSocket, keepOffer);
 
   return { channel: new NativeChannel(module), module };
 }

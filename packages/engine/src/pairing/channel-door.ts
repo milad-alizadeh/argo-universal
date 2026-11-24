@@ -1,4 +1,4 @@
-import { PairingClaim } from '@repo/contracts';
+import { ChannelCompression, PairingClaim } from '@repo/contracts';
 import { productCompatibility } from '@repo/contracts/product-identity';
 import type { Admission, DeviceAdmission } from '../devices/admit-device';
 import type { OpenChannels } from '../devices/open-channels';
@@ -90,7 +90,7 @@ export class ChannelDoor {
       ? await this.admit(received.deviceKey, claim, { socket, reply })
       : replayed;
 
-    const welcome = agreed(claim, admission.welcome);
+    const welcome = agreed(socket, admission.welcome);
     const answered = reply.welcome(welcome);
 
     this.open(
@@ -146,11 +146,11 @@ type AnsweredSocket = {
 
 // The Server compresses only for a Device that offered it, and says so in the welcome so the App knows every record carries the leading byte.
 const agreed = (
-  claim: PairingClaim,
+  socket: ChannelCarrier,
   welcome: Admission['welcome'],
 ): Admission['welcome'] =>
-  claim.compression && welcome.paired
-    ? { ...welcome, compression: claim.compression }
+  socket.offersCompression && welcome.paired
+    ? { ...welcome, compression: ChannelCompression.value }
     : welcome;
 
 const replayed: Admission = {

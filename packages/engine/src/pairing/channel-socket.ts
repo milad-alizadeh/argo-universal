@@ -16,7 +16,6 @@ export class ChannelSocket extends Duplex {
   public readonly remoteAddress: string | undefined;
   public readonly localAddress: string | undefined;
   private readonly records = new FrameReader();
-  private received = 0;
 
   public constructor(
     private readonly socket: ChannelCarrier,
@@ -30,11 +29,6 @@ export class ChannelSocket extends Duplex {
     socket.on('data', (chunk: Buffer): void => this.receive(chunk));
     socket.once('close', (): void => this.finish());
     socket.once('error', (error: Error): void => void this.destroy(error));
-  }
-
-  // Bytes that have crossed the socket underneath, which is what a test counts to see what compression saved.
-  public get wireBytesRead(): number {
-    return this.received;
   }
 
   public setNoDelay(): this {
@@ -67,13 +61,28 @@ export class ChannelSocket extends Duplex {
     _encoding: BufferEncoding,
     done: (error?: Error | null) => void,
   ): void {
+    if (this.compression) {
+      this.writeDeflated(chunk).then(
+        () => done(),
+        (error: Error) => done(error),
+      );
+
+      return;
+    }
+
     try {
       for (const piece of pieces(chunk, this.pieceBytes()))
-        this.socket.write(frameRecord(this.cipher.seal(this.pack(piece))));
+        this.socket.write(frameRecord(this.cipher.seal(piece)));
       done();
     } catch (error) {
       done(channelFailure(error));
     }
+  }
+
+  // Deflating a piece takes a thread of Node's pool, not the event loop. A Duplex starts no write until the last one is done, and the pieces are awaited one at a time, so records are sealed and written in the order they were numbered.
+  private async writeDeflated(chunk: Buffer): Promise<void> {
+    for (const piece of pieces(chunk, this.pieceBytes()))
+      this.socket.write(frameRecord(this.cipher.seal(await packRecord(piece))));
   }
 
   // A WebSocket writes a message's header and payload back to back, so they are joined into one record rather than sealed as two.
@@ -108,8 +117,6 @@ export class ChannelSocket extends Duplex {
 
   // A record that does not open with this channel's key is not from the Device that opened it, so the Connection ends rather than carrying on.
   private receive(chunk: Buffer): void {
-    this.received += chunk.length;
-
     try {
       for (const record of this.records.push(chunk)) this.pushRecord(record);
     } catch (error) {
@@ -128,10 +135,6 @@ export class ChannelSocket extends Duplex {
     return this.compression
       ? maxPlaintextBytes - leadingBytes
       : maxPlaintextBytes;
-  }
-
-  private pack(piece: Buffer): Buffer {
-    return this.compression ? packRecord(piece) : piece;
   }
 
   private unpack(plaintext: Buffer): Buffer {
