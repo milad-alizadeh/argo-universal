@@ -2,6 +2,7 @@ import { bytesText, concatBytes, bytesBase64, textBytes } from './bytes';
 import { ServerUnreachable } from './channel-route';
 import { readHead, type HeadAndRest } from './http-exchange';
 import { PairingRefused, type OpenedChannel } from './open-channel';
+import { SocketEvents, type Listener, type SocketEvent } from './socket-events';
 import {
   encodeClientFrame,
   FrameParser,
@@ -21,12 +22,6 @@ const keyBytes = 16;
 const normalClosure = 1000;
 
 const abnormalClosure = 1006;
-
-type Listener = (event: {
-  data?: string;
-  code?: number;
-  reason?: string;
-}) => void;
 
 export interface ChannelSocketDeps {
   readonly openChannel: () => Promise<OpenedChannel>;
@@ -58,7 +53,7 @@ function closeCode(payload: Uint8Array): number {
 class ChannelWebSocket {
   public readyState: number = WebSocket.CONNECTING;
   public binaryType = 'arraybuffer';
-  private readonly listeners = new Map<string, Set<Listener>>();
+  private readonly events = new SocketEvents();
   private channel: OpenedChannel | undefined;
   private readonly frames = new FrameParser();
   private head: Uint8Array = new Uint8Array(0);
@@ -81,13 +76,11 @@ class ChannelWebSocket {
   }
 
   public addEventListener(type: string, listener: Listener): void {
-    const set = this.listeners.get(type) ?? new Set<Listener>();
-    set.add(listener);
-    this.listeners.set(type, set);
+    this.events.add(type, listener);
   }
 
   public removeEventListener(type: string, listener: Listener): void {
-    this.listeners.get(type)?.delete(listener);
+    this.events.remove(type, listener);
   }
 
   public send(text: string): void {
@@ -188,20 +181,19 @@ class ChannelWebSocket {
     this.emit('close', { code, reason });
   }
 
-  private emit(type: string, event: Parameters<Listener>[0]): void {
-    for (const listener of this.listeners.get(type) ?? [])
-      listener.call(this, event);
+  private emit(type: string, event: SocketEvent): void {
+    this.events.emit(this, type, event);
   }
 }
 
 // A Server that is off or away is drawn by the Connection as reconnecting, as an unpaired Device is drawn as not allowed; only anything else is a fault worth the error overlay.
-function reportFault(cause: unknown): void {
+export function reportFault(cause: unknown): void {
   if (cause instanceof ServerUnreachable) return;
   console.error('The channel to the Server failed', cause);
 }
 
 // A Device with a row and a key does not meet this: the Server asks for a Ticket only of a Device it has no row for.
-const isUnknownDevice = (cause: unknown): boolean =>
+export const isUnknownDevice = (cause: unknown): boolean =>
   cause instanceof PairingRefused && cause.refusal === 'ticket-required';
 
 const pathOf = (url: string): string =>

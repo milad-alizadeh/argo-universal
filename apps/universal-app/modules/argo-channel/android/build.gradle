@@ -1,0 +1,21 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'expo.modules.argochannel'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.argochannel"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // The channel's outer WebSocket is OkHttp's, the client React Native's own WebSocket uses; `react-android` exposes it.
+  implementation 'com.facebook.react:react-android'
+}
