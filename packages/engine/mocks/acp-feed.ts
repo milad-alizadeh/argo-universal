@@ -7,6 +7,7 @@ import type {
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
+import { plain } from './plain-feed';
 
 export type AcpFeedUpdates = SessionNotification['update'][];
 
@@ -15,7 +16,9 @@ export const waitForAcpSnapshot = async (
   sessionId: string,
   matches: (snapshot: SessionSnapshot) => boolean,
 ): Promise<SessionSnapshot> => {
-  const events = await host.caller.feed.subscribe({ sessionId, after: null });
+  const events = await plain(
+    host.caller.feed.subscribe({ sessionId, after: null }),
+  );
 
   for await (const event of events) {
     const snapshot = matchingSnapshot(event, matches);

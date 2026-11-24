@@ -4,6 +4,7 @@ import { insertEndedTurn, openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 import { publishHeaderConfiguration } from './live-header-configuration';
 import { writeStoredHeader, storedHeaderRevision } from './live-header-storage';
+import { plain } from './plain-feed';
 import { scriptedEngineInput } from './scripted-engine';
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
@@ -67,9 +68,9 @@ async function promptHeaderSession(
     prompt: [{ type: 'text', text: 'Check tests' }],
   });
 
-  return (await caller.feed.subscribe({ sessionId: 'session-1', after: null }))[
-    Symbol.asyncIterator
-  ]();
+  return (
+    await plain(caller.feed.subscribe({ sessionId: 'session-1', after: null }))
+  )[Symbol.asyncIterator]();
 }
 
 export async function readLiveHeader(

@@ -12,6 +12,7 @@ import {
   type ConversationAgentReply,
 } from './conversation-agent';
 import { offer } from './conversation-engine';
+import { plain } from './plain-feed';
 
 export type { ConversationAgentReply } from './conversation-agent';
 
@@ -134,9 +135,11 @@ export class ConversationWork {
     const controller = new AbortController();
     const after = fromStart ? { epoch: 0, revision: 0 } : null;
 
-    const events = await this.host
-      .createCaller({ signal: controller.signal })
-      .feed.subscribe({ sessionId: this.sessionId, after });
+    const events = await plain(
+      this.host
+        .createCaller({ signal: controller.signal })
+        .feed.subscribe({ sessionId: this.sessionId, after }),
+    );
 
     return collect(events, ends, controller);
   }

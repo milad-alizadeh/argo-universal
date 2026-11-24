@@ -4,6 +4,7 @@ import type { EngineInput } from '../src/engine/machine';
 import type { OperationWaitClock } from '../src/operations';
 import { startAcpEngine } from './acp-engine';
 import { waitForAcpSnapshot } from './acp-feed';
+import { plain } from './plain-feed';
 import { openAccessSession, sessionIdentityStep } from './session-access';
 
 type RaceHost = {
@@ -66,7 +67,9 @@ export async function pendingOperation(
   host: Host,
   sessionId: string,
 ): Promise<ToolCallUpdate> {
-  const updates = await host.caller.feed.subscribe({ sessionId, after: null });
+  const updates = await plain(
+    host.caller.feed.subscribe({ sessionId, after: null }),
+  );
 
   for await (const update of updates) {
     const row = pendingProjectList(update);

@@ -1,5 +1,12 @@
 import { SessionOpenFailure } from '@repo/contracts';
-import { type AnyTRPCRouter, initTRPC, TRPCError } from '@trpc/server';
+import {
+  type AnyTRPCRouter,
+  initTRPC,
+  isTrackedEnvelope,
+  TRPCError,
+  tracked,
+  type TrackedEnvelope,
+} from '@trpc/server';
 import { z } from 'zod';
 import type { RpcContext } from './connection';
 
@@ -105,5 +112,31 @@ export function zAsyncIterable<TYieldIn, TYieldOut>(options: {
     )
     .transform(async function* (iterable): ParsedValues<TYieldOut> {
       for await (const value of iterable) yield options.yield.parseAsync(value);
+    });
+}
+
+type TrackedOrPlain<Value> = Value | TrackedEnvelope<Value>;
+
+// The same for a subscription whose events carry ids (tRPC's `tracked`), so its client can resume after the last one it received; an event without an id passes as it is.
+export function zTrackedAsyncIterable<TYieldIn, TYieldOut>(options: {
+  yield: z.ZodType<TYieldOut, TYieldIn>;
+}): z.ZodPipe<
+  z.ZodCustom<AsyncIterable<TrackedOrPlain<TYieldIn>>>,
+  z.ZodTransform<
+    AsyncGenerator<TrackedOrPlain<TYieldOut>>,
+    AsyncIterable<TrackedOrPlain<TYieldIn>>
+  >
+> {
+  return z
+    .custom<AsyncIterable<TrackedOrPlain<TYieldIn>>>(
+      (value): value is AsyncIterable<Parameters<typeof isAsyncIterable>[0]> =>
+        isAsyncIterable(value),
+    )
+    .transform(async function* (iterable) {
+      for await (const value of iterable) {
+        yield isTrackedEnvelope(value)
+          ? tracked(value[0], await options.yield.parseAsync(value[1]))
+          : await options.yield.parseAsync(value);
+      }
     });
 }

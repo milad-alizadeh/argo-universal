@@ -2,6 +2,7 @@ import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
+import { plain } from '#mocks/plain-feed';
 
 const snapshotTitled = (
   event: FeedSubscribeOutput,
@@ -29,9 +30,9 @@ it('republishes an open Session page snapshot under its new title', async () => 
   const host = await startAcpEngine({ steps: [] });
   const { sessionId } = await promptedArchiveSession(host, { type: 'main' });
 
-  const events = (await host.caller.feed.subscribe({ sessionId, after: null }))[
-    Symbol.asyncIterator
-  ]();
+  const events = (
+    await plain(host.caller.feed.subscribe({ sessionId, after: null }))
+  )[Symbol.asyncIterator]();
 
   await nextTitled(events, 'Keep this Session');
   await host.caller.session.rename({ sessionId, title: renamed });

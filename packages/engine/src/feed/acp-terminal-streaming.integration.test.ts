@@ -14,6 +14,7 @@ import {
   readThrough,
 } from '#mocks/feed-stream-reading';
 import { readBlobText } from '#mocks/feed-tool-output';
+import { plain } from '#mocks/plain-feed';
 
 const upsert = 'row.upsert';
 
@@ -41,9 +42,9 @@ it('streams equal chunks once per message, ignores mismatched or malformed chunk
   const host = await startAcpEngine(streamedTerminals(finish.promise));
   const { sessionId } = await host.caller.session.new(emptySessionInput);
 
-  const stream = (await host.caller.feed.subscribe({ sessionId, after: null }))[
-    Symbol.asyncIterator
-  ]();
+  const stream = (
+    await plain(host.caller.feed.subscribe({ sessionId, after: null }))
+  )[Symbol.asyncIterator]();
 
   await stream.next();
   await host.caller.session.prompt({
@@ -63,10 +64,12 @@ it('streams equal chunks once per message, ignores mismatched or malformed chunk
   await closeTestSession(host, { sessionId });
 
   const replay = (
-    await host.caller.feed.subscribe({
-      sessionId,
-      after: { epoch: 0, revision: 0 },
-    })
+    await plain(
+      host.caller.feed.subscribe({
+        sessionId,
+        after: { epoch: 0, revision: 0 },
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   const events = await readThrough(replay, isSecondCommand);

@@ -1,9 +1,16 @@
-import type { FeedSubscribeInput, FeedSubscribeOutput } from '@repo/contracts';
+import {
+  feedEventId,
+  type FeedSubscribeInput,
+  type FeedSubscribeOutput,
+  type FeedSyncPoint,
+  syncPointOfEventId,
+} from '@repo/contracts';
+import { tracked, type TrackedEnvelope } from '@trpc/server';
 import type { FeedDeps } from './feed';
 import { FeedDelivery } from './feed-delivery';
 import { FeedListener } from './feed-listener';
 
-type SubscriptionStart = FeedSubscribeInput & {
+type SubscriptionStart = Pick<FeedSubscribeInput, 'sessionId' | 'after'> & {
   epoch: number;
   maxRevision: number;
 };
@@ -90,12 +97,31 @@ async function* deliverSubscription(
   yield* deliverLive(listener, delivery);
 }
 
+// Where an App resumes: the event id tRPC sends again after a reconnect names the rows it has, unless the App already held higher ones (ADR-0007: the higher revision wins).
+function resumePoint({
+  after,
+  lastEventId,
+}: Pick<FeedSubscribeInput, 'after' | 'lastEventId'>): FeedSyncPoint | null {
+  const last = lastEventId ? syncPointOfEventId(lastEventId) : null;
+
+  if (!last) return after;
+
+  if (after?.epoch !== last.epoch) return last;
+
+  return after.revision > last.revision ? after : last;
+}
+
 export async function* streamFeed(
   resources: FeedDeps,
   input: FeedSubscribeInput,
   signal: AbortSignal | undefined,
 ): AsyncGenerator<FeedSubscribeOutput> {
-  const start = { ...input, ...resources.readSession(input.sessionId) };
+  const start = {
+    ...input,
+    after: resumePoint(input),
+    ...resources.readSession(input.sessionId),
+  };
+
   const listener = new FeedListener(resources, input.sessionId, signal);
 
   try {
@@ -103,5 +129,38 @@ export async function* streamFeed(
     yield* deliverSubscription(resources, start, listener);
   } finally {
     listener.stop();
+  }
+}
+
+// The sync point an event moves an App to: the revision it carries, or the new epoch's start.
+function pointOfEvent(
+  epoch: number,
+  event: FeedSubscribeOutput,
+): FeedSyncPoint | null {
+  if (event.type === 'closed') return null;
+
+  if (event.type === 'reset') return { epoch: event.epoch, revision: 0 };
+
+  if (event.type === 'snapshot')
+    return { epoch, revision: event.snapshot.maxRevision };
+
+  return { epoch, revision: event.rev };
+}
+
+/*
+ * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none.
+ */
+export async function* trackedFeed(
+  resources: FeedDeps,
+  input: FeedSubscribeInput,
+  signal: AbortSignal | undefined,
+): AsyncGenerator<FeedSubscribeOutput | TrackedEnvelope<FeedSubscribeOutput>> {
+  let { epoch } = resources.readSession(input.sessionId);
+
+  for await (const event of streamFeed(resources, input, signal)) {
+    const point = pointOfEvent(epoch, event);
+
+    epoch = point?.epoch ?? epoch;
+    yield point ? tracked(feedEventId(point), event) : event;
   }
 }

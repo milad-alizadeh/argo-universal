@@ -2,11 +2,12 @@ import {
   FeedPageInput,
   type FeedPageOutput,
   type FeedSubscribeOutput,
+  feedEventId,
   FeedSubscribeInput,
-  type FeedSyncPoint,
+  syncPointOfEventId,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import { focusManager, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import {
   createTRPCClient,
   TRPCClientError,
@@ -59,17 +60,20 @@ function connectionOf(link: Link): Connection {
 type Wire = Observer<
   {
     result:
-      | { type: 'data'; data: FeedSubscribeOutput | FeedPageOutput }
-      | { type: 'started' }
-      | { type: 'state'; state: 'connecting' | 'pending'; error: null };
+      | {
+          type: 'data';
+          data: FeedSubscribeOutput | FeedPageOutput;
+          id?: string;
+        }
+      | { type: 'started' };
   },
   TRPCClientError<AppRouter>
 >;
 
 // A Server that answers the Feed's reads and subscription from the recorded stream, and records what it was asked.
 interface Server {
-  // The `after` of each `feed.subscribe` the App opened.
-  opened: (FeedSyncPoint | null)[];
+  // The `lastEventId` of each `feed.subscribe` the App opened.
+  opened: (string | undefined)[];
   // Each `feed.page` the App read.
   pageReads: FeedPageInput[];
   open: Wire | undefined;
@@ -78,14 +82,13 @@ interface Server {
 }
 
 // Every change in the recorded stream above the revision the App holds, as the Server replays them; none once the App holds the newest.
-function replayAbove(after: FeedSyncPoint | null): FeedSubscribeOutput[] {
+function replayAbove(lastEventId: string | undefined): FeedSubscribeOutput[] {
+  const held = lastEventId ? syncPointOfEventId(lastEventId) : null;
+
   return rowEvents(streamed.stream).filter(
-    (event) => !('rev' in event) || event.rev > (after?.revision ?? -1),
+    (event) => !('rev' in event) || event.rev > (held?.revision ?? -1),
   );
 }
-
-// Restores the shared focus manager, for the stories after this one.
-export const restoreForeground = (): void => focusManager.setFocused(undefined);
 
 // The tail waits for the test; the page before a cursor is the recorded rows before it.
 function answerPage(server: Server, wire: Wire, input: FeedPageInput): void {
@@ -110,16 +113,24 @@ function answerPage(server: Server, wire: Wire, input: FeedPageInput): void {
 function openSubscription(
   server: Server,
   wire: Wire,
-  { after }: FeedSubscribeInput,
+  { lastEventId }: FeedSubscribeInput,
 ): void {
-  server.opened.push(after);
+  server.opened.push(lastEventId);
   server.open = wire;
-  // tRPC's client tells each subscription the socket's state as it opens.
-  wire.next({ result: { type: 'state', state: 'pending', error: null } });
   wire.next({ result: { type: 'started' } });
 
-  for (const data of replayAbove(after))
-    wire.next({ result: { type: 'data', data } });
+  // Each row event has the id tRPC's client resumes from.
+  for (const data of replayAbove(lastEventId))
+    wire.next({
+      result: {
+        type: 'data',
+        data,
+        id:
+          'rev' in data
+            ? feedEventId({ epoch: 0, revision: data.rev })
+            : undefined,
+      },
+    });
 }
 
 function clientOf(server: Server): TRPCClient<AppRouter> {
@@ -151,10 +162,8 @@ export interface FeedLiveFixture {
   send: (event: FeedSubscribeOutput) => void;
   // Ends the open subscription with an error, as a dropped socket does.
   fail: () => void;
-  // The socket is lost, or comes back: tRPC tells each open subscription, and the Connection changes state.
+  // The Connection changes state.
   connect: (state: ConnectionState) => void;
-  // The window regains focus, as the App returns to the foreground.
-  returnToForeground: () => void;
   connection: Connection;
   client: TRPCClient<AppRouter>;
   // What the screen holds of the Session's Feed, as of its last render.
@@ -219,19 +228,8 @@ export function feedLiveFixture({
       server.open?.error(TRPCClientError.from(new Error('Socket lost'))),
     connect: (state) => {
       link.state = state;
-      server.open?.next({
-        result: {
-          type: 'state',
-          state: state === 'open' ? 'pending' : 'connecting',
-          error: null,
-        },
-      });
 
       for (const listener of link.listeners) listener();
-    },
-    returnToForeground: () => {
-      focusManager.setFocused(false);
-      focusManager.setFocused(true);
     },
     connection: connectionOf(link),
     client: clientOf(server),

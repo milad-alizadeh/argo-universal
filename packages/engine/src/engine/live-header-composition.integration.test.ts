@@ -7,6 +7,7 @@ import {
   publishStoredHeader,
   startLiveHeaderHost,
 } from '#mocks/live-header-composition';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const checkingTestsStatus = 'Checking the tests';
@@ -53,10 +54,12 @@ it.each(liveHeaderMocks)(
     expect(await readLiveHeader(context, retryingStatus)).toBe(retryingStatus);
 
     const reconnect = (
-      await context.caller.feed.subscribe({
-        sessionId: 'session-1',
-        after: null,
-      })
+      await plain(
+        context.caller.feed.subscribe({
+          sessionId: 'session-1',
+          after: null,
+        }),
+      )
     )[Symbol.asyncIterator]();
 
     expect((await reconnect.next()).value).toMatchObject({

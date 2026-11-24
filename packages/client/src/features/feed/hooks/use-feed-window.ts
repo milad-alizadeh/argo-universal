@@ -139,7 +139,10 @@ interface ViewInputs {
   translate: FeedViewTranslator;
 }
 
-// The view follows the rows, the Plan and the snapshot, not the revision, and keeps the items the last draw had.
+/*
+ * The view follows the rows, the Plan and the snapshot, not the revision, and keeps the items the last draw had.
+ * `useQuery({ select })` cannot do this alone: its result is shared with `replaceData(previous, selected, options)`, and an observer's `structuralSharing` option is also the one the query writes its own data with (queryObserver.ts `setOptions`, query.ts `setData`). The window must stay unshared, so a shared view would need a function that tells the two apart.
+ */
 function useFeedView({
   feed: { rows, plan },
   snapshot,

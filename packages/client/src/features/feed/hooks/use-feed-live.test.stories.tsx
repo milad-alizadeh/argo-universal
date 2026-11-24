@@ -1,3 +1,4 @@
+import { feedEventId } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { page, rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
@@ -5,17 +6,16 @@ import {
   FeedLivePreview,
   feedLiveFixture,
   type FeedLiveFixture,
-  restoreForeground,
 } from '../../../../mocks/feed/feed-live.mocks';
 
 const { snapshot, stream } = streamed;
 
 const newest = { epoch: 0, revision: snapshot.maxRevision };
 
+const seeded = feedEventId({ epoch: 0, revision: 0 });
+
 const meta = {
   title: 'Tests/Feed/UseFeedLive',
-  // Returning to the foreground changes the window's shared focus; the next story finds it as it was.
-  beforeEach: (): (() => void) => restoreForeground,
 } satisfies Meta;
 
 export default meta;
@@ -61,9 +61,7 @@ export const OpensOnTheTailPageOfASessionNotSeenBefore: Story = {
 
     fixture.answerTail();
 
-    await waitFor(() =>
-      expect(fixture.server.opened).toEqual([{ epoch: 0, revision: 0 }]),
-    );
+    await waitFor(() => expect(fixture.server.opened).toEqual([seeded]));
   },
 };
 
@@ -117,11 +115,20 @@ export const KeepsTheSnapshotItHoldsWhenTheNextIsEqual: Story = {
   },
 };
 
-// A Server with nothing newer than the cached revision sends no rows, so the Feed is not written again.
-export const ReopensAfterTheCachedRevisionAfterAReconnect: Story = {
+// The subscription opens once, after the cached revision, and the rows it replays do not open it again.
+export const OpensOnceAfterTheCachedRevision: Story = {
   play: async ({ mount }) => {
     const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
+    await settled();
+
+    await expect(fixture.server.opened).toEqual([seeded]);
+  },
+};
+
+// tRPC's client resumes a lost socket by itself (the integration test proves it); a subscription that failed opens again when the Connection reopens.
+export const ReopensAFailedSubscriptionWhenTheConnectionReopens: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
 
     fixture.fail();
     await settled();
@@ -130,48 +137,13 @@ export const ReopensAfterTheCachedRevisionAfterAReconnect: Story = {
     fixture.connect('open');
 
     await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
   },
 };
 
-// The socket died without an error, so the subscription is still pending when tRPC reports the loss: it opens once, after the cached revision.
-export const ReopensOnceAfterTheCachedRevisionWhenTheSocketIsLost: Story = {
-  play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
-
-    fixture.connect('reconnecting');
-    await settled();
-    fixture.connect('open');
-    await settled();
-
-    await expect(fixture.server.opened).toEqual([
-      { epoch: 0, revision: 0 },
-      newest,
-    ]);
-    await expect(fixture.feedWrites()).toBe(writes);
-  },
-};
-
-export const ReopensAfterTheCachedRevisionOnReturnToTheForeground: Story = {
-  play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
-
-    fixture.returnToForeground();
-
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
-  },
-};
-
-// A closure shows why the Feed closed until the reader retries; the retry reopens after the rows held, and writes nothing.
+// A closure shows why the Feed closed until the reader retries; the retry opens it again.
 export const ShowsWhyTheFeedClosedUntilTheReaderRetries: Story = {
   play: async ({ mount }) => {
     const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
 
     fixture.send({ type: 'closed', failure: 'Agent exited' });
     await waitFor(() =>
@@ -182,8 +154,6 @@ export const ShowsWhyTheFeedClosedUntilTheReaderRetries: Story = {
 
     await waitFor(() => expect(fixture.held()?.openError).toBeNull());
     await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
   },
 };
 
@@ -194,7 +164,6 @@ export const RetriesNothingForASessionItDoesNotShow: Story = {
     await waitFor(() => expect(fixture.held()).toBeDefined());
 
     fixture.held()?.retryOpen();
-    fixture.returnToForeground();
     await settled();
 
     await expect(fixture.server.opened).toEqual([]);

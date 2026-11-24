@@ -14,6 +14,7 @@ import { expect, it, describe, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   permissionSteps,
@@ -325,7 +326,7 @@ describe.each(appFixtureAgentIds)('%s pending Permission requests', (agent) => {
     const departingApp = host.createCaller();
 
     const watching = (
-      await departingApp.feed.subscribe({ sessionId, after: null })
+      await plain(departingApp.feed.subscribe({ sessionId, after: null }))
     )[Symbol.asyncIterator]();
 
     await watching.next();
