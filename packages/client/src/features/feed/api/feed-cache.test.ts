@@ -20,7 +20,9 @@ function show(h: FeedCacheHarness, enabled = false): () => void {
     ...h.cache.tailOptions(),
     enabled,
   });
+
   const unsubscribe = observer.subscribe(() => {});
+
   const stop = h.cache.start();
 
   return (): void => {

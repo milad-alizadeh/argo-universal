@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTRPCClient } from '#features/connection';
 import {
   FeedCache,
@@ -14,8 +14,7 @@ import {
 } from '../api/feed-cache';
 import { emptyFeed, type FeedState } from '../view/feed-state';
 import type { FeedView } from '../view/feed-view';
-import { shownRows } from '../view/held-plan';
-import { keepUnchangedItems } from '../view/keep-unchanged-items';
+import { createFeedViewMemo } from '../view/feed-view-memo';
 import { waitForFrame } from './frame-wait';
 
 // Translates Feed rows to the Feed view, such as the Session's own or a subagent's.
@@ -105,24 +104,7 @@ function useFeedViewOf(
   snapshot: SessionSnapshot | null,
   translate: FeedViewTranslator,
 ): FeedView | null {
-  const previous = useRef<FeedView | null>(null);
-  // The view follows the rows, the Plan and the snapshot, not the revision.
-  const { rows, plan } = feed;
+  const [viewOf] = useState(createFeedViewMemo);
 
-  const view = useMemo(
-    () =>
-      snapshot
-        ? keepUnchangedItems(
-            previous.current,
-            translate(shownRows({ rows, plan }), snapshot),
-          )
-        : null,
-    [rows, plan, snapshot, translate],
-  );
-
-  useEffect(() => {
-    previous.current = view;
-  }, [view]);
-
-  return view;
+  return viewOf(feed, snapshot, translate);
 }

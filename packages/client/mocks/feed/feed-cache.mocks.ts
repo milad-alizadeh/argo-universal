@@ -48,7 +48,9 @@ export function feedCacheHarness(
     pageReads: [],
     pages: new Map(),
   };
+
   const cache = new FeedCache(queryClient, cacheId, portsOf(drives));
+
   let writes = 0;
 
   queryClient.getQueryCache().subscribe((event) => {

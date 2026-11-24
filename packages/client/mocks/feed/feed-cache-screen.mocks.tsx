@@ -19,6 +19,7 @@ export const newFeedCache = (): FeedCache =>
 // What a screen shows of the Session: it renders when the Feed's queries change.
 function SessionFeedScreen({ cache }: { cache: FeedCache }): JSX.Element {
   const feed = useQuery({ ...cache.tailOptions(), ...feedQueryDefaults });
+
   const held = useQuery({
     ...feedQueryDefaults,
     queryKey: cache.snapshotKey,

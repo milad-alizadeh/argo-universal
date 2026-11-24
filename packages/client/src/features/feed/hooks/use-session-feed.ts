@@ -21,7 +21,9 @@ export function useSessionFeed(
     shown,
     tail: true,
   });
+
   const live = useFeedLive(sessionId, window.cache, shown);
+
   const older = useLoadOlder(window.cache);
 
   return {

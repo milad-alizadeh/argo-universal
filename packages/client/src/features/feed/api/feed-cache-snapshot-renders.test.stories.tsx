@@ -1,6 +1,6 @@
 import { renderCounter } from '@repo/kit/mocks/render-counts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { JSX } from 'react';
+import { type JSX, Profiler } from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
 import { FeedCacheScreen } from '../../../../mocks/feed/feed-cache-screen.mocks';
@@ -11,16 +11,22 @@ const { rows, snapshot, stream } = streamed;
 const renders = renderCounter();
 
 // The cache this visit of the story drew.
-const visit: { cache: FeedCache | null } = { cache: null };
+interface Visit {
+  cache: FeedCache | null;
+}
+
+const visit: Visit = { cache: null };
 
 const meta = {
   title: 'Tests/Feed/FeedCacheSnapshotRenders',
   render: (): JSX.Element => (
-    <FeedCacheScreen
-      onCache={(cache) => {
-        visit.cache = cache;
-      }}
-    />
+    <Profiler id={renders.id} onRender={renders.onRender}>
+      <FeedCacheScreen
+        onCache={(cache) => {
+          visit.cache = cache;
+        }}
+      />
+    </Profiler>
   ),
 } satisfies Meta;
 

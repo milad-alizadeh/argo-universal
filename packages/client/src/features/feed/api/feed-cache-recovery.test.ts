@@ -20,9 +20,12 @@ async function opened(h: FeedCacheHarness): Promise<void> {
     ...h.cache.tailOptions(),
     enabled: false,
   });
+
   observer.subscribe(() => {});
+
   h.cache.start();
   h.answer('tail', tail);
+
   await h.queryClient.fetchQuery(h.cache.tailOptions());
 }
 
@@ -98,11 +101,14 @@ describe('FeedCache loading older history', () => {
     h.cache.start();
     h.answer('tail', { ...older, hasOlder: true });
     await h.queryClient.fetchQuery(h.cache.tailOptions());
+
     const window = h.cache.read();
+
     const before = page(rows, snapshot.maxRevision, {
       before: window.startCursor ?? 0,
       limit: 2,
     });
+
     h.answer('before', before);
 
     await h.cache.loadOlder();
