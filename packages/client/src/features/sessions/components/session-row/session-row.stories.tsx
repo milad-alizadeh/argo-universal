@@ -17,7 +17,6 @@ import {
 } from './session-row-call-fixtures';
 import {
   archivedSession,
-  checkoutChangesPullRequestSession,
   checkoutChangesSession,
   checkoutChangesShellSession,
   compactSession,
@@ -148,11 +147,6 @@ export const CheckoutChanges: Story = {
 export const CheckoutChangesWithShell: Story = {
   args: checkoutChangesShellSession,
   render: noChange,
-};
-
-// A Change replaces the totals.
-export const CheckoutChangesWithPullRequest: Story = {
-  args: checkoutChangesPullRequestSession,
 };
 
 // An archived Session ends its meta line on the Archived pill.
