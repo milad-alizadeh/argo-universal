@@ -254,6 +254,7 @@ export const HistoryButtonsJumpBetweenFixedPositions: ScaffoldStory = {
       canvas.getByRole('button', { name: backLabel }),
       canvas.getByRole('button', { name: 'Forward' }),
     ];
+
     const positions = (): [Box, Box] => {
       const [back, forward] = history();
 
