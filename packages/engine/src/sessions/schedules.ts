@@ -12,6 +12,7 @@ import {
   type NewSchedule,
   type Schedule,
 } from './schedule-store';
+import { scheduleUpdates } from './schedule-updates';
 import { sendQueueCommand } from './sent-prompt/queue';
 import { requireWritableSession } from './session-command';
 import type { SessionActorRef } from './session-machine';
@@ -60,6 +61,16 @@ export class Schedules {
   }
   public list(sessionId: string): Schedule[] {
     return this.store.list(sessionId);
+  }
+  public updates(
+    sessionId: string,
+    signal?: AbortSignal,
+  ): ReturnType<typeof scheduleUpdates> {
+    return scheduleUpdates(
+      this.sources,
+      { sessionId, read: () => this.list(sessionId) },
+      signal,
+    );
   }
   // A Schedule made inside a Session: `session.schedulePrompt`.
   public create(input: CreateSchedule): Promise<Schedule> {
@@ -122,7 +133,7 @@ export class Schedules {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found' });
 
     requireWritableSession(this.sources.readSession(row.sessionId));
-    const write = this.store.sentNow(id);
+    const write = this.store.sentNow(row);
     const session = await this.open(row.sessionId, signal);
 
     await this.enqueue(session, id, {
