@@ -100,14 +100,17 @@ const scrollProps = {
 } satisfies ComponentProps<typeof ScrollView>;
 
 /*
- * One glass panel holds every card, as the Inspector's does, each card a section parted from the next by a hairline.
+ * One panel holds every card, as the Inspector's does, each card a section parted from the next by a hairline.
  * It takes its cards' height up to the column's and scrolls past that: the panel fills the column only as far as its
  * cards reach, and shrinks to it once they reach further.
  */
 function WorkbenchScroll(props: { children: ReactNode }): ReactElement {
+  // The iPad panel can cover the Feed. Give its text an opaque backing.
+  const material = Platform.OS === 'ios' ? 'card' : 'glass';
+
   return (
     <View pointerEvents="auto" className="max-h-full">
-      <Surface kind="glass" fill={Platform.OS === 'web'}>
+      <Surface kind={material} fill={Platform.OS === 'web'}>
         <View className="min-h-0 shrink overflow-hidden rounded-2xl">
           <ScrollView {...scrollProps}>{props.children}</ScrollView>
         </View>
