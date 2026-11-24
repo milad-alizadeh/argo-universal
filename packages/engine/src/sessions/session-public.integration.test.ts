@@ -2,6 +2,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
 import { insertSession } from '#mocks/database';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { startSessionJourney } from '#mocks/session-journey';
 
@@ -82,10 +83,12 @@ it('reads a stored Session snapshot without connecting an Agent when its Feed is
   onTestFinished(() => controller.abort());
   const caller = createCaller({ signal: controller.signal });
 
-  const updates = await caller.feed.subscribe({
-    sessionId: 'session-1',
-    after: null,
-  });
+  const updates = await plain(
+    caller.feed.subscribe({
+      sessionId: 'session-1',
+      after: null,
+    }),
+  );
 
   const iterator = updates[Symbol.asyncIterator]();
   expect((await iterator.next()).value).toMatchObject({

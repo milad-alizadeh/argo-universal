@@ -4,6 +4,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { agentCredentials } from '#mocks/agent-credentials';
+import { plain } from '#mocks/plain-feed';
 import { sessionJourneyGit } from '#mocks/session-journey';
 
 const storedSessionId = 'session-1';
@@ -113,10 +114,12 @@ it('a past Session reports a typed auth-required failure through its Feed subscr
   await entered.promise;
 
   const events = (
-    await host.caller.feed.subscribe({
-      sessionId: storedSessionId,
-      after: null,
-    })
+    await plain(
+      host.caller.feed.subscribe({
+        sessionId: storedSessionId,
+        after: null,
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   await events.next();

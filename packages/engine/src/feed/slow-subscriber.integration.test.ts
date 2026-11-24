@@ -4,6 +4,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { readMessageText } from '#mocks/feed-message-observation';
 import { readThrough, isIdle, closeStream } from '#mocks/feed-stream-reading';
+import { plain } from '#mocks/plain-feed';
 
 const chunkCount = 5000;
 
@@ -21,9 +22,9 @@ it('a subscriber that stops reading during a long message catches up whole witho
 
   const created = await host.caller.session.new(emptySessionInput);
 
-  const slow = (await host.caller.feed.subscribe({ ...created, after: null }))[
-    Symbol.asyncIterator
-  ]();
+  const slow = (
+    await plain(host.caller.feed.subscribe({ ...created, after: null }))
+  )[Symbol.asyncIterator]();
 
   await slow.next();
   await host.caller.session.prompt({

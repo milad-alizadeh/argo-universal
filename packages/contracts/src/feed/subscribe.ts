@@ -16,6 +16,8 @@ export type FeedSyncPoint = z.infer<typeof FeedSyncPoint>;
 export const FeedSubscribeInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   after: FeedSyncPoint.nullable(),
+  // tRPC's resume point: the id of the last event an App received, which its client sends again after a reconnect (`epoch:revision`, see `feedEventId`). It stands in for `after` when its revision is higher.
+  lastEventId: z.string().optional(),
 });
 
 export type FeedSubscribeInput = z.infer<typeof FeedSubscribeInput>;
@@ -76,3 +78,16 @@ export const FeedSubscribeOutput = z.discriminatedUnion('type', [
 ]);
 
 export type FeedSubscribeOutput = z.infer<typeof FeedSubscribeOutput>;
+
+// The id `feed.subscribe` gives an event that moves an App's sync point; tRPC's client sends the newest back as `lastEventId` when its socket reconnects.
+export const feedEventId = ({ epoch, revision }: FeedSyncPoint): string =>
+  `${epoch}:${revision}`;
+
+// The sync point a `lastEventId` names; null for an id this Server did not give.
+export function syncPointOfEventId(id: string): FeedSyncPoint | null {
+  const [epoch, revision, ...rest] = id.split(':').map(Number);
+
+  if (rest.length > 0) return null;
+
+  return FeedSyncPoint.safeParse({ epoch, revision }).data ?? null;
+}

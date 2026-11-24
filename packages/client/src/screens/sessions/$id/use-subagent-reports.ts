@@ -1,20 +1,16 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { useCallback } from 'react';
-import type { ClientError } from '#features/connection';
+import { type ClientError, useTRPCClient } from '#features/connection';
 import {
   toParentResults,
-  useFeedHistoryPages,
   useFeedLive,
   useFeedWindow,
+  useOlderHistory,
+  type FeedPageReader,
   type FeedViewItem,
 } from '#features/feed';
-import { useReportsPages, type ReportQuery } from './subagent-report-query';
 
 type ParentResult = Extract<FeedViewItem, { type: 'parent_result' }>;
-
-type Window = ReturnType<typeof useFeedWindow>;
-
-type Live = ReturnType<typeof useFeedLive>;
 
 type Reports = {
   items: ParentResult[];
@@ -25,66 +21,52 @@ type Reports = {
   retry: () => void;
 };
 
+const reportsPageSize = 40;
+
 const isReport = (item: FeedViewItem): item is ParentResult =>
   item.type === 'parent_result';
 
-function useReportFeed(parentId: string, childId: string): Window {
+// A subagent's reports are pages of the parent's Feed that its own Feed window holds, with the parent's live changes.
+export function useSubagentReports(parentId: string, childId: string): Reports {
+  const client = useTRPCClient();
+
   const translate = useCallback(
     (rows: readonly SessionUpdate[]) => toParentResults(rows, childId),
     [childId],
   );
 
-  const cacheId = JSON.stringify(['reports', parentId, childId]);
+  const readPage: FeedPageReader = (cursor) =>
+    client.feed.reports.query({
+      sessionId: parentId,
+      childSessionId: childId,
+      limit: reportsPageSize,
+      ...cursor,
+    });
 
-  return useFeedWindow(parentId, translate, {
+  const { cacheId, feed, view, query } = useFeedWindow(parentId, translate, {
+    cacheId: JSON.stringify(['reports', parentId, childId]),
+    readPage,
+  });
+
+  const live = useFeedLive(parentId, {
     cacheId,
     shown: true,
-    tail: false,
+    loaded: feed.epoch !== null,
   });
-}
 
-const noItems: readonly FeedViewItem[] = [];
+  const older = useOlderHistory(cacheId, readPage);
 
-function reportItems(window: Window): ParentResult[] {
-  return (window.view?.items ?? noItems)
-    .filter(isReport)
-    .filter((item) => item.content.length > 0);
-}
-
-function retryReports(pages: ReportQuery, live: Live): void {
-  void pages.refetch();
-  live.retryOpen();
-}
-
-const reportError = (live: Live): Reports['error'] =>
-  live.closure?.error ?? live.changes.error;
-
-function reportControls(
-  pages: ReportQuery,
-  window: Window,
-  live: Live,
-): Reports {
   return {
-    items: reportItems(window),
-    hasOlder: pages.hasNextPage,
-    loading: pages.isFetchingNextPage,
-    loadOlder: (): void => void pages.fetchNextPage(),
-    error: pages.error ?? reportError(live),
-    retry: (): void => retryReports(pages, live),
+    items: (view?.items ?? [])
+      .filter(isReport)
+      .filter((item) => item.content.length > 0),
+    hasOlder: feed.hasOlder,
+    loading: older.isPending,
+    loadOlder: () => older.mutate(),
+    error: query.error ?? live.closure?.error ?? live.changes.error,
+    retry: () => {
+      void query.refetch();
+      live.retryOpen();
+    },
   };
-}
-
-export function useSubagentReports(parentId: string, childId: string): Reports {
-  const window = useReportFeed(parentId, childId);
-
-  const pages = useReportsPages(
-    parentId,
-    childId,
-    window.feed.epoch ?? undefined,
-  );
-
-  useFeedHistoryPages(window.cache, pages.data);
-  const live = useFeedLive(parentId, window.cache, true);
-
-  return reportControls(pages, window, live);
 }

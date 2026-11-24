@@ -8,16 +8,19 @@ import {
 } from '#mocks/native-permission';
 import { nextOperationRow } from '#mocks/operation-rows';
 import { runOperation } from '#mocks/operations';
+import { plain } from '#mocks/plain-feed';
 
 it('queues Argo requests in order and exposes only the next request after the first answer', async () => {
   const journey = await permissionJourney();
   const first = await askArchive(journey);
   const { host, session, target } = journey;
 
-  const events = await host.caller.feed.subscribe({
-    sessionId: session.sessionId,
-    after: null,
-  });
+  const events = await plain(
+    host.caller.feed.subscribe({
+      sessionId: session.sessionId,
+      after: null,
+    }),
+  );
 
   const second = Promise.allSettled([
     runOperation(session.caller.operations, {

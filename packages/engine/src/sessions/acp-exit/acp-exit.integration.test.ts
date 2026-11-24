@@ -2,6 +2,7 @@ import { scenarios, sharedReply } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import { plain } from '#mocks/plain-feed';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 import { withoutSessionAccess } from '#mocks/session-access';
 
@@ -41,16 +42,22 @@ it('without Agent access, a shared Agent exit ends both Turns with error and std
   const session = await host.caller.session.new(emptySessionInput);
   const sibling = await host.caller.session.new(emptySessionInput);
 
-  const siblingEvents = await host.caller.feed.subscribe({
-    ...sibling,
-    after: null,
-  });
+  const siblingEvents = await plain(
+    host.caller.feed.subscribe({
+      ...sibling,
+      after: null,
+    }),
+  );
 
   await host.caller.session.prompt({
     ...sibling,
     prompt: [{ type: 'text', text: 'Sibling' }],
   });
-  const events = await host.caller.feed.subscribe({ ...session, after: null });
+
+  const events = await plain(
+    host.caller.feed.subscribe({ ...session, after: null }),
+  );
+
   await host.caller.session.prompt({
     ...session,
     prompt: [{ type: 'text', text: 'First' }],
@@ -123,7 +130,11 @@ it('an Agent exit after Stop preserves the cancelled Turn and publishes the exit
   const host = await startAcpEngine(scenarios['ignores-cancel']);
 
   const session = await host.caller.session.new(emptySessionInput);
-  const events = await host.caller.feed.subscribe({ ...session, after: null });
+
+  const events = await plain(
+    host.caller.feed.subscribe({ ...session, after: null }),
+  );
+
   await host.caller.session.prompt({
     ...session,
     prompt: [{ type: 'text', text: 'First' }],
@@ -175,7 +186,11 @@ it('an Agent whose output closes before its exit is seen ends the Turn with the 
   });
 
   const session = await host.caller.session.new(emptySessionInput);
-  const events = await host.caller.feed.subscribe({ ...session, after: null });
+
+  const events = await plain(
+    host.caller.feed.subscribe({ ...session, after: null }),
+  );
+
   await host.caller.session.prompt({
     ...session,
     prompt: [{ type: 'text', text: 'First' }],

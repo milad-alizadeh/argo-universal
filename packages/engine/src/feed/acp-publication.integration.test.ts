@@ -7,6 +7,7 @@ import {
   isUpsert,
   closeStream,
 } from '#mocks/feed-stream-reading';
+import { plain } from '#mocks/plain-feed';
 
 const upsertEvent = 'row.upsert';
 
@@ -55,7 +56,7 @@ it('all wire-earlier content precedes idle and text appends keep the actual bloc
   const created = await host.caller.session.new(emptySessionInput);
 
   const stream = (
-    await host.caller.feed.subscribe({ ...created, after: null })
+    await plain(host.caller.feed.subscribe({ ...created, after: null }))
   )[Symbol.asyncIterator]();
 
   await stream.next();
@@ -97,7 +98,7 @@ it('owned unsolicited updates remain visible with a null Turn while idle', async
   const created = await host.caller.session.new(emptySessionInput);
 
   const stream = (
-    await host.caller.feed.subscribe({ ...created, after: null })
+    await plain(host.caller.feed.subscribe({ ...created, after: null }))
   )[Symbol.asyncIterator]();
 
   await stream.next();
