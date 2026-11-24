@@ -1,18 +1,7 @@
-import type { DiagramPalette } from '@repo/contracts/kit-diagram';
-import { drawDiagram } from '@repo/contracts/kit-diagram';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { type DiagramPalette, drawDiagram } from '@repo/contracts/kit-diagram';
+import { expect, it } from 'vitest';
 import { drawnState } from './diagram-drawn-state';
 import { flowchartDiagram } from './diagram-fixtures';
-
-vi.mock('@repo/contracts/kit-diagram', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@repo/contracts/kit-diagram')>();
-
-  return {
-    ...actual,
-    drawDiagram: vi.fn<typeof actual.drawDiagram>(actual.drawDiagram),
-  };
-});
 
 const palette: DiagramPalette = {
   background: 'colour',
@@ -28,26 +17,37 @@ const palette: DiagramPalette = {
   tones: {},
 };
 
-beforeEach(() => {
-  vi.mocked(drawDiagram).mockClear();
-});
+// The real layout, counted.
+function countedLayout(): { layouts: () => number; draw: typeof drawDiagram } {
+  let count = 0;
+
+  return {
+    layouts: () => count,
+    draw: (source, colours) => {
+      count += 1;
+
+      return drawDiagram(source, colours);
+    },
+  };
+}
 
 it('lays a diagram out once when a row remounts and draws it again', () => {
-  const first = drawnState(flowchartDiagram.source, palette);
-  const remounted = drawnState(flowchartDiagram.source, { ...palette });
+  const { layouts, draw } = countedLayout();
+  const first = drawnState(flowchartDiagram.source, palette, draw);
+  const remounted = drawnState(flowchartDiagram.source, { ...palette }, draw);
 
   expect(first.kind).toBe('drawn');
   expect(remounted).toBe(first);
-  expect(drawDiagram).toHaveBeenCalledTimes(1);
+  expect(layouts()).toBe(1);
 });
 
 it('lays the same diagram out again when the theme changes its colours', () => {
-  const light = drawnState(flowchartDiagram.source, palette);
+  const { layouts, draw } = countedLayout();
+  // Its own diagram, so the first test's drawing is not found.
+  const source = `${flowchartDiagram.source}\n  E --> F`;
+  drawnState(source, palette, draw);
 
-  const dark = drawnState(flowchartDiagram.source, {
-    ...palette,
-    background: 'other colour',
-  });
+  drawnState(source, { ...palette, background: 'other colour' }, draw);
 
-  expect(dark).not.toBe(light);
+  expect(layouts()).toBe(2);
 });

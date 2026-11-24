@@ -96,7 +96,7 @@ export const OpenOnMountClosesFromItsFullHeight: Story = {
   render: () => <OpenInAList />,
   play: async ({ canvas }) => {
     await settleLayout('phone');
-    await canvas.getByRole('button', { name: idleLabel }).click();
+    canvas.getByRole('button', { name: idleLabel }).click();
     const detail = await canvas.findByText(detailLabel);
     await frame();
     await frame();

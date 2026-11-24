@@ -27,8 +27,14 @@ function paletteKey(palette: DiagramPalette): string {
   return key;
 }
 
-function laidOut(source: string, palette: DiagramPalette): DiagramState {
-  const drawing = drawDiagram(source, palette);
+type Draw = typeof drawDiagram;
+
+function laidOut(
+  source: string,
+  palette: DiagramPalette,
+  draw: Draw,
+): DiagramState {
+  const drawing = draw(source, palette);
 
   return drawing ? { kind: 'drawn', drawing } : { kind: 'failed' };
 }
@@ -37,16 +43,18 @@ function laidOut(source: string, palette: DiagramPalette): DiagramState {
  * A row that remounts or is recycled draws the same diagram again, so a drawing is kept per source and palette
  * rather than per mount.
  */
+// `draw` is the layout, which a test passes its own to count.
 export function drawnState(
   source: string,
   palette: DiagramPalette,
+  draw: Draw = drawDiagram,
 ): DiagramState {
   const key = `${paletteKey(palette)}\n${source}`;
   const known = drawnStates.get(key);
 
   if (known) return known;
 
-  const state = laidOut(source, palette);
+  const state = laidOut(source, palette, draw);
   drawnStates.set(key, state);
 
   return state;

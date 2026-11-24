@@ -1,26 +1,32 @@
 import { validateChartFence } from '@repo/contracts/chart-fence';
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 import { parsedChartFence } from './parsed-chart-fence';
-
-vi.mock('@repo/contracts/chart-fence', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@repo/contracts/chart-fence')>();
-
-  return {
-    ...actual,
-    validateChartFence: vi.fn<typeof actual.validateChartFence>(
-      actual.validateChartFence,
-    ),
-  };
-});
 
 const fence = '```chart\n{"type":"bar","data":[{"label":"A","value":1}]}\n```';
 
-it('parses a fence once however often a row draws it', () => {
-  const first = parsedChartFence(fence);
+// The real parser, counted.
+function countedParser(): {
+  parses: () => number;
+  validate: typeof validateChartFence;
+} {
+  let count = 0;
 
-  expect(parsedChartFence(`${fence}`)).toBe(first);
-  expect(validateChartFence).toHaveBeenCalledTimes(1);
+  return {
+    parses: () => count,
+    validate: (raw) => {
+      count += 1;
+
+      return validateChartFence(raw);
+    },
+  };
+}
+
+it('parses a fence once however often a row draws it', () => {
+  const { parses, validate } = countedParser();
+  const first = parsedChartFence(fence, validate);
+
+  expect(parsedChartFence(`${fence}`, validate)).toBe(first);
+  expect(parses()).toBe(1);
 });
 
 it('keeps a fence that does not parse as not valid', () => {
