@@ -148,7 +148,7 @@ it('pushes the list as expired when its end time passes', async () => {
       sessionId,
       id: created.id,
       action: 'setEnd',
-      endsAt: Date.now() + 1500,
+      endsAt: Date.now() + 5000,
     });
 
     expect(

@@ -62,15 +62,23 @@ export function useSchedules(
   return { items: query.data ?? [], canCreate, ...change };
 }
 
-// A change reaches the list through the Server's push, so a mutation does not read it again.
+// A change reaches the list through the Server's push; marking the list stale also covers a push missed while the subscription was down.
 function useChangeSchedule(
   sessionId: string,
 ): Omit<ScheduleControls, 'items' | 'canCreate'> {
   const session = useTRPC().session;
+  const queryClient = useQueryClient();
 
-  const mutation = useMutation(session.manageSchedule.mutationOptions());
+  const changed = {
+    onSuccess: (): Promise<void> =>
+      queryClient.invalidateQueries({
+        queryKey: session.listSchedules.queryKey({ sessionId }),
+      }),
+  };
 
-  const create = useMutation(session.schedulePrompt.mutationOptions());
+  const mutation = useMutation(session.manageSchedule.mutationOptions(changed));
+
+  const create = useMutation(session.schedulePrompt.mutationOptions(changed));
 
   useErrorToast(
     scheduleError(

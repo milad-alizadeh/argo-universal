@@ -173,7 +173,8 @@ export class Schedules {
     const row = this.store.row(id);
 
     if (row?.endsAt != null && row.endsAt <= Date.now())
-      void this.sources.open.write(announceOnly(row.sessionId));
+      // Best effort: a write refused while closing loses only this notice, and a watcher's next subscribe reads the list afresh.
+      this.sources.open.write(announceOnly(row.sessionId)).catch(() => {});
   }
   private async deliverDue(
     id: string,
