@@ -1,5 +1,4 @@
 import type {
-  BlobRef,
   ConversationPartial,
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
@@ -7,6 +6,7 @@ import type {
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
+import type { ImageUrl } from '../feed-image';
 import { ComposerCover } from '#lib/product/composer-cover';
 import { NewSessionQuestion } from '#lib/product/new-session-question';
 import { useFeedTrayInset } from '#lib/product/session-column';
@@ -36,7 +36,7 @@ export interface FeedProps {
   historyCursor?: number | null;
   // Asks for older rows when the reader nears the top.
   onStartReached: () => void;
-  imageUrl: (blob: BlobRef) => string;
+  imageUrl: ImageUrl;
   // The checkout's branch, under the empty Feed's heading.
   checkoutBranch?: string;
   // Fixes the live header's clock, for stories and tests.

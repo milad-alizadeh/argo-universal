@@ -1,4 +1,4 @@
-import type { BlobRef } from '@repo/contracts';
+import type { ImageUrl } from './feed-image';
 import type * as React from 'react';
 import { useCallback, useState } from 'react';
 import { useImageStepKeys } from '../hooks/use-image-step-keys';
@@ -9,7 +9,7 @@ import { OpenFeedImageContext, OpenImage } from './feed-image';
 
 interface FeedImagesProps {
   items: readonly FeedViewItem[];
-  imageUrl: (blob: BlobRef) => string;
+  imageUrl: ImageUrl;
   children: React.ReactNode;
 }
 

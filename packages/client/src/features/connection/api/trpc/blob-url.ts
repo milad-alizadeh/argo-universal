@@ -1,16 +1,18 @@
 import { type BlobRef, blobPath } from '@repo/contracts';
 import { pluginAssetPath } from '@repo/contracts/plugins/assets';
-import type { MediaUrl } from '@repo/kit/primitives/content/media-url';
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useSyncExternalStore,
-} from 'react';
+import type {
+  MediaAsset,
+  MediaUrl,
+} from '@repo/kit/primitives/content/media-url';
+import { createContext, useContext, useMemo } from 'react';
 import { ChannelMedia } from '../channel/channel-media';
 import { serverHttpUrl } from './create-trpc-client';
 
-export type BlobUrl = (blob: BlobRef) => string;
+// `watch` is there when the URL arrives later; it tells the readers of this one Blob, and no others, to ask again.
+export interface BlobUrl {
+  (blob: BlobRef): string;
+  watch?: (blob: BlobRef, changed: () => void) => () => void;
+}
 
 export const BlobUrlContext = createContext<BlobUrl | null>(null);
 
@@ -41,15 +43,25 @@ export interface ServerUrls {
 // A paired Server has no URL for a Blob or an asset, so its images come out of its channel instead and read as empty until they have arrived (ADR-0045).
 export function useChannelUrls(read: typeof fetch): ServerUrls {
   const media = useMemo(() => new ChannelMedia(read), [read]);
-  const version = useSyncExternalStore(media.subscribe, media.getVersion);
 
-  // The version is why these are new functions once something has arrived, so the screens reading them draw again.
+  // Stable, so an arriving image does not hand every reader new functions; each reader watches its own path.
   return useMemo(
     () => ({
-      blobUrl: (blob) => media.urlFor(blobPath(blob.blobId)),
-      mediaUrl: (asset) => media.urlFor(pluginAssetPath(asset)),
+      blobUrl: Object.assign(
+        (blob: BlobRef) => media.urlFor(blobPath(blob.blobId)),
+        {
+          watch: (blob: BlobRef, changed: () => void) =>
+            media.watch(blobPath(blob.blobId), changed),
+        },
+      ),
+      mediaUrl: Object.assign(
+        (asset: MediaAsset) => media.urlFor(pluginAssetPath(asset)),
+        {
+          watch: (asset: MediaAsset, changed: () => void) =>
+            media.watch(pluginAssetPath(asset), changed),
+        },
+      ),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the version is the point
-    [media, version],
+    [media],
   );
 }

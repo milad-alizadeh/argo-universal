@@ -1,5 +1,5 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
-import type { BlobRef } from '@repo/contracts';
+import type { ImageUrl } from '../feed-image';
 import { CollapsibleLayoutSyncContext } from '@repo/kit/primitives/layout/collapsible';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
@@ -17,7 +17,7 @@ export interface RowMotion {
 }
 
 export interface EntryDrawing {
-  imageUrl: (blob: BlobRef) => string;
+  imageUrl: ImageUrl;
   now?: number;
   // Opens a Subagent row's Feed, where the Session offers one.
   onOpenSubagent?: (subagentSessionId: string) => void;

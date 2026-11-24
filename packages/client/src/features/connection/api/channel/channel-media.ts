@@ -4,24 +4,24 @@ const fallbackMime = 'application/octet-stream';
 
 /*
  * The Blobs and Plugin assets of a paired Server, read inside its channel and held as data URIs.
- * The kit asks for a URL it can hand to an image, and a paired Server has no URL (ADR-0045), so this answers with an empty one until the bytes have come and asks its readers to look again once they have.
+ * The kit asks for a URL it can hand to an image, and a paired Server has no URL (ADR-0045), so this answers with an empty one until the bytes have come and tells the readers of that one path to look again once they have.
+ * Where the bytes are kept is this class's one seam: the images cached on the Device (#2694) replace `dataUri`, and what readers hear stays the same.
  */
 export class ChannelMedia {
   private readonly loaded = new Map<string, string>();
   private readonly requested = new Set<string>();
-  private readonly listeners = new Set<() => void>();
-  private version = 0;
+  private readonly listeners = new Map<string, Set<() => void>>();
 
   public constructor(private readonly read: typeof fetch) {}
 
-  public readonly subscribe = (changed: () => void): (() => void) => {
-    this.listeners.add(changed);
+  // Told when `path` has arrived, and only then: what is drawn from another path is not asked to draw again.
+  public readonly watch = (path: string, changed: () => void): (() => void) => {
+    const watching = this.listeners.get(path) ?? new Set<() => void>();
+    watching.add(changed);
+    this.listeners.set(path, watching);
 
-    return () => void this.listeners.delete(changed);
+    return () => void watching.delete(changed);
   };
-
-  // Changes whenever something arrives, which is what makes the readers ask for their URLs again.
-  public readonly getVersion = (): number => this.version;
 
   public urlFor(path: string): string {
     void this.load(path);
@@ -44,9 +44,8 @@ export class ChannelMedia {
 
   private keep(path: string, uri: string): void {
     this.loaded.set(path, uri);
-    this.version += 1;
 
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners.get(path) ?? []) listener();
   }
 
   private async dataUri(path: string): Promise<string> {
