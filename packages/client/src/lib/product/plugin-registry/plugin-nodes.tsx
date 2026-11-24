@@ -9,6 +9,7 @@ import {
 } from '@repo/contracts/plugins/wire-node-key';
 import { Fragment, createElement, type ElementType } from 'react';
 import { pluginEntries } from './plugin-entries';
+import { listRowsOf } from './plugin-list-rows';
 import type * as Rendering from './plugin-rendering';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
@@ -59,7 +60,10 @@ function renderComponent(
   const { node, definition, context } = input;
   const props = context.controls(input);
 
-  if (definition.children)
+  const rows = listRowsOf(node);
+
+  if (rows) Object.assign(props, rows, { renderItem: rowRenderer(context) });
+  else if (definition.children)
     props.children = renderedChildren(node.children, context);
 
   return createElement(component, {
@@ -68,6 +72,15 @@ function renderComponent(
     key: elementKey(node, context.key),
   });
 }
+
+// A List's row as data: drawn at the address its child would have, from the same cache of drawn nodes.
+const rowRenderer =
+  (context: Rendering.RenderContext) =>
+  (node: WireNode): React.JSX.Element | null =>
+    RenderNode({
+      node,
+      context: { ...context, key: childNodeKey(context.key, node.key) },
+    });
 
 function renderedChildren(
   nodes: WireNode[],
