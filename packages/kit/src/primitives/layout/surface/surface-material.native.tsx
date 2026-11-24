@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import {
@@ -26,9 +27,18 @@ function GlassMaterial(props: SurfaceProps): React.JSX.Element {
       interactive={Boolean(props.onPress)}
       fallbackClassName={surfaceClass({ ...props, padding: 0 }, 'plain')}
     >
-      <View className={cn(props.fill && 'flex-1', contentPadding(props))}>
-        {props.children}
-      </View>
+      {glassContent(props)}
     </LiquidGlass>
+  );
+}
+
+function glassContent(props: SurfaceProps): ReactNode {
+  // A padding-free fill already sizes its children through the native host.
+  if (props.fill && !props.padding) return props.children;
+
+  return (
+    <View className={cn(props.fill && 'flex-1', contentPadding(props))}>
+      {props.children}
+    </View>
   );
 }
