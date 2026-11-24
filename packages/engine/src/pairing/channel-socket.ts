@@ -64,7 +64,7 @@ export class ChannelSocket extends Duplex {
     if (this.compression) {
       this.writeDeflated(chunk).then(
         () => done(),
-        (error: Error) => done(error),
+        (error: Error) => done(channelFailure(error)),
       );
 
       return;

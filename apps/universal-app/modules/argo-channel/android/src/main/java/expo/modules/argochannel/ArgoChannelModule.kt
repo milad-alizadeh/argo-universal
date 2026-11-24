@@ -179,8 +179,8 @@ class ArgoChannelModule : Module() {
 
       val timed = client.newBuilder().connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS).build()
       // `headers` ride on the WebSocket upgrade request, which is where the App offers compression: a Server built before it never reads them.
-      val request = Request.Builder().url(url).apply { headers.forEach { (name, value) -> header(name, value) } }.build()
-      synchronized(channel) { channel.attach(timed.newWebSocket(request, listener)) }
+      val upgrade = Request.Builder().url(url).apply { headers.forEach { (name, value) -> header(name, value) } }.build()
+      synchronized(channel) { channel.attach(timed.newWebSocket(upgrade, listener)) }
     }
 
     // A `ByteArray` is a `Uint8Array` on the JavaScript side.
