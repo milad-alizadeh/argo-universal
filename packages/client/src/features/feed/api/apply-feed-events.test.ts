@@ -20,6 +20,8 @@ const events = rowEvents(stream);
 
 const id = 'session-1';
 
+const rowsUpsert = 'rows.upsert' as const;
+
 const never = (): Promise<SessionUpdate> => new Promise(() => {});
 
 function heldFeed(queryClient: QueryClient, held: FeedState): void {
@@ -71,7 +73,7 @@ describe('applyFeedEvents', () => {
 
     applyFeedEvents({ queryClient: batched, cacheId: id, fetchRow: never }, [
       {
-        type: 'rows.upsert',
+        type: rowsUpsert,
         rev: Math.max(...batch.map((row) => row.revision)),
         rows: batch,
       },
@@ -89,6 +91,28 @@ describe('applyFeedEvents', () => {
     expect(readFeed(batched)).toEqual(readFeed(single));
   });
 
+  it('leaves rows before a held window out of a batch, as one by one', () => {
+    const tail = page(rows, Math.max(...rows.map((row) => row.revision)), {
+      limit: 1,
+    });
+
+    const batched = createQueryClient();
+    const single = createQueryClient();
+
+    heldFeed(batched, mergeNewestPage(emptyFeed, tail));
+    heldFeed(single, mergeNewestPage(emptyFeed, tail));
+    applyFeedEvents({ queryClient: batched, cacheId: id, fetchRow: never }, [
+      { type: rowsUpsert, rev: tail.maxRevision, rows: [...rows] },
+    ]);
+    applyFeedEvents(
+      { queryClient: single, cacheId: id, fetchRow: never },
+      rows.map((row) => ({ type: upsert, rev: row.revision, row })),
+    );
+
+    expect(tail.hasOlder).toBe(true);
+    expect(readFeed(batched)).toEqual(readFeed(single));
+  });
+
   it('keeps a held row whose revision is higher than the one in a batch', () => {
     const queryClient = createQueryClient();
     const [row] = rows;
@@ -99,7 +123,7 @@ describe('applyFeedEvents', () => {
     heldFeed(queryClient, mergeNewestPage(emptyFeed, page([newer], 0)));
 
     applyFeedEvents({ queryClient, cacheId: id, fetchRow: never }, [
-      { type: 'rows.upsert', rev: row.revision, rows: [row] },
+      { type: rowsUpsert, rev: row.revision, rows: [row] },
     ]);
 
     expect(readFeed(queryClient)?.rows).toEqual([newer]);

@@ -16,15 +16,47 @@ type SyncPoint = { after: number; storedRevision: number };
 // Where a subscriber resumes, and whether it reads a catch-up in batches of rows.
 type Start = SyncPoint & { batched: boolean };
 
-// A page of rows as one event for an App that reads batches (its last row's revision names the event), or one per row.
+const kilobyte = 1024;
+
+const batchKilobytes = 256;
+
+// A batch stays near this size once serialised, so the App never parses a message of megabytes on its JS thread while live events wait behind it.
+const batchBytes = batchKilobytes * kilobyte;
+
+const bytesOf = (row: SessionUpdate): number => JSON.stringify(row).length;
+
+// The page in runs of rows, each of about `batchBytes` or a single row.
+function* runsOfRows(
+  page: readonly SessionUpdate[],
+): Generator<readonly SessionUpdate[]> {
+  let start = 0;
+  let bytes = 0;
+
+  for (const [index, row] of page.entries()) {
+    if (index > start && bytes + bytesOf(row) > batchBytes) {
+      yield page.slice(start, index);
+      start = index;
+      bytes = 0;
+    }
+
+    bytes += bytesOf(row);
+  }
+
+  if (start < page.length) yield page.slice(start);
+}
+
+// A page of rows as events for an App that reads batches (each names its own last row's revision), or one per row.
 function* pageEvents(
   page: readonly SessionUpdate[],
   batched: boolean,
 ): Generator<RowUpsert | RowsUpsert> {
-  const last = page.at(-1);
+  if (batched) {
+    for (const rows of runsOfRows(page)) {
+      const last = rows.at(-1);
 
-  if (batched && last) {
-    yield { type: 'rows.upsert', rev: last.revision, rows: [...page] };
+      if (last)
+        yield { type: 'rows.upsert', rev: last.revision, rows: [...rows] };
+    }
 
     return;
   }

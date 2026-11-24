@@ -6,7 +6,7 @@ import {
   type SessionUpdate,
 } from '@repo/contracts';
 import { keepNewerRevisions, startCursor } from './feed-revisions';
-import { applyHeldEvent, applyUpsert, upsertRow } from './feed-row-events';
+import { applyHeldEvent, applyUpsert, upsertRowsOnce } from './feed-row-events';
 import { laterPlan } from './held-plan';
 
 // The rows an App holds for one Session: a window of the newest rows, kept in sync by revision (ADR 0007).
@@ -116,7 +116,7 @@ export function applySubscriptionEvent(
 
   if (event.type === 'rows.upsert')
     return {
-      feed: event.rows.reduce((held, row) => upsertRow(held, row), feed),
+      feed: upsertRowsOnce(feed, event.rows),
     };
 
   return applyHeldEvent(feed, event);
