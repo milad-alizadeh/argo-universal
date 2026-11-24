@@ -97,19 +97,19 @@ const CardEdge = ({
 
 // A List of `entries` reads the nodes they make as its children, so its Sections, moves, search and selection read them as ever.
 function useEntryChildren<Item>(props: ListProps<Item>): ListProps<Item> {
-  const { entries, renderItem, ...rest } = props;
+  const { entries, renderEntry, ...rest } = props;
 
   const children = useMemo(
     () =>
-      entries && renderItem
-        ? flatChildren(entryNodes(entries, renderItem))
+      entries && renderEntry
+        ? flatChildren(entryNodes(entries, renderEntry))
         : undefined,
-    [entries, renderItem],
+    [entries, renderEntry],
   );
 
   return children === undefined
     ? props
-    : { ...rest, items: undefined, children };
+    : { ...rest, items: undefined, renderItem: undefined, children };
 }
 
 /*

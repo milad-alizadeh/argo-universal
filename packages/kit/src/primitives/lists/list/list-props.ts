@@ -48,8 +48,9 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'keyboardShouldPersistTaps'
   > & {
     ref?: Ref<ListRef>;
-    // Kit-only: rows and Sections as data, drawn by `renderItem`, in place of children.
+    // Kit-only: rows and Sections as data, each row drawn by `renderEntry`, in place of children.
     entries?: readonly ListEntry<Item>[];
+    renderEntry?: (item: Item, index: number) => ReactNode;
     header?: ReactNode;
     endContent?: ReactNode;
     startContent?: ReactNode;

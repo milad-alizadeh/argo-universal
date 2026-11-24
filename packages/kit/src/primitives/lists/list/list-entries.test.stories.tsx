@@ -82,7 +82,7 @@ function Sectioned({
             accessibilityLabel="Produce"
             searchMode={searchMode}
             entries={entries(changed && next ? next : fruit, veg)}
-            renderItem={drawRow}
+            renderEntry={drawRow}
           />
         </View>
       </Profiler>

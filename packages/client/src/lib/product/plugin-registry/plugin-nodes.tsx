@@ -75,7 +75,7 @@ function renderComponent(
   else if (entries)
     Object.assign(props, {
       entries,
-      renderItem: entryRenderer(context),
+      renderEntry: entryRenderer(context),
       recycleItems: true,
     });
   else if (definition.children)
