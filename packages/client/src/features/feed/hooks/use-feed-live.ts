@@ -24,10 +24,7 @@ import { closedFeedError } from '../utils/closed-feed-error';
 import { emptyFeed, type FeedState, syncPointOf } from '../view/feed-state';
 import { waitForFrame } from './frame-wait';
 
-export type LiveChanges = TRPCSubscriptionResult<
-  FeedSubscribeOutput,
-  ClientError
->;
+type LiveChanges = TRPCSubscriptionResult<FeedSubscribeOutput, ClientError>;
 
 type Changes = Exclude<FeedSubscribeOutput, { type: 'closed' }>;
 

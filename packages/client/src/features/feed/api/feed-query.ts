@@ -1,7 +1,7 @@
 const hourMs = 3_600_000;
 
 // The subscription keeps a Feed current, so it never goes stale on a clock; it is kept long enough that a Session seen today opens from here.
-export const feedKeptMs = 24 * hourMs;
+const feedKeptMs = 24 * hourMs;
 
 export const feedKeyPrefix = ['feed', 'window'] as const;
 
