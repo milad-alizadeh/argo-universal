@@ -1,9 +1,14 @@
 import {
+  NativeSidebarHeader,
+  NativeSidebarList,
+} from '@repo/kit/native-sidebar';
+import {
   SettingsPages,
   type SettingsLayoutSections,
   type SettingsPagesProps,
 } from '@repo/kit/primitives/scaffolds/settings-layout';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
+import { use } from 'react';
 import type { ReactNode } from 'react';
 import type * as React from 'react';
 import {
@@ -28,6 +33,37 @@ export type { SettingsListViewProps } from './settings-list-props';
 export function SettingsListView(
   props: SettingsListViewProps,
 ): React.JSX.Element {
+  const header = use(NativeSidebarHeader);
+
+  if (header) {
+    const selected = shownRow(
+      settingsRows(props, true),
+      props.selectedPath,
+    )?.href;
+
+    return (
+      <>
+        <NativeSidebarList
+          sections={settingsGroups(props, true).map(({ title, rows }) => ({
+            id: title,
+            title,
+            rows: rows.map((row) => ({
+              id: row.href,
+              title: row.label,
+              icon: row.icon,
+              value: row.value,
+              selected: row.href === selected,
+              onPress: row.disabled
+                ? undefined
+                : () => props.onSelect(row.href),
+            })),
+          }))}
+        />
+        {shownTheme(props)}
+      </>
+    );
+  }
+
   return (
     <SettingsPages
       {...settingsPagesProps(props)}

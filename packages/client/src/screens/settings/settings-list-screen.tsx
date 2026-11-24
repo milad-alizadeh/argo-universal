@@ -1,5 +1,7 @@
+import { NativeSidebarHeader } from '@repo/kit/native-sidebar';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { usePathname } from 'expo-router';
+import { use } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useInstalledAgents } from '#features/agents';
@@ -81,6 +83,10 @@ const settingsSearch =
 export function SettingsListScreen(
   props: SettingsListScreenProps,
 ): React.JSX.Element {
+  const list = useSettingsList(props.query);
+
+  if (use(NativeSidebarHeader)) return <SettingsListView {...list} />;
+
   return (
     <Screen
       title={sections.settings.title}
@@ -88,7 +94,7 @@ export function SettingsListScreen(
       value={props.query}
       onChangeText={props.onQueryChange}
     >
-      <SettingsListView {...useSettingsList(props.query)} />
+      <SettingsListView {...list} />
     </Screen>
   );
 }

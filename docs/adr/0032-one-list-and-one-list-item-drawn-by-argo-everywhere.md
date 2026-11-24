@@ -92,4 +92,4 @@ A Composer queue tray is a compact web List at every window width (owner, 2026-1
 
 ## iPad navigation amendment
 
-Owner amendment, 2026-11-23 (#2681). The App puts its existing lists in the system sidebar on iPadOS 26 and later. The system draws the split view and the Inspector around Argo's content. See [ADR-0026](0026-the-ui-kit-names-its-tokens-by-role.md) for the width and platform rules.
+Owner amendments, 2026-11-23 and 2026-11-24 (#2681). On iPadOS 26 and later, iPadOS draws the split view and Inspector. The sidebar uses a SwiftUI sidebar List with system selection and collapsible sections. The large section title opens the section menu. The App supplies the rows and actions from its existing data. See [ADR-0026](0026-the-ui-kit-names-its-tokens-by-role.md) for the width and platform rules.

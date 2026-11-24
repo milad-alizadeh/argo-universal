@@ -1,5 +1,5 @@
 import { listDefaults } from '@repo/contracts/kit-tokens';
-import type { ReactElement } from 'react';
+import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { InRowFrameContext } from '#primitives/fields/field-row';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
@@ -15,9 +15,14 @@ import { DataList } from './list/list-data-list';
 import { ListMenuRows } from './list/list-menu-rows';
 import { NativeGroupedList } from './list/list-native-grouped';
 import { drawsNativeGroupedList } from './list/list-native-rows';
+import {
+  PluginSidebar,
+  supportsNativeSidebar,
+} from './list/list-native-sidebar';
 import { hasNoRows, placeholderChildren } from './list/list-placeholder';
 import type { ListProps, MovesOrItems } from './list/list-props';
 import { ListSection } from './list/list-section';
+import { NativePluginSidebar } from './native-sidebar';
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();
@@ -100,6 +105,9 @@ const CardEdge = ({
 export function PluginList<Item>(props: ListProps<Item>): ReactElement {
   const list = useListContent(props);
   const look = useLook(list);
+
+  if (use(NativePluginSidebar) && supportsNativeSidebar(list))
+    return <PluginSidebar list={list} />;
 
   return (
     <InRowFrameContext value={false}>

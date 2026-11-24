@@ -1,10 +1,12 @@
 import type { AgentServer, ProjectsListOutput } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
+import { NativeSidebarHeader } from '@repo/kit/native-sidebar';
 import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import { Skeleton } from '@repo/kit/primitives/status/skeleton';
+import { use } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -12,6 +14,7 @@ import {
   type SessionsListPlugins,
   type SessionsLoadState,
   type SessionsView,
+  NativeSessionSidebar,
   serverSilentMessage,
 } from '#features/sessions';
 import { Screen } from '#lib/product/screen/screen';
@@ -89,7 +92,16 @@ export function SessionListView(
 ): React.JSX.Element {
   useSessionsErrorToasts(props);
 
-  return <SessionsLayout {...props} />;
+  return use(NativeSidebarHeader) ? (
+    <NativeSessionSidebar
+      {...props}
+      loading={props.loadState !== 'ready'}
+      onNewSession={props.onNewSessionInProject}
+      onEndReached={props.onLoadMore}
+    />
+  ) : (
+    <SessionsLayout {...props} />
+  );
 }
 
 /*

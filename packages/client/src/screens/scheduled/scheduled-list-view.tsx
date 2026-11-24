@@ -1,24 +1,16 @@
 import type { AgentServer, SessionInfo } from '@repo/contracts';
 import type { ProjectSchedule } from '@repo/contracts/operations';
 import { ListTreeContext } from '@repo/kit/list-tree';
+import { NativeSidebarHeader } from '@repo/kit/native-sidebar';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { List, ListSectionHeader } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import {
-  Menu,
-  type MenuEntry,
-  MenuTrigger,
-} from '@repo/kit/primitives/overlays/menu';
+import { Menu, MenuTrigger } from '@repo/kit/primitives/overlays/menu';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
-import { useState, type ReactElement } from 'react';
+import { use, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import {
-  cadenceLabel,
-  upcomingOccurrence,
-  scheduleTimeZone,
-} from '#features/project-schedules';
 import {
   nestedSessionEntries,
   SessionListRow,
@@ -32,6 +24,12 @@ import {
   useSessionsListRowClassName,
 } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
+import { NativeScheduleRows } from './native-schedule-rows';
+import {
+  menuEntries,
+  scheduleSubtitle,
+  type ScheduleMenuProps,
+} from './schedule-row-actions';
 
 export type ScheduleRowAction = 'edit' | 'pause' | 'resume' | 'run' | 'delete';
 
@@ -50,6 +48,28 @@ export interface ScheduledListViewProps {
 }
 
 export function ScheduledListView(props: ScheduledListViewProps): ReactElement {
+  const header = use(NativeSidebarHeader);
+
+  if (header)
+    return (
+      <>
+        {header({
+          actions: [
+            {
+              title: 'New Schedule',
+              icon: 'new-session',
+              onPress: props.onCreate,
+            },
+          ],
+        })}
+        <NativeScheduleRows
+          entries={scheduleEntries(props, true, new Set())}
+          props={props}
+          empty={<EmptyState title={emptyTitle(props.status)} />}
+        />
+      </>
+    );
+
   return (
     <Screen
       title="Scheduled"
@@ -86,11 +106,11 @@ type Task = {
   schedule: ProjectSchedule;
 };
 
-type NestedEntry = ReturnType<
+export type NestedEntry = ReturnType<
   typeof nestedSessionEntries<Task | SessionInfo>
 >[number];
 
-type ScheduleEntry = ScheduleSection | NestedEntry;
+export type ScheduleEntry = ScheduleSection | NestedEntry;
 
 function scheduleEntries(
   props: ScheduledListViewProps,
@@ -255,63 +275,6 @@ function ScheduleRow({
       />
     </View>
   );
-}
-
-function scheduleSubtitle(schedule: ProjectSchedule): string {
-  const cadence = cadenceLabel(schedule.cadence);
-
-  if (schedule.archived) return `${cadence} · Archived`;
-
-  if (schedule.paused) return cadence;
-
-  if (schedule.running) return `${cadence} · Running`;
-
-  const time = upcomingOccurrence(
-    schedule.nextAt,
-    scheduleTimeZone(schedule.cadence),
-  );
-
-  return `${cadence} · ${time}`;
-}
-
-type ScheduleMenuProps = {
-  schedule: ProjectSchedule;
-  onAction: NonNullable<ScheduledListViewProps['onAction']>;
-};
-
-function menuEntries({ schedule, onAction }: ScheduleMenuProps): MenuEntry[] {
-  const entries: MenuEntry[] = [];
-
-  if (!schedule.archived) {
-    entries.push(
-      {
-        label: schedule.paused ? 'Resume' : 'Pause',
-        onPress: () => onAction(schedule, schedule.paused ? 'resume' : 'pause'),
-      },
-      {
-        label: 'Run now',
-        disabled: schedule.running,
-        onPress: () => onAction(schedule, 'run'),
-      },
-    );
-  }
-
-  entries.push(
-    {
-      label: 'Edit Schedule',
-      icon: 'edit',
-      onPress: () => onAction(schedule, 'edit'),
-    },
-    {
-      label: 'Delete Schedule…',
-      icon: 'delete',
-      tone: 'danger',
-      section: {},
-      onPress: () => onAction(schedule, 'delete'),
-    },
-  );
-
-  return entries;
 }
 
 function ScheduleMenu(props: ScheduleMenuProps): ReactElement {

@@ -9,8 +9,12 @@ import {
   type FrameSections,
   type PluginSection,
 } from '@repo/client';
+import {
+  NativePluginSidebar,
+  NativeSidebarHeader,
+  type SidebarHeaderProps,
+} from '@repo/kit/native-sidebar';
 import { createPlace, useClaimed, type Place } from '@repo/kit/place';
-import { Menu } from '@repo/kit/primitives/overlays/menu';
 import {
   InspectorPane,
   NativeInspectorPlace,
@@ -30,13 +34,21 @@ import {
   FramePresentationContext,
   useFramePresentation,
 } from './frame-presentation';
+import { IPadSidebarHeader } from './ipad-sidebar-header';
 import { splitSectionHref } from './ipad-split-view';
 
 type SplitCommands = NonNullable<React.ComponentRef<typeof SplitView>>;
 
+const coreIcons = {
+  sessions: 'bubble.left.and.bubble.right',
+  scheduled: 'clock',
+  settings: 'gearshape',
+} as const;
+
 const coreChoices = sectionOrder.map((id) => ({
   id,
   title: sections[id].title,
+  icon: coreIcons[id],
   href: `/${id}` satisfies Href,
 }));
 
@@ -44,18 +56,24 @@ interface SectionPickerProps {
   section: Section;
   plugins: readonly PluginSection[];
   lastPages: React.RefObject<Map<string, Href>>;
+  chrome?: SidebarHeaderProps;
 }
 
 function SectionPicker({
   section,
   plugins,
   lastPages,
+  chrome,
 }: SectionPickerProps): JSX.Element {
   const router = useRouter();
 
   const items = [
     ...coreChoices,
-    ...plugins.map((plugin) => ({ ...plugin, href: plugin.rootPath })),
+    ...plugins.map((plugin) => ({
+      ...plugin,
+      href: plugin.rootPath,
+      icon: 'puzzlepiece.extension' as const,
+    })),
   ];
 
   const pick = (next: string): void => {
@@ -68,12 +86,12 @@ function SectionPicker({
   };
 
   return (
-    <Menu
-      trigger="Sections"
-      accessibilityLabel="Choose section"
-      value={section}
-      options={items.map(({ id, title }) => ({ value: id, label: title }))}
-      onValueChange={pick}
+    <IPadSidebarHeader
+      {...chrome}
+      section={section}
+      choices={items}
+      coreCount={coreChoices.length}
+      onPick={pick}
     />
   );
 }
@@ -108,10 +126,24 @@ function SidebarColumn({
   const { section } = picker;
   const list = isCoreSection(section) ? lists[section].list : pluginList;
 
+  const header = (chrome: SidebarHeaderProps): JSX.Element => (
+    <SectionPicker {...picker} chrome={chrome} />
+  );
+
   return (
     <SafeAreaView edges={{ left: true, top: true }} style={{ flex: 1 }}>
-      <SectionPicker {...picker} />
-      {list && <ScreenListColumn>{list}</ScreenListColumn>}
+      <NativeSidebarHeader value={header}>
+        {section !== 'sessions' && section !== 'scheduled' && (
+          <SectionPicker {...picker} />
+        )}
+        {list && (
+          <ScreenListColumn>
+            <NativePluginSidebar value={!isCoreSection(section)}>
+              {list}
+            </NativePluginSidebar>
+          </ScreenListColumn>
+        )}
+      </NativeSidebarHeader>
     </SafeAreaView>
   );
 }
@@ -141,6 +173,10 @@ function SplitViewWithInspector({
         showInspector={inFrame && inspector?.open === true}
         onInspectorHide={() => inspector?.onOpenChange(false)}
         preferredSplitBehavior="tile"
+        columnMetrics={{
+          preferredPrimaryColumnWidthOrFraction: 356,
+          preferredInspectorColumnWidthOrFraction: 360,
+        }}
         preferredDisplayMode={inFrame ? 'automatic' : 'secondaryOnly'}
       >
         <SplitView.Column>
