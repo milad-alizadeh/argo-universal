@@ -2,6 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import {
   createFileMediaStore,
   forgetServerFiles,
+  rememberServerFiles,
   safeName,
   type MediaDisk,
   type MediaFile,
@@ -52,8 +53,12 @@ const appCache: MediaDisk = {
   file: (serverId, name) => mediaFile(new File(folderOf(serverId), name)),
 };
 
-// What the disk could not take is held in memory instead, as data URIs, until the Server is removed.
-const inMemory = memoryMedia(dataUrls);
+// What the disk could not take is held in memory instead, as data URIs, up to a size and until the Server is removed.
+const fallbackMebibytes = 32;
+
+const bytesPerMebibyte = 1_048_576;
+
+const inMemory = memoryMedia(dataUrls, fallbackMebibytes * bytesPerMebibyte);
 
 // Files in the App's cache directory on iOS and Android.
 export function createMediaStore(serverId: string): MediaStore {
@@ -66,4 +71,10 @@ export function createMediaStore(serverId: string): MediaStore {
 export function forgetServerMedia(serverId: string): void {
   forgetServerFiles(appCache, serverId);
   inMemory.forget(serverId);
+}
+
+// The Server is paired again, so what arrives for it is kept once more.
+export function rememberServerMedia(serverId: string): void {
+  rememberServerFiles(appCache, serverId);
+  inMemory.remember(serverId);
 }

@@ -1,3 +1,4 @@
+import { LRUCache } from 'lru-cache';
 import { bytesBase64 } from './bytes';
 
 /*
@@ -7,6 +8,13 @@ import { bytesBase64 } from './bytes';
 export interface MediaStore {
   find: (path: string) => string | null;
   keep: (path: string, bytes: Uint8Array, mime: string) => Promise<string>;
+}
+
+// A copy arriving for a Server that has been removed: not kept anywhere, so nothing of it outlives the Server.
+export class ForgottenError extends Error {
+  public constructor() {
+    super('The Server was removed, so its images are not kept');
+  }
 }
 
 // How bytes held in memory become a URL an image can draw from, and how that URL is given back.
@@ -27,16 +35,33 @@ export const objectUrls: MemoryUrls = {
 };
 
 // What each Server's store holds in memory, so removing the Server can give every URL back.
+interface Held {
+  url: string;
+  size: number;
+}
+
 export interface MemoryMedia {
   store: (serverId: string) => MediaStore;
   forget: (serverId: string) => void;
+  remember: (serverId: string) => void;
 }
 
-export function memoryMedia(urls: MemoryUrls): MemoryMedia {
-  const held = new Map<string, Map<string, string>>();
+export function memoryMedia(
+  urls: MemoryUrls,
+  maxBytes = Number.MAX_SAFE_INTEGER,
+): MemoryMedia {
+  const held = new Map<string, LRUCache<string, Held>>();
+  const forgotten = new Set<string>();
 
-  const heldBy = (serverId: string): Map<string, string> => {
-    const mine = held.get(serverId) ?? new Map<string, string>();
+  const heldBy = (serverId: string): LRUCache<string, Held> => {
+    const mine =
+      held.get(serverId) ??
+      new LRUCache<string, Held>({
+        maxSize: maxBytes,
+        sizeCalculation: ({ size }: Held): number => Math.max(size, 1),
+        dispose: ({ url }: Held): void => urls.revoke?.(url),
+      });
+
     held.set(serverId, mine);
 
     return mine;
@@ -44,19 +69,24 @@ export function memoryMedia(urls: MemoryUrls): MemoryMedia {
 
   return {
     store: (serverId) => ({
-      find: (path) => held.get(serverId)?.get(path) ?? null,
+      find: (path) => held.get(serverId)?.get(path)?.url ?? null,
       keep: (path, bytes, mime) => {
+        if (forgotten.has(serverId))
+          return Promise.reject(new ForgottenError());
         const mine = heldBy(serverId);
-        const url = mine.get(path) ?? urls.make(bytes, mime);
-        mine.set(path, url);
+        const url = mine.get(path)?.url ?? urls.make(bytes, mime);
+
+        mine.set(path, { url, size: bytes.length });
 
         return Promise.resolve(url);
       },
     }),
     forget: (serverId) => {
-      for (const url of held.get(serverId)?.values() ?? []) urls.revoke?.(url);
+      forgotten.add(serverId);
+      held.get(serverId)?.clear();
       held.delete(serverId);
     },
+    remember: (serverId) => void forgotten.delete(serverId),
   };
 }
 
@@ -73,6 +103,9 @@ export function withFallback(
       try {
         return await primary.keep(path, bytes, mime);
       } catch (cause) {
+        // A Server that was removed has nothing kept anywhere, memory included.
+        if (cause instanceof ForgottenError) throw cause;
+
         if (!logged)
           console.error('Could not keep an image on the Device', cause);
         logged = true;
@@ -89,3 +122,5 @@ const web = memoryMedia(objectUrls);
 export const createMediaStore = web.store;
 
 export const forgetServerMedia = web.forget;
+
+export const rememberServerMedia = web.remember;

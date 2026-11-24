@@ -42,7 +42,7 @@ class AppServersStore implements ServersStore {
 
   public constructor(
     ownServerUrl: string | undefined,
-    private readonly onForgotten: readonly ((serverId: string) => void)[],
+    private readonly hooks: Required<ServersStoreHooks>,
   ) {
     this.own = ownServerUrl === undefined ? [] : [ownAppServer(ownServerUrl)];
     this.snapshot = {
@@ -83,6 +83,8 @@ class AppServersStore implements ServersStore {
     keepLookedAtServer(added.id);
     void keepKnownServer(known);
     void notePaired(known.key, Date.now());
+
+    for (const added of this.hooks.onAdded) added(known.key);
   };
 
   public readonly remove = (id: string): void => {
@@ -100,7 +102,7 @@ class AppServersStore implements ServersStore {
     void forgetKnownServer(id);
     void forgetServerHistory(id);
 
-    for (const forget of this.onForgotten) forget(id);
+    for (const forget of this.hooks.onForgotten) forget(id);
   };
 
   private set(next: ServersSnapshot): void {
@@ -125,13 +127,16 @@ class AppServersStore implements ServersStore {
   }
 }
 
+export interface ServersStoreHooks {
+  onForgotten?: readonly ((serverId: string) => void)[];
+  onAdded?: readonly ((serverId: string) => void)[];
+}
+
 export const createServersStore = (
   ownServerUrl?: string,
-  // What the App has kept on the Device for a Server is wiped through these when the Server is unpaired or removed.
-  {
-    onForgotten = [],
-  }: { onForgotten?: readonly ((serverId: string) => void)[] } = {},
-): ServersStore => new AppServersStore(ownServerUrl, onForgotten);
+  // What the App keeps on the Device for a Server is wiped through `onForgotten` when the Server is unpaired or removed, and lifted through `onAdded` when it is paired again.
+  { onForgotten = [], onAdded = [] }: ServersStoreHooks = {},
+): ServersStore => new AppServersStore(ownServerUrl, { onForgotten, onAdded });
 
 /*
  * A Server the App can show: one it holds with somewhere to open a Connection. A paired Server whose address this

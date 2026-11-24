@@ -1,5 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import {
+  ForgottenError,
   memoryMedia,
   withFallback,
   type MediaStore,
@@ -52,4 +53,49 @@ it('gives back every URL held for a Server that is forgotten, and no other', asy
   expect(urls.revoked).toEqual(['blob:1']);
   expect(held.store('server-a').find('/blobs/a')).toBeNull();
   expect(held.store('server-b').find('/blobs/a')).toBe('blob:2');
+});
+
+it('keeps nothing in memory for a Server forgotten while an image was arriving, until it is added again', async () => {
+  const urls = countingUrls();
+  const held = memoryMedia(urls);
+  const store = held.store('server-a');
+
+  held.forget('server-a');
+
+  await expect(
+    store.keep('/blobs/a', bytes, 'image/png'),
+  ).rejects.toBeInstanceOf(ForgottenError);
+  expect(urls.revoked).toEqual([]);
+  expect(store.find('/blobs/a')).toBeNull();
+
+  held.remember('server-a');
+
+  expect(await store.keep('/blobs/a', bytes, 'image/png')).toBe('blob:1');
+});
+
+it('does not hold in memory what a forgotten Server could not keep on the disk', async () => {
+  const forgottenDisk: MediaStore = {
+    find: () => null,
+    keep: () => Promise.reject(new ForgottenError()),
+  };
+
+  const memory = memoryMedia(countingUrls());
+  const store = withFallback(forgottenDisk, memory.store('server-a'));
+
+  await expect(
+    store.keep('/blobs/a', bytes, 'image/png'),
+  ).rejects.toBeInstanceOf(ForgottenError);
+  expect(memory.store('server-a').find('/blobs/a')).toBeNull();
+});
+
+it('gives back the least recently used image once memory holds more than its size', async () => {
+  const urls = countingUrls();
+  const store = memoryMedia(urls, 5).store('server-a');
+
+  await store.keep('/blobs/a', bytes, 'image/png');
+  await store.keep('/blobs/b', bytes, 'image/png');
+
+  expect(urls.revoked).toEqual(['blob:1']);
+  expect(store.find('/blobs/a')).toBeNull();
+  expect(store.find('/blobs/b')).toBe('blob:2');
 });

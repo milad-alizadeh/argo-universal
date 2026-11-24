@@ -1,4 +1,4 @@
-import type { MediaStore } from './media-store';
+import { ForgottenError, type MediaStore } from './media-store';
 
 export interface MediaFile {
   uri: string;
@@ -89,26 +89,38 @@ const forgottenOn = (disk: MediaDisk): Set<string> => {
   return servers;
 };
 
+// Servers whose folder has been looked at this run: copies cut short by an earlier run are cleared then, and never while this run may be writing one.
+const swept = new WeakMap<MediaDisk, Set<string>>();
+
+function sweepOnce(disk: MediaDisk, serverId: string): void {
+  const servers = swept.get(disk) ?? new Set<string>();
+  swept.set(disk, servers);
+
+  if (servers.has(serverId)) return;
+  servers.add(serverId);
+
+  const folder = disk.folder(serverId);
+
+  if (!folder.exists) return;
+
+  for (const file of folder.list())
+    if (file.uri.endsWith(partial)) file.delete();
+  trim(folder);
+}
+
 let writes = 0;
 
 /*
  * A phone's Blobs and Plugin assets, kept as files in the App's cache directory: one folder per Server and one file per path, so a Blob is fetched once and survives a restart.
  * The system may clear the cache directory when the Device is short of space; a file that is gone is simply fetched again.
- * A store made for a Server is the Device pairing with it again, so it lifts that Server's wipe. A copy cut short by the App closing is cleared when the next store opens.
+ * Making a store touches nothing: the folder is first looked at when the first image of a run is kept, which clears copies an earlier run left cut short.
+ * A Server wiped by `forgetServerFiles` keeps nothing more until `rememberServerFiles` says it is paired again.
  */
 export function createFileMediaStore(
   disk: MediaDisk,
   serverId: string,
 ): MediaStore {
   const folder = disk.folder(serverId);
-
-  forgottenOn(disk).delete(serverId);
-
-  if (folder.exists) {
-    for (const file of folder.list())
-      if (file.uri.endsWith(partial)) file.delete();
-    trim(folder);
-  }
 
   return {
     find: (path) => {
@@ -119,15 +131,14 @@ export function createFileMediaStore(
     keep: async (path, bytes) => {
       const kept = await keepFile({ disk, serverId }, path, bytes);
 
-      trim(folder, kept);
+      if (!forgottenOn(disk).has(serverId)) trim(folder, kept);
 
       return kept;
     },
   };
 }
 
-const gone = (): Error =>
-  new Error('The Server was removed, so its images are not kept');
+const gone = (): Error => new ForgottenError();
 
 interface Where {
   disk: MediaDisk;
@@ -160,19 +171,36 @@ async function keepFile(
   const { disk, serverId } = where;
 
   if (forgottenOn(disk).has(serverId)) throw gone();
+  sweepOnce(disk, serverId);
   disk.folder(serverId).create();
 
   const name = safeName(path);
-  const writing = await writeAside(where, name, bytes);
 
+  return moveIn(where, await writeAside(where, name, bytes), name);
+}
+
+async function moveIn(
+  { disk, serverId }: Where,
+  writing: MediaFile,
+  name: string,
+): Promise<string> {
   if (forgottenOn(disk).has(serverId)) {
     writing.delete();
     throw gone();
   }
 
+  // Moving from a copy that is gone would clear the image already kept under this name on iOS.
+  if (!writing.exists) throw new Error('The copy was lost before it was kept');
   await writing.moveOver(name);
 
-  return disk.file(serverId, name).uri;
+  const kept = disk.file(serverId, name);
+
+  if (forgottenOn(disk).has(serverId)) {
+    kept.delete();
+    throw gone();
+  }
+
+  return kept.uri;
 }
 
 // The Server is unpaired or removed: everything kept for it goes, and nothing still arriving is kept.
@@ -183,8 +211,15 @@ export function forgetServerFiles(disk: MediaDisk, serverId: string): void {
   if (folder.exists) folder.delete();
 }
 
+// The Server is paired again: what arrives for it is kept once more.
+export function rememberServerFiles(disk: MediaDisk, serverId: string): void {
+  forgottenOn(disk).delete(serverId);
+}
+
 // Deletes the oldest files, never `keeping`, once the folder holds more than the limit, until it is back under `trimmedTo`. One file over the limit on its own stays.
 function trim(folder: MediaFolder, keeping?: string): void {
+  if (!folder.exists) return;
+
   const files = folder
     .list()
     .map((file) => ({ file, ...file.info() }))
