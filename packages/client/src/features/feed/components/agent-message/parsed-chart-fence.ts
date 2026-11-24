@@ -1,11 +1,10 @@
 import { validateChartFence } from '@repo/contracts/chart-fence';
+import { LRUCache } from 'lru-cache';
 
 type ChartFence = ReturnType<typeof validateChartFence>;
 
-const parsedFences = new Map<string, ChartFence>();
-
-// Enough for the charts a Feed holds; the oldest goes first.
-const parsedFenceLimit = 100;
+// Enough for the charts a Feed holds.
+const parsedFences = new LRUCache<string, ChartFence>({ max: 100 });
 
 /*
  * A row draws its chart on every render and again when it remounts or is recycled, so a fence is parsed once
@@ -18,9 +17,6 @@ export function parsedChartFence(raw: string): ChartFence {
 
   const parsed = validateChartFence(raw);
   parsedFences.set(raw, parsed);
-
-  if (parsedFences.size > parsedFenceLimit)
-    parsedFences.delete(parsedFences.keys().next().value ?? raw);
 
   return parsed;
 }

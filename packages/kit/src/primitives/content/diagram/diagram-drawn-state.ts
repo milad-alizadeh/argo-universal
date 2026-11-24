@@ -3,16 +3,29 @@ import {
   type DiagramPalette,
   drawDiagram,
 } from '@repo/contracts/kit-diagram';
+import { LRUCache } from 'lru-cache';
 
 export type DiagramState =
   | { kind: 'pending' }
   | { kind: 'drawn'; drawing: DiagramDrawing }
   | { kind: 'failed' };
 
-const drawnStates = new Map<string, DiagramState>();
+// Enough for the diagrams a Feed holds.
+const drawnStates = new LRUCache<string, DiagramState>({ max: 100 });
 
-// Enough for the diagrams a Feed holds; the oldest goes first.
-const drawnStateLimit = 100;
+// A mount's palette object lives as long as its theme does, so it is written out once.
+const paletteKeys = new WeakMap<DiagramPalette, string>();
+
+function paletteKey(palette: DiagramPalette): string {
+  const known = paletteKeys.get(palette);
+
+  if (known !== undefined) return known;
+
+  const key = JSON.stringify(palette);
+  paletteKeys.set(palette, key);
+
+  return key;
+}
 
 function laidOut(source: string, palette: DiagramPalette): DiagramState {
   const drawing = drawDiagram(source, palette);
@@ -28,16 +41,13 @@ export function drawnState(
   source: string,
   palette: DiagramPalette,
 ): DiagramState {
-  const key = JSON.stringify([source, palette]);
+  const key = `${paletteKey(palette)}\n${source}`;
   const known = drawnStates.get(key);
 
   if (known) return known;
 
   const state = laidOut(source, palette);
   drawnStates.set(key, state);
-
-  if (drawnStates.size > drawnStateLimit)
-    drawnStates.delete(drawnStates.keys().next().value ?? key);
 
   return state;
 }

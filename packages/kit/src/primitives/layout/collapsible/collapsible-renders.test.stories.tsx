@@ -3,6 +3,7 @@ import { Profiler, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
 import { renderCounter } from '#mocks/render-counts';
+import { sampleEachFrame } from '#mocks/sample-each-frame';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import {
@@ -78,5 +79,39 @@ export const OpenAtRestDrawsOnceOnMount: Story = {
 
     await expect(counts.LayoutSyncedContent?.mounts).toBe(1);
     await expect(counts.LayoutSyncedContent?.updates).toEqual([]);
+  },
+};
+
+// The box that clips the content while it moves.
+function clipHeight(detail: HTMLElement | null): number {
+  let box = detail?.parentElement;
+
+  while (box && getComputedStyle(box).overflow !== 'hidden')
+    box = box.parentElement;
+
+  return box?.getBoundingClientRect().height ?? 0;
+}
+
+export const OpenOnMountClosesFromItsFullHeight: Story = {
+  render: () => <OpenInAList />,
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    await canvas.getByRole('button', { name: idleLabel }).click();
+    const detail = await canvas.findByText(detailLabel);
+    await frame();
+    await frame();
+    const trigger = canvas.getByRole('button', { name: 'Read files' });
+    const open = detail.getBoundingClientRect().height;
+
+    const heights = await sampleEachFrame(
+      () => trigger.click(),
+      () => clipHeight(canvas.queryByText(detailLabel)),
+      6,
+    );
+
+    // It starts from what it showed and only shrinks, rather than snapping shut from a height it never measured.
+    await expect(open).toBeGreaterThan(0);
+    await expect(heights[0]).toBeGreaterThan(0);
+    await expect(heights).toEqual([...heights].sort((a, b) => b - a));
   },
 };
