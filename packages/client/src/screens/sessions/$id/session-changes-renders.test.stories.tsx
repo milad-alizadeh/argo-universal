@@ -2,7 +2,7 @@ import { type RenderCount, renderCounter } from '@repo/kit/mocks/render-counts';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type JSX, Profiler } from 'react';
-import { expect, screen, userEvent, waitFor } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 import {
   drawnRows,
   fewChanges,
@@ -80,6 +80,17 @@ async function settled(): Promise<void> {
   );
 }
 
+// The Viewed mark beside a file's header: the nearest ancestor of the header that holds one.
+function markOf(header: HTMLElement): HTMLElement {
+  for (let row = header.parentElement; row; row = row.parentElement) {
+    const mark = within(row).queryByRole('checkbox', { name: 'Viewed' });
+
+    if (mark) return mark;
+  }
+
+  throw new Error('Missing Viewed mark');
+}
+
 const isOpen = (open: boolean): Promise<void> =>
   waitFor(() =>
     expect(fileHeader(shortFile)).toHaveAttribute(
@@ -102,6 +113,7 @@ export const FoldingOneFileDrawsOnlyItsHeader: Story = {
 
     await expect(otherFiles(counts.PageRow)).toEqual([]);
     await expect(otherFiles(counts.HeaderRow)).toEqual([]);
+    await expect(pathsOf(counts.HeaderRow)).toContain(shortFile);
   },
 };
 
@@ -110,10 +122,7 @@ export const MarkingOneFileViewedDrawsOnlyItsHeader: Story = {
   play: async ({ canvasElement }) => {
     await settled();
 
-    const marks = await screen.findAllByRole('checkbox', { name: 'Viewed' });
-    const mark = marks[1];
-
-    if (!mark) throw new Error('Missing Viewed mark');
+    const mark = markOf(await findFileHeader(shortFile));
 
     const counts = await renders.during(canvasElement, async () => {
       await userEvent.click(mark);
@@ -122,6 +131,7 @@ export const MarkingOneFileViewedDrawsOnlyItsHeader: Story = {
 
     await expect(otherFiles(counts.PageRow)).toEqual([]);
     await expect(otherFiles(counts.HeaderRow)).toEqual([]);
+    await expect(pathsOf(counts.HeaderRow)).toContain(shortFile);
   },
 };
 
@@ -146,6 +156,10 @@ export const FoldingOneOfManyFilesDrawsOnlyItsHeader: Story = {
     });
 
     await expect(updatesOf(counts.PageRow)).toEqual([]);
-    await expect(pathsOf(counts.HeaderRow)).toEqual([hundredsFirstFile]);
+    await expect(new Set(pathsOf(counts.HeaderRow))).toEqual(
+      new Set([hundredsFirstFile]),
+    );
+    // The list draws only the rows near the reader, not every page of 120 files.
+    await expect(screen.queryAllByTestId('diff-line').length).toBeLessThan(120);
   },
 };

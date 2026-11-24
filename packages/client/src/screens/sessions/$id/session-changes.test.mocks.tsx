@@ -37,10 +37,13 @@ const fewFiles: FileDiff[] = [
 ];
 
 // One recorded edit under many paths: the same list, only longer.
-const manyFiles: FileDiff[] = Array.from({ length: 60 }, (_, index) => ({
-  ...recordedFile('agent-1'),
-  path: `/repo/src/module-${index + 1}/index.ts`,
-}));
+const moduleFiles = (count: number): FileDiff[] =>
+  Array.from({ length: count }, (_, index) => ({
+    ...recordedFile('agent-1'),
+    path: `/repo/src/module-${index + 1}/index.ts`,
+  }));
+
+const manyFiles = moduleFiles(60);
 
 if (fewFiles[0]?.path !== largeFile)
   throw new Error('Recorded catalog needs the long file first');
@@ -65,15 +68,8 @@ export const fewChanges = catalog(always(fewFiles));
 
 export const manyChanges = catalog(always(manyFiles));
 
-// More files than the list draws at once, so a press has many rows it must leave alone.
-export const hundredsOfChanges = catalog(
-  always(
-    Array.from({ length: 120 }, (_, index) => ({
-      ...recordedFile('agent-1'),
-      path: `/repo/src/module-${index + 1}/index.ts`,
-    })),
-  ),
-);
+// A hundred and more files, so a press has many rows it must leave alone.
+export const hundredsOfChanges = catalog(always(moduleFiles(120)));
 
 export const hundredsFirstFile = '/repo/src/module-1/index.ts';
 
