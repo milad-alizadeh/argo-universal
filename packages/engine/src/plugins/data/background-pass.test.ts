@@ -5,6 +5,7 @@ import {
   type BackgroundEntry,
   type BackgroundServices,
 } from './background-pass';
+import { PluginBackground } from './plugin-background';
 import { backgroundBudgetMs } from './query-intervals';
 
 type Timer = { at: number; run: () => void };
@@ -98,4 +99,38 @@ it('never has two loads in flight while a Watch overruns its budget', async () =
 
   expect(started).toBe(2);
   expect(peak).toBe(1);
+});
+
+it('lets another Project’s pass start once the first have overrun their budget', async () => {
+  const clock = steppedClock();
+  const loaded: string[] = [];
+
+  const background = new PluginBackground({
+    clock,
+    log: (): void => {},
+    kind: 'watch',
+    projectRemoved: (): void => {},
+    // Every load waits on its Plugin and never answers.
+    draws: {
+      load: (_pluginId, { projectId }): Promise<never> => {
+        loaded.push(projectId);
+
+        return new Promise<never>(() => {});
+      },
+    },
+  });
+
+  background.configure('github', { path: '/', interval: 60_000 }, () =>
+    Promise.resolve(),
+  );
+  // More Projects than the gate lets run at once.
+  background.syncProjects(['p1', 'p2', 'p3', 'p4', 'p5']);
+  await tick();
+  expect(loaded).toHaveLength(4);
+
+  clock.advance(backgroundBudgetMs);
+  await tick();
+
+  expect(loaded).toContain('p5');
+  background.close();
 });
