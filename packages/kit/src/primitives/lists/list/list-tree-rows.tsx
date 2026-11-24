@@ -6,6 +6,7 @@ import {
   type TreeRow,
 } from '../../../list-tree';
 import { sameElement } from './list-child-identity';
+import { sectionNodeOf } from './list-entries';
 
 // How a List flattens its tree of ListItems: which parents are folded, and whether a wide window draws the tree at all.
 export interface TreeFolding {
@@ -59,7 +60,7 @@ interface Place {
 
 // Where it sits: its React key, or its index when it has none.
 const placeKey = (child: ReactNode, prefix: string, index: number): string =>
-  `${prefix}/${isValidElement(child) ? child.key : index}`;
+  `${prefix}/${isValidElement(child) ? child.key : (sectionNodeOf(child)?.key ?? index)}`;
 
 export const childKey = (
   child: ReactNode,

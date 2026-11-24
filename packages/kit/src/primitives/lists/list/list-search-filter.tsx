@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, type ReactNode } from 'react';
-import { flattenedChildren } from '../../../flattened-children';
+import { flatChildren, flattenedChildren } from '../../../flattened-children';
+import { sectionNodeOf, withRows } from './list-entries';
 import type { ListProps } from './list-props';
 import { unfilteredMove } from './list-search-moves';
 import { listTree, readList } from './list-section-model';
@@ -21,16 +22,33 @@ function matches(node: ReactNode, query: string): boolean {
 }
 
 function filteredChild(child: ReactNode, query: string): ReactNode[] {
+  const section = sectionNodeOf(child);
+
+  if (section) return filteredSection(section, query);
+
   if (!isValidElement<SearchRow>(child)) return [];
 
   return filteredRow(child, query);
 }
 
+// A Section held as nodes keeps the rows a search matches, and goes when it matches none.
+function filteredSection(
+  section: NonNullable<ReturnType<typeof sectionNodeOf>>,
+  query: string,
+): ReactNode[] {
+  const rows = filteredChildren(section.props.children, query);
+
+  return rows.length > 0 ? [withRows(section, rows)] : [];
+}
+
+// A row with no child rows, whether it has no `children` or an empty list of them, is matched by its own text.
 function filteredRow(
   child: React.ReactElement<SearchRow>,
   query: string,
 ): ReactNode[] {
-  if (child.props.children === undefined) return matchedChild(child, query);
+  if (flattenedChildren(child.props.children).length === 0)
+    return matchedChild(child, query);
+
   const children = filteredChildren(child.props.children, query);
 
   return children.length > 0 ? [cloneElement(child, {}, children)] : [];
@@ -51,7 +69,7 @@ export function filterList<Item>(
   if (!hasAppQuery(props.searchMode, query)) return props;
 
   if (props.items === undefined) {
-    const children = filteredChildren(props.children, query);
+    const children = flatChildren(filteredChildren(props.children, query));
 
     return { ...props, children, onMove: searchedMove(props, children) };
   }
@@ -101,7 +119,7 @@ const orderOf = (
 // A search shows some rows; a move among them reaches the owner counted in its full order.
 const searchedMove = (
   { children, onMove }: Pick<ListProps<never>, 'children' | 'onMove'>,
-  shown: ReactNode[],
+  shown: ReactNode,
 ): ListProps<never>['onMove'] =>
   onMove &&
   ((move) => onMove(unfilteredMove(orderOf(children), orderOf(shown), move)));

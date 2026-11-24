@@ -23,7 +23,7 @@ function nestedKey(child: ReactNode, prefix: string, index: number): ReactNode {
 
 const flatNodes = Symbol('flatNodes');
 
-interface FlatChildren extends Iterable<ReactNode> {
+export interface FlatChildren extends Iterable<ReactNode> {
   [flatNodes]: ReactNode[];
 }
 
@@ -31,10 +31,11 @@ const isFlat = (children: ReactNode): children is FlatChildren =>
   typeof children === 'object' && children !== null && flatNodes in children;
 
 /*
- * Nodes a caller already holds as one flat list, each with its own key: read as they are, where `flattenedChildren`
- * would copy every element to key it. It is iterable, so it is also valid children.
+ * Nodes a caller already holds as one flat list, each with its own key: `flattenedChildren` returns them as they are,
+ * where it would copy every element to key it. It is iterable, so it is also valid children for anything that reads
+ * children as React does. The contract: every node has its own unique key, and no node is a Fragment.
  */
-export function flatChildren(nodes: ReactNode[]): ReactNode {
+export function flatChildren(nodes: ReactNode[]): FlatChildren {
   const flat: FlatChildren = {
     [flatNodes]: nodes,
     [Symbol.iterator]: () => nodes[Symbol.iterator](),

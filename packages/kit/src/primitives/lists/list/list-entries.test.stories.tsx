@@ -26,7 +26,12 @@ interface Row {
 
 const row = (id: string, title = `Row ${id}`): Row => ({ id, title });
 
-const entryOf = (item: Row): ListEntry<Row> => ({ key: item.id, item });
+const rowEntry = (item: Row, section: string): ListEntry<Row> => ({
+  kind: 'row',
+  key: item.id,
+  item,
+  section,
+});
 
 const fruit = [row('apple', 'Apple'), row('pear', 'Pear')];
 
@@ -37,16 +42,19 @@ const entries = (
   second: readonly Row[],
 ): ListEntry<Row>[] => [
   {
+    kind: 'section',
     key: 'fruit',
     section: { title: 'Fruit', collapsible: true },
-    entries: first.map(entryOf),
   },
-  {
-    key: 'veg',
-    section: { title: 'Vegetables' },
-    entries: second.map(entryOf),
-  },
+  ...first.map((item) => rowEntry(item, 'fruit')),
+  { kind: 'section', key: 'veg', section: { title: 'Vegetables' } },
+  ...second.map((item) => rowEntry(item, 'veg')),
 ];
+
+// A row outside any Section, after them.
+const salt = row('salt', 'Salt');
+
+const loose: ListEntry<Row> = { kind: 'row', key: salt.id, item: salt };
 
 // As the App keeps what it drew for a row it did not change (its Plugin renderer's drawn nodes), a row keeps its element.
 const drawn = new WeakMap<Row, React.JSX.Element>();
@@ -81,7 +89,7 @@ function Sectioned({
           <List
             accessibilityLabel="Produce"
             searchMode={searchMode}
-            entries={entries(changed && next ? next : fruit, veg)}
+            entries={[...entries(changed && next ? next : fruit, veg), loose]}
             renderEntry={drawRow}
           />
         </View>
@@ -137,5 +145,28 @@ export const ChangedRowDrawsAlone: Story = {
 
     await expect(counts.ListItem?.updates).toHaveLength(1);
     await expect(counts.ListItem).toHaveProperty('mounts', 0);
+  },
+};
+
+function ChildrenSearch(): React.JSX.Element {
+  return (
+    <List searchMode="app">
+      <List.Section title="Vegetables">
+        <ListItem title="Kale">{[]}</ListItem>
+        <ListItem title="Leek">{[]}</ListItem>
+      </List.Section>
+    </List>
+  );
+}
+
+// A row given an empty list of child rows is a row, not a parent: a search matches it by its own text.
+export const SearchMatchesRowsWithEmptyChildren: Story = {
+  render: () => <ChildrenSearch />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.type(await canvas.findByLabelText('Search'), 'kale');
+
+    await expect(canvas.getByText('Kale')).toBeVisible();
+    await expect(canvas.queryByText('Leek')).toBeNull();
   },
 };

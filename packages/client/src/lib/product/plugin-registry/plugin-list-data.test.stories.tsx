@@ -154,3 +154,89 @@ export const ChangedRowInSectionDrawsAlone: Story = {
     await expect(counts.ListItem).toHaveProperty('mounts', 0);
   },
 };
+
+const longSectioned: WireNode = {
+  ...firstPage,
+  props: { ...firstPage.props, pagination: undefined },
+  children: [
+    sectionOf('one', issueListTree(200).children),
+    sectionOf(
+      'two',
+      issueListTree(400)
+        .children.slice(200)
+        .map((child) => ({ ...child, key: `b-${child.key}` })),
+    ),
+  ],
+};
+
+const frame = (): Promise<number> =>
+  new Promise((resolve) => requestAnimationFrame(resolve));
+
+function scrollerIn(root: Element): HTMLElement {
+  const scroller = [...root.querySelectorAll<HTMLElement>('*')].find(
+    (element) =>
+      element.scrollHeight > element.clientHeight + 100 &&
+      /auto|scroll/.test(getComputedStyle(element).overflowY),
+  );
+
+  if (!scroller) throw new Error('No scrolling element');
+
+  return scroller;
+}
+
+async function fling(scroller: HTMLElement): Promise<void> {
+  for (let index = 0; index < 30; index += 1) {
+    scroller.scrollTop += 120;
+    await frame();
+  }
+}
+
+// Rows scroll through the cells the list holds: a cell is reused for a row of its own type, not drawn anew.
+export const RowsRecycleCells: Story = {
+  render: () => (
+    <View style={{ height: 700 }}>
+      <Profiler id={renders.id} onRender={renders.onRender}>
+        <PluginTree root={longSectioned} onPageCall={fn(async () => {})} />
+      </Profiler>
+    </View>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await settleLayout('wide');
+    await canvas.findByText('Section one');
+    const scroller = scrollerIn(canvasElement);
+
+    const counts = await renders.during(canvasElement, () => fling(scroller));
+
+    // The rows that scrolled in drew in cells that were already there, so cells mounted fewer times than they drew.
+    await expect(counts.FixedListRow?.mounts).toBeLessThan(
+      counts.FixedListRow?.updates.length ?? 0,
+    );
+  },
+};
+
+const longFlat: WireNode = {
+  ...issueListTree(400),
+  props: { appearance: 'plain', density: 'compact' },
+};
+
+// A flat List's rows, handed over as data, recycle cells in the same way.
+export const FlatRowsRecycleCells: Story = {
+  render: () => (
+    <View style={{ height: 700 }}>
+      <Profiler id={renders.id} onRender={renders.onRender}>
+        <PluginTree root={longFlat} onPageCall={fn(async () => {})} />
+      </Profiler>
+    </View>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await settleLayout('wide');
+    await canvas.findByText('PROJ-1');
+    const scroller = scrollerIn(canvasElement);
+
+    const counts = await renders.during(canvasElement, () => fling(scroller));
+
+    await expect(counts.DataListRow?.mounts).toBeLessThan(
+      counts.DataListRow?.updates.length ?? 0,
+    );
+  },
+};

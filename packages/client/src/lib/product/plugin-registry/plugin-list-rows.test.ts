@@ -73,7 +73,7 @@ describe('listRowsOf', () => {
       children: rows,
     });
 
-    it('holds Sections and rows as entries, with the address each row draws at', () => {
+    it('holds a Section and its rows as flat entries, each row naming its Section and keeping the address it draws at', () => {
       const loose = node(rowType, 'x');
 
       const entries = listEntriesOf(
@@ -83,15 +83,20 @@ describe('listRowsOf', () => {
       );
 
       expect(entries).toEqual([
+        { kind: 'section', key: 'rows/s', section: { drawnFor: 's' } },
         {
-          key: 's',
-          section: { drawnFor: 's' },
-          entries: [
-            { key: 'a', item: { node: rows[0], key: 'rows/s/a' } },
-            { key: 'b', item: { node: rows[1], key: 'rows/s/b' } },
-          ],
+          kind: 'row',
+          key: 'rows/s/a',
+          item: { node: rows[0], key: 'rows/s/a' },
+          section: 'rows/s',
         },
-        { key: 'x', item: { node: loose, key: 'rows/x' } },
+        {
+          kind: 'row',
+          key: 'rows/s/b',
+          item: { node: rows[1], key: 'rows/s/b' },
+          section: 'rows/s',
+        },
+        { kind: 'row', key: 'rows/x', item: { node: loose, key: 'rows/x' } },
       ]);
     });
 

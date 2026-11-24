@@ -19,7 +19,12 @@ import type * as Rendering from './plugin-rendering';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
 
-type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
+type RenderNodeProps = {
+  node: WireNode;
+  context: Rendering.RenderContext;
+  // Whether the node draws the rows it holds: a Section of an entry List holds its own props alone, its rows being entries.
+  withRows?: boolean;
+};
 
 /*
  * The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything
@@ -44,6 +49,7 @@ export function RenderNode({
 function drawNode({
   node,
   context,
+  withRows = true,
 }: RenderNodeProps): React.JSX.Element | null {
   const definition = kitComponent(node.type);
   const component = registry.get(node.type);
@@ -54,13 +60,13 @@ function drawNode({
 
   const slots = renderedSlots(node, definition, context);
 
-  return renderComponent(component, input, slots);
+  return renderComponent(component, input, { slots, withRows });
 }
 
 function renderComponent(
   component: ElementType,
   input: Rendering.ControlInput,
-  slots: Rendering.PluginProps,
+  { slots, withRows }: { slots: Rendering.PluginProps; withRows: boolean },
 ): React.JSX.Element {
   const { node, definition, context } = input;
   const props = context.controls(input);
@@ -78,7 +84,7 @@ function renderComponent(
       renderEntry: entryRenderer(context),
       recycleItems: true,
     });
-  else if (definition.children)
+  else if (definition.children && withRows)
     props.children = renderedChildren(node.children, context);
 
   return createElement(component, {
@@ -107,32 +113,21 @@ const isProps = (value: unknown): value is Rendering.PluginProps =>
   typeof value === 'object' && value !== null;
 
 /*
- * A Section's own props, held as the element they draw, so a Section its node left as it was has the same props and
- * the kit keeps the header and footer it drew.
+ * A Section's own props, from the one drawing a Section has, with no rows: the node the Server left as it was keeps
+ * the element it drew, so its props are the same and the kit keeps the header and footer it drew.
  */
 const sectionProps =
   (context: Rendering.RenderContext) =>
   (node: WireNode, key: string): Rendering.PluginProps => {
     const scoped = { ...context, key };
-    const held = scoped.drawn.get(key, node);
 
-    if (isProps(held?.props)) return held.props;
+    const element =
+      scoped.drawn.get(key, node) ??
+      drawNode({ node, context: scoped, withRows: false });
 
-    const definition = kitComponent(node.type);
-    const component = registry.get(node.type);
+    scoped.drawn.set(key, node, element);
 
-    if (!definition || !component) return {};
-
-    const input = { node, definition, context: scoped, source: node.props };
-
-    const props = {
-      ...scoped.controls(input),
-      ...renderedSlots(node, definition, scoped),
-    };
-
-    scoped.drawn.set(key, node, createElement(component, props));
-
-    return props;
+    return isProps(element?.props) ? element.props : {};
   };
 
 function renderedChildren(

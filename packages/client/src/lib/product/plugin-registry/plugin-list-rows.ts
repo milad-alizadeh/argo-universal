@@ -59,10 +59,10 @@ export interface RowItem {
   key: string;
 }
 
-// The kit's entries, with a Section's props as the renderer drew them.
+// The kit's flat entries: a Section is a header entry, and a row names the Section it sits in.
 export type PluginEntry<Section> =
-  | { key: string; item: RowItem }
-  | { key: string; section: Section; entries: PluginEntry<Section>[] };
+  | { kind: 'section'; key: string; section: Section }
+  | { kind: 'row'; key: string; item: RowItem; section?: string };
 
 // A native grouped List draws FieldGroup rows from its children alone.
 const holdsNativeRow = (nodes: readonly WireNode[]): boolean =>
@@ -72,41 +72,46 @@ const holdsNativeRow = (nodes: readonly WireNode[]): boolean =>
       (child.type === sectionType && holdsNativeRow(child.children)),
   );
 
-interface Entries<Section> {
-  nodes: readonly WireNode[];
-  parent: string;
-  sectionProps: (section: WireNode, key: string) => Section;
-}
+type SectionProps<Section> = (section: WireNode, key: string) => Section;
 
-function entriesIn<Section>({
-  nodes,
-  parent,
-  sectionProps,
-}: Entries<Section>): PluginEntry<Section>[] {
-  return nodes.map((child) => {
-    const key = childNodeKey(parent, child.key);
+const rowEntry = (
+  node: WireNode,
+  parent: string,
+  section?: string,
+): PluginEntry<never> => {
+  const key = childNodeKey(parent, node.key);
 
-    if (child.type !== sectionType)
-      return { key: child.key, item: { node: child, key } };
+  return { kind: 'row', key, item: { node, key }, ...(section && { section }) };
+};
 
-    return {
-      key: child.key,
-      section: sectionProps(child, key),
-      entries: entriesIn({ nodes: child.children, parent: key, sectionProps }),
-    };
-  });
+function sectionEntries<Section>(
+  node: WireNode,
+  parent: string,
+  sectionProps: SectionProps<Section>,
+): PluginEntry<Section>[] {
+  const key = childNodeKey(parent, node.key);
+
+  return [
+    { kind: 'section', key, section: sectionProps(node, key) },
+    ...node.children.map((row) => rowEntry(row, key, key)),
+  ];
 }
 
 /*
- * A List's Sections and rows as the kit's entries, the structure its children would spell, for a List that is not a
- * flat run of rows: Sections, nested rows, moves, grids and lanes. `sectionProps` draws a Section's own props.
+ * A List's Sections and rows as the kit's flat entries, in order, for a List that is not a flat run of rows: Sections,
+ * nested rows, moves, grids and lanes. `sectionProps` draws a Section's own props. A row keeps the address it would
+ * draw at as a child, so it keeps its state wherever the List reads it.
  */
 export function listEntriesOf<Section>(
   node: WireNode,
   key: string,
-  sectionProps: Entries<Section>['sectionProps'],
+  sectionProps: SectionProps<Section>,
 ): PluginEntry<Section>[] | undefined {
   if (node.type !== 'List' || holdsNativeRow(node.children)) return undefined;
 
-  return entriesIn({ nodes: node.children, parent: key, sectionProps });
+  return node.children.flatMap((child) =>
+    child.type === sectionType
+      ? sectionEntries(child, key, sectionProps)
+      : [rowEntry(child, key)],
+  );
 }

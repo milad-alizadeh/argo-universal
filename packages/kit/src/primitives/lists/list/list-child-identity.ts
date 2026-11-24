@@ -2,13 +2,22 @@ import { isValidElement, type ReactNode } from 'react';
 import type { ListChild } from './list-children';
 import type { TileListProps } from './list-tile-props';
 
+// A row's type is the component that draws it, so a recycled cell is only ever reused for a row of the same kind.
+function contentType(content: ReactNode): string {
+  if (!isValidElement(content) || typeof content.type !== 'function')
+    return 'item';
+
+  return content.type.name || 'item';
+}
+
 export const childIdentity: Pick<
   TileListProps<ListChild>,
   'keyExtractor' | 'getItemType' | 'fullSpan'
 > = {
   keyExtractor: (item) => item.key,
   fullSpan: (item) => item.fullSpan === true,
-  getItemType: (item) => (item.fullSpan ? 'section' : 'item'),
+  getItemType: (item) =>
+    item.fullSpan ? 'section' : contentType(item.content),
 };
 
 // What an element is drawn from; any other node is itself.
