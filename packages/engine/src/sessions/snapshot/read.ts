@@ -1,11 +1,5 @@
-import type {
-  ChangesSummary,
-  SessionGetInput,
-  SessionGetOutput,
-} from '@repo/contracts';
-import { readChangesSummary } from '@repo/git';
-import { sessionChangesSelection } from '../changes-selection';
-import { storeSessionChanges } from '../session-changes';
+import type { SessionGetInput, SessionGetOutput } from '@repo/contracts';
+import { readSessionChanges } from '../session-changes';
 import type { HandlerSources } from '../session-sources';
 import { SessionSnapshotReader } from './reader';
 
@@ -43,12 +37,10 @@ async function withStoredChanges(
   { sessionId, snapshot }: { sessionId: string; snapshot: SessionGetOutput },
 ): Promise<SessionGetOutput> {
   try {
-    const changes = await storedChanges(sources, snapshot);
-
-    storeSessionChanges(
+    const changes = await readSessionChanges(
       { database: sources.database, writer: sources.findWriter() },
       sessionId,
-      changes,
+      snapshot,
     );
 
     return { ...snapshot, changes };
@@ -57,13 +49,4 @@ async function withStoredChanges(
 
     return snapshot;
   }
-}
-
-function storedChanges(
-  sources: SnapshotSources,
-  snapshot: SessionGetOutput,
-): Promise<ChangesSummary> {
-  return readChangesSummary(
-    sessionChangesSelection(sources.database, snapshot),
-  );
 }

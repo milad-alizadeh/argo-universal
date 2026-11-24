@@ -8,7 +8,7 @@ import type {
   Turn,
 } from '@repo/contracts';
 import { type LiveSession } from '../../live-header';
-import { storedChanges } from '../../session-changes';
+import { rowChangesSummary } from '../../session-changes';
 import { toSessionCheckout } from '../../session-record';
 import type { SessionListState } from '../state';
 import { SessionInfoActivity } from './activity';
@@ -138,7 +138,7 @@ function sessionDetails(
     subagents: input.subagents,
     shells: input.shells ?? { total: 0, running: 0 },
     archivedAt: input.row.archivedAt,
-    changes: storedChanges(input.row),
+    changes: rowChangesSummary(input.row),
     pullRequest: null,
   };
 }

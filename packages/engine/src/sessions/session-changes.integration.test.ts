@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
 import type { ChangesSummary } from '@repo/contracts';
@@ -122,4 +122,26 @@ it('queues no write for totals the row already holds', async (): Promise<void> =
     deletions: 0,
   });
   expect(send).toHaveBeenCalledOnce();
+});
+
+it('keeps the stored totals when the Checkout is gone', async (): Promise<void> => {
+  const { host, sessionId, worktree } = await startClosedSession(3);
+
+  await expect
+    .poll(() => storedColumns(host, sessionId))
+    .toEqual({ files: 1, additions: 3, deletions: 0 });
+
+  rmSync(worktree, { recursive: true, force: true });
+  await host.caller.session.get({ sessionId });
+
+  expect(await listedChanges(host)).toEqual({
+    files: 1,
+    additions: 3,
+    deletions: 0,
+  });
+  expect(storedColumns(host, sessionId)).toEqual({
+    files: 1,
+    additions: 3,
+    deletions: 0,
+  });
 });

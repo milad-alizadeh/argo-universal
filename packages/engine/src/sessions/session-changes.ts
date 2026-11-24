@@ -1,14 +1,16 @@
 import type { ChangesSummary, SessionRecord } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
+import { readChangesSummary } from '@repo/git';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterActorRef, WriterJob } from '../storage';
+import { sessionChangesSelection } from './changes-selection';
 import { readSessionRow } from './session-record';
 import type { QueuedSessionChange } from './session-storage';
 import type { AnnouncedJob, WriterChange } from './writer-changes';
 
 // The Checkout totals a stored row holds; null until a read stores them.
-export function storedChanges(row: SessionRecord): ChangesSummary | null {
+export function rowChangesSummary(row: SessionRecord): ChangesSummary | null {
   const { changesFiles, changesAdditions, changesDeletions } = row;
 
   if (
@@ -89,14 +91,31 @@ export function storeSessionChanges(
   changes: ChangesSummary,
 ): void {
   const { writer } = sources;
-  const current = readSessionRow({ ...sources, writer }, sessionId);
+  const current = readSessionRow(sources, sessionId);
 
   if (!writer || !current) return;
 
-  if (sameChanges(storedChanges(current), changes)) return;
+  if (sameChanges(rowChangesSummary(current), changes)) return;
 
   writer.send({
     type: 'writer.write',
     job: new SessionChangesJob(sessionId, changes),
   });
+}
+
+type ChangesCheckout = { projectId: string; checkout: { path: string } };
+
+// The Checkout's totals against the default comparison, stored for the Session list as they are read.
+export async function readSessionChanges(
+  sources: ChangesStoreSources,
+  sessionId: string,
+  session: ChangesCheckout,
+): Promise<ChangesSummary> {
+  const changes = await readChangesSummary(
+    sessionChangesSelection(sources.database, session),
+  );
+
+  storeSessionChanges(sources, sessionId, changes);
+
+  return changes;
 }

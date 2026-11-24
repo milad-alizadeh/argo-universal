@@ -7,6 +7,7 @@ import {
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { SessionRow } from './session-row';
 import {
+  checkoutChangesArchivedSession,
   checkoutChangesPullRequestSession,
   checkoutChangesSession,
   checkoutChangesShellSession,
@@ -113,6 +114,18 @@ export const NoLinesDrawNothing: Story = {
     await expect(
       canvas.queryByTestId('session-changes-slot'),
     ).not.toBeInTheDocument();
+  },
+};
+
+// An archived Session draws no totals, and keeps its Archived pill.
+export const ArchivedDrawsNoTotals: Story = {
+  args: checkoutChangesArchivedSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    await expect(await canvas.findByText('Archived')).toBeVisible();
+    await expect(canvas.queryByText(additions)).not.toBeInTheDocument();
+    await expect(canvas.queryByText(deletions)).not.toBeInTheDocument();
   },
 };
 

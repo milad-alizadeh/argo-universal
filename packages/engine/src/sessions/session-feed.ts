@@ -1,12 +1,10 @@
-import { readChangesSummary } from '@repo/git';
 import {
   readQueuedFeedRow,
   readUnaddressedPlan,
   readWrittenRow,
   type FeedInput,
 } from '../feed';
-import { sessionChangesSelection } from './changes-selection';
-import { storeSessionChanges } from './session-changes';
+import { readSessionChanges } from './session-changes';
 import type { SessionContext } from './session-context';
 
 type FeedPosition = Pick<
@@ -48,19 +46,12 @@ const findUnaddressedPlan = (
     acpSessionId,
   });
 
-// Reads the Checkout totals and stores them for the Session list.
-const refreshChanges = async (
+const refreshChanges = (
   context: SessionContext,
-): ReturnType<typeof readChangesSummary> => {
+): ReturnType<typeof readSessionChanges> => {
   const { database, writer } = context.input;
 
-  const changes = await readChangesSummary(
-    sessionChangesSelection(database, context),
-  );
-
-  storeSessionChanges({ database, writer }, context.sessionId, changes);
-
-  return changes;
+  return readSessionChanges({ database, writer }, context.sessionId, context);
 };
 
 // The Session's Feed reads stored and queued rows from its opened position.

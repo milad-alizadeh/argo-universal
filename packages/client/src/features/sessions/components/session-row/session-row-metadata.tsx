@@ -51,14 +51,14 @@ function pullRequestPart({ pullRequest }: SessionRowMetadataProps): MetaPart[] {
   ];
 }
 
-// The Checkout's line totals stand where a Change would; a Change replaces them, and none shows for no lines or no read yet.
+// The Checkout's line totals stand where a Change would; a Change replaces them, and none shows for no lines, no read yet or an archived Session.
 function changesPart({
   session,
   pullRequest,
 }: SessionRowMetadataProps): MetaPart[] {
   const { changes } = session;
 
-  if (pullRequest || !changes) return [];
+  if (pullRequest || !changes || session.archivedAt !== null) return [];
 
   if (changes.additions === 0 && changes.deletions === 0) return [];
 

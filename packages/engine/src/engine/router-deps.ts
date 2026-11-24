@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
-import { readChangesSummary } from '@repo/git';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { AppNavigationDeps } from '../app-navigation';
@@ -24,8 +23,7 @@ import {
   createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
-  sessionChangesSelection,
-  storeSessionChanges,
+  readSessionChanges,
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
@@ -115,21 +113,12 @@ function createStoredChangesReader(
   sources: Pick<FeedSources, 'findWriter'>,
   readSession: ReturnType<typeof createSessionReader>,
 ): FeedDeps['readStoredChangesSummary'] {
-  return async (sessionId) => {
-    const session = readSession(sessionId);
-
-    const changes = await readChangesSummary(
-      sessionChangesSelection(input.database, session),
-    );
-
-    storeSessionChanges(
+  return (sessionId) =>
+    readSessionChanges(
       { database: input.database, writer: sources.findWriter() },
       sessionId,
-      changes,
+      readSession(sessionId),
     );
-
-    return changes;
-  };
 }
 
 type AgentSetup = Pick<

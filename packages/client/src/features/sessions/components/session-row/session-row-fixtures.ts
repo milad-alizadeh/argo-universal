@@ -201,6 +201,15 @@ export const checkoutChangesPullRequestSession = {
   pullRequest: { number: 45, stage: 'open' },
 } satisfies SessionRowFixture;
 
+// An archived Session keeps no totals on its row; the Archived pill stays.
+export const checkoutChangesArchivedSession = {
+  ...checkoutChangesSession,
+  session: {
+    ...checkoutChangesSession.session,
+    archivedAt: sessionRows.archived.archivedAt,
+  },
+} satisfies SessionRowFixture;
+
 // Totals of no lines, such as an untouched Checkout, draw nothing.
 export const checkoutNoLinesSession = {
   ...checkoutChangesSession,
