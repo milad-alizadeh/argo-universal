@@ -12,6 +12,7 @@ import {
 import {
   NativePluginSidebar,
   NativeSidebarHeader,
+  sidebarSystemImage,
   type SidebarHeaderProps,
 } from '@repo/kit/native-sidebar';
 import { createPlace, useClaimed, type Place } from '@repo/kit/place';
@@ -72,7 +73,8 @@ function SectionPicker({
     ...plugins.map((plugin) => ({
       ...plugin,
       href: plugin.rootPath,
-      icon: 'puzzlepiece.extension' as const,
+      icon:
+        sidebarSystemImage(plugin.icon) ?? ('puzzlepiece.extension' as const),
     })),
   ];
 
@@ -137,7 +139,7 @@ function SidebarColumn({
           <SectionPicker {...picker} />
         )}
         {list && (
-          <ScreenListColumn>
+          <ScreenListColumn hideHeading>
             <NativePluginSidebar value={!isCoreSection(section)}>
               {list}
             </NativePluginSidebar>

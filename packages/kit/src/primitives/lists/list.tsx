@@ -9,6 +9,7 @@ import {
   useDeclaredListLook,
   useListLook,
 } from '../../list-look-context';
+import { NativePluginSidebar } from '../../native-sidebar';
 import { ListBehaviours } from './list/list-behaviours';
 import { ChildRows } from './list/list-child-rows';
 import { DataList } from './list/list-data-list';
@@ -22,7 +23,6 @@ import {
 import { hasNoRows, placeholderChildren } from './list/list-placeholder';
 import type { ListProps, MovesOrItems } from './list/list-props';
 import { ListSection } from './list/list-section';
-import { NativePluginSidebar } from './native-sidebar';
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();

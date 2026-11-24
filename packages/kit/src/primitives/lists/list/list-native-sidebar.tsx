@@ -3,12 +3,12 @@ import { Icon } from '#primitives/content/icon';
 import type { ListItemProps } from '#primitives/lists/list-item';
 import { flattenedChildren } from '../../../flattened-children';
 import { nestingRow } from '../../../list-tree';
-import type { DrawnIcon } from '../../../symbols/icon-symbol';
 import {
   NativeSidebarList,
   type SidebarRow,
   type SidebarSection,
-} from '../native-sidebar';
+} from '../../../native-sidebar';
+import type { DrawnIcon } from '../../../symbols/icon-symbol';
 import { isSection } from './list-level-entries';
 import type { ListProps } from './list-props';
 

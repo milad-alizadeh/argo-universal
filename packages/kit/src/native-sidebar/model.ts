@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { DrawnIcon } from '../../../symbols/icon-symbol';
+import type { DrawnIcon } from '../symbols/icon-symbol';
 
 export interface SidebarAction {
   title: string;

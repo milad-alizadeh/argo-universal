@@ -27,8 +27,8 @@ import {
   tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement, ReactNode } from 'react';
-import { useNativeTheme } from '../../../native-theme';
-import { NativeSymbol } from '../../../symbols/native-symbol';
+import { useNativeTheme } from '../native-theme';
+import { NativeSymbol } from '../symbols/native-symbol';
 import type {
   NativeSidebarListProps,
   SidebarAction,
