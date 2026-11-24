@@ -13,6 +13,7 @@ import {
   SessionOpenInput,
   SessionOpenOutput,
 } from '@repo/contracts';
+import { operations } from '@repo/contracts/operations';
 import {
   mergeRouters,
   authenticatedAppProcedure,
@@ -24,6 +25,7 @@ import {
 import { agentOptionsUpdates } from './configuration';
 import type { SessionList } from './list/session-list';
 import { delegatedAttention } from './orchestration/input-requests';
+import type { Schedules } from './schedules';
 import {
   answerSessionElicitation,
   answerSessionPermission,
@@ -52,6 +54,19 @@ const createCountsRouter = routerFactory((sessionList: SessionList) =>
       }): AsyncGenerator<SessionCounts, void> {
         yield* sessionList.counts(signal);
       }),
+  }),
+);
+
+const createScheduleUpdatesRouter = routerFactory((schedules: Schedules) =>
+  router({
+    scheduleUpdates: publicProcedure
+      .input(operations['session.listSchedules'].params)
+      .output(
+        zAsyncIterable({ yield: operations['session.listSchedules'].result }),
+      )
+      .subscription(({ input, signal }) =>
+        schedules.updates(input.sessionId, signal),
+      ),
   }),
 );
 
@@ -115,9 +130,18 @@ const createAnswerRouter = routerFactory((sources: SessionHandlerSources) =>
 
 // The Session procedures that are not Operations: the list's updates, seen marks, opening and answers.
 export const createSessionRouter = routerFactory(
-  ({ sources, list }: { sources: SessionHandlerSources; list: SessionList }) =>
+  ({
+    sources,
+    list,
+    schedules,
+  }: {
+    sources: SessionHandlerSources;
+    list: SessionList;
+    schedules: Schedules;
+  }) =>
     mergeRouters(
       createListUpdatesRouter(list),
+      createScheduleUpdatesRouter(schedules),
       createCountsRouter(list),
       createSeenRouter(sources),
       createStartRouter(sources),

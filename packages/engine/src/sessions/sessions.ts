@@ -78,7 +78,11 @@ export class Sessions {
     );
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
-    this.router = createSessionRouter({ sources: this.sources, list });
+    this.router = createSessionRouter({
+      sources: this.sources,
+      list,
+      schedules: this.schedules,
+    });
     this.archives = new SessionArchives(this.sources);
     this.conversation = new ConversationSessionWork(
       this.sources,
