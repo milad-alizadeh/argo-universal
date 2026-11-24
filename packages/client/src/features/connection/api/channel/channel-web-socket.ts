@@ -2,7 +2,7 @@ import { bytesText, concatBytes, bytesBase64, textBytes } from './bytes';
 import { ServerUnreachable } from './channel-route';
 import { readHead, type HeadAndRest } from './http-exchange';
 import { PairingRefused, type OpenedChannel } from './open-channel';
-import { SocketEvents, type Listener, type SocketEvent } from './socket-events';
+import { EventedSocket } from './socket-events';
 import {
   encodeClientFrame,
   FrameParser,
@@ -50,10 +50,7 @@ function closeCode(payload: Uint8Array): number {
  * The slice of the browser's WebSocket that tRPC's client uses, speaking RFC 6455 to the Server inside an open channel. tRPC runs over it exactly as it runs over `ws://`, so nothing on the Server or in tRPC knows the difference (ADR-0045).
  * Each instance opens its own channel, so tRPC's reconnect is a new handshake with the same Device Key.
  */
-class ChannelWebSocket {
-  public readyState: number = WebSocket.CONNECTING;
-  public binaryType = 'arraybuffer';
-  private readonly events = new SocketEvents();
+class ChannelWebSocket extends EventedSocket {
   private channel: OpenedChannel | undefined;
   private readonly frames = new FrameParser();
   private head: Uint8Array = new Uint8Array(0);
@@ -69,18 +66,11 @@ class ChannelWebSocket {
     private readonly deps: ChannelSocketDeps,
     private readonly path: string,
   ) {
+    super();
     deps.openChannel().then(
       (channel) => this.start(channel),
       (cause: unknown) => this.fail(cause),
     );
-  }
-
-  public addEventListener(type: string, listener: Listener): void {
-    this.events.add(type, listener);
-  }
-
-  public removeEventListener(type: string, listener: Listener): void {
-    this.events.remove(type, listener);
   }
 
   public send(text: string): void {
@@ -173,16 +163,6 @@ class ChannelWebSocket {
     else reportFault(cause);
     this.emit('error', {});
     this.shutdown(abnormalClosure);
-  }
-
-  private finish(code: number, reason = ''): void {
-    if (this.readyState === WebSocket.CLOSED) return;
-    this.readyState = WebSocket.CLOSED;
-    this.emit('close', { code, reason });
-  }
-
-  private emit(type: string, event: SocketEvent): void {
-    this.events.emit(this, type, event);
   }
 }
 

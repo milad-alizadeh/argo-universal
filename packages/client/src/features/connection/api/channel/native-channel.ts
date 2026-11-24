@@ -5,6 +5,8 @@ import { channelUrl } from './web-socket-carrier';
 // How long the module waits for the socket to open, as the JavaScript carrier does.
 const connectTimeoutMs = 4000;
 
+const normalClosure = 1000;
+
 // The channel as the module takes it over: the two keys, where each direction's record numbers stand, and the WebSocket upgrade that goes inside it. Keys are base64.
 export interface ChannelHandOver {
   readonly sendKey: string;
@@ -31,18 +33,24 @@ export type NativeChannelEvent = { readonly id: string } & (
     }
 );
 
+export interface ChannelSubscription {
+  readonly remove: () => void;
+}
+
 /*
  * The native module's surface (`ArgoChannel`, Swift and Kotlin). It owns the channel's WebSocket: `open` connects it, and from `handOver` on the module decrypts every record, so it gives JavaScript one message string per event and takes one per `send`.
- * Events of a socket are held back until `listen`, so none is lost between `open` and the first handler; `listen` again is harmless.
+ * JavaScript names each socket, so it is listening before `open` can raise an event. The module is an Expo module: its events arrive through `addListener`.
  */
 export interface ChannelNative {
-  open: (url: string, timeoutMs: number) => Promise<string>;
-  listen: (id: string) => void;
+  open: (id: string, url: string, timeoutMs: number) => Promise<void>;
   write: (id: string, base64: string) => void;
   handOver: (id: string, handOver: ChannelHandOver) => void;
   send: (id: string, message: string) => void;
   close: (id: string, code: number, reason: string) => void;
-  subscribe: (listener: (event: NativeChannelEvent) => void) => () => void;
+  addListener: (
+    name: 'channel',
+    listener: (event: NativeChannelEvent) => void,
+  ) => ChannelSubscription;
 }
 
 type Handler = (event: NativeChannelEvent) => void;
@@ -68,15 +76,18 @@ export class NativeByteSocket implements ByteSocket {
   }
 
   public close(): void {
-    this.channel.native.close(this.id, 1000, '');
+    this.channel.native.close(this.id, normalClosure, '');
   }
 }
 
 export class NativeChannel {
   private readonly handlers = new Map<string, Handler>();
+  private opened = 0;
 
   public constructor(public readonly native: ChannelNative) {
-    native.subscribe((event) => this.handlers.get(event.id)?.(event));
+    native.addListener('channel', (event) =>
+      this.handlers.get(event.id)?.(event),
+    );
   }
 
   // Opens the module's socket to the Server, ready for the handshake.
@@ -85,7 +96,6 @@ export class NativeChannel {
 
   public watch(id: string, handler: Handler): void {
     this.handlers.set(id, handler);
-    this.native.listen(id);
   }
 
   public forget(id: string): void {
@@ -93,8 +103,17 @@ export class NativeChannel {
   }
 
   private async socketAt(address: ChannelAddress): Promise<NativeByteSocket> {
-    const id = await this.native.open(channelUrl(address), connectTimeoutMs);
+    this.opened += 1;
+    const id = String(this.opened);
+    const socket = new NativeByteSocket(id, this);
 
-    return new NativeByteSocket(id, this);
+    try {
+      await this.native.open(id, channelUrl(address), connectTimeoutMs);
+    } catch (cause) {
+      this.forget(id);
+      throw cause;
+    }
+
+    return socket;
   }
 }

@@ -1,5 +1,5 @@
 import type { ByteSocket } from './byte-socket';
-import type { ChannelCipher } from './channel-cipher';
+import type { ChannelCipher, ChannelPosition } from './channel-cipher';
 import { tagBytes } from './cipher-state';
 import { FrameReader, frameRecord, maxRecordBytes } from './frames';
 
@@ -10,7 +10,7 @@ export interface StreamListener {
   onClose: (error?: Error) => void;
 }
 
-export interface HandOver extends ReturnType<ChannelCipher['position']> {
+export interface HandOver extends ChannelPosition {
   readonly socket: ByteSocket;
 }
 
@@ -56,8 +56,10 @@ export class SecureStream {
     if (this.listener || this.early.length > 0 || this.ended)
       throw new Error('A channel that has been read cannot be handed over');
     const { socket } = this;
+
     this.ended = {};
     socket.onData = (): void => {};
+
     socket.onClose = (): void => {};
 
     return { socket, ...this.cipher.position() };

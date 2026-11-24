@@ -7,7 +7,7 @@ import {
   type NativeChannelEvent,
 } from './native-channel';
 import type { HandOver } from './secure-stream';
-import { SocketEvents, type Listener, type SocketEvent } from './socket-events';
+import { EventedSocket } from './socket-events';
 import { acceptFor, upgradeRequest } from './ws-upgrade';
 
 const normalClosure = 1000;
@@ -23,28 +23,18 @@ export interface NativeSocketDeps extends ChannelSocketDeps {
 /*
  * The same slice of the browser's WebSocket as `channelWebSocket`, with the channel carried by the native module: JavaScript runs the handshake, hands the keys over, and from then on every message is one string, with no base64 and no decryption in JavaScript.
  */
-class NativeChannelWebSocket {
-  public readyState: number = WebSocket.CONNECTING;
-  public binaryType = 'arraybuffer';
-  private readonly events = new SocketEvents();
+class NativeChannelWebSocket extends EventedSocket {
   private id: string | undefined;
 
   public constructor(
     private readonly deps: NativeSocketDeps,
     private readonly path: string,
   ) {
+    super();
     deps.openChannel().then(
       (channel) => this.start(channel.stream.handOver()),
       (cause: unknown) => this.fail(cause),
     );
-  }
-
-  public addEventListener(type: string, listener: Listener): void {
-    this.events.add(type, listener);
-  }
-
-  public removeEventListener(type: string, listener: Listener): void {
-    this.events.remove(type, listener);
   }
 
   public send(text: string): void {
@@ -87,21 +77,29 @@ class NativeChannelWebSocket {
   }
 
   private heard(event: NativeChannelEvent): void {
-    if (event.type === 'open') this.opened();
-    else if (event.type === 'message')
-      this.emit('message', { data: event.data });
-    else if (event.type === 'close') this.closed(event);
+    switch (event.type) {
+      case 'open':
+        return this.opened();
+      case 'message':
+        return this.emit('message', { data: event.data });
+      case 'close':
+        return this.closed(event);
+      default:
+    }
   }
 
   private opened(): void {
     if (this.readyState !== WebSocket.CONNECTING) return;
+
     this.readyState = WebSocket.OPEN;
     this.emit('open', {});
   }
 
   private closed(event: Extract<NativeChannelEvent, { type: 'close' }>): void {
     if (this.id !== undefined) this.deps.native.forget(this.id);
+
     if (this.readyState === WebSocket.CONNECTING) this.emit('error', {});
+
     this.finish(event.code, event.reason);
   }
 
@@ -118,16 +116,6 @@ class NativeChannelWebSocket {
     this.emit('error', {});
     this.release(abnormalClosure, '');
     this.finish(abnormalClosure);
-  }
-
-  private finish(code: number, reason = ''): void {
-    if (this.readyState === WebSocket.CLOSED) return;
-    this.readyState = WebSocket.CLOSED;
-    this.emit('close', { code, reason });
-  }
-
-  private emit(type: string, event: SocketEvent): void {
-    this.events.emit(this, type, event);
   }
 }
 

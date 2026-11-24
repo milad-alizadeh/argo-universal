@@ -7,7 +7,10 @@ import {
   pairedNodeDevice,
   type PairableHost,
 } from '../../../../../mocks/node-channel-platform';
-import { nodeNativeChannel } from '../../../../../mocks/node-native-channel';
+import {
+  nodeNativeChannel,
+  type NodeNativeModule,
+} from '../../../../../mocks/node-native-channel';
 import { channelServerUrl, createTRPCClient } from '../trpc/create-trpc-client';
 import { createChannelTransport } from './channel-transport';
 
@@ -19,22 +22,22 @@ afterEach(async () => {
 
 async function nativeClientTo(host: PairableHost): Promise<{
   client: ReturnType<typeof createTRPCClient>['client'];
-  native: ReturnType<typeof nodeNativeChannel>;
+  native: NodeNativeModule;
 }> {
   const platform = nodeChannelPlatform(await pairedNodeDevice(host));
-  const native = nodeNativeChannel(platform.openSocket);
+  const { channel, module: native } = nodeNativeChannel(platform.openSocket);
   const { host: address, port, serverPublicKey } = await endpointOf(host);
 
   const transport = createChannelTransport(
     { address: { host: address, port }, serverPublicKey },
-    { ...platform, nativeChannel: native.channel },
+    { ...platform, nativeChannel: channel },
   );
 
   const trpc = createTRPCClient(channelServerUrl, undefined, {
     channel: transport,
   });
 
-  closers.push(trpc.close, native.close);
+  closers.push(trpc.close, () => native.closeAll());
 
   return { client: trpc.client, native };
 }
@@ -76,7 +79,7 @@ it('reconnects with a new handshake when the module reports the socket closed', 
   const { client, native } = await nativeClientTo(await startEngineTestHost());
 
   await client.system.info.query();
-  native.dropSockets();
+  native.closeAll();
 
   await vi.waitFor(() => expect(native.opened()).toBe(2), { timeout: 5000 });
   expect(await client.system.info.query()).toMatchObject({ version: '1.2.3' });

@@ -20,8 +20,36 @@ export class SocketEvents {
     this.listeners.get(type)?.delete(listener);
   }
 
-  public emit(target: object, type: string, event: SocketEvent): void {
+  public emit<Target>(target: Target, type: string, event: SocketEvent): void {
     for (const listener of this.listeners.get(type) ?? [])
       listener.call(target, event);
+  }
+}
+
+/*
+ * What a channel's WebSocket-shaped objects share: the ready state, the listeners, and closing once.
+ */
+export abstract class EventedSocket {
+  public readyState: number = WebSocket.CONNECTING;
+  public binaryType = 'arraybuffer';
+  private readonly events = new SocketEvents();
+
+  public addEventListener(type: string, listener: Listener): void {
+    this.events.add(type, listener);
+  }
+
+  public removeEventListener(type: string, listener: Listener): void {
+    this.events.remove(type, listener);
+  }
+
+  protected finish(code: number, reason = ''): void {
+    if (this.readyState === WebSocket.CLOSED) return;
+
+    this.readyState = WebSocket.CLOSED;
+    this.emit('close', { code, reason });
+  }
+
+  protected emit(type: string, event: SocketEvent): void {
+    this.events.emit(this, type, event);
   }
 }

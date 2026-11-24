@@ -14,8 +14,6 @@ private final class Channel {
   let socket: ChannelSocket
   private let lock = NSLock()
   private var session: ChannelSession?
-  private var listening = false
-  private var held: [[String: Any]] = []
   private let emit: ([String: Any]) -> Void
 
   init(socket: ChannelSocket, emit: @escaping ([String: Any]) -> Void) {
@@ -23,21 +21,8 @@ private final class Channel {
     self.emit = emit
   }
 
-  func listen() {
-    lock.lock()
-    listening = true
-    let waiting = held
-    held = []
-    lock.unlock()
-    waiting.forEach(emit)
-  }
-
   func event(_ event: [String: Any]) {
-    lock.lock()
-    let now = listening
-    if !now { held.append(event) }
-    lock.unlock()
-    if now { emit(event) }
+    emit(event)
   }
 
   func handOver(_ record: HandOverRecord) throws {
@@ -110,9 +95,8 @@ public final class ArgoChannelModule: Module {
 
     Events("channel")
 
-    AsyncFunction("open") { (url: String, timeoutMs: Double) async throws -> String in
+    AsyncFunction("open") { (id: String, url: String, timeoutMs: Double) async throws in
       guard let address = URL(string: url) else { throw ChannelError.malformed("url") }
-      let id = UUID().uuidString
       let socket = ChannelSocket(url: address)
       let channel = Channel(socket: socket) { [weak self] event in
         var tagged = event
@@ -126,14 +110,16 @@ public final class ArgoChannelModule: Module {
         channel.event(event)
         self?.forget(id)
       }
-      try await socket.open(timeout: timeoutMs / 1000)
       self.channelsLock.lock()
       self.channels[id] = channel
       self.channelsLock.unlock()
-      return id
+      do {
+        try await socket.open(timeout: timeoutMs / 1000)
+      } catch {
+        self.forget(id)
+        throw error
+      }
     }
-
-    Function("listen") { (id: String) in self.channel(id)?.listen() }
 
     Function("write") { (id: String, base64: String) in
       if let data = Data(base64Encoded: base64) { self.channel(id)?.socket.send(data) }

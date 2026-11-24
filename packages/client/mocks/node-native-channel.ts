@@ -14,6 +14,7 @@ import {
   NativeChannel,
   type ChannelHandOver,
   type ChannelNative,
+  type ChannelSubscription,
   type NativeChannelEvent,
 } from '../src/features/connection/api/channel/native-channel';
 import { SecureStream } from '../src/features/connection/api/channel/secure-stream';
@@ -21,163 +22,170 @@ import { nodeRandomBytes } from './node-channel-platform';
 
 interface Entry {
   readonly socket: ByteSocket;
-  listening: boolean;
-  held: NativeChannelEvent[];
-  handedOver: boolean;
-  closed: boolean;
   ws?: WebSocket;
 }
 
 const noRest = new Uint8Array(0);
 
-const portOf = (url: string): number => Number(new URL(url).port);
+const abnormalClosure = 1006;
 
-const hostOf = (url: string): string => new URL(url).hostname;
+const noStatus = 1005;
+
+const closeOf = (id: string, event: Event): NativeChannelEvent => ({
+  id,
+  type: 'close',
+  code:
+    'code' in event && typeof event.code === 'number' ? event.code : noStatus,
+  reason:
+    'reason' in event && typeof event.reason === 'string' ? event.reason : '',
+});
+
+const rawBytes = (id: string, chunk: Uint8Array): NativeChannelEvent => ({
+  id,
+  type: 'bytes',
+  data: bytesBase64(chunk),
+});
+
+const cipherOf = (handed: ChannelHandOver): ChannelCipher =>
+  new ChannelCipher(
+    new CipherState(base64Bytes(handed.sendKey), aead, handed.sendRecords),
+    new CipherState(
+      base64Bytes(handed.receiveKey),
+      aead,
+      handed.receiveRecords,
+    ),
+  );
 
 /*
- * The native module's contract, kept in Node: sockets come from the `openSocket` it is given and, after the hand-over, the channel runs on the same JavaScript framing the web uses. It does the one thing the real module does that matters to JavaScript: it takes the keys and record numbers it is handed, and from then on sends only finished message strings. A test that passes through it proves what the JavaScript side hands over and does with what it gets back.
+ * The native module's contract, kept in Node: sockets come from the `openSocket` it is given and, after the hand-over, the channel runs on the same JavaScript framing the web uses.
+ * It does the one thing the real module does that matters to JavaScript: it takes the keys and record numbers it is handed, and from then on sends only finished message strings. A test that passes through it proves what the JavaScript side hands over and does with what comes back.
  */
-export function nodeNativeChannel(openSocket: OpenSocket): {
-  channel: NativeChannel;
+export class NodeNativeModule implements ChannelNative {
   // Every message string the module handed up.
-  messages: string[];
-  bytesAfterHandOver: () => number;
-  opened: () => number;
+  public readonly messages: string[] = [];
+  private readonly entries = new Map<string, Entry>();
+  private readonly listeners = new Set<(event: NativeChannelEvent) => void>();
+  private rawEventsAfterHandOver = 0;
+  private count = 0;
+
+  public constructor(private readonly openSocket: OpenSocket) {}
+
+  // Handshake bytes the module passed up after the hand-over; there should be none.
+  public bytesAfterHandOver(): number {
+    return this.rawEventsAfterHandOver;
+  }
+
+  public opened(): number {
+    return this.count;
+  }
+
   // As when the network drops under the phone: every socket the module holds closes.
-  dropSockets: () => void;
-  close: () => void;
-} {
-  const entries = new Map<string, Entry>();
-  const listeners = new Set<(event: NativeChannelEvent) => void>();
-  const messages: string[] = [];
-  let rawBytesAfterHandOver = 0;
-  let count = 0;
+  public closeAll(): void {
+    for (const entry of this.entries.values()) entry.socket.close();
+  }
 
-  const deliver = (event: NativeChannelEvent): void => {
-    for (const listener of listeners) listener(event);
-  };
+  public async open(id: string, url: string): Promise<void> {
+    const { hostname, port } = new URL(url);
 
-  const emit = (id: string, event: NativeChannelEvent): void => {
-    const entry = entries.get(id);
+    const socket = await this.openSocket({
+      host: hostname,
+      port: Number(port),
+    });
 
-    if (!entry) return;
-    if (event.type === 'close') entry.closed = true;
-    if (entry.listening) deliver(event);
-    else entry.held.push(event);
-  };
+    this.count += 1;
+    this.entries.set(id, { socket });
+    socket.onData = (chunk): void => this.emit(id, rawBytes(id, chunk));
 
-  const entryOf = (id: string): Entry => {
-    const entry = entries.get(id);
+    socket.onClose = (error): void =>
+      this.emit(id, {
+        id,
+        type: 'close',
+        code: abnormalClosure,
+        reason: '',
+        error: error?.message,
+      });
+  }
 
-    if (!entry) throw new Error(`No socket ${id}`);
+  public write(id: string, base64: string): void {
+    this.entryOf(id).socket.write(base64Bytes(base64));
+  }
 
-    return entry;
-  };
-
-  const handOver = (id: string, handed: ChannelHandOver): void => {
-    const entry = entryOf(id);
-    const cipher = new ChannelCipher(
-      new CipherState(base64Bytes(handed.sendKey), aead, handed.sendRecords),
-      new CipherState(
-        base64Bytes(handed.receiveKey),
-        aead,
-        handed.receiveRecords,
-      ),
-    );
-
-    const stream = new SecureStream(entry.socket, cipher, noRest);
-    const path = handed.upgrade.split(' ')[1] ?? '/';
+  public handOver(id: string, handed: ChannelHandOver): void {
+    const entry = this.entryOf(id);
+    const stream = new SecureStream(entry.socket, cipherOf(handed), noRest);
 
     const Socket = channelWebSocket({
       openChannel: async () => ({ stream, deviceId: 'native' }),
       randomBytes: nodeRandomBytes,
     });
 
-    const ws = new Socket(`wss://argo.channel${path}`);
-    entry.handedOver = true;
+    const ws = new Socket(`wss://argo.channel${handed.upgrade.split(' ')[1]}`);
+
     entry.ws = ws;
-    ws.addEventListener('open', () => emit(id, { id, type: 'open' }));
+    this.relay(id, ws);
+  }
+
+  public send(id: string, message: string): void {
+    this.entryOf(id).ws?.send(message);
+  }
+
+  public close(id: string, code: number, reason: string): void {
+    const { ws, socket } = this.entryOf(id);
+
+    if (ws) ws.close(code, reason);
+    else socket.close();
+  }
+
+  public addListener(
+    _name: 'channel',
+    listener: (event: NativeChannelEvent) => void,
+  ): ChannelSubscription {
+    this.listeners.add(listener);
+
+    return { remove: (): void => void this.listeners.delete(listener) };
+  }
+
+  private relay(id: string, ws: WebSocket): void {
+    ws.addEventListener('open', () => this.emit(id, { id, type: 'open' }));
 
     ws.addEventListener('message', (event) => {
-      messages.push(String(event.data));
-      emit(id, { id, type: 'message', data: String(event.data) });
+      this.messages.push(String(event.data));
+      this.emit(id, { id, type: 'message', data: String(event.data) });
     });
 
-    ws.addEventListener('close', (event) =>
-      emit(id, {
-        id,
-        type: 'close',
-        code: (event as CloseEvent).code,
-        reason: (event as CloseEvent).reason,
-      }),
-    );
-  };
+    ws.addEventListener('close', (event) => this.emit(id, closeOf(id, event)));
+  }
 
-  const module: ChannelNative = {
-    open: async (url) => {
-      const socket = await openSocket({ host: hostOf(url), port: portOf(url) });
-      count += 1;
-      const id = String(count);
-      const entry: Entry = {
-        socket,
-        listening: false,
-        held: [],
-        handedOver: false,
-        closed: false,
-      };
+  private emit(id: string, event: NativeChannelEvent): void {
+    const entry = this.entries.get(id);
 
-      entries.set(id, entry);
+    if (!entry) return;
 
-      socket.onData = (chunk): void => {
-        if (entry.handedOver) rawBytesAfterHandOver += 1;
-        emit(id, { id, type: 'bytes', data: bytesBase64(chunk) });
-      };
+    if (entry.ws && event.type === 'bytes') this.rawEventsAfterHandOver += 1;
 
-      socket.onClose = (error): void =>
-        emit(id, {
-          id,
-          type: 'close',
-          code: 1006,
-          reason: '',
-          error: error?.message,
-        });
+    this.deliver(event);
+  }
 
-      return id;
-    },
-    listen: (id) => {
-      const entry = entryOf(id);
+  private deliver(event: NativeChannelEvent): void {
+    for (const listener of this.listeners) listener(event);
+  }
 
-      entry.listening = true;
-      for (const event of entry.held.splice(0)) deliver(event);
-    },
-    write: (id, base64) => entryOf(id).socket.write(base64Bytes(base64)),
-    handOver,
-    send: (id, message) => entryOf(id).ws?.send(message),
-    close: (id, code, reason) => {
-      const entry = entryOf(id);
+  private entryOf(id: string): Entry {
+    const entry = this.entries.get(id);
 
-      if (entry.ws) entry.ws.close(code, reason);
-      else entry.socket.close();
-    },
-    subscribe: (listener) => {
-      listeners.add(listener);
+    if (!entry) throw new Error(`No socket ${id}`);
 
-      return (): void => {
-        listeners.delete(listener);
-      };
-    },
-  };
+    return entry;
+  }
+}
 
-  const closeAll = (): void => {
-    for (const entry of entries.values()) entry.socket.close();
-  };
+export interface NodeNative {
+  readonly channel: NativeChannel;
+  readonly module: NodeNativeModule;
+}
 
-  return {
-    channel: new NativeChannel(module),
-    messages,
-    bytesAfterHandOver: () => rawBytesAfterHandOver,
-    opened: () => count,
-    dropSockets: closeAll,
-    close: closeAll,
-  };
+export function nodeNativeChannel(openSocket: OpenSocket): NodeNative {
+  const module = new NodeNativeModule(openSocket);
+
+  return { channel: new NativeChannel(module), module };
 }

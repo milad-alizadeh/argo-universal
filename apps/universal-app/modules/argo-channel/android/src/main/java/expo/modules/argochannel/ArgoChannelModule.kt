@@ -6,7 +6,6 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
@@ -33,22 +32,10 @@ class HandOverRecord : Record {
 private class Channel(private val id: String, private val emit: (Map<String, Any?>) -> Unit) {
   lateinit var socket: WebSocket
   private var session: ChannelSession? = null
-  private var listening = false
-  private val held = mutableListOf<Map<String, Any?>>()
   private var closed = false
 
-  @Synchronized
-  fun listen() {
-    listening = true
-    val waiting = held.toList()
-    held.clear()
-    waiting.forEach(emit)
-  }
-
-  @Synchronized
   fun event(event: Map<String, Any?>) {
-    val tagged = event + ("id" to id)
-    if (listening) emit(tagged) else held.add(tagged)
+    emit(event + ("id" to id))
   }
 
   @Synchronized
@@ -130,8 +117,7 @@ class ArgoChannelModule : Module() {
 
     Events("channel")
 
-    AsyncFunction("open") { url: String, timeoutMs: Double, promise: Promise ->
-      val id = UUID.randomUUID().toString()
+    AsyncFunction("open") { id: String, url: String, timeoutMs: Double, promise: Promise ->
       val channel = Channel(id) { event -> sendEvent("channel", event) }
       var settled = false
 
@@ -139,7 +125,7 @@ class ArgoChannelModule : Module() {
         synchronized(channel) {
           if (!settled) {
             settled = true
-            if (error == null) promise.resolve(id) else promise.reject("ERR_CHANNEL_OPEN", error, null)
+            if (error == null) promise.resolve(null) else promise.reject("ERR_CHANNEL_OPEN", error, null)
           }
         }
       }
@@ -173,8 +159,6 @@ class ArgoChannelModule : Module() {
       val timed = client.newBuilder().connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS).build()
       channel.socket = timed.newWebSocket(Request.Builder().url(url).build(), listener)
     }
-
-    Function("listen") { id: String -> channels[id]?.listen() }
 
     Function("write") { id: String, base64: String ->
       channels[id]?.socket?.send(Base64.decode(base64, Base64.NO_WRAP).toByteString())
