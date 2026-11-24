@@ -5,7 +5,11 @@ import {
   type ServerResponse,
 } from 'node:http';
 import type { Socket } from 'node:net';
-import { channelPath } from '@repo/contracts';
+import {
+  channelCompressionHeader,
+  channelPath,
+  ChannelCompression,
+} from '@repo/contracts';
 import { createWebSocketStream, type WebSocket, WebSocketServer } from 'ws';
 import type { ChannelCarrier } from '../pairing/channel-carrier';
 
@@ -87,7 +91,7 @@ function upgrading(
     if (!proven || pathOf(request) !== channelPath)
       return void socket.destroy();
     carriers.handleUpgrade(request, socket, head, (carrier): void =>
-      arrive(carrierOf(carrier, socket), proven),
+      arrive(carrierOf(carrier, socket, request), proven),
     );
   };
 }
@@ -95,8 +99,16 @@ function upgrading(
 const pathOf = (request: IncomingMessage): string =>
   (request.url ?? '/').split('?')[0] ?? '/';
 
-const carrierOf = (webSocket: WebSocket, socket: Socket): ChannelCarrier =>
+const carrierOf = (
+  webSocket: WebSocket,
+  socket: Socket,
+  request: IncomingMessage,
+): ChannelCarrier =>
   Object.assign(createWebSocketStream(webSocket), {
     remoteAddress: socket.remoteAddress,
     localAddress: socket.localAddress,
+    offersCompression: offered(request),
   });
+
+const offered = (request: IncomingMessage): boolean =>
+  request.headers[channelCompressionHeader] === ChannelCompression.value;

@@ -37,6 +37,8 @@ export interface ChannelInput {
 export interface OpenedChannel {
   readonly stream: SecureStream;
   readonly deviceId: string;
+  // Whether the Server agreed to compress: every record from here on opens with a byte that says whether the rest is deflated, which only the module reads.
+  readonly compressed: boolean;
 }
 
 const handshakeOf = (input: ChannelInput): InitiatorHandshake =>
@@ -120,5 +122,6 @@ function opened(
   return {
     stream: new SecureStream(socket, cipher, inbox.rest()),
     deviceId: welcome.deviceId,
+    compressed: welcome.compression !== undefined,
   };
 }

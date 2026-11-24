@@ -6,6 +6,7 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
   var onClose: ((_ code: Int, _ reason: String, _ error: String?) -> Void)?
 
   private let url: URL
+  private let headers: [String: String]
   private var session: URLSession?
   private var task: URLSessionWebSocketTask?
   private var opening: CheckedContinuation<Void, Error>?
@@ -13,14 +14,18 @@ final class ChannelSocket: NSObject, URLSessionWebSocketDelegate {
   private var opened = false
   private var closed = false
 
-  init(url: URL) {
+  /// `headers` ride on the WebSocket upgrade request, which is where the App offers compression: a Server built before it never reads them.
+  init(url: URL, headers: [String: String] = [:]) {
     self.url = url
+    self.headers = headers
   }
 
   /// Resolves when the socket is open, or throws when it fails or has not opened within `timeout`. The session keeps its default timeouts, so an idle open channel is not dropped.
   func open(timeout: TimeInterval) async throws {
     let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-    let task = session.webSocketTask(with: url)
+    var request = URLRequest(url: url)
+    for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
+    let task = session.webSocketTask(with: request)
     self.session = session
     self.task = task
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

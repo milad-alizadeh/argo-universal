@@ -32,7 +32,7 @@ class NativeChannelWebSocket extends EventedSocket {
   ) {
     super();
     deps.openChannel().then(
-      (channel) => this.start(channel.stream.handOver()),
+      (channel) => this.start(channel.stream.handOver(), channel.compressed),
       (cause: unknown) => this.fail(cause),
     );
   }
@@ -50,7 +50,10 @@ class NativeChannelWebSocket extends EventedSocket {
     this.finish(code, reason);
   }
 
-  private start({ socket, sending, receiving }: HandOver): void {
+  private start(
+    { socket, sending, receiving }: HandOver,
+    compression: boolean,
+  ): void {
     if (!(socket instanceof NativeByteSocket)) {
       socket.close();
 
@@ -73,6 +76,7 @@ class NativeChannelWebSocket extends EventedSocket {
       receiveRecords: receiving.records,
       upgrade: upgradeRequest(this.path, key),
       accept: acceptFor(key),
+      compression,
     });
   }
 
