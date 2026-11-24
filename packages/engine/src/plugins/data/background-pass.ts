@@ -30,7 +30,7 @@ export const passTerms: Record<PassKind, { name: string; floorMs: number }> = {
 
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
   kind: PassKind;
-  draws: PluginDraws;
+  draws: Pick<PluginDraws, 'load'>;
   // A removed Project's kept answers end with its passes.
   projectRemoved: (projectId: string) => void;
 };
@@ -91,20 +91,23 @@ export class BackgroundPass {
     );
   }
 
-  // The budget is scheduled before the load's own limit of the same length, so on that clock it ends first.
+  /*
+   * The budget only says so in the log. The load has no limit of its own, so it ends when the Plugin's code does or
+   * its worker ends; the gate and the next interval wait for that, so an overrunning pass never stacks another.
+   */
   private async pass(): Promise<void> {
-    const ended = Promise.withResolvers<string>();
+    const closed = Promise.withResolvers<string>();
 
     const deadline = this.services.clock.schedule((): void => {
-      ended.resolve(`reached ${backgroundBudgetMs} ms`);
+      this.line(`reached ${backgroundBudgetMs} ms`);
     }, backgroundBudgetMs);
 
     this.finish = (): void => {
-      ended.resolve('closed');
+      closed.resolve('closed');
     };
 
     try {
-      this.line(await Promise.race([this.load(), ended.promise]));
+      this.line(await Promise.race([this.load(), closed.promise]));
     } finally {
       deadline();
       this.finish = (): void => {};
@@ -121,7 +124,7 @@ export class BackgroundPass {
         projectId: this.projectId,
         ...(this.services.kind === 'watch' && { watch: true }),
       },
-      backgroundBudgetMs,
+      null,
     );
 
     return loaded.ok ? 'completed' : `failed: ${loaded.error}`;

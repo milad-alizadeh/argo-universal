@@ -102,12 +102,20 @@ function fixRead(step: Step, read: LinkRead): Promise<boolean> | false {
   return pull ? fixPull(step, pull, read) : false;
 }
 
-// Only a Session of the Project the Watch runs for can be prompted or have a Prompt taken back; the Server refuses any other.
+/*
+ * Only a Session of the Project the Watch runs for can be prompted or have a Prompt taken back; the Server refuses
+ * any other. A Session that is gone has its record forgotten. One that moved to another Project keeps its record,
+ * as it can move back, and is left alone meanwhile.
+ */
 async function inProject(
-  sessions: Sessions,
-  { sessionId, projectId }: FixRecord,
+  { sessions, fix }: Fixing,
+  record: FixRecord,
 ): Promise<boolean> {
-  return (await sessions.get(sessionId))?.projectId === projectId;
+  const session = await sessions.get(record.sessionId);
+
+  if (!session) await fix.forget(record);
+
+  return session?.projectId === record.projectId;
 }
 
 async function fixOne(
@@ -115,7 +123,7 @@ async function fixOne(
   fresh: Fresh,
   record: FixRecord,
 ): Promise<boolean> {
-  if (!(await inProject(fixing.sessions, record))) return false;
+  if (!(await inProject(fixing, record))) return false;
 
   const read = await freshOf(fresh, record);
 
