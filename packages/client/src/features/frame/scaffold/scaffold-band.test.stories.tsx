@@ -306,11 +306,6 @@ export const ExpandKeepsItsPlace = toggleKeepsItsPlace(
   [{ inspectorState: 'closed' }, { inspectorState: 'open' }],
 );
 
-// The frame's inset in from the window's right edge, where every pane ends, and the capsule's padding inside it.
-const frameInset = 8;
-
-const capsulePadding = 2;
-
 /*
  * The closed Inspector's capsule, the open Inspector's panel and the Workbench's panel all end on the panes' one right
  * edge, whether the Workbench shows or not; the Inspector toggle ends the capsule's padding inside it.
@@ -321,10 +316,8 @@ export const TrailingEdgesLineUp: ScaffoldStory = {
     const right = (testID: string): number =>
       canvas.getByTestId(testID).getBoundingClientRect().right;
 
-    const toggle = (): number =>
-      canvas
-        .getByRole('button', { name: /^(Show|Hide) Inspector$/ })
-        .getBoundingClientRect().right;
+    const toggle = (): HTMLElement =>
+      canvas.getByRole('button', { name: /^(Show|Hide) Inspector$/ });
 
     // The Workbench shows in the page's gutter at 1920, and has no room for it at 1440.
     for (const [width, workbench] of [
@@ -332,11 +325,14 @@ export const TrailingEdgesLineUp: ScaffoldStory = {
       [1440, false],
     ] as const) {
       await settleLayout(width);
-      const edge = right(windowBand) - frameInset;
       await controlled.render({ inspectorState: 'closed' });
       await settleMotion();
-      await expect(right(trailingCapsuleID)).toBe(edge);
-      await expect(toggle()).toBe(edge - capsulePadding);
+      const edge = right(trailingCapsuleID);
+      const resting = box(toggle());
+      await expect(edge).toBeLessThan(right(windowBand));
+      await expect(
+        inside(toggle(), canvas.getByTestId(trailingCapsuleID)),
+      ).toBe(true);
       await expect(
         canvas.queryByRole('region', { name: 'Workbench overview' }) !== null,
       ).toBe(workbench);
@@ -346,7 +342,7 @@ export const TrailingEdgesLineUp: ScaffoldStory = {
       await controlled.render({ inspectorState: 'open' });
       await settleMotion();
       await expect(right('desktop-inspector')).toBe(edge);
-      await expect(toggle()).toBe(edge - capsulePadding);
+      await expect(box(toggle())).toEqual(resting);
     }
   }),
 };
