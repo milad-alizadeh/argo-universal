@@ -2,7 +2,7 @@ import type { SessionListUpdate } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TRPCSubscriptionResult } from '@trpc/tanstack-react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { applySessionListUpdate } from '../api/apply-session-list-update';
@@ -16,13 +16,15 @@ type SessionListSubscription = TRPCSubscriptionResult<
 >;
 
 type SessionListRefresh = {
-  refetch: () => void;
+  catchUp: () => void;
   apply: (update: SessionListUpdate) => void;
 };
 
 function useSessionListRefresh(): SessionListRefresh {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const started = useRef(false);
+  const [mountedAt] = useState(Date.now);
 
   return useMemo((): SessionListRefresh => {
     const list = trpc.session.list.pathFilter();
@@ -31,24 +33,44 @@ function useSessionListRefresh(): SessionListRefresh {
       refreshSessionList(queryClient, list),
     );
 
+    /*
+     * The first start after mount rides a read made during this mount, so one that landed or is in flight is not asked again; a read kept from an earlier visit may predate changes, so it is.
+     * The Server replays missed updates only to the first watcher, so every later start (a reconnect or a return to the foreground) asks again whatever the read's age.
+     */
+    const catchUp = (): void => {
+      const restart = started.current;
+      started.current = true;
+
+      void queryClient.refetchQueries(
+        restart
+          ? list
+          : {
+              ...list,
+              predicate: (query): boolean =>
+                query.state.dataUpdatedAt < mountedAt,
+            },
+        { cancelRefetch: restart },
+      );
+    };
+
     // A row the list shows changes where it sits; only what the loaded pages cannot place asks the Server again.
     const apply = (update: SessionListUpdate): void => {
       if (applySessionListUpdate(queryClient, list, update)) refetch();
     };
 
-    return { refetch, apply };
-  }, [queryClient, trpc]);
+    return { catchUp, apply };
+  }, [queryClient, trpc, started, mountedAt]);
 }
 
 // Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
 export function useSessionListUpdates(enabled = true): SessionListSubscription {
   const trpc = useTRPC();
-  const { refetch, apply } = useSessionListRefresh();
+  const { catchUp, apply } = useSessionListRefresh();
 
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
       enabled,
-      onStarted: refetch,
+      onStarted: catchUp,
       onData: apply,
     }),
   );
