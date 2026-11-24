@@ -70,9 +70,21 @@ const rowRevisions = (events: readonly Identified[]): number[] =>
     event.type === 'row.upsert' ? [event.rev] : [],
   );
 
-it('gives each row event the id of the point it moves an App to, and the snapshot the newest', async () => {
+it('sends plain events, which an App from before event ids understands, when it gives no lastEventId', async () => {
   const { read, epoch } = await settledSession();
   const events = await read(fromStart(epoch));
+
+  expect(rowRevisions(events).length).toBeGreaterThan(1);
+  expect(events.every(({ id }) => id === undefined)).toBe(true);
+});
+
+it('gives each row event the id of the point it moves an App to, and the snapshot the newest', async () => {
+  const { read, epoch } = await settledSession();
+
+  const events = await read({
+    ...fromStart(epoch),
+    lastEventId: feedEventId({ epoch, revision: 0 }),
+  });
 
   const rowIds = events.flatMap(({ id, event }) =>
     event.type === 'row.upsert' ? [[id, event.rev] as const] : [],

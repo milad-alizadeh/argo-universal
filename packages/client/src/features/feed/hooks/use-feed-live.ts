@@ -3,7 +3,7 @@ import {
   feedEventId,
   type SessionUpdate,
 } from '@repo/contracts';
-import { useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   type TRPCSubscriptionResult,
   useSubscription,
@@ -82,22 +82,54 @@ function useFrames(
   };
 }
 
-// Where the subscription opens: after the newest revision the cache holds, read when it opens (on the first rows and on a return from hiding), not on every row. From then on tRPC's client sends the id of the last event it received when its socket reconnects.
+interface Opening {
+  shown: boolean;
+  loaded: boolean;
+  // How many times the cache was read for a new open; a read is what gives the memo below a new point.
+  reads: number;
+}
+
+// Where a subscription opening now resumes: after the newest revision the cache holds.
+function pointToOpen(
+  queryClient: QueryClient,
+  cacheId: string,
+  { shown, loaded }: Opening,
+): string | undefined {
+  if (!shown || !loaded) return;
+
+  const point = syncPointOf(
+    queryClient.getQueryData<FeedState>(feedKey(cacheId)) ?? emptyFeed,
+  );
+
+  return point ? feedEventId(point) : undefined;
+}
+
+interface ResumePoint {
+  lastEventId: string | undefined;
+  // The id an open now would carry.
+  read: () => string | undefined;
+  reread: () => void;
+}
+
+// The id the subscription opens with, read when it opens (on the first rows, on a return from hiding, and when it reopens), not on every row. From then on tRPC's client sends the id of the last event it received when its socket reconnects.
 function useResumePoint(
   cacheId: string,
   { shown, loaded }: Pick<LiveOptions, 'shown' | 'loaded'>,
-): string | undefined {
+): ResumePoint {
   const queryClient = useQueryClient();
+  const [reads, setReads] = useState(0);
 
-  return useMemo(() => {
-    if (!shown || !loaded) return;
+  const lastEventId = useMemo(
+    () => pointToOpen(queryClient, cacheId, { shown, loaded, reads }),
+    [queryClient, cacheId, shown, loaded, reads],
+  );
 
-    const point = syncPointOf(
-      queryClient.getQueryData<FeedState>(feedKey(cacheId)) ?? emptyFeed,
-    );
-
-    return point ? feedEventId(point) : undefined;
-  }, [queryClient, cacheId, shown, loaded]);
+  return {
+    lastEventId,
+    read: (): string | undefined =>
+      pointToOpen(queryClient, cacheId, { shown, loaded, reads }),
+    reread: (): void => setReads((count) => count + 1),
+  };
 }
 
 export function useFeedLive(
@@ -107,7 +139,11 @@ export function useFeedLive(
   const trpc = useTRPC();
   const [closure, setClosure] = useState<FeedLive['closure']>(null);
   const receive = useFrames(sessionId, { cacheId, shown });
-  const lastEventId = useResumePoint(cacheId, { shown, loaded });
+
+  const { lastEventId, read, reread } = useResumePoint(cacheId, {
+    shown,
+    loaded,
+  });
 
   const changes = useSubscription(
     trpc.feed.subscribe.subscriptionOptions(
@@ -125,14 +161,20 @@ export function useFeedLive(
     ),
   );
 
-  useResubscribeOnReconnect(changes);
+  // A new open starts after the newest revision the cache holds: a new id opens it by itself, the same one starts it again.
+  const reopen = (): void => {
+    if (read() === lastEventId) changes.reset();
+    else reread();
+  };
+
+  useResubscribeOnReconnect({ status: changes.status, reset: reopen });
 
   return {
     changes,
     closure,
     retryOpen: (): void => {
       setClosure(null);
-      changes.reset();
+      reopen();
     },
   };
 }

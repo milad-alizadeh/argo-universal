@@ -148,7 +148,7 @@ function pointOfEvent(
 }
 
 /*
- * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none.
+ * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none. An App that gives no `lastEventId` is one from before event ids, which reads plain events.
  */
 export async function* trackedFeed(
   resources: FeedDeps,
@@ -161,6 +161,8 @@ export async function* trackedFeed(
     const point = pointOfEvent(epoch, event);
 
     epoch = point?.epoch ?? epoch;
-    yield point ? tracked(feedEventId(point), event) : event;
+    yield point && input.lastEventId !== undefined
+      ? tracked(feedEventId(point), event)
+      : event;
   }
 }

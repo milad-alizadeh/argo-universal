@@ -14,9 +14,10 @@ import {
   type TRPCClient,
 } from '@trpc/client';
 import { type Observer, observable } from '@trpc/server/observable';
-import { type JSX, useEffect } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import {
   ConnectionContext,
+  useConnectionState,
   TRPCProvider,
   type Connection,
   type ConnectionState,
@@ -77,6 +78,8 @@ interface Server {
   // Each `feed.page` the App read.
   pageReads: FeedPageInput[];
   open: Wire | undefined;
+  // How many `feed.subscribe` the App has closed.
+  closed: number;
   // The tail page the Server answers; null holds the answer back.
   tail: Promise<FeedPageOutput>;
 }
@@ -139,15 +142,20 @@ function clientOf(server: Server): TRPCClient<AppRouter> {
       () =>
         ({ op }) =>
           observable((wire: Wire) => {
-            if (op.path === 'feed.page')
+            if (op.path === 'feed.page') {
               answerPage(server, wire, FeedPageInput.parse(op.input));
-            else if (op.path === 'feed.subscribe')
-              openSubscription(
-                server,
-                wire,
-                FeedSubscribeInput.parse(op.input),
-              );
-            else throw new Error(`Unexpected request: ${op.path}`);
+
+              return (): void => {};
+            }
+
+            if (op.path !== 'feed.subscribe')
+              throw new Error(`Unexpected request: ${op.path}`);
+
+            openSubscription(server, wire, FeedSubscribeInput.parse(op.input));
+
+            return (): void => {
+              server.closed += 1;
+            };
           }),
     ],
   });
@@ -162,8 +170,12 @@ export interface FeedLiveFixture {
   send: (event: FeedSubscribeOutput) => void;
   // Ends the open subscription with an error, as a dropped socket does.
   fail: () => void;
-  // The Connection changes state.
-  connect: (state: ConnectionState) => void;
+  // The Connection changes state; this settles once the screen has drawn it.
+  connect: (state: ConnectionState) => Promise<void>;
+  noteConnection: (state: ConnectionState) => void;
+  // The Session is shown to the reader, or hidden from them.
+  show: (shown: boolean) => void;
+  onShown: (set: (shown: boolean) => void) => void;
   connection: Connection;
   client: TRPCClient<AppRouter>;
   // What the screen holds of the Session's Feed, as of its last render.
@@ -200,6 +212,44 @@ function seed(queryClient: ReturnType<typeof createQueryClient>): void {
   queryClient.setQueryData(snapshotKey(sessionId), streamed.snapshot);
 }
 
+const newServer = (tail: Promise<FeedPageOutput>): Server => ({
+  opened: [],
+  pageReads: [],
+  open: undefined,
+  closed: 0,
+  tail,
+});
+
+interface ConnectionWatch {
+  connect: (state: ConnectionState) => Promise<void>;
+  note: (state: ConnectionState) => void;
+}
+
+// Moves the Connection, and settles once the screen has drawn the state it moved to.
+function watchConnection(link: Link): ConnectionWatch {
+  let drawn: ConnectionState = 'open';
+  const waiting: [ConnectionState, () => void][] = [];
+
+  return {
+    connect: (state) => {
+      link.state = state;
+
+      for (const listener of link.listeners) listener();
+
+      return drawn === state
+        ? Promise.resolve()
+        : new Promise((resolve) => void waiting.push([state, resolve]));
+    },
+    note: (state) => {
+      drawn = state;
+
+      for (const [wanted, resolve] of waiting.splice(0))
+        if (wanted === state) resolve();
+        else waiting.push([wanted, resolve]);
+    },
+  };
+}
+
 // A Session's Feed as an App that opened it before holds it (unless `seeded` is false, and then its tail page waits for `answerTail`), with a Server whose answers a fake link gives.
 export function feedLiveFixture({
   seeded = true,
@@ -208,14 +258,10 @@ export function feedLiveFixture({
   const link: Link = { state: 'open', listeners: new Set() };
   const answer = Promise.withResolvers<FeedPageOutput>();
 
-  const server: Server = {
-    opened: [],
-    pageReads: [],
-    open: undefined,
-    tail: answer.promise,
-  };
-
+  const server = newServer(answer.promise);
+  const watching = watchConnection(link);
   let held: ReturnType<typeof useSessionFeed> | undefined;
+  let setShown: ((shown: boolean) => void) | undefined;
 
   if (seeded) seed(queryClient);
 
@@ -226,10 +272,11 @@ export function feedLiveFixture({
     send: (data) => server.open?.next({ result: { type: 'data', data } }),
     fail: () =>
       server.open?.error(TRPCClientError.from(new Error('Socket lost'))),
-    connect: (state) => {
-      link.state = state;
-
-      for (const listener of link.listeners) listener();
+    connect: watching.connect,
+    noteConnection: watching.note,
+    show: (shown) => setShown?.(shown),
+    onShown: (set) => {
+      setShown = set;
     },
     connection: connectionOf(link),
     client: clientOf(server),
@@ -250,9 +297,13 @@ function Screen({
   fixture: FeedLiveFixture;
   shown: boolean;
 }): JSX.Element {
-  const feed = useSessionFeed(sessionId, undefined, shown);
+  const [visible, setVisible] = useState(shown);
+  const feed = useSessionFeed(sessionId, undefined, visible);
+  const connection = useConnectionState();
 
   useEffect(() => fixture.hold(feed));
+  useEffect(() => fixture.onShown(setVisible), [fixture]);
+  useEffect(() => fixture.noteConnection(connection), [fixture, connection]);
 
   return <span>{`${feed.revision} ${feed.openError?.message ?? ''}`}</span>;
 }

@@ -67,6 +67,7 @@ function noteOpens(data: string, opens: Open[]): void {
     });
 }
 
+// A phone coming back to the foreground with a dead socket: `connection.foreground()` (called from the App's AppState handler, apps/universal-app/src/app/_layout.tsx) lets the wsClient's waiting reconnect attempt go at once (stores/connection.test.ts, 'allows a waiting attempt at once when the App comes to the foreground'), and the reconnect is the one this test drives.
 it('sends one re-open of a Feed subscription after the last event id it received when the socket is lost', async () => {
   const host = await startAcpEngine();
 
@@ -131,7 +132,14 @@ it('sends one re-open of a Feed subscription after the last event id it received
   await vi.waitFor(() => expect(opens.length).toBeGreaterThan(1), {
     timeout: 10_000,
   });
-  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  // A later event on the new socket shows the Feed is live again, and that no second open followed the first.
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Third' }],
+  });
+  await waitForAcpSessionIdle(host, created.sessionId);
+  await vi.waitFor(() => expect(ids.at(-1)).not.toBe(newest));
 
   expect(opens.slice(1)).toEqual([{ input: first, resumedFrom: newest }]);
 }, 30_000);
