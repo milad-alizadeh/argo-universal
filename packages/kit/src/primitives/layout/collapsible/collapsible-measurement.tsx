@@ -37,14 +37,17 @@ function useMeasuredHeight(
   const [measured, setMeasured] = useState(false);
   const [renderedHeight, setRenderedHeight] = useState(0);
 
-  const recordHeight = useCallback((height: number): void => {
-    contentHeight.current = height;
+  const recordHeight = useCallback(
+    (height: number): void => {
+      contentHeight.current = height;
 
-    if (resting.current) return;
+      if (resting.current) return;
 
-    setRenderedHeight(height);
-    setMeasured(true);
-  }, [resting]);
+      setRenderedHeight(height);
+      setMeasured(true);
+    },
+    [resting],
+  );
 
   const forget = useCallback((): void => setMeasured(false), []);
 
