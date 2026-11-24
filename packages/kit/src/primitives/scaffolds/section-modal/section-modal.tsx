@@ -2,15 +2,9 @@ import type { ReactElement, ReactNode } from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { OfferColumn } from '#kit/content-column/content-column';
 import { SidebarGutterHeld } from '#kit/sidebar-gutter';
-import { IconButton } from '#primitives/actions/icon-button';
 import { CentredModalRoot } from '#primitives/overlays/centred-overlay';
-import {
-  ScreenHeadingEndInset,
-  ScreenListColumn,
-} from '#primitives/scaffolds/screen';
+import { ScreenListColumn } from '#primitives/scaffolds/screen';
 import { SectionModalOverlay } from './section-modal-overlay';
-
-export const sectionModalHeadingInset = 48;
 
 const windowMargin = 24;
 
@@ -39,6 +33,7 @@ export function SectionModal(props: SectionModalProps): ReactElement {
     >
       <SectionModalOverlay
         label={props.label}
+        scrimDismissLabel={`Dismiss ${props.label}`}
         onCloseAutoFocus={props.onCloseAutoFocus}
         className="overflow-hidden rounded-3xl bg-content shadow-2xl"
       >
@@ -50,20 +45,7 @@ export function SectionModal(props: SectionModalProps): ReactElement {
           }}
         >
           <ModalList>{props.list}</ModalList>
-          <View className="min-w-0 flex-1">
-            <ScreenHeadingEndInset value={sectionModalHeadingInset}>
-              {props.children}
-            </ScreenHeadingEndInset>
-            <View className="absolute right-8 top-3">
-              <IconButton
-                icon="close"
-                variant="secondary"
-                muted
-                accessibilityLabel={`Close ${props.label}`}
-                onPress={props.onClose}
-              />
-            </View>
-          </View>
+          <View className="min-w-0 flex-1">{props.children}</View>
         </View>
       </SectionModalOverlay>
     </CentredModalRoot>

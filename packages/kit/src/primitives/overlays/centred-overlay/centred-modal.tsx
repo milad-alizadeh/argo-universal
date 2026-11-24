@@ -123,10 +123,21 @@ function contentHandlers(props: CentredModalFrameProps): ContentHandlers {
   };
 }
 
-// The card alone, for a modal drawn in a region of its own with no scrim.
+// A labelled scrim belongs inside Dialog.Content so it stays in the accessibility tree and focus trap.
 export function CentredModalFrame(props: CentredModalFrameProps): ReactElement {
+  const scrimLabel = mayDismiss(props.dismissible)
+    ? props.scrimDismissLabel
+    : undefined;
+
   return (
-    <RadixDialog.Content {...contentHandlers(props)} className="outline-none">
+    <RadixDialog.Content
+      {...contentHandlers(props)}
+      className={
+        scrimLabel
+          ? 'absolute inset-0 isolate grid place-items-center outline-none'
+          : 'outline-none'
+      }
+    >
       <View
         className={props.className}
         accessibilityLabel={props.accessibilityLabel}
@@ -134,6 +145,12 @@ export function CentredModalFrame(props: CentredModalFrameProps): ReactElement {
         <ModalLabel label={props.label} />
         {props.children}
       </View>
+      {scrimLabel && (
+        <RadixDialog.Close
+          aria-label={scrimLabel}
+          className="absolute inset-0 -z-10 focus-visible:outline-2 focus-visible:-outline-offset-2"
+        />
+      )}
     </RadixDialog.Content>
   );
 }

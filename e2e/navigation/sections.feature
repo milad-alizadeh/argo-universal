@@ -24,10 +24,10 @@ Feature: Sections
     And focus returns to the Settings rail tile
 
     Examples:
-      | control |
-      | Escape  |
-      | Close   |
-      | the dim |
+      | control                 |
+      | Escape                  |
+      | the dim                 |
+      | the accessible backdrop |
 
   Scenario: Reopening Settings shows its last page
     Given a wide Frame
