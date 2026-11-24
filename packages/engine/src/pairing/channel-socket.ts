@@ -67,6 +67,14 @@ export class ChannelSocket extends Duplex {
     }
   }
 
+  // A WebSocket writes a message's header and payload back to back, so they are joined into one record rather than sealed as two.
+  public override _writev(
+    chunks: { chunk: Buffer }[],
+    done: (error?: Error | null) => void,
+  ): void {
+    this._write(Buffer.concat(chunks.map(({ chunk }) => chunk)), 'utf8', done);
+  }
+
   public override _final(done: (error?: Error | null) => void): void {
     this.socket.end();
     done();
