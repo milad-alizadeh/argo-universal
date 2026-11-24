@@ -133,7 +133,11 @@ export async function watchRuntime(
 function requireRowEvent(
   event: Exclude<FeedSubscribeOutput, { type: 'snapshot' }>,
 ): Parameters<typeof applyRuntimeRow>[1] {
-  if (event.type === 'closed' || event.type === 'reset')
+  if (
+    event.type === 'closed' ||
+    event.type === 'reset' ||
+    event.type === 'tail'
+  )
     throw new Error(`Feed ${event.type} during runtime observation`);
 
   return event;
