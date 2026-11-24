@@ -84,13 +84,30 @@ it('opens an undragged Inspector into the room the list leaves, without folding 
   expect(wide.inspector.width).toBe(600);
 });
 
-it('folds the list for an Inspector a drag widened', () => {
-  const layout = frameLayout({
-    ...input,
-    inspectorState: 'open',
-    preferredInspectorWidth: 600,
-  });
+it.each([
+  { width: 1728, listWidth: 460 },
+  { width: 1440, listWidth: 312 },
+  { width: 1439, listWidth: 0 },
+])(
+  'fits the sidebar, saved Inspector and Feed together at $width when there is room',
+  ({ width, listWidth }) => {
+    const at = {
+      ...input,
+      width,
+      preferredListWidth: 460,
+      preferredInspectorWidth: 760,
+    };
 
-  expect(layout.list.folded).toBe(true);
-  expect(layout.inspector.width).toBe(600);
-});
+    const closed = frameLayout(at);
+    const opened = frameLayout({ ...at, inspectorState: 'open' });
+
+    expect(closed.list.folded).toBe(false);
+    expect(opened.thresholds.listFold).toBe(1440);
+    expect(opened.list.folded).toBe(width < 1440);
+    expect(opened.inspector.open).toBe(true);
+    expect(opened.page.width).toBeGreaterThanOrEqual(688);
+
+    expect(opened.list.width).toBe(listWidth);
+    expect(opened.inspector.width).toBeGreaterThanOrEqual(352);
+  },
+);

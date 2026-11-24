@@ -1,5 +1,6 @@
+import { Surface } from '@repo/kit/primitives/layout/surface';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-import { ScrollView, View, type ViewProps } from 'react-native';
+import { Platform, ScrollView, View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { bandWorkbench } from '#lib/product/window-band';
 import { useFrameSlide } from '../hooks/use-frame-offset';
@@ -39,7 +40,7 @@ function WorkbenchPanel({
 
 type PanelProps = ComponentProps<typeof Animated.View> & { inert: boolean };
 
-// The panel slides without fading: a translucent panel would stop its cards' frost blurring the page under them.
+// Keep the moving wrapper opaque so glass can sample the page through it.
 function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
   const placement = workbenchPlacement(layout);
   const { visible } = placement.motion;
@@ -53,7 +54,11 @@ function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
     ...slide,
     testID: 'desktop-workbench',
     className: placement.className,
-    style: [placement.style, style, !visible && { opacity: 0 }],
+    style: [
+      placement.style,
+      style,
+      Platform.OS !== 'web' && !visible && { opacity: 0 },
+    ],
     ...visibilityProps(visible),
   };
 }
@@ -88,27 +93,28 @@ function workbenchPlacement({
   };
 }
 
-const shadowScrollProps = {
+const scrollProps = {
   role: 'region',
   accessibilityLabel: 'Workbench overview',
-  // box-none restores direct children's input, so the full-height frame must opt out explicitly.
-  className: 'min-h-0 flex-1 -mx-8 -mt-8 web:pointer-events-none!',
-  pointerEvents: 'box-none',
-  contentContainerStyle: { pointerEvents: 'box-none' },
-  contentContainerClassName: 'px-8 pt-8 pb-16 web:pointer-events-none!',
+  className: 'grow-0',
 } satisfies ComponentProps<typeof ScrollView>;
 
 /*
- * The cards have no backing of their own, so what an overlaid Workbench covers shows through their glass and nothing
- * clips them. The scroll view fades no edge: the web's fade is a mask, and a mask would make the scroll view the
- * glass's backdrop, so the cards would blur nothing of the Feed behind them.
+ * One panel holds every card, as the Inspector's does, each card a section parted from the next by a hairline.
+ * It takes its cards' height up to the column's and scrolls past that: the panel fills the column only as far as its
+ * cards reach, and shrinks to it once they reach further.
  */
 function WorkbenchScroll(props: { children: ReactNode }): ReactElement {
+  // The iPad panel can cover the Feed. Give its text an opaque backing.
+  const material = Platform.OS === 'ios' ? 'card' : 'glass';
+
   return (
-    <ScrollView {...shadowScrollProps}>
-      <View pointerEvents="auto" className="gap-2">
-        {props.children}
-      </View>
-    </ScrollView>
+    <View pointerEvents="auto" className="max-h-full">
+      <Surface kind={material} fill={Platform.OS === 'web'}>
+        <View className="min-h-0 shrink overflow-hidden rounded-2xl">
+          <ScrollView {...scrollProps}>{props.children}</ScrollView>
+        </View>
+      </Surface>
+    </View>
   );
 }

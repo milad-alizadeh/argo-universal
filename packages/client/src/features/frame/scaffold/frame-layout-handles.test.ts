@@ -99,11 +99,11 @@ describe('the Inspector handle agrees with the layout', () => {
       preferredInspectorWidth: 600,
     });
 
-    expect(untouched.list.folded).toBe(true);
+    expect(untouched.list.folded).toBe(false);
     expect(untouched.page.width).toBeGreaterThanOrEqual(688);
   });
 
-  it('folds the list before the content a drag narrowed gives more', () => {
+  it('does not reopen the sidebar solely because a drag reduced the content floor', () => {
     const dragged = {
       ...input,
       inspectorState: 'open' as const,
@@ -133,7 +133,7 @@ describe('the Inspector handle agrees with the layout', () => {
   });
 
   it('lowers no floor for an Inspector left at its default width', () => {
-    const narrow = { ...input, width: 1100, inspectorState: 'open' as const };
+    const narrow = { ...input, width: 1020, inspectorState: 'open' as const };
     const { inspector } = frameLayout(narrow).handles;
 
     expect(frameLayout(narrow).page.width).toBeLessThan(688);

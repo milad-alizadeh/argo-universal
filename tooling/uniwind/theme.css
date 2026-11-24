@@ -232,6 +232,10 @@
   /* The rail on a wide window; the web narrows it below. */
   --spacing-frame-rail: 80px;
   --spacing-frame-control: 44px;
+  /* The floating panels start this far below the window's top, so the title bar's 32 buttons, centred with the window
+     buttons half a frame control down, fit inside them; the panels' content starts a frame control down. */
+  --spacing-frame-top: 6px;
+  --spacing-frame-title-bar: 38px;
   --spacing-frame-list: 312px;
   --spacing-frame-inspector: 352px;
   --spacing-frame-inset: 8px;

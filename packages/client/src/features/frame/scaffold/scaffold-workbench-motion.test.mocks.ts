@@ -59,6 +59,7 @@ interface WorkbenchSlide {
   startTime: Animation['startTime'];
   currentTime: Animation['currentTime'];
   positions: number[];
+  backdropSafe: boolean;
 }
 
 // Hold the same task that creates the animation, as a heavy render does before the browser can paint.
@@ -68,6 +69,28 @@ function holdMainThread(milliseconds: number): void {
   while (performance.now() < until) {
     // The browser cannot paint during this task.
   }
+}
+
+function preservesGlassBackdrop(workbench: HTMLElement): boolean {
+  const glass = [...workbench.querySelectorAll('div')].find(
+    (part) => getComputedStyle(part).backdropFilter !== 'none',
+  );
+
+  if (!glass) throw new Error('The Workbench needs a backdrop-filter surface.');
+
+  return glassHasOpaqueAncestors(glass);
+}
+
+export function glassHasOpaqueAncestors(glass: Element): boolean {
+  for (
+    let ancestor = glass.parentElement;
+    ancestor;
+    ancestor = ancestor.parentElement
+  ) {
+    if (Number(getComputedStyle(ancestor).opacity) < 1) return false;
+  }
+
+  return true;
 }
 
 // Pause the real element animation before sampling it so a slow runner cannot skip its middle.
@@ -108,15 +131,18 @@ export async function sampleWorkbenchSlide(
       throw new Error('The Workbench slide needs a positive duration.');
     }
 
+    let backdropSafe = true;
+
     const positions = Array.from({ length: 12 }, (_, index) => {
       animation.currentTime = (duration * index) / 12;
+      backdropSafe = preservesGlassBackdrop(workbench) && backdropSafe;
 
       return getComputedStyle(workbench).opacity === '0'
         ? Number.NaN
         : Math.round(workbench.getBoundingClientRect().left);
     });
 
-    return { startTime, currentTime, positions };
+    return { startTime, currentTime, positions, backdropSafe };
   } finally {
     spy.mockRestore();
     captured?.animation.cancel();

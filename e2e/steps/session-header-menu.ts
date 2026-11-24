@@ -3,9 +3,12 @@ import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 import { sessionWithStatus } from './live-session';
 
-// ⋯ in the open Session's header.
-async function openHeaderMenu(page: Page): Promise<Locator> {
-  await page.getByRole('button', { name: 'More', exact: true }).click();
+const sessionTitle = (page: Page): Locator =>
+  page.getByTestId('window-band-title').getByRole('button');
+
+// The Session title opens its menu in the window band.
+export async function openHeaderMenu(page: Page): Promise<Locator> {
+  await sessionTitle(page).click();
 
   return page.getByRole('menu');
 }
@@ -27,7 +30,9 @@ Then(
   'the Session page and its row are titled {string}',
   async ({ page }, title: string): Promise<void> => {
     await expect(
-      page.getByRole('heading', { name: title, exact: true }),
+      sessionTitle(page).and(
+        page.getByRole('button', { name: title, exact: true }),
+      ),
     ).toBeVisible();
     await expect(sessionWithStatus(page, title, 'Idle')).toBeVisible();
   },
@@ -41,12 +46,12 @@ When(
   },
 );
 
-// A Plugin's first header action: a button beside ⋯ on the web.
+// The wide Frame holds the first Plugin action in the trailing window band.
 When(
   'I press {string} in the Session header',
   async ({ page }, name: string): Promise<void> => {
     await page
-      .getByTestId('desktop-detail')
+      .getByTestId('window-band-trailing')
       .getByRole('button', { name, exact: true })
       .click();
   },
@@ -71,6 +76,7 @@ Then(
  */
 Then('no Session page is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions(\/new)?$/);
+  await expect(sessionTitle(page)).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'More', exact: true }),
   ).toHaveCount(0);

@@ -6,15 +6,22 @@ import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
+import { trailingPill } from './band-geometry';
+import { bandGeometryInput } from './band-input';
 import { shownInspectorState } from './inspector-column';
+import {
+  InspectorGlass,
+  type InspectorBox,
+  inspectorSurface,
+} from './inspector-glass';
 import { isFramed } from './is-framed';
 import { ScaffoldBand } from './scaffold-band';
+import { InspectorTitleBar } from './scaffold-band-controls';
 import { PaneBanner, type PaneBannerProps } from './scaffold-chrome';
 import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import { ScaffoldWorkbench } from './scaffold-workbench';
 import {
-  type PartReads,
   type ScaffoldPartProps,
   useScaffoldLayout,
 } from './use-scaffold-layout';
@@ -42,10 +49,7 @@ export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
 
 export type PanePlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
-type InspectorReads = PartReads<
-  'inspector',
-  'inspector' | 'motion' | 'measures'
->;
+type InspectorReads = ScaffoldPartProps;
 
 const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   offset: layout.inspector.offset,
@@ -54,24 +58,75 @@ const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   ...layout.motion,
 });
 
+/*
+ * The Inspector's glass: the open panel, the closed Inspector's capsule round the title bar's buttons, or, with no
+ * buttons to hold, the panel faded past the window's edge.
+ */
+function inspectorBox(parts: InspectorReads): InspectorBox {
+  const { layout } = parts;
+  const { inspector, measures } = layout;
+
+  const panel = {
+    x: inspector.offset,
+    y: -measures.titleBarHeight,
+    width: inspector.width,
+    height: null,
+    bottom: measures.inset,
+    opacity: 1,
+  };
+
+  if (inspector.open) return panel;
+  const pill = trailingPill(bandGeometryInput(parts));
+
+  if (!pill)
+    return {
+      ...panel,
+      x: layout.width,
+      width: measures.inspectorWidth,
+      opacity: 0,
+    };
+  const top = layout.safeTop + layout.panesTop;
+
+  return {
+    ...pill,
+    y: pill.y - top,
+    bottom: 0,
+    opacity: 1,
+  };
+}
+
+// The Inspector floats as the sidebar does: its panel runs up beside the title bar, whose row it holds its controls in.
 function FramedInspector(parts: InspectorReads): React.JSX.Element {
   return (
-    <View className="absolute top-0 flex-row" style={inspectorPosition(parts)}>
-      <FramePane
-        testID="desktop-inspector"
-        surface="glass"
-        {...inspectorPlacement(parts)}
+    <InspectorGlass box={inspectorBox(parts)} {...parts.layout.motion}>
+      <View
+        pointerEvents="box-none"
+        className="absolute flex-row"
+        style={inspectorPosition(parts)}
       >
-        <InspectorControlsContext value={true}>
-          {parts.scaffold.inspector(parts.layout.inspector.expanded)}
-        </InspectorControlsContext>
-      </FramePane>
-    </View>
+        <FramePane
+          testID="desktop-inspector"
+          surface={inspectorSurface}
+          {...inspectorPlacement(parts)}
+        >
+          <InspectorTitleBar {...parts} />
+          <View className="min-h-0 flex-1">
+            <InspectorControlsContext value={true}>
+              {parts.scaffold.inspector(parts.layout.inspector.expanded)}
+            </InspectorControlsContext>
+          </View>
+        </FramePane>
+      </View>
+    </InspectorGlass>
   );
 }
 
 function inspectorPosition({ layout }: InspectorReads): ViewStyle {
-  return { left: layout.inspector.offset, bottom: layout.measures.inset };
+  return {
+    left: layout.inspector.offset,
+    top: -layout.measures.titleBarHeight,
+    bottom: layout.measures.inset,
+  };
 }
 
 type BannerPlacement = Pick<PaneBannerProps, 'left' | 'width'>;
@@ -90,17 +145,40 @@ function bannerPlacement({
 }
 
 // A press anywhere outside the Workbench opened over the content closes it, as Codex's popover does.
+interface DismissProps extends Pick<ScaffoldParts, 'layout'> {
+  testID: string;
+  // Where the press lands: the whole window under the Workbench, or the Inspector over it.
+  style?: ViewStyle;
+}
+
 function WorkbenchDismiss({
   layout,
-}: Pick<ScaffoldParts, 'layout'>): React.JSX.Element | null {
+  testID,
+  style,
+}: DismissProps): React.JSX.Element | null {
   if (layout.workbench.state !== 'overlay') return null;
 
   return (
     <Pressable
-      testID="workbench-dismiss"
+      testID={testID}
       accessibilityLabel="Close Workbench"
-      className="absolute inset-0"
+      className={style ? 'absolute' : 'absolute inset-0'}
+      style={style}
       onPress={() => layout.setWorkbenchPopover(false)}
+    />
+  );
+}
+
+// The Inspector covers the Workbench, so a press on the Inspector closes the popover from above it.
+function InspectorDismiss(parts: InspectorReads): React.JSX.Element | null {
+  return (
+    <WorkbenchDismiss
+      layout={parts.layout}
+      testID="workbench-dismiss-inspector"
+      style={{
+        ...inspectorPosition(parts),
+        width: parts.layout.inspector.width,
+      }}
     />
   );
 }
@@ -108,9 +186,10 @@ function WorkbenchDismiss({
 function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
-      <FramedInspector {...parts} />
-      <WorkbenchDismiss layout={parts.layout} />
+      <WorkbenchDismiss layout={parts.layout} testID="workbench-dismiss" />
       <ScaffoldWorkbench {...parts} />
+      <FramedInspector {...parts} />
+      <InspectorDismiss {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner {...bannerPlacement(parts)}>
         {parts.scaffold.banner}
@@ -119,7 +198,7 @@ function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   );
 }
 
-// The Inspector, Workbench and handles share the panes' origin below the band.
+// The Inspector, Workbench and handles share the panes' origin below the band. The Inspector floats over the Workbench, which slides out from under its edge.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
     <View
@@ -148,18 +227,11 @@ const frameEdges = (parts: ScaffoldParts): FrameEdges =>
 
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// A framed tablet's panes start under the status bar; the window surface still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
-function frameTop(parts: ScaffoldParts): ViewStyle {
-  return {
-    paddingTop: parts.framed ? parts.layout.safeTop + parts.layout.panesTop : 0,
-  };
-}
-
+// The sidebar's panel runs up beside the title bar, so the page and the sidebar each set their own top.
 const frameViewProps = (parts: ScaffoldParts): ViewProps => ({
   // Named for the Size class it lays out, such as `wide-frame`.
   testID: `${parts.scaffold.sizeClass}-frame`,
   className: 'flex-1 flex-row overflow-hidden bg-content',
-  style: frameTop(parts),
   onLayout: parts.layout.onLayout,
 });
 

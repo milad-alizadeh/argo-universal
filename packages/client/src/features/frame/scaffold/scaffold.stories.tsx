@@ -5,6 +5,7 @@ import { action } from 'storybook/actions';
 import { sectionOrder } from '../../../lib/product/navigation/sections';
 import { InspectorFilesMock } from './inspector-files.mocks';
 import {
+  closedPanelsScaffold,
   collapsedSidebarScaffold,
   mediumScaffold,
   openInspectorScaffold,
@@ -54,7 +55,13 @@ type Story = StoryObj<typeof meta>;
 // The rail, the sidebar's list and the page; callbacks report rail and divider changes.
 export const Wide: Story = { args: wideScaffold };
 
-// Paper's "Rail B · collapsed": only the rail stays on the glass, on the window surface.
+// The sidebar and the Inspector closed, their controls in the title bar's leading and trailing capsules.
+export const PanelsClosed: Story = {
+  name: 'Panels closed',
+  args: closedPanelsScaffold,
+};
+
+// The sidebar closed with the rail, beside the page and its open Inspector.
 export const SidebarHidden: Story = {
   name: 'Sidebar hidden',
   args: collapsedSidebarScaffold,

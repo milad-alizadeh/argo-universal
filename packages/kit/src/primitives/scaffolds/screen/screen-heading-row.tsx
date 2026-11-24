@@ -15,7 +15,7 @@ import { HeadingActions } from './screen-heading-actions';
 import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
-import { ScreenTitle } from './screen-title-menu';
+import { ScreenTitle, type TitleRole } from './screen-title-menu';
 
 /*
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
@@ -66,7 +66,7 @@ function HeadingCaption(props: ScreenHeaderInput): ReactNode {
  * sidebar's, its buttons the window band's size, since it sits above a list beside its page. A List that is selecting replaces it with its
  * own header (ADR-0043).
  */
-type HeadingPlacement = 'page' | 'list';
+type HeadingPlacement = 'page' | 'list' | 'bar';
 
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 
@@ -99,7 +99,14 @@ function DeclaredHeading(props: DeclaredHeadingProps): ReactElement {
   );
 }
 
-type Look = { titleLevel: number; buttonSize: IconButtonSize };
+type Look = {
+  titleLevel: number;
+  buttonSize: IconButtonSize;
+  // The title bar draws the header's buttons among the window's own, apart from the title.
+  apartActions?: boolean;
+  // A title in the window's title bar is the Heading role, bold at body size, as a window's title is.
+  titleRole?: TitleRole;
+};
 
 // The title, a menu button when it has a menu, and the header's buttons, in the placement's looks.
 const headingContent = (
@@ -107,7 +114,7 @@ const headingContent = (
   look: Look,
 ): HeadingContent => ({
   title: headingTitle(props, look),
-  actions: headingActions(props, look),
+  actions: look.apartActions ? null : headingActions(props, look),
 });
 
 const headingTitle = (
@@ -118,6 +125,7 @@ const headingTitle = (
     title={props.title}
     level={look.titleLevel}
     groups={props.titleGroups}
+    role={look.titleRole}
   />
 );
 
@@ -139,7 +147,27 @@ const headingActions = (
 const placements: Record<HeadingPlacement, Look & { sidebar: boolean }> = {
   page: { titleLevel: 1, buttonSize: chromeControlSize, sidebar: false },
   list: { titleLevel: 2, buttonSize: chromeControlSize, sidebar: true },
+  bar: {
+    titleLevel: 1,
+    buttonSize: chromeControlSize,
+    sidebar: false,
+    titleRole: 'heading',
+    apartActions: true,
+  },
 };
+
+// The header's buttons in the window's title bar, at the window controls' size.
+export function TitleBarActions(props: ScreenHeaderInput): ReactElement {
+  return (
+    <FixedSizeChrome>
+      <HeadingActions
+        header={props.headers.heading}
+        size={placements.bar.buttonSize}
+        options={props.pageOptions}
+      />
+    </FixedSizeChrome>
+  );
+}
 
 function Heading(props: {
   content: HeadingContent;

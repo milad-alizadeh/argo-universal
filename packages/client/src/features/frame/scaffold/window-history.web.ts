@@ -5,7 +5,7 @@ import type { HistoryStep, WindowHistory } from './window-history';
 
 export type { HistoryStep, WindowHistory } from './window-history';
 
-// The Navigation API reports where history can go; a browser without it leaves both buttons enabled.
+// The Navigation API reports where history can go. Without it Forward is unavailable.
 const navigation = (): Navigation | undefined =>
   'navigation' in window ? window.navigation : undefined;
 
@@ -18,7 +18,7 @@ function subscribe(onChange: () => void): () => void {
 
 const canGoBack = (): boolean => navigation()?.canGoBack ?? true;
 
-const canGoForward = (): boolean => navigation()?.canGoForward ?? true;
+const canGoForward = (): boolean => navigation()?.canGoForward ?? false;
 
 const historyBack = (): void => window.history.back();
 
@@ -46,3 +46,5 @@ export function useWindowHistory(): WindowHistory {
     forward: { enabled: forward, go: historyForward },
   };
 }
+
+export const hasWindowHistory = true;

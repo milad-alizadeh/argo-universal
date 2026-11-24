@@ -13,7 +13,10 @@ import {
 } from '#lib/product/session-column';
 import { openNewShell } from './sections/runs-section';
 import type { SessionDetailViewProps } from './session-detail-view';
-import { sessionHeaderActions } from './session-header-actions';
+import {
+  sessionHeaderActions,
+  sessionTitleBarActions,
+} from './session-header-actions';
 import {
   type HeaderPlacement,
   type ToggleWorkbenchCard,
@@ -42,8 +45,8 @@ export function SessionPageHeader(
 
   return (
     <SizeClass
-      compact={stackHeader(props, true)}
-      wide={stackHeader(props, false, headingColumn)}
+      compact={compactHeader(props)}
+      wide={wideHeader(props, headingColumn)}
     />
   );
 }
@@ -84,22 +87,52 @@ function directActions(
   ];
 }
 
-function stackHeader(
+const menuOf = (
   props: SessionDetailViewProps,
-  compact: boolean,
-  headingColumn?: React.ComponentProps<
+):
+  | Extract<SessionDetailViewProps, { state: 'open' }>['header']['menu']
+  | undefined => (props.state === 'open' ? props.header.menu : undefined);
+
+const titleOf = (props: SessionDetailViewProps): string =>
+  props.state === 'open' ? props.header.title : 'Session';
+
+// A phone keeps the Session's actions under ⋯ in its stack header.
+function compactHeader(props: SessionDetailViewProps): React.JSX.Element {
+  return (
+    <ScreenStackHeader
+      title={titleOf(props)}
+      actions={sessionHeaderActions(
+        menuOf(props),
+        pluginActionsOf(props),
+        directActions(props, true),
+      )}
+    />
+  );
+}
+
+/*
+ * A wide window titles the Session in its title bar, as Claude's and Codex's do: the title opens the Session's menu,
+ * and the direct Actions sit beside it. Where no title bar is offered the heading stays at the column's top.
+ */
+function wideHeader(
+  props: SessionDetailViewProps,
+  headingColumn: React.ComponentProps<
     typeof ScreenStackHeader
   >['headingColumn'],
 ): React.JSX.Element {
+  const { titleMenu, actions } = sessionTitleBarActions(
+    menuOf(props),
+    pluginActionsOf(props),
+    directActions(props, false),
+  );
+
   return (
     <ScreenStackHeader
+      inTitleBar
       headingColumn={headingColumn}
-      title={props.state === 'open' ? props.header.title : 'Session'}
-      actions={sessionHeaderActions(
-        props.state === 'open' ? props.header.menu : undefined,
-        pluginActionsOf(props),
-        directActions(props, compact),
-      )}
+      title={titleOf(props)}
+      titleMenu={titleMenu}
+      actions={actions}
     />
   );
 }
