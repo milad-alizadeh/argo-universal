@@ -1,5 +1,6 @@
 import { ClockTick } from '@repo/contracts';
 import { startEngineTestHost } from '@repo/engine/mocks';
+import { openAcpFeedSession } from '@repo/engine/mocks/acp-feed';
 import { afterEach, expect, it, vi } from 'vitest';
 import {
   endpointOf,
@@ -11,6 +12,7 @@ import {
   nodeNativeChannel,
   type NodeNativeModule,
 } from '../../../../../mocks/node-native-channel';
+import { phoneOn } from '../../../../../mocks/slow-channel-client';
 import { openConnection } from '../open-connection';
 import { channelServerUrl, createTRPCClient } from '../trpc/create-trpc-client';
 import { createChannelTransport } from './channel-transport';
@@ -23,12 +25,20 @@ afterEach(async () => {
   for (const close of closers.splice(0)) await close();
 });
 
-async function nativeClientTo(host: PairableHost): Promise<{
+async function nativeClientTo(
+  host: PairableHost,
+  keepOffer = true,
+): Promise<{
   client: ReturnType<typeof createTRPCClient>['client'];
   native: NodeNativeModule;
 }> {
   const platform = nodeChannelPlatform(await pairedNodeDevice(host));
-  const { channel, module: native } = nodeNativeChannel(platform.openSocket);
+
+  const { channel, module: native } = nodeNativeChannel(
+    platform.openSocket,
+    keepOffer,
+  );
+
   const { host: address, port, serverPublicKey } = await endpointOf(host);
 
   const transport = createChannelTransport(
@@ -53,6 +63,54 @@ it('reads the Server through the native module, one message string at a time', a
     true,
   );
   expect(native.bytesAfterHandOver()).toBe(0);
+});
+
+const paragraph =
+  'A line of an Agent reply, long enough to cost bytes. '.repeat(40);
+
+const seededFeed = Array.from({ length: 60 }, (_, index) => ({
+  sessionUpdate: 'agent_message_chunk' as const,
+  messageId: `message-${index}`,
+  content: { type: 'text' as const, text: `${index}: ${paragraph}` },
+}));
+
+it('reads a large Feed page through the module at a fraction of its size', async () => {
+  const { host, sessionId } = await openAcpFeedSession(seededFeed);
+  const { client, native } = await nativeClientTo(host);
+
+  const page = await client.feed.page.query({ sessionId, direction: 'tail' });
+  const message = native.messages.find((m) => m.includes('message-59'));
+
+  expect(page.rows.length).toBeGreaterThan(20);
+  expect(message?.length).toBeGreaterThan(90_000);
+  expect(native.wireBytesAfterHandOver()).toBeLessThan(
+    (message?.length ?? 0) / 10,
+  );
+});
+
+it('still pairs and reads the same page, uncompressed, when the Server never sees the offer', async () => {
+  const { host, sessionId } = await openAcpFeedSession(seededFeed);
+  const { client, native } = await nativeClientTo(host, false);
+
+  const page = await client.feed.page.query({ sessionId, direction: 'tail' });
+  const message = native.messages.find((m) => m.includes('message-59'));
+
+  expect(page.rows.length).toBeGreaterThan(20);
+  expect(native.wireBytesAfterHandOver()).toBeGreaterThan(message?.length ?? 0);
+});
+
+it('still reads the same page through a carrier that did not offer compression', async () => {
+  const { host, sessionId } = await openAcpFeedSession(seededFeed);
+  const phone = await phoneOn(host);
+
+  closers.push(phone.close);
+
+  const page = await phone.client.feed.page.query({
+    sessionId,
+    direction: 'tail',
+  });
+
+  expect(page.rows.length).toBeGreaterThan(20);
 });
 
 it('carries a subscription through the native module', async () => {

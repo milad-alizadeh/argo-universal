@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { connectAsDevice } from '#mocks/engine-channel';
+import { connectAsDevice, openChannel } from '#mocks/engine-channel';
 import { PairingRefused } from './connect-channel';
 
 it('gives a Device that spends a Pairing Ticket its own row and a Connection', async (): Promise<void> => {
@@ -96,4 +96,17 @@ it('refuses a Pairing Ticket that has run out of time with its own reason', asyn
     refusal: 'ticket-expired',
   });
   expect(await host.caller.devices.list()).toHaveLength(1);
+});
+
+it('ignores a key in the claim it does not know, so a later App still pairs', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const { ticket } = host.pairing.mint();
+
+  const device = await openChannel(host, {
+    ticket,
+    claimExtras: { futureKey: 'from a later App' },
+  });
+
+  expect(device.deviceId).toEqual(expect.any(String));
+  device.socket.destroy();
 });

@@ -12,7 +12,7 @@ import {
   openChannel,
   type ChannelInput,
 } from '../src/features/connection/api/channel/open-channel';
-import { openWebSocketCarrier } from '../src/features/connection/api/channel/web-socket-carrier';
+import { webSocketCarrierWith } from '../src/features/connection/api/channel/web-socket-carrier';
 import {
   keypairFromPrivateKey,
   type Keypair,
@@ -20,6 +20,11 @@ import {
 import type { PairedEndpoint } from '../src/features/connection/api/server-endpoint';
 
 const keyBytes = 32;
+
+// Node's own WebSocket takes upgrade headers as its second argument, which is how a test stands in for the native module setting them.
+const nodeWebSocketCarrier: OpenSocket = webSocketCarrierWith((url, headers) =>
+  Reflect.construct(WebSocket, [url, { headers }]),
+);
 
 export const nodeRandomBytes = (length: number): Uint8Array =>
   new Uint8Array(randomBytes(length));
@@ -41,7 +46,7 @@ export const nodeChannelPlatform = (
   const key = device.deviceKey ?? newDeviceKey();
 
   return {
-    openSocket: openWebSocketCarrier,
+    openSocket: nodeWebSocketCarrier,
     randomBytes: nodeRandomBytes,
     deviceKey: async () => key,
     claim: () => ({ name: 'Test phone', platform: 'android', ...device.claim }),
@@ -163,8 +168,8 @@ export function silenceable(open: OpenSocket): Silenceable {
   const sockets: ByteSocket[] = [];
   let silent = false;
 
-  const openSocket: OpenSocket = async (to) => {
-    const socket = await open(to);
+  const openSocket: OpenSocket = async (to, headers) => {
+    const socket = await open(to, headers);
     const first = real.length === 0;
     const heard = (): boolean => !(first && silent);
 

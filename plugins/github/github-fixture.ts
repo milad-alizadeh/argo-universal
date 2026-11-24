@@ -42,8 +42,12 @@ export type GitHubFixture = FixtureServices & {
   files: Map<string, FixtureFile[]>;
   // Every token GitHub accepts; empty means every call is a 401.
   accepted: Set<string>;
-  // Set to make every call to `api.github.com` fail with this status, once signed in.
-  failWith: { status: number | null };
+  // Set to make every call to `api.github.com` fail with this status, once signed in; `message` and `headers` are what GitHub says of it.
+  failWith: {
+    status: number | null;
+    message?: string;
+    headers?: Record<string, string>;
+  };
   // Set to hold every call to `api.github.com` until the promise settles: a GitHub that answers slowly.
   stall: { until: Promise<void> | null };
   // The repository each fork was made from, by `owner/repository`.

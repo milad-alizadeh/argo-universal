@@ -20,6 +20,11 @@ private struct Vectors: Decodable {
   let upgradeThenPing: [String]
   let badAcceptUpgrade: String
   let tamperedRecord: String
+  let compressedMessage: String
+  let upgradeThenCompressedMessage: [String]
+  let upgradeThenStoredMessage: [String]
+  let upgradeThenOversizedRecord: [String]
+  let upgradeThenUnknownLeadingByte: [String]
 }
 
 private func bytes(_ hex: String) -> Data {
@@ -56,10 +61,13 @@ private let fixedMask: [UInt8] = [1, 2, 3, 4]
 
 final class ChannelCoreTests: XCTestCase {
   // The channel as JavaScript hands it over: each direction has sealed or opened the vector's record 0.
-  private func session(_ vectors: Vectors, deliver: @escaping (Data) -> Void = { _ in }) -> ChannelSession {
+  private func session(
+    _ vectors: Vectors, compression: Bool = false, deliver: @escaping (Data) -> Void = { _ in }
+  ) -> ChannelSession {
     ChannelSession(
       sendKey: bytes(vectors.sendKey), sendRecords: 1, receiveKey: bytes(vectors.receiveKey), receiveRecords: 1,
-      upgrade: "GET / HTTP/1.1\r\n\r\n", accept: vectors.accept, deliver: deliver, randomMask: { fixedMask })
+      upgrade: "GET / HTTP/1.1\r\n\r\n", accept: vectors.accept, compression: compression, deliver: deliver,
+      randomMask: { fixedMask })
   }
 
   func testTheCipherAgreesWithThePublishedVectorRecords() throws {
@@ -134,6 +142,52 @@ final class ChannelCoreTests: XCTestCase {
     let frame = [UInt8](try server.open(replies[0].dropFirst(2)))
     XCTAssertEqual(frame[0], 0x8a)
     XCTAssertEqual(frame[1] & 0x80, 0x80)
+  }
+
+  // With compression agreed every record opens with a byte: the Server's raw deflate is inflated, and a message it sent as it is passes through.
+  func testADeflatedRecordArrivesAsItsMessage() throws {
+    let vectors = try loadVectors()
+
+    let events = try session(vectors, compression: true).receive(joined(vectors.upgradeThenCompressedMessage))
+
+    XCTAssertEqual(events, [.open, .message(vectors.compressedMessage)])
+    XCTAssertGreaterThan(vectors.compressedMessage.utf8.count, 3000)
+  }
+
+  func testAStoredRecordArrivesAsItsMessage() throws {
+    let vectors = try loadVectors()
+
+    let events = try session(vectors, compression: true).receive(joined(vectors.upgradeThenStoredMessage))
+
+    XCTAssertEqual(events, [.open, .message(vectors.message)])
+  }
+
+  func testARecordThatInflatesBeyondWhatARecordHoldsIsRefused() throws {
+    let vectors = try loadVectors()
+
+    XCTAssertThrowsError(try session(vectors, compression: true).receive(joined(vectors.upgradeThenOversizedRecord))) {
+      XCTAssertEqual($0 as? ChannelError, .malformed("compressed record"))
+    }
+  }
+
+  func testAnUnknownLeadingByteIsRefused() throws {
+    let vectors = try loadVectors()
+
+    XCTAssertThrowsError(try session(vectors, compression: true).receive(joined(vectors.upgradeThenUnknownLeadingByte))) {
+      XCTAssertEqual($0 as? ChannelError, .malformed("compressed record"))
+    }
+  }
+
+  func testWithCompressionAgreedWhatIsSentGoesBehindAZeroByte() throws {
+    let vectors = try loadVectors()
+    var server = RecordCipher(key: bytes(vectors.sendKey), records: 1)
+    var outer: [Data] = []
+    try session(vectors, compression: true) { outer.append($0) }.send(message: "hi")
+
+    let record = [UInt8](try server.open(outer[0].dropFirst(2)))
+
+    XCTAssertEqual(record[0], 0)
+    XCTAssertEqual(record[1], 0x81)
   }
 
   func testAFrameLengthBeyondAnyMessageIsMalformedRatherThanAWait() {
