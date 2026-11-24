@@ -1,4 +1,5 @@
 import type { KnownServer } from '#features/connection';
+import { forgetServerCache } from '../../server-cache';
 import { type AppServer, ownAppServer, pairedAppServer } from './app-server';
 import {
   forgetKnownServer,
@@ -96,6 +97,7 @@ class AppServersStore implements ServersStore {
     });
     void forgetKnownServer(id);
     void forgetServerHistory(id);
+    void forgetServerCache(id);
   };
 
   private set(next: ServersSnapshot): void {
