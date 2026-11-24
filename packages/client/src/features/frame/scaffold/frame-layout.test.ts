@@ -4,8 +4,8 @@ import { input } from './frame-layout.mocks';
 
 describe('frameLayout title bar', () => {
   it.each([
-    { titleBarTop: 6, titleBarHeight: 38, panesTop: 44 },
-    { titleBarTop: 0, titleBarHeight: 38, panesTop: 38 },
+    { titleBarTop: 6, titleBarHeight: 46, panesTop: 52 },
+    { titleBarTop: 0, titleBarHeight: 46, panesTop: 46 },
   ])(
     'starts the panes under a title bar of $titleBarHeight that starts $titleBarTop down',
     ({ titleBarTop, titleBarHeight, panesTop }) => {
