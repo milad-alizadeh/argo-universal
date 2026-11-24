@@ -35,9 +35,14 @@ const contentClip = (box: InspectorBox): CSSProperties => ({
   clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${heightOf(box)} round ${box.height === null ? 'var(--radius-2xl)' : '9999px'})`,
 });
 
+// The same clip in pixels throughout, so it eases from the capsule's box to the panel's with the glass.
+const clipFrame = (box: InspectorBox, height: number): Keyframe => ({
+  clipPath: `xywh(${pixels(box.x)} ${pixels(box.y)} ${pixels(box.width)} ${pixels(height)} round ${box.height === null ? 'var(--radius-2xl)' : pixels(height / 2)})`,
+});
+
 /*
  * The closed Inspector's capsule is the panel's own glass: as the Inspector opens, the capsule grows into the panel on
- * the panes' timing. The content clips to the Inspector's resting box as the pane slides in.
+ * the panes' timing. The content's clip grows with it, from the capsule's box, so no content draws without its glass.
  */
 export function InspectorGlass({
   box,
@@ -45,6 +50,7 @@ export function InspectorGlass({
   ...motion
 }: InspectorGlassProps): ReactElement {
   const glass = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
   useFrameTransition({
     ...motion,
     value: box,
@@ -56,7 +62,15 @@ export function InspectorGlass({
         height: value.height ?? parentHeight - value.y - value.bottom,
       });
 
-      return [[glass.current, surfaceFrames(bounds(from), bounds(to))]];
+      const [start, end] = [bounds(from), bounds(to)];
+
+      return [
+        [glass.current, surfaceFrames(start, end)],
+        [
+          content.current,
+          [clipFrame(from, start.height), clipFrame(to, end.height)],
+        ],
+      ];
     },
   });
 
@@ -74,6 +88,7 @@ export function InspectorGlass({
         style={glassBox(box)}
       />
       <div
+        ref={content}
         className="pointer-events-none absolute inset-0"
         style={contentClip(box)}
       >
