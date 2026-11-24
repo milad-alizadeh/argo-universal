@@ -1,11 +1,14 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
+import type { LegendListState } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { type RefObject, useEffect, useEffectEvent, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { LiquidGlass } from '#primitives/content/liquid-glass';
 
-type ListRef = RefObject<LegendListRef | null>;
+// Only what listening for the end reads, so a caller can hand over a list that offers no more.
+type ListRef = RefObject<{
+  getState: () => Pick<LegendListState, 'listen'>;
+} | null>;
 
 const listenAtEnd = (
   list: ListRef,
