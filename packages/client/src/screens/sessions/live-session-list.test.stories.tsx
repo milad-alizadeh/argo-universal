@@ -1,17 +1,17 @@
 import { activeSessions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { focusManager } from '@tanstack/react-query';
 import { expect, waitFor, within } from 'storybook/test';
 import {
   type LiveSessionListFixture,
   LiveSessionListPreview,
   liveSessionListFixture,
+  restoreWindowFocus,
 } from '../../../mocks/sessions/live-session-list.mocks';
 
 const meta = {
   title: 'Tests/Screens/Sessions/LiveSessionList',
   // A return to the foreground forces the window's focus; give it back to the browser after each story.
-  beforeEach: () => (): void => focusManager.setFocused(undefined),
+  beforeEach: (): (() => void) => restoreWindowFocus,
 } satisfies Meta;
 
 export default meta;

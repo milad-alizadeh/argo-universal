@@ -184,6 +184,10 @@ export function liveSessionListFixture(): LiveSessionListFixture {
   };
 }
 
+// Gives the window's focus back to the browser after a story forced it.
+export const restoreWindowFocus = (): void =>
+  focusManager.setFocused(undefined);
+
 export function LiveSessionListPreview({
   fixture,
 }: {
