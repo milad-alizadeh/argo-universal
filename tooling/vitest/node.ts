@@ -16,7 +16,7 @@ const nodeTest = {
 
 type NodeTestOptions = Pick<
   TestUserConfig,
-  'include' | 'testTimeout' | 'expect'
+  'include' | 'exclude' | 'testTimeout' | 'expect'
 > & {
   // Test files that measure time, such as event-loop delay or a Hook's budget: they run alone, after the rest.
   budget?: string[];
@@ -28,6 +28,7 @@ type ProjectOptions = Omit<NodeTestOptions, 'budget'> & { budget: string[] };
 
 const createUnitProject = ({
   budget,
+  exclude = [],
   integrationSetup: _unused,
   ...options
 }: ProjectOptions): TestProjectInlineConfiguration => ({
@@ -36,7 +37,12 @@ const createUnitProject = ({
     ...nodeTest,
     ...options,
     name: 'unit',
-    exclude: [...configDefaults.exclude, '**/*.integration.test.*', ...budget],
+    exclude: [
+      ...configDefaults.exclude,
+      '**/*.integration.test.*',
+      ...budget,
+      ...exclude,
+    ],
     setupFiles: [fileURLToPath(new URL('./unit-setup.ts', import.meta.url))],
   },
 });
