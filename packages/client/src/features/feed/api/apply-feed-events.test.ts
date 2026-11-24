@@ -20,6 +20,8 @@ const events = rowEvents(stream);
 
 const id = 'session-1';
 
+const rowsUpsert = 'rows.upsert' as const;
+
 const never = (): Promise<SessionUpdate> => new Promise(() => {});
 
 function heldFeed(queryClient: QueryClient, held: FeedState): void {
@@ -55,6 +57,76 @@ describe('applyFeedEvents', () => {
 
     expect(writes()).toBe(1);
     expect(readFeed(queryClient)?.rows).toEqual(rows);
+  });
+
+  it('writes a batch of rows once, to the same Feed as the rows one by one', () => {
+    const upserts = events.filter((event) => event.type === upsert);
+
+    const batch = upserts.flatMap((event) =>
+      event.type === upsert ? [event.row] : [],
+    );
+
+    const batched = createQueryClient();
+
+    heldFeed(batched, mergeNewestPage(emptyFeed, page([], 0)));
+    const writes = writesOf(batched);
+
+    applyFeedEvents({ queryClient: batched, cacheId: id, fetchRow: never }, [
+      {
+        type: rowsUpsert,
+        rev: Math.max(...batch.map((row) => row.revision)),
+        rows: batch,
+      },
+    ]);
+
+    const single = createQueryClient();
+
+    heldFeed(single, mergeNewestPage(emptyFeed, page([], 0)));
+    applyFeedEvents(
+      { queryClient: single, cacheId: id, fetchRow: never },
+      upserts,
+    );
+
+    expect(writes()).toBe(1);
+    expect(readFeed(batched)).toEqual(readFeed(single));
+  });
+
+  it('leaves rows before a held window out of a batch, as one by one', () => {
+    const tail = page(rows, Math.max(...rows.map((row) => row.revision)), {
+      limit: 1,
+    });
+
+    const batched = createQueryClient();
+    const single = createQueryClient();
+
+    heldFeed(batched, mergeNewestPage(emptyFeed, tail));
+    heldFeed(single, mergeNewestPage(emptyFeed, tail));
+    applyFeedEvents({ queryClient: batched, cacheId: id, fetchRow: never }, [
+      { type: rowsUpsert, rev: tail.maxRevision, rows: [...rows] },
+    ]);
+    applyFeedEvents(
+      { queryClient: single, cacheId: id, fetchRow: never },
+      rows.map((row) => ({ type: upsert, rev: row.revision, row })),
+    );
+
+    expect(tail.hasOlder).toBe(true);
+    expect(readFeed(batched)).toEqual(readFeed(single));
+  });
+
+  it('keeps a held row whose revision is higher than the one in a batch', () => {
+    const queryClient = createQueryClient();
+    const [row] = rows;
+
+    if (!row) throw new Error('No streamed rows');
+    const newer = { ...row, revision: row.revision + 10 };
+
+    heldFeed(queryClient, mergeNewestPage(emptyFeed, page([newer], 0)));
+
+    applyFeedEvents({ queryClient, cacheId: id, fetchRow: never }, [
+      { type: rowsUpsert, rev: row.revision, rows: [row] },
+    ]);
+
+    expect(readFeed(queryClient)?.rows).toEqual([newer]);
   });
 
   it('keeps the snapshot it holds when the next one is equal', () => {
