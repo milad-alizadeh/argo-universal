@@ -1,6 +1,7 @@
 import { openAcpFeedSession } from '@repo/engine/mocks/acp-feed';
 import { afterEach, expect, it } from 'vitest';
 import {
+  catchUpMs,
   coldOpenMs,
   firstPageMs,
   phoneOn,
@@ -68,4 +69,29 @@ it('opens a Feed the App holds nothing of in one round trip over bad Wi-Fi', asy
   expect(oneTrip.rows).toBe(twoTrips.rows);
   expect(oneTrip.rows).toBeLessThanOrEqual(40);
   expect(oneTrip.ms).toBeLessThan(twoTrips.ms);
+});
+
+const manyShort = Array.from({ length: 400 }, (_, index) => ({
+  sessionUpdate: 'agent_message_chunk' as const,
+  messageId: `short-${index}`,
+  content: { type: 'text' as const, text: `Short reply ${index}.` },
+}));
+
+// A reconnect that catches up on many rows sends batches, not a message per row.
+it('catches up on many rows in far fewer messages over bad Wi-Fi', async () => {
+  const { host, sessionId } = await openAcpFeedSession(manyShort);
+  const before = await phoneOn(host, badWifi);
+  const after = await phoneOn(host, badWifi);
+
+  phones.push(before, after);
+
+  const perRow = await catchUpMs(before, sessionId, false);
+  const batched = await catchUpMs(after, sessionId, true);
+
+  console.info(
+    `catch-up of ${perRow.rows} rows over bad Wi-Fi: ${perRow.messages} messages in ${Math.round(perRow.ms)} ms per row, ${batched.messages} messages in ${Math.round(batched.ms)} ms in batches`,
+  );
+
+  expect(batched.rows).toBe(perRow.rows);
+  expect(batched.messages).toBeLessThan(perRow.messages / 4);
 });
