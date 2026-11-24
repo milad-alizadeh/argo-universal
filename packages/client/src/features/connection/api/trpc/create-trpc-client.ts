@@ -27,6 +27,8 @@ export function serverHttpUrl(serverUrl: string, path: string): string {
 export interface ChannelTransport {
   WebSocket: typeof WebSocket;
   fetch: typeof fetch;
+  // Reads Blobs and Plugin assets on one channel it keeps, which `fetch` would open for each.
+  media: typeof fetch;
 }
 
 // The address tRPC writes into a request that goes over a channel. The socket is already open to the one Server, so this names nothing.

@@ -1,4 +1,9 @@
-import type { FeedSubscribeOutput, RowUpsert } from '@repo/contracts';
+import type {
+  FeedSubscribeOutput,
+  RowsUpsert,
+  RowUpsert,
+  SessionUpdate,
+} from '@repo/contracts';
 import type { FeedDeps } from './feed';
 import { FeedCatchUp } from './feed-catch-up';
 import type { ClosedFeed } from './feed-listener';
@@ -8,14 +13,70 @@ import { MovedRowDelivery } from './moved-row-delivery';
 
 type SyncPoint = { after: number; storedRevision: number };
 
-function* catchUpRows(catchUp: FeedCatchUp): Generator<RowUpsert> {
+// Where a subscriber resumes, and whether it reads a catch-up in batches of rows.
+type Start = SyncPoint & { batched: boolean };
+
+const kilobyte = 1024;
+
+const batchKilobytes = 256;
+
+// A batch stays near this size once serialised, so the App never parses a message of megabytes on its JS thread while live events wait behind it.
+const batchBytes = batchKilobytes * kilobyte;
+
+const bytesOf = (row: SessionUpdate): number =>
+  Buffer.byteLength(JSON.stringify(row));
+
+// The page in runs of rows, each of about `batchBytes` or a single row.
+function* runsOfRows(
+  page: readonly SessionUpdate[],
+): Generator<readonly SessionUpdate[]> {
+  let start = 0;
+  let bytes = 0;
+
+  for (const [index, row] of page.entries()) {
+    const size = bytesOf(row);
+
+    if (index > start && bytes + size > batchBytes) {
+      yield page.slice(start, index);
+      start = index;
+      bytes = 0;
+    }
+
+    bytes += size;
+  }
+
+  if (start < page.length) yield page.slice(start);
+}
+
+// A page of rows as events for an App that reads batches (each names its own last row's revision), or one per row.
+function* pageEvents(
+  page: readonly SessionUpdate[],
+  batched: boolean,
+): Generator<RowUpsert | RowsUpsert> {
+  if (batched) {
+    for (const rows of runsOfRows(page)) {
+      const last = rows.at(-1);
+
+      if (last)
+        yield { type: 'rows.upsert', rev: last.revision, rows: [...rows] };
+    }
+
+    return;
+  }
+
+  for (const row of page) yield { type: 'row.upsert', rev: row.revision, row };
+}
+
+function* catchUpRows(
+  catchUp: FeedCatchUp,
+  batched: boolean,
+): Generator<RowUpsert | RowsUpsert> {
   for (
     let page = catchUp.readNextPage();
     page.length > 0;
     page = catchUp.readNextPage()
   )
-    for (const row of page)
-      yield { type: 'row.upsert', rev: row.revision, row };
+    yield* pageEvents(page, batched);
 }
 
 export class FeedDelivery {
@@ -23,13 +84,15 @@ export class FeedDelivery {
   private movedRows = new MovedRowDelivery([]);
   private delivered = 0;
   private readonly marks = new VoiceMarkerFilter();
+  private readonly batched: boolean;
 
   public constructor(
     private readonly sources: FeedDeps,
     private readonly sessionId: string,
-    syncPoint: SyncPoint,
+    start: Start,
   ) {
-    this.catchUp = new FeedCatchUp(sources, sessionId, syncPoint);
+    this.batched = start.batched;
+    this.catchUp = new FeedCatchUp(sources, sessionId, start);
   }
 
   // Everything delivered leaves without the voice marks of Agent messages.
@@ -56,7 +119,7 @@ export class FeedDelivery {
   }
 
   private *readCaughtUp(): Generator<FeedSubscribeOutput> {
-    yield* catchUpRows(this.catchUp);
+    yield* catchUpRows(this.catchUp, this.batched);
     this.movedRows = new MovedRowDelivery(this.catchUp.readMovedRows());
     this.delivered = Math.max(this.delivered, this.catchUp.highWaterMark);
   }

@@ -177,7 +177,12 @@ function subscribeInput(
       after: lastEventId ? syncPointOfEventId(lastEventId) : null,
     };
 
-  const input: FeedSubscribeInput = { sessionId: id, after: null, lastEventId };
+  const input: FeedSubscribeInput = {
+    sessionId: id,
+    after: null,
+    lastEventId,
+    batched: true,
+  };
 
   if (coldOpen && lastEventId === undefined) input.tail = true;
 

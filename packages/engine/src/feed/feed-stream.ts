@@ -14,7 +14,7 @@ import { readFeedPage } from './feed-page';
 
 type SubscriptionStart = Pick<
   FeedSubscribeInput,
-  'sessionId' | 'after' | 'tail'
+  'sessionId' | 'after' | 'tail' | 'batched'
 > & {
   epoch: number;
   maxRevision: number;
@@ -107,6 +107,7 @@ async function* deliverSubscription(
   const delivery = new FeedDelivery(resources, start.sessionId, {
     after: initialRevision(start),
     storedRevision: start.maxRevision,
+    batched: start.batched === true,
   });
 
   yield* delivery.readCatchUp();
@@ -166,8 +167,16 @@ function pointOfEvent(
   return { epoch, revision: event.rev };
 }
 
+// An App that sends a `lastEventId`, or asks for the tail or for batches, keeps event ids.
+const hasEventIds = ({
+  lastEventId,
+  tail,
+  batched,
+}: FeedSubscribeInput): boolean =>
+  lastEventId !== undefined || tail === true || batched === true;
+
 /*
- * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none. An App that gives neither a `lastEventId` nor `tail` is one from before event ids, which reads plain events.
+ * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none. An App that gives none of `lastEventId`, `tail` and `batched` is one from before event ids, which reads plain events.
  */
 export async function* trackedFeed(
   resources: FeedDeps,
@@ -180,7 +189,7 @@ export async function* trackedFeed(
     const point = pointOfEvent(epoch, event);
 
     epoch = point?.epoch ?? epoch;
-    yield point && (input.lastEventId !== undefined || input.tail)
+    yield point && hasEventIds(input)
       ? tracked(feedEventId(point), event)
       : event;
   }

@@ -26,6 +26,9 @@ export class VoiceMarkerFilter {
     if (event.type === 'row.upsert')
       return { ...event, row: this.row(event.row) };
 
+    if (event.type === 'rows.upsert')
+      return { ...event, rows: event.rows.map((row) => this.row(row)) };
+
     if (event.type === 'row.append') return this.append(event);
 
     this.settle(event);

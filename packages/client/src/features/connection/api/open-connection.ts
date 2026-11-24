@@ -97,7 +97,7 @@ function openOver(endpoint: ServerEndpoint, network: Network): OpenConnection {
   return {
     client: trpc.client,
     connection,
-    fetch: channel?.fetch,
+    fetch: channel?.media,
     close: closing(connection, trpc),
   };
 }
