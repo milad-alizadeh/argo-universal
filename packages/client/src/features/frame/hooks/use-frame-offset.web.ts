@@ -47,6 +47,7 @@ function keyframes(
   const moving = element
     .getAnimations()
     .some((animation) => animation.playState === 'running');
+
   const shown = moving ? now.opacity : Number(last.visible);
 
   const [start, end] =

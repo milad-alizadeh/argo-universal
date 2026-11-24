@@ -1,10 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import type {
-  BandMotion,
-  BandPlace,
-  BandRef,
-  BandRefs,
-} from './band-motion-types';
+import type { FrameMotion } from '../utils/frame-timing';
+import type { BandRef, BandRefs } from './band-motion-types';
 import type { ViewElement } from './frame-slide-types';
 import {
   type ElementFrame,
@@ -16,186 +12,112 @@ import {
 
 type Part = keyof BandRefs;
 
+// Where a part's box was laid out, ignoring any motion's transform.
+interface Span {
+  left: number;
+  width: number;
+}
+
 type Elements = Partial<Record<Part, HTMLElement>>;
 
-// The groups that size to their buttons, whose width the row reads rather than computes.
-type Group = 'leading' | 'trailing';
+type Spans = Partial<Record<Part, Span>>;
 
-type Widths = Record<Group, number>;
-
-const isGroup = (part: Part): part is Group =>
-  part === 'leading' || part === 'trailing';
-
-interface BandState {
-  widths: Widths;
-  place: BandPlace;
-}
-
-// The row's elements, and each group's width as last laid out, before the change that moves it.
 interface BandElements {
   elements: Elements;
-  laidOut: Widths;
   refs: BandRefs;
-}
-
-function groupWidths(read: (group: Group) => number): Widths {
-  return { leading: read('leading'), trailing: read('trailing') };
-}
-
-const laidOutNow = (elements: Elements): Widths =>
-  groupWidths((group) => elements[group]?.offsetWidth ?? 0);
-
-function partRef(
-  part: Part,
-  band: Omit<BandElements, 'refs'>,
-  observer: ResizeObserver,
-): BandRef {
-  return (node: ViewElement | null): void => {
-    const element = node instanceof HTMLElement ? node : undefined;
-    const last = band.elements[part];
-
-    if (last && isGroup(part)) observer.unobserve(last);
-    band.elements[part] = element;
-
-    if (element && isGroup(part)) observer.observe(element);
-  };
 }
 
 function createBandElements(): BandElements {
   const elements: Elements = {};
-  const laidOut: Widths = { leading: 0, trailing: 0 };
-  const observer = new ResizeObserver(() => {
-    Object.assign(laidOut, laidOutNow(elements));
-  });
-  const ref = (part: Part): BandRef =>
-    partRef(part, { elements, laidOut }, observer);
 
-  return {
-    elements,
-    laidOut,
-    refs: {
-      leading: ref('leading'),
-      title: ref('title'),
-      trailing: ref('trailing'),
-      leadingCapsule: ref('leadingCapsule'),
-      trailingCapsule: ref('trailingCapsule'),
-    },
-  };
+  const ref =
+    (part: Part): BandRef =>
+    (node: ViewElement | null): void => {
+      elements[part] = node instanceof HTMLElement ? node : undefined;
+    };
+
+  return { elements, refs: { title: ref('title'), moving: ref('moving') } };
 }
 
-const pixels = (value: number): string => `${value}px`;
+const spanOf = (element: HTMLElement | undefined): Span | undefined =>
+  element && { left: element.offsetLeft, width: element.offsetWidth };
 
-function widthFrame(
-  element: HTMLElement | undefined,
-  from: number,
-  to: number,
-): ElementFrame[] {
-  if (!element || from === to) return [];
-
-  return [[element, [{ width: pixels(from) }, { width: pixels(to) }]]];
-}
-
-const titleFrame = ({ titleStart, titleEnd }: BandPlace): Keyframe => ({
-  paddingLeft: pixels(titleStart),
-  paddingRight: pixels(titleEnd),
+const laidOut = (elements: Elements): Spans => ({
+  title: spanOf(elements.title),
+  moving: spanOf(elements.moving),
 });
 
-function titleFrames(
-  element: HTMLElement | undefined,
-  from: BandPlace,
-  to: BandPlace,
-): ElementFrame[] {
-  if (!element) return [];
+const slide = (from: Span, to: Span): Keyframe[] => [
+  { transform: `translateX(${from.left - to.left}px)` },
+  { transform: 'translateX(0px)' },
+];
 
-  return [[element, [titleFrame(from), titleFrame(to)]]];
-}
+/*
+ * The heading slides with its start; a heading that widens shows its new room as its end moves, by a clip that closes
+ * on the same curve, and one that narrows truncates at once inside the room it ends in.
+ */
+function titleFrames(from: Span, to: Span): Keyframe[] {
+  const [start, end] = slide(from, to);
+  const hidden = Math.max(0, to.width - from.width);
 
-function capsuleFrame(
-  element: HTMLElement | undefined,
-  from: boolean,
-  to: boolean,
-): ElementFrame[] {
-  if (!element || from === to) return [];
-
-  return [[element, [{ opacity: Number(from) }, { opacity: Number(to) }]]];
-}
-
-function bandFrames(
-  elements: Elements,
-  from: BandState,
-  to: BandState,
-): ElementFrame[] {
   return [
-    ...widthFrame(elements.leading, from.widths.leading, to.widths.leading),
-    ...widthFrame(elements.trailing, from.widths.trailing, to.widths.trailing),
-    ...titleFrames(elements.title, from.place, to.place),
-    ...capsuleFrame(
-      elements.leadingCapsule,
-      from.place.leadingCapsule,
-      to.place.leadingCapsule,
-    ),
-    ...capsuleFrame(
-      elements.trailingCapsule,
-      from.place.trailingCapsule,
-      to.place.trailingCapsule,
-    ),
+    { ...start, clipPath: `inset(0px ${hidden}px 0px 0px)` },
+    { ...end, clipPath: 'inset(0px 0px 0px 0px)' },
   ];
 }
 
-const running = (motion: readonly Animation[]): boolean =>
-  motion.some((animation) => animation.playState === 'running');
+function partFrame(
+  element: HTMLElement | undefined,
+  [from, to]: readonly [Span | undefined, Span | undefined],
+  frames: (from: Span, to: Span) => Keyframe[],
+): ElementFrame[] {
+  if (!element || !from || !to) return [];
 
-const pixelsOf = (value: string): number => Number.parseFloat(value) || 0;
+  if (from.left === to.left && from.width === to.width) return [];
 
-// Where a running motion has the title now, so a change mid-motion carries on from there.
-function shownPlace(elements: Elements, last: BandPlace): BandPlace {
-  const title = elements.title && getComputedStyle(elements.title);
-
-  return {
-    ...last,
-    titleStart: title ? pixelsOf(title.paddingLeft) : last.titleStart,
-    titleEnd: title ? pixelsOf(title.paddingRight) : last.titleEnd,
-  };
+  return [[element, frames(from, to)]];
 }
 
-// Where the row showed before this change: mid-motion as drawn now, at rest as last laid out.
-function startingState(
-  band: BandElements,
-  motion: readonly Animation[],
-  last: BandPlace,
-): BandState {
-  const { elements } = band;
-
-  return running(motion)
-    ? { widths: laidOutNow(elements), place: shownPlace(elements, last) }
-    : { widths: { ...band.laidOut }, place: last };
-}
+const bandFrames = (
+  elements: Elements,
+  from: Spans,
+  to: Spans,
+): ElementFrame[] => [
+  ...partFrame(elements.title, [from.title, to.title], titleFrames),
+  ...partFrame(elements.moving, [from.moving, to.moving], slide),
+];
 
 /*
- * The row takes its new layout at once and plays back from where it showed, as the panes do: the groups' widths, the
- * title's ends and the capsules' pills move on the panes' timing, so each button rides its group's edge and the
- * toggles pinned to the row's ends stay still.
+ * FLIP: the parts take their new place at once and play back from where they were laid out, by transform and clip
+ * alone, so the title bar lays out once per change and nothing reflows while the panes move. The pinned toggles never
+ * move, so they need no motion.
  */
-export function useBandMotion(motion: BandMotion): BandRefs {
+export function useBandMotion(motion: FrameMotion): BandRefs {
   const [band] = useState(createBandElements);
   const playing = useRef<Animation[]>([]);
-  const previous = useRef(motion);
+
+  const last = useRef<{ key: string; spans: Spans }>({
+    key: motion.transitionKey,
+    spans: {},
+  });
+
   useCancelOnUnmount(playing);
   useLayoutEffect(() => {
-    const last = previous.current;
-    previous.current = motion;
+    const spans = laidOut(band.elements);
+    const previous = last.current;
+    last.current = { key: motion.transitionKey, spans };
 
-    // A resize moves immediately; an unrelated render leaves an ongoing motion alone.
-    if (last.transitionKey === motion.transitionKey) return;
+    // A resize or an unrelated render moves the parts at once.
+    if (previous.key === motion.transitionKey) return;
 
-    const from = startingState(band, playing.current, last.place);
     cancelMotion(playing.current);
-    const { elements } = band;
-    const to = { widths: laidOutNow(elements), place: motion.place };
     playing.current = mayAnimate(motion.animate)
-      ? playFrames(bandFrames(elements, from, to), motion.timing)
+      ? playFrames(
+          bandFrames(band.elements, previous.spans, spans),
+          motion.timing,
+        )
       : [];
-  }, [band, motion]);
+  });
 
   return band.refs;
 }

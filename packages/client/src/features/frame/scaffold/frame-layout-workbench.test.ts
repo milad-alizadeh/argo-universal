@@ -39,12 +39,12 @@ describe('Workbench states from one toggle', () => {
     expect(layout.list.width).toBe(312);
   });
 
-  it('waits at the trailing inset while it is not drawn', () => {
+  it('waits past the window edge while it is not drawn', () => {
     const { workbench } = frameLayout({ ...input, workbenchIntent: 'hidden' });
 
     expect(workbench).toEqual({
       state: 'hidden',
-      offset: 1432,
+      offset: 1440,
       width: 0,
       fits: false,
     });

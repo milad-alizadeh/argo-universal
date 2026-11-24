@@ -13,3 +13,6 @@ export interface WindowHistory {
 export function useWindowHistory(): WindowHistory | null {
   return null;
 }
+
+// Whether the title bar draws Back and Forward, which sets the leading capsule's width.
+export const hasWindowHistory = false;

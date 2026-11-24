@@ -87,8 +87,11 @@ function directActions(
   ];
 }
 
-const menuOf = (props: SessionDetailViewProps) =>
-  props.state === 'open' ? props.header.menu : undefined;
+const menuOf = (
+  props: SessionDetailViewProps,
+):
+  | Extract<SessionDetailViewProps, { state: 'open' }>['header']['menu']
+  | undefined => (props.state === 'open' ? props.header.menu : undefined);
 
 const titleOf = (props: SessionDetailViewProps): string =>
   props.state === 'open' ? props.header.title : 'Session';

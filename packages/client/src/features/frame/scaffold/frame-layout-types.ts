@@ -20,7 +20,8 @@ export interface FrameMeasures {
   inspectorWidth: number;
   railWidth: number;
   inset: number;
-  // The title bar's row, which starts one inset below the window's top.
+  // The floating panels' top inset, and the title bar's row inside their top, which their content starts below.
+  titleBarTop: number;
   titleBarHeight: number;
   workbenchWidth: number;
   paneGap: number;

@@ -46,3 +46,5 @@ export function useWindowHistory(): WindowHistory {
     forward: { enabled: forward, go: historyForward },
   };
 }
+
+export const hasWindowHistory = true;

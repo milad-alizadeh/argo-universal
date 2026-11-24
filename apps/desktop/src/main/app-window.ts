@@ -56,7 +56,7 @@ const trafficLightPosition = { x: 20, y: 15 };
 // Electron positions the top of the 14-point traffic lights.
 const trafficLightRadius = 7;
 
-const TitleBarCentre = z.number().positive();
+const BandHeight = z.number().positive();
 
 function windowChrome():
   | { titleBarStyle: 'hidden'; trafficLightPosition: { x: number; y: number } }
@@ -69,15 +69,15 @@ function windowChrome():
 function alignTrafficLights(window: BrowserWindow): void {
   if (process.platform !== 'darwin') return;
 
-  window.webContents.ipc.on('window:title-bar-centre', (event, input) => {
+  window.webContents.ipc.on('window:band-height', (event, input) => {
     if (event.senderFrame !== window.webContents.mainFrame) return;
 
-    const centre = TitleBarCentre.safeParse(input);
+    const height = BandHeight.safeParse(input);
 
-    if (!centre.success) return;
+    if (!height.success) return;
 
     const zoom = window.webContents.getZoomFactor();
-    const center = Math.round(centre.data * zoom);
+    const center = Math.round((height.data / 2) * zoom);
 
     if (center > window.getContentBounds().height / 2) return;
 

@@ -1,7 +1,7 @@
+import { Surface } from '@repo/kit/primitives/layout/surface';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { ScrollView, View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Surface } from '@repo/kit/primitives/layout/surface';
 import { bandWorkbench } from '#lib/product/window-band';
 import { useFrameSlide } from '../hooks/use-frame-offset';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
@@ -97,13 +97,14 @@ const scrollProps = {
 
 /*
  * One glass panel holds every card, as the Inspector's does, each card a section parted from the next by a hairline.
- * It takes its cards' height up to the column's and scrolls past that.
+ * It takes its cards' height up to the column's and scrolls past that: the panel fills the column only as far as its
+ * cards reach, and shrinks to it once they reach further.
  */
 function WorkbenchScroll(props: { children: ReactNode }): ReactElement {
   return (
     <View pointerEvents="auto" className="max-h-full">
-      <Surface kind="glass">
-        <View className="overflow-hidden rounded-2xl">
+      <Surface kind="glass" fill>
+        <View className="min-h-0 shrink overflow-hidden rounded-2xl">
           <ScrollView {...scrollProps}>{props.children}</ScrollView>
         </View>
       </Surface>

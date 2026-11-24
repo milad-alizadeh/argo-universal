@@ -49,14 +49,18 @@ async function openMenu(
   return within(await screen.findByRole('menu'));
 }
 
-const openMore = async (context: PlayContext) =>
+const openMore = async (
+  context: PlayContext,
+): Promise<ReturnType<typeof within>> =>
   openMenu(
     context,
     await context.canvas.findByRole('button', { name: 'More' }),
   );
 
 // A wide window's title, in the title bar, opens what a phone's ⋯ holds.
-const openTitleMenu = async (context: PlayContext) =>
+const openTitleMenu = async (
+  context: PlayContext,
+): Promise<ReturnType<typeof within>> =>
   openMenu(context, await titleTrigger(context.canvas));
 
 // A desktop shows the first Plugin action as a button; the title's menu holds Argo's Rename and Archive first, then the Plugins' rest.

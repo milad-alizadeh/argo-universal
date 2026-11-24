@@ -16,12 +16,22 @@ interface GlassRefs {
   rail: PanelRef;
 }
 
-// The panel's box inside the sidebar column: it narrows to nothing and fades as the sidebar closes, or keeps the rail alone below the title bar.
+/*
+ * The panel's box, from the frame's left edge and the column's top: the open panel, the rail alone below the title
+ * bar, or the closed sidebar's capsule round its buttons, which the panel's glass grows from and shrinks into.
+ * `height` is the panel's own only for the capsule; the panel otherwise runs to the column's bottom.
+ */
 interface GlassBox {
-  width: number;
+  left: number;
   top: number;
+  width: number;
+  height: number | null;
+  radius: number;
   opacity: number;
 }
+
+// The panel's corner, as `rounded-2xl` draws it.
+const panelRadius = 16;
 
 interface GlassLayerProps {
   ref: Ref<HTMLDivElement>;
@@ -33,27 +43,55 @@ interface GlassMaskProps extends GlassLayerProps {
   railRef: Ref<HTMLDivElement>;
 }
 
-const glassBox = ({
-  width,
-  barHeight,
-  sidebarShown,
-}: Pick<
-  GlassSurfaceProps,
-  'width' | 'barHeight' | 'sidebarShown'
->): GlassBox => ({
-  width,
-  top: sidebarShown ? 0 : barHeight,
-  opacity: width > 0 ? 1 : 0,
+function glassBox(props: GlassSurfaceProps): GlassBox {
+  const { width, barHeight, sidebarShown, origin, pill } = props;
+
+  if (width === 0 && pill)
+    return {
+      left: pill.x,
+      top: pill.y,
+      width: pill.width,
+      height: pill.height,
+      radius: pill.height / 2,
+      opacity: 1,
+    };
+
+  return {
+    left: origin,
+    top: sidebarShown ? 0 : barHeight,
+    width,
+    height: null,
+    radius: panelRadius,
+    opacity: width > 0 ? 1 : 0,
+  };
+}
+
+// The box as the column draws it, from where the column starts now.
+const boxStyle = (box: GlassBox, origin: number): React.CSSProperties => ({
+  left: box.left - origin,
+  top: box.top,
+  width: box.width,
+  ...(box.height === null ? { bottom: 0 } : { height: box.height }),
+  borderRadius: box.radius,
+  opacity: box.opacity,
 });
 
 // The tint keeps the rail's place in the window while the panel's top moves past it.
 const railTop = (props: GlassSurfaceProps, box: GlassBox): number =>
   props.barHeight - box.top;
 
-const panelFrame = ({ width, top, opacity }: GlassBox): Keyframe => ({
-  width: `${width}px`,
-  top: `${top}px`,
-  opacity,
+// A keyframe spells the height out, so the box grows from the capsule to the column's bottom.
+const panelFrame = (
+  box: GlassBox,
+  origin: number,
+  columnHeight: number,
+): Keyframe => ({
+  left: `${box.left - origin}px`,
+  top: `${box.top}px`,
+  width: `${box.width}px`,
+  height: `${box.height ?? columnHeight - box.top}px`,
+  borderRadius: `${box.radius}px`,
+  opacity: box.opacity,
 });
 
 function glassFrames(
@@ -61,7 +99,12 @@ function glassFrames(
   props: GlassSurfaceProps,
   [from, to]: readonly [GlassBox, GlassBox],
 ): readonly ElementFrame[] {
-  const panel = [panelFrame(from), panelFrame(to)];
+  const columnHeight = refs.mask.current?.parentElement?.offsetHeight ?? 0;
+
+  const panel = [from, to].map((box) =>
+    panelFrame(box, props.origin, columnHeight),
+  );
+
   const rail = [from, to].map((box) => ({ top: `${railTop(props, box)}px` }));
 
   return [
@@ -141,7 +184,7 @@ function GlassMask({ ref, ...layer }: GlassMaskProps): React.JSX.Element {
     <div
       ref={ref}
       className="pointer-events-none absolute bottom-0 left-0 overflow-hidden rounded-2xl"
-      style={layer.box}
+      style={boxStyle(layer.box, layer.props.origin)}
     >
       <GlassFill {...layer} />
       <RailTint {...layer} />
@@ -149,15 +192,16 @@ function GlassMask({ ref, ...layer }: GlassMaskProps): React.JSX.Element {
   );
 }
 
-function GlassEdge({ ref, box }: GlassLayerProps): React.JSX.Element {
+function GlassEdge({
+  ref,
+  box,
+  origin,
+}: GlassLayerProps & { origin: number }): React.JSX.Element {
   return (
     <div
       ref={ref}
-      className={cn(
-        'pointer-events-none absolute bottom-0 left-0 rounded-2xl',
-        glassMaterial.edge,
-      )}
-      style={box}
+      className={cn('pointer-events-none absolute', glassMaterial.edge)}
+      style={boxStyle(box, origin)}
     />
   );
 }
@@ -169,7 +213,7 @@ export function GlassSurface(props: GlassSurfaceProps): React.JSX.Element {
   return (
     <>
       <GlassMask ref={mask} railRef={rail} props={props} box={box} />
-      <GlassEdge ref={edge} box={box} />
+      <GlassEdge ref={edge} box={box} origin={props.origin} />
     </>
   );
 }

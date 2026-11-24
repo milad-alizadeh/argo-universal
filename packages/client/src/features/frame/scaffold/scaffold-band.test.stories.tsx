@@ -6,25 +6,36 @@ import type { Meta } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, within } from 'storybook/test';
 import type { WindowBandView } from '#lib/product/window-band';
+import { bandControlAppearance } from './band-control-appearance';
 import {
   controlledPlay,
   scaffoldMeta,
   type ScaffoldPlayContext,
   type ScaffoldStory,
 } from './scaffold-test.mocks';
-import { bandControlAppearance } from './band-control-appearance';
 import { ScaffoldMock } from './scaffold.mocks';
 
 const windowBand = 'window-band';
 
 const trailingGroup = 'window-band-trailing';
 
+const leadingCapsule = 'window-band-leading-capsule';
+
+const trailingCapsuleID = 'window-band-trailing-capsule';
+
+const workbenchToggle = 'Toggle Workbench';
+
+const hideSidebar = 'Hide sidebar';
+
+const pageAction = 'Page action';
+
+const backLabel = 'Back';
+
+const labelOf = (button: HTMLElement): string | null =>
+  button.getAttribute('aria-label');
+
 // The trailing controls, in the order the band draws them.
-const trailingNames = [
-  'Toggle Workbench',
-  'Expand Inspector',
-  'Show Inspector',
-];
+const trailingNames = [workbenchToggle, 'Expand Inspector', 'Show Inspector'];
 
 const sessionBand: WindowBandView = {
   session: {
@@ -56,7 +67,7 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     await settleLayout('wide');
     await controlled.render({});
     const band = canvas.getByTestId(windowBand);
-    const toggle = canvas.getByRole('button', { name: 'Hide sidebar' });
+    const toggle = canvas.getByRole('button', { name: hideSidebar });
     const appRegion = 'app-region';
     await expect(band).toContainElement(toggle);
     await expect(getComputedStyle(band).getPropertyValue(appRegion)).toBe(
@@ -68,22 +79,6 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     await expect(canvas.getByTestId('desktop-rail')).not.toContainElement(
       toggle,
     );
-  }),
-};
-
-export const BackAndForwardFollowTheSidebarToggle: ScaffoldStory = {
-  play: controlledPlay(async ({ canvas }, controlled) => {
-    await settleLayout('wide');
-    await controlled.render({});
-
-    const band = within(canvas.getByTestId(windowBand));
-
-    const leading = band
-      .getAllByRole('button')
-      .slice(0, 3)
-      .map((button) => button.getAttribute('aria-label'));
-
-    await expect(leading).toEqual(['Hide sidebar', 'Back', 'Forward']);
   }),
 };
 
@@ -103,7 +98,7 @@ export const PageTitleDrawsNoBack: ScaffoldStory = {
     const page = within(canvas.getByTestId('desktop-detail'));
 
     await expect(page.getByText('Body')).toBeVisible();
-    await expect(page.queryByRole('button', { name: 'Back' })).toBeNull();
+    await expect(page.queryByRole('button', { name: backLabel })).toBeNull();
   }),
 };
 
@@ -113,23 +108,23 @@ function trailingCapsule(width: number): ScaffoldStory {
     args: { band: sessionBand },
     play: controlledPlay(async ({ canvas }, controlled) => {
       await settleLayout(width);
-      const group = canvas.getByTestId(trailingGroup);
-      const controls = within(group).getAllByRole('button');
-      const positions = controls.map(position);
-      await expect(controls).toHaveLength(trailingNames.length);
+      await settleMotion();
 
-      for (const [index, name] of trailingNames.entries())
-        await expect(controls[index]).toHaveAccessibleName(name);
+      const controls = (): HTMLElement[] =>
+        trailingNames.map((name) => canvas.getByRole('button', { name }));
+
+      const positions = controls().map(position);
+      const lefts = positions.map(({ x }) => x);
+      await expect(lefts).toEqual([...lefts].sort((a, b) => a - b));
 
       await expect(
-        within(group).getByRole('button', { name: 'Expand Inspector' }),
+        canvas.getByRole('button', { name: 'Expand Inspector' }),
       ).toBeDisabled();
 
       for (const sidebarShown of [false, true]) {
         await controlled.render({ sidebarShown, inspectorState: 'closed' });
-        await expect(
-          within(group).getAllByRole('button').map(position),
-        ).toEqual(positions);
+        await settleMotion();
+        await expect(controls().map(position)).toEqual(positions);
       }
     }),
   };
@@ -149,14 +144,16 @@ export const OpenInspectorHoldsItsControls: ScaffoldStory = {
 
     for (const inspectorState of ['open', 'expanded'] as const) {
       await controlled.render({ inspectorState });
-      await expect(canvas.queryByTestId('window-band-capsule')).toBeNull();
+      await expect(canvas.queryByTestId(trailingCapsuleID)).toBeNull();
 
-      for (const name of ['Toggle Workbench', 'Hide Inspector'])
+      for (const name of [workbenchToggle, 'Hide Inspector'])
         await expectInInspectorRow(canvas, name);
     }
 
     await controlled.render({ inspectorState: 'open' });
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide Inspector' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Hide Inspector' }),
+    );
     await expect(controlled.onInspectorStateChange).toHaveBeenCalledWith(
       'closed',
     );
@@ -172,17 +169,20 @@ export const LeadingCapsuleHoldsTheClosedSidebarsControls: ScaffoldStory = {
       within(canvas.getByTestId('window-band-leading'));
 
     await controlled.render({ sidebarShown: true });
-    await expect(leading().queryByTestId('window-band-capsule')).toBeNull();
+    await expect(canvas.queryByTestId(leadingCapsule)).toBeNull();
     await controlled.render({ sidebarShown: false });
     await settleMotion();
-    const capsule = leading().getByTestId('window-band-capsule');
+    const capsule = canvas.getByTestId(leadingCapsule);
     const buttons: HTMLElement[] = leading().getAllByRole('button');
 
-    await expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(
-      ['Show sidebar', 'Back', 'Forward'],
-    );
+    await expect(buttons.map(labelOf)).toEqual([
+      'Show sidebar',
+      backLabel,
+      'Forward',
+    ]);
 
-    for (const button of buttons) await expect(inside(button, capsule)).toBe(true);
+    for (const button of buttons)
+      await expect(inside(button, capsule)).toBe(true);
   }),
 };
 
@@ -193,21 +193,22 @@ export const PageButtonsDrawInTheTrailingGroup: ScaffoldStory = {
     await settleLayout(1440);
     const group = within(canvas.getByTestId(trailingGroup));
 
-    await expect(
-      group.getAllByRole('button').map((button) => button.getAttribute('aria-label')),
-    ).toEqual(['Page action', ...trailingNames]);
+    await expect(group.getAllByRole('button').map(labelOf)).toEqual([
+      pageAction,
+      workbenchToggle,
+    ]);
     await expect(
       inside(
-        group.getByRole('button', { name: 'Page action' }),
-        canvas.getByTestId('window-band-capsule'),
+        group.getByRole('button', { name: pageAction }),
+        canvas.getByTestId(trailingCapsuleID),
       ),
     ).toBe(true);
 
     await controlled.render({ inspectorState: 'open' });
     await expect(canvas.getByTestId(trailingGroup)).toContainElement(
-      canvas.getByRole('button', { name: 'Page action' }),
+      canvas.getByRole('button', { name: pageAction }),
     );
-    await expectInInspectorRow(canvas, 'Page action');
+    await expectInInspectorRow(canvas, pageAction);
   }),
 };
 
@@ -230,6 +231,7 @@ function toggleKeepsItsPlace(
 
       for (const state of [states[1], states[0]]) {
         await controlled.render(state);
+
         const frames = await boxesWhileMoving(() =>
           canvas.getByRole('button', { name }),
         );
@@ -245,10 +247,101 @@ export const SidebarToggleKeepsItsPlace = toggleKeepsItsPlace(/sidebar$/, [
   { sidebarShown: false },
 ]);
 
+export const HistoryButtonsJumpBetweenFixedPositions: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await settleLayout(1440);
+
+    const history = (): HTMLElement[] =>
+      [backLabel, 'Forward'].map((name) =>
+        canvas.getByRole('button', { name }),
+      );
+
+    await controlled.render({ sidebarShown: true });
+    await settleMotion();
+    const open = history().map(box);
+    const list = canvas.getByTestId('desktop-list').getBoundingClientRect();
+    await expect(open[0].x).toBeGreaterThan(list.left);
+    await expect(open[1].x + open[1].width).toBeLessThanOrEqual(list.right);
+
+    await controlled.render({ sidebarShown: false });
+    await settleMotion();
+    const closed = history().map(box);
+    const capsule = canvas.getByTestId(leadingCapsule);
+    for (const button of history())
+      await expect(inside(button, capsule)).toBe(true);
+
+    await expect(closed[1].x).toBeLessThan(open[0].x);
+
+    for (const [sidebarShown, boxes] of [
+      [true, open],
+      [false, closed],
+    ] as const) {
+      await controlled.render({ sidebarShown });
+      await Promise.all(
+        history().map(async (button, index) => {
+          for (const frame of await boxesWhileMoving(() => button))
+            await expect(frame).toEqual(boxes[index]);
+        }),
+      );
+    }
+  }),
+};
+
 export const InspectorToggleKeepsItsPlace = toggleKeepsItsPlace(
   /^(Show|Hide) Inspector$/,
   [{ inspectorState: 'closed' }, { inspectorState: 'open' }],
 );
+
+// Expand stays beside the Inspector toggle, open or closed: it leaves the open Inspector's row to sit there.
+export const ExpandKeepsItsPlace = toggleKeepsItsPlace(
+  /^(Expand|Restore) Inspector$/,
+  [{ inspectorState: 'closed' }, { inspectorState: 'open' }],
+);
+
+// The frame's inset in from the window's right edge, where every pane ends, and the capsule's padding inside it.
+const frameInset = 8;
+
+const capsulePadding = 2;
+
+/*
+ * The closed Inspector's capsule, the open Inspector's panel and the Workbench's panel all end on the panes' one right
+ * edge, whether the Workbench shows or not; the Inspector toggle ends the capsule's padding inside it.
+ */
+export const TrailingEdgesLineUp: ScaffoldStory = {
+  args: { band: sessionBand },
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    const right = (testID: string): number =>
+      canvas.getByTestId(testID).getBoundingClientRect().right;
+
+    const toggle = (): number =>
+      canvas
+        .getByRole('button', { name: /^(Show|Hide) Inspector$/ })
+        .getBoundingClientRect().right;
+
+    // The Workbench shows in the page's gutter at 1920, and has no room for it at 1440.
+    for (const [width, workbench] of [
+      [1920, true],
+      [1440, false],
+    ] as const) {
+      await settleLayout(width);
+      const edge = right(windowBand) - frameInset;
+      await controlled.render({ inspectorState: 'closed' });
+      await settleMotion();
+      await expect(right(trailingCapsuleID)).toBe(edge);
+      await expect(toggle()).toBe(edge - capsulePadding);
+      await expect(
+        canvas.queryByRole('region', { name: 'Workbench overview' }) !== null,
+      ).toBe(workbench);
+
+      if (workbench) await expect(right('desktop-workbench')).toBe(edge);
+
+      await controlled.render({ inspectorState: 'open' });
+      await settleMotion();
+      await expect(right('desktop-inspector')).toBe(edge);
+      await expect(toggle()).toBe(edge - capsulePadding);
+    }
+  }),
+};
 
 type Box = Pick<DOMRect, 'x' | 'y' | 'width' | 'height'>;
 
@@ -302,8 +395,10 @@ async function expectInInspectorRow(
 
   await expect(button.left).toBeGreaterThanOrEqual(row.left);
   await expect(button.right).toBeLessThanOrEqual(row.right);
+  const band = canvas.getByTestId(windowBand).getBoundingClientRect();
+  await expect(button.top).toBeGreaterThanOrEqual(row.top);
   await expect(button.top + button.height / 2).toBeCloseTo(
-    row.top + row.height / 2,
+    band.top + band.height / 2,
     0,
   );
 }

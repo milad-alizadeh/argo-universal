@@ -1,14 +1,9 @@
-import type { BandMotion, BandRefs } from './band-motion-types';
+import type { FrameMotion } from '../utils/frame-timing';
+import type { BandRefs } from './band-motion-types';
 
-const unmoved: BandRefs = {
-  leading: undefined,
-  title: undefined,
-  trailing: undefined,
-  leadingCapsule: undefined,
-  trailingCapsule: undefined,
-};
+const unmoved: BandRefs = { title: undefined, moving: undefined };
 
 // A tablet's title bar takes its new place at once; the web's moves with the panes.
-export function useBandMotion(_motion: BandMotion): BandRefs {
+export function useBandMotion(_motion: FrameMotion): BandRefs {
   return unmoved;
 }

@@ -1,7 +1,4 @@
-import {
-  type CardProps,
-  CardSection,
-} from '@repo/kit/primitives/layout/card';
+import { type CardProps, CardSection } from '@repo/kit/primitives/layout/card';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { WorkbenchColumn, type WorkbenchColumnCard } from './workbench-column';

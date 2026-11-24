@@ -108,7 +108,7 @@ function placeRegions(
     ...leading,
     inspector,
     page,
-    workbench: workbenchRegion(input, page),
+    workbench: workbenchRegion(input, page, inspector),
   };
 }
 
@@ -135,7 +135,7 @@ export function frameLayout(input: FrameLayoutInput): FrameLayout {
   return {
     ...placed,
     ...column,
-    panesTop: input.measures.inset + input.measures.titleBarHeight,
+    panesTop: input.measures.titleBarTop + input.measures.titleBarHeight,
     thresholds,
     sidebarWidth:
       placed.rail.width > 0 ? railZone(input.measures) + placed.list.width : 0,

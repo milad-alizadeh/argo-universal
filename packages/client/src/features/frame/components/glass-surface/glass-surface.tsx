@@ -9,6 +9,17 @@ export interface GlassSurfaceProps extends FrameMotion {
   // The title bar's row at the panel's top, which the rail's tint starts below; a panel with the rail alone starts below it.
   barHeight: number;
   sidebarShown: boolean;
+  // Where the column starts in the window, which moves to its edge once the sidebar closes.
+  origin: number;
+  // The closed sidebar's capsule, in the window from the column's top: the panel's glass shrinks into it.
+  pill?: GlassPill;
+}
+
+export interface GlassPill {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 /*

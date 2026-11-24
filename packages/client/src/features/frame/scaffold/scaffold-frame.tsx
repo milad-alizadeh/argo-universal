@@ -6,7 +6,14 @@ import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
+import { trailingPill } from './band-geometry';
+import { bandGeometryInput } from './band-input';
 import { shownInspectorState } from './inspector-column';
+import {
+  InspectorGlass,
+  type InspectorBox,
+  inspectorSurface,
+} from './inspector-glass';
 import { isFramed } from './is-framed';
 import { ScaffoldBand } from './scaffold-band';
 import { InspectorTitleBar } from './scaffold-band-controls';
@@ -51,23 +58,71 @@ const inspectorPlacement = ({ layout }: InspectorReads): PanePlacement => ({
   ...layout.motion,
 });
 
+// The panel's corner, as `rounded-2xl` draws it.
+const panelRadius = 16;
+
+/*
+ * The Inspector's glass: the open panel, the closed Inspector's capsule round the title bar's buttons, or, with no
+ * buttons to hold, the panel faded past the window's edge.
+ */
+function inspectorBox(parts: InspectorReads): InspectorBox {
+  const { layout } = parts;
+  const { inspector, measures } = layout;
+
+  const panel = {
+    x: inspector.offset,
+    y: -measures.titleBarHeight,
+    width: inspector.width,
+    height: null,
+    bottom: measures.inset,
+    radius: panelRadius,
+    opacity: 1,
+  };
+
+  if (inspector.open) return panel;
+  const pill = trailingPill(bandGeometryInput(parts));
+
+  if (!pill)
+    return {
+      ...panel,
+      x: layout.width,
+      width: measures.inspectorWidth,
+      opacity: 0,
+    };
+  const top = layout.safeTop + layout.panesTop;
+
+  return {
+    ...pill,
+    y: pill.y - top,
+    bottom: 0,
+    radius: pill.height / 2,
+    opacity: 1,
+  };
+}
+
 // The Inspector floats as the sidebar does: its panel runs up beside the title bar, whose row it holds its controls in.
 function FramedInspector(parts: InspectorReads): React.JSX.Element {
   return (
-    <View className="absolute flex-row" style={inspectorPosition(parts)}>
-      <FramePane
-        testID="desktop-inspector"
-        surface="glass"
-        {...inspectorPlacement(parts)}
+    <InspectorGlass box={inspectorBox(parts)} {...parts.layout.motion}>
+      <View
+        pointerEvents="box-none"
+        className="absolute flex-row"
+        style={inspectorPosition(parts)}
       >
-        <InspectorTitleBar {...parts} />
-        <View className="min-h-0 flex-1">
-          <InspectorControlsContext value={true}>
-            {parts.scaffold.inspector(parts.layout.inspector.expanded)}
-          </InspectorControlsContext>
-        </View>
-      </FramePane>
-    </View>
+        <FramePane
+          testID="desktop-inspector"
+          surface={inspectorSurface}
+          {...inspectorPlacement(parts)}
+        >
+          <InspectorTitleBar {...parts} />
+          <View className="min-h-0 flex-1">
+            <InspectorControlsContext value={true}>
+              {parts.scaffold.inspector(parts.layout.inspector.expanded)}
+            </InspectorControlsContext>
+          </View>
+        </FramePane>
+      </View>
+    </InspectorGlass>
   );
 }
 

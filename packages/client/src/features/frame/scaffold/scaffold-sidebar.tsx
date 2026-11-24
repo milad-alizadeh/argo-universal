@@ -11,10 +11,13 @@ import {
 } from '../components/frame-pane/frame-pane';
 import {
   GlassSurface,
+  type GlassPill,
   type GlassSurfaceProps,
 } from '../components/glass-surface/glass-surface';
 import type { FrameMotion } from '../utils/frame-timing';
+import { leadingPill } from './band-geometry';
 import type { ScaffoldLayout } from './use-scaffold-layout';
+import { hasWindowHistory } from './window-history';
 
 // The list scrolls across the pane, with equal insets and its scrollbar at the edge.
 const listColumn = { paddingLeft: 8, paddingRight: 8 };
@@ -22,9 +25,31 @@ const listColumn = { paddingLeft: 8, paddingRight: 8 };
 interface SidebarLayout {
   layout: Pick<
     ScaffoldLayout,
-    'measures' | 'rail' | 'list' | 'motion' | 'safeTop'
+    | 'measures'
+    | 'rail'
+    | 'list'
+    | 'motion'
+    | 'safeTop'
+    | 'bandLeading'
+    | 'panesTop'
   >;
 }
+
+// The closed sidebar's capsule round its toggle, Back and Forward, from the column's top.
+function sidebarPill({ layout }: SidebarLayout): GlassPill {
+  const top = layout.safeTop + layout.measures.titleBarTop;
+
+  const pill = leadingPill({
+    layout,
+    history: hasWindowHistory,
+  });
+
+  return { ...pill, y: pill.y - top };
+}
+
+// The column starts one inset in while the panel shows, and at the window's edge once it closes.
+const columnInset = ({ layout }: SidebarLayout): number =>
+  layout.rail.width > 0 ? layout.measures.inset : 0;
 
 // A closed sidebar hides the whole panel, the rail with the list; a page with no list keeps the rail's.
 const glassGeometry = ({
@@ -35,6 +60,8 @@ const glassGeometry = ({
   railWidth: layout.measures.railWidth,
   barHeight: layout.measures.titleBarHeight,
   sidebarShown: !layout.list.folded,
+  origin: columnInset({ layout }),
+  pill: sidebarPill({ layout }),
 });
 
 function SidebarGlass(parts: SidebarLayout): React.JSX.Element {
@@ -102,15 +129,15 @@ export interface ScaffoldSidebarColumnProps extends SidebarLayout {
 }
 
 /*
- * The panel runs the window's height one inset in from its edges, as Mail's does: the title bar's row at its top holds
+ * The panel runs the window's height, one inset in from its sides and bottom and the title bar's top inset from its top, as Mail's does: the title bar's row at its top holds
  * the window buttons and the band's controls, and the rail and the list start under it. Closed, the column takes no
  * width, so the page reaches the window's edge.
  */
 const columnStyle = ({ layout }: SidebarLayout): ViewStyle => {
-  const inset = layout.rail.width > 0 ? layout.measures.inset : 0;
+  const inset = columnInset({ layout });
 
   return {
-    paddingTop: layout.safeTop + layout.measures.inset,
+    paddingTop: layout.safeTop + layout.measures.titleBarTop,
     paddingBottom: layout.measures.inset,
     paddingLeft: inset,
     paddingRight: inset,

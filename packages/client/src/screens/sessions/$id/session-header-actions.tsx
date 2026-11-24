@@ -53,12 +53,18 @@ function moreAction(
   ];
 }
 
+// What a wide window's title bar draws of a Session's Actions: the title's menu, and the icons beside it.
+export interface SessionTitleBarActions {
+  titleMenu: React.JSX.Element[];
+  actions: React.JSX.Element[];
+}
+
 // In a wide window's title bar the More menu's entries are the title's own menu, and the direct Actions stay beside it as icons.
 export function sessionTitleBarActions(
   menu: SessionMenu | undefined,
   plugins: SessionPluginActions,
   direct: readonly React.JSX.Element[] = [],
-): { titleMenu: React.JSX.Element[]; actions: React.JSX.Element[] } {
+): SessionTitleBarActions {
   return {
     titleMenu: moreEntries(menu, plugins.menu),
     actions: [...plugins.beside.map(pluginAction), ...direct],
