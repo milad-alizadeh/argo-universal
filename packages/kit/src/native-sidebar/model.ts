@@ -32,6 +32,7 @@ export interface SidebarRow {
 export interface SidebarSection {
   id: string;
   title?: string;
+  footer?: string;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   actions?: readonly SidebarAction[];

@@ -48,7 +48,7 @@ export function nestsChildren(type: RowComponent): void {
 
 type RowElement = ReactElement<{ children?: ReactNode }>;
 
-export const nestingRow = (child: ReactNode): child is RowElement =>
+const nestingRow = (child: ReactNode): child is RowElement =>
   isValidElement(child) &&
   typeof child.type !== 'string' &&
   nestingTypes.has(child.type);

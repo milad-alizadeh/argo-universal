@@ -1,8 +1,6 @@
 import { isValidElement, useState, type ReactNode } from 'react';
-import { Icon } from '#primitives/content/icon';
 import type { ListItemProps } from '#primitives/lists/list-item';
 import { flattenedChildren } from '../../../flattened-children';
-import { nestingRow } from '../../../list-tree';
 import {
   NativeSidebarList,
   type SidebarRow,
@@ -10,31 +8,42 @@ import {
 } from '../../../native-sidebar';
 import type { DrawnIcon } from '../../../symbols/icon-symbol';
 import { isSection } from './list-level-entries';
-import type { ListProps } from './list-props';
+import type { ListProps, ListSectionProps } from './list-props';
 
 function iconOf(node: ReactNode): DrawnIcon | undefined {
-  if (isValidElement<{ name: DrawnIcon }>(node) && node.type === Icon)
-    return node.props.name;
+  const [leading] = flattenedChildren(node);
 
-  return undefined;
+  return isValidElement<{ name?: DrawnIcon }>(leading)
+    ? leading.props.name
+    : undefined;
+}
+
+function sidebarItem(
+  child: ReactNode,
+): child is React.ReactElement<ListItemProps> {
+  return (
+    isValidElement<ListItemProps>(child) &&
+    typeof child.props.title === 'string'
+  );
 }
 
 function items(children: ReactNode): React.ReactElement<ListItemProps>[] {
-  return flattenedChildren(children).filter(
-    (child): child is React.ReactElement<ListItemProps> =>
-      isValidElement<ListItemProps>(child) && nestingRow(child),
-  );
+  return flattenedChildren(children).filter(sidebarItem);
 }
 
 function supportedRows(children: ReactNode): boolean {
   return flattenedChildren(children).every(
-    (child) =>
-      child == null ||
-      child === false ||
-      (isValidElement<ListItemProps>(child) &&
-        nestingRow(child) &&
-        typeof child.props.title === 'string' &&
-        supportedRows(child.props.children)),
+    (child) => sidebarItem(child) && supportedRows(child.props.children),
+  );
+}
+
+function sidebarSection(
+  child: ReactNode,
+): child is React.ReactElement<ListSectionProps> {
+  return (
+    isSection(child) ||
+    (isValidElement<ListSectionProps>(child) &&
+      ('collapsible' in child.props || 'footer' in child.props))
   );
 }
 
@@ -43,7 +52,7 @@ export function supportsNativeSidebar<Item>(list: ListProps<Item>): boolean {
     list.items === undefined &&
     list.onMove === undefined &&
     flattenedChildren(list.children).every((child) =>
-      isSection(child)
+      sidebarSection(child)
         ? supportedRows(child.props.children)
         : supportedRows(child),
     )
@@ -92,7 +101,7 @@ function sidebarSections(
   toggle: (id: string) => void,
 ): SidebarSection[] {
   return flattenedChildren(children).flatMap((child, index) => {
-    if (!isSection(child)) {
+    if (!sidebarSection(child)) {
       return sidebarRows(child, String(index), {
         folded,
         toggle,
@@ -103,8 +112,14 @@ function sidebarSections(
       }));
     }
 
-    const { title, collapsible, children, isExpanded, onExpandedChange } =
-      child.props;
+    const {
+      title,
+      footer,
+      collapsible,
+      children,
+      isExpanded,
+      onExpandedChange,
+    } = child.props;
 
     const id = String(child.key ?? index);
 
@@ -112,6 +127,7 @@ function sidebarSections(
       {
         id,
         title,
+        footer,
         expanded: collapsible ? (isExpanded ?? !folded.has(id)) : undefined,
         onExpandedChange: collapsible
           ? (onExpandedChange ?? (() => toggle(id)))

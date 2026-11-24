@@ -2,6 +2,7 @@ import {
   NativeSidebarHeader,
   NativeSidebarList,
 } from '@repo/kit/native-sidebar';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import {
   SettingsPages,
   type SettingsLayoutSections,
@@ -59,7 +60,7 @@ export function SettingsListView(
             })),
           }))}
         />
-        {shownTheme(props)}
+        <FieldGroup>{shownTheme(props)}</FieldGroup>
       </>
     );
   }

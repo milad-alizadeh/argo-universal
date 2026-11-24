@@ -57,7 +57,7 @@ export const FramePresentationContext = createContext<FramePresentation | null>(
 );
 
 // Both the native sidebar and the routed Frame draw from the same lists and Settings backdrop.
-export function useFramePresentation(): FramePresentation {
+export function useFramePresentation(nativeSidebar = false): FramePresentation {
   const sizeClass = useSizeClass();
   const plugins = usePluginSections();
 
@@ -70,7 +70,9 @@ export function useFramePresentation(): FramePresentation {
     Boolean(modalSection),
   );
 
-  const shown = sizeClass === 'wide' ? modalSection : undefined;
+  const shown =
+    !nativeSidebar && sizeClass === 'wide' ? modalSection : undefined;
+
   const lists = useSectionLists(shown ? backdrop.path : undefined);
 
   return {

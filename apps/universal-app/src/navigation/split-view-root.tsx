@@ -114,6 +114,28 @@ function useSectionPages(
   return lastPages;
 }
 
+function usePluginSidebarList(
+  section: Section,
+  place: Place<ReactNode>,
+): ReactNode {
+  const list = useClaimed(place);
+
+  const [previous, remember] = useState<{
+    section: Section;
+    list: ReactNode;
+  }>();
+
+  if (
+    list != null &&
+    !isCoreSection(section) &&
+    (previous?.section !== section || previous.list !== list)
+  ) {
+    remember({ section, list });
+  }
+
+  return list ?? (previous?.section === section ? previous.list : undefined);
+}
+
 interface SidebarColumnProps extends SectionPickerProps {
   lists: FrameSections['lists'];
   listPlace: Place<ReactNode>;
@@ -124,8 +146,8 @@ function SidebarColumn({
   lists,
   ...picker
 }: SidebarColumnProps): JSX.Element {
-  const pluginList = useClaimed(listPlace);
   const { section } = picker;
+  const pluginList = usePluginSidebarList(section, listPlace);
   const list = isCoreSection(section) ? lists[section].list : pluginList;
 
   const header = (chrome: SidebarHeaderProps): JSX.Element => (
@@ -158,7 +180,7 @@ function SplitViewWithInspector({
   place: Place<InspectorProps>;
 }): JSX.Element {
   const inspector = useClaimed(place);
-  const presentation = useFramePresentation();
+  const presentation = useFramePresentation(true);
   const { frame, plugins } = presentation;
   const segments: readonly string[] = useSegments();
   const inFrame = segments.includes('(frame)');

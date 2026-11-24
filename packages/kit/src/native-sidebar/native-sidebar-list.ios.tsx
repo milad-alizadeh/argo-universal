@@ -176,6 +176,7 @@ function SidebarGroup({
           </WithActions>
         )
       }
+      footer={group.footer ? <Text>{group.footer}</Text> : undefined}
       isExpanded={group.expanded}
       onIsExpandedChange={group.onExpandedChange}
     >
