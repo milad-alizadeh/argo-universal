@@ -1,8 +1,8 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import type { ListChild, ListReader } from './list-children';
 import {
-  isSection,
+  sectionOf,
   levelEntries,
   placedChild,
   type Level,
@@ -30,8 +30,11 @@ interface SectionBlock {
   blocks: ListBlock[];
 }
 
-const sectionChildren = (child: ReactNode): ReactNode[] | undefined =>
-  isSection(child) ? flattenedChildren(child.props.children) : undefined;
+const sectionChildren = (child: ReactNode): ReactNode[] | undefined => {
+  const section = sectionOf(child);
+
+  return section && flattenedChildren(section.props.children);
+};
 
 export function listTree(
   children: ReactNode,
@@ -145,7 +148,9 @@ function appendChild(
   { child, entry }: PlacedChild,
   level: Level,
 ): void {
-  if (isSection(child)) blocks.push(sectionBlock(child, entry.key, level));
+  const section = sectionOf(child);
+
+  if (section) blocks.push(sectionBlock(section.props, entry.key, level));
   else appendItem(blocks, entry);
 }
 
@@ -162,11 +167,11 @@ function sectionLevel(level: Level, key: string, section: SectionState): Level {
 
 // A Section's rows read one level down, under its key; only a Section with an id names where its rows land.
 function sectionBlock(
-  child: ReactElement<ListSectionProps>,
+  props: ListSectionProps,
   key: string,
   level: Level,
 ): SectionBlock {
-  const section = preparedSection(child.props, key, level.tree);
+  const section = preparedSection(props, key, level.tree);
   const blocks = readLevel(section.children, sectionLevel(level, key, section));
 
   return { key, kind: 'section', section, blocks };

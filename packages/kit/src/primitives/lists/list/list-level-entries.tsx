@@ -2,6 +2,7 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import { listPosition } from '../../../list-context';
 import type { ListChild } from './list-children';
+import { sectionNodeOf } from './list-entries';
 import { rowIdOf, type RowId } from './list-move-model';
 import { refilled, type HeldOrder } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
@@ -45,11 +46,25 @@ export function isSection(
   return isValidElement<ListSectionProps>(child) && child.type === ListSection;
 }
 
+// A Section's key and props, whether it is a `List.Section` element or a Section held as the nodes of its rows.
+export function sectionOf(child: ReactNode): SectionRead | undefined {
+  if (isSection(child)) return { key: child.key, props: child.props };
+
+  return sectionNodeOf(child);
+}
+
+interface SectionRead {
+  key: string | null;
+  props: ListSectionProps;
+}
+
 // A row moves when it is a ListItem with an `id`, among the List's own rows or a Section's that has an id.
 const movableId =
   (movable: boolean) =>
   (child: ReactNode): RowId | undefined =>
-    movable && !isSection(child) ? rowIdOf(renderedId(child)) : undefined;
+    movable && sectionOf(child) === undefined
+      ? rowIdOf(renderedId(child))
+      : undefined;
 
 // The first child to take `key` keeps it; a later one keeps its place key.
 function unique(
@@ -73,17 +88,17 @@ function ownKey(level: Level): (child: ReactNode) => string | undefined {
   return (child) =>
     unique(
       level.keys,
-      isSection(child)
-        ? sectionKey(level, child)
+      sectionOf(child)
+        ? sectionKey(level, sectionOf(child))
         : rowKey(level.list, idOf(child)),
     );
 }
 
 const sectionKey = (
   { list, moves }: Level,
-  section: ReactElement<ListSectionProps>,
+  section: SectionRead | undefined,
 ): string | undefined =>
-  moves && section.props.id !== undefined
+  moves && section?.props.id !== undefined
     ? `${list}/section/${section.props.id}`
     : undefined;
 
@@ -105,7 +120,11 @@ function heldEntries(entries: ReactNode[], level: Level): ReactNode[] {
 export function levelEntries(children: ReactNode, level: Level): TreeChild[] {
   const entries = heldEntries(flattenedChildren(children), level);
   const { prefix, tree } = level;
-  const top = topLevel(prefix, { passes: isSection, keyed: ownKey(level) });
+
+  const top = topLevel(prefix, {
+    passes: (child) => sectionOf(child) !== undefined,
+    keyed: ownKey(level),
+  });
 
   if (!tree.holds)
     return entries.map((child, index) => ({
