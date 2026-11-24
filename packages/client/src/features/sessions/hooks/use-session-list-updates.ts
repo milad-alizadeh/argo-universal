@@ -62,7 +62,7 @@ function useSessionListRefresh(): SessionListRefresh {
   }, [queryClient, trpc, started, mountedAt]);
 }
 
-// Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
+// Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus. The screen that owns the list passes `enabled` false until its query holds rows, from the Device or the Server, so an update has rows to land on.
 export function useSessionListUpdates(enabled = true): SessionListSubscription {
   const trpc = useTRPC();
   const { catchUp, apply } = useSessionListRefresh();

@@ -3,6 +3,8 @@ import { type ReactNode, useMemo, useSyncExternalStore } from 'react';
 import { forgetServerMedia, rememberServerMedia } from '#features/connection';
 import {
   createServersStore,
+  forgetServerCache,
+  rememberServerCache,
   type OpenServerConnection,
   type ServerConnections,
   ServerConnectionsContext,
@@ -31,8 +33,8 @@ export function AppProviders(props: AppProvidersProps): React.JSX.Element {
   const store = useMemo(
     () =>
       createServersStore(props.serverUrl, {
-        onForgotten: [forgetServerMedia],
-        onAdded: [rememberServerMedia],
+        onForgotten: [forgetServerMedia, forgetServerCache],
+        onAdded: [rememberServerMedia, rememberServerCache],
       }),
     [props.serverUrl],
   );

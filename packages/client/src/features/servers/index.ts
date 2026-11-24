@@ -1,5 +1,7 @@
 export { type AppServer, type AppServerState } from './app-server';
 
+export { forgetServerCache, rememberServerCache } from './server-cache-store';
+
 export {
   ServerConnectionsContext,
   type OpenServerConnection,
