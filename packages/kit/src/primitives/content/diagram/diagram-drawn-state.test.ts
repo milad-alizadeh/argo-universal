@@ -18,7 +18,12 @@ const palette: DiagramPalette = {
 };
 
 // The real layout, counted.
-function countedLayout(): { layouts: () => number; draw: typeof drawDiagram } {
+interface CountedLayout {
+  layouts: () => number;
+  draw: typeof drawDiagram;
+}
+
+function countedLayout(): CountedLayout {
   let count = 0;
 
   return {

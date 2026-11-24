@@ -5,10 +5,12 @@ import { parsedChartFence } from './parsed-chart-fence';
 const fence = '```chart\n{"type":"bar","data":[{"label":"A","value":1}]}\n```';
 
 // The real parser, counted.
-function countedParser(): {
+interface CountedParser {
   parses: () => number;
   validate: typeof validateChartFence;
-} {
+}
+
+function countedParser(): CountedParser {
   let count = 0;
 
   return {
