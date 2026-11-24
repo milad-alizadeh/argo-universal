@@ -27,15 +27,24 @@ const endThreshold = 0.02;
 const startThreshold = 2;
 
 /*
- * What a row that has not been measured is worth. The recorded Feeds average 91px a row in the 800px
- * column and 138px on a phone, and one number serves both, so this sits between them rather than at
- * either. It only places rows above the opening view; each kind takes its own measured average after
- * that.
+ * What a row that has not been measured is worth. The recorded Feeds average 138px a row on a phone and
+ * 91px in the 800px column of a wide window. The native App is drawn on phones, so it takes the phone's
+ * average (a tablet's wider column measures shorter rows and corrects as they measure); web keeps a
+ * number between the two. The kit takes only one number, and a feature does not read the size class. It
+ * only places rows above the opening view; each kind takes its own measured average after that.
  */
-const estimatedRowHeight = 112;
+const nativeEstimatedRowHeight = 138;
+
+const webEstimatedRowHeight = 112;
+
+const estimatedRowHeight =
+  Platform.OS === 'web' ? webEstimatedRowHeight : nativeEstimatedRowHeight;
 
 // Keep rows ready for a reversal while limiting how many mount in a fling frame.
 const nativeDrawDistance = 1600;
+
+// Until the list has settled it draws about a screen and a half; the rest of the distance is added after.
+const openingDrawDistance = 600;
 
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
 const keyboardProps = Platform.select({
@@ -111,6 +120,9 @@ export interface FeedScrollProps extends EntryDrawing {
   list: ListRef;
   entries: FeedEntry[];
   initialIndex: number;
+  // The list has placed its opening rows: older history may be asked for and the full draw distance applies.
+  settled: boolean;
+  onReady: () => void;
   turnRunning: boolean;
   conversationActive?: boolean;
   onStartReached: () => void;
@@ -135,6 +147,8 @@ export type FeedListProps = Pick<
   | 'maintainVisibleContentPosition'
   | 'alignItemsAtEnd'
   | 'onStartReached'
+  | 'onReady'
+  | 'drawDistance'
   | 'endContent'
   | 'header'
 >;
@@ -151,10 +165,19 @@ function useFeedListProps(input: FeedScrollProps): FeedListProps {
     renderItem: useRenderEntry({ ...props, ...motion }),
     ...getInitialScrollProps(props),
     ...anchors,
-    onStartReached: props.onStartReached,
+    // Older rows are not asked for while the list is still placing the rows it opened on.
+    onStartReached: props.settled ? props.onStartReached : undefined,
+    onReady: props.onReady,
+    ...settledDrawDistance(props.settled),
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };
 }
+
+// Fewer rows draw while the list opens; the rest are added once it has settled.
+const settledDrawDistance = (
+  settled: boolean,
+): Pick<FeedListProps, 'drawDistance'> =>
+  settled || Platform.OS === 'web' ? {} : { drawDistance: openingDrawDistance };
 
 // On iOS, opening at the end lays out the last row and the Composer clearance together.
 function getInitialScrollProps({
