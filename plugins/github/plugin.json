@@ -16,7 +16,7 @@
         "key": "prefer-github-cli",
         "type": "toggle",
         "label": "Prefer GitHub CLI for reads",
-        "description": "Read pull requests and Checks with the Server Device’s active GitHub CLI login. Argo tries the Project’s GitHub Account if the CLI read fails.",
+        "description": "Try the Server Device’s active GitHub CLI login first for pull requests and Checks, then the Project’s GitHub Account. Without it Argo reads with the Account and uses the CLI login only when GitHub refuses the Account (403 or 404).",
         "default": false
       }
     ],
