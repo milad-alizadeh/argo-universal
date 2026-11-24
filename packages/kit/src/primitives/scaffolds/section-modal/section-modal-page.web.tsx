@@ -1,7 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
-import { ScreenHeadingEndInset } from '#primitives/scaffolds/screen';
-import { SectionModal, sectionModalHeadingInset } from './section-modal';
+import { SectionModal } from './section-modal';
 import type { SectionModalPageProps } from './section-modal-page';
 
 function pageHost(): HTMLDivElement {
@@ -38,13 +37,7 @@ export function SectionModalPage({
       ) : (
         renderPage(place)
       )}
-      {host &&
-        createPortal(
-          <ScreenHeadingEndInset value={modal ? sectionModalHeadingInset : 0}>
-            {children}
-          </ScreenHeadingEndInset>,
-          host,
-        )}
+      {host && createPortal(children, host)}
     </>
   );
 }
