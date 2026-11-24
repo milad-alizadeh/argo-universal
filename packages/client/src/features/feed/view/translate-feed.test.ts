@@ -129,6 +129,7 @@ const inTurn = (row: SessionUpdate, turnId: string | null): SessionUpdate => ({
 
 it('draws a Permission request that resolves as the Tool call it was', () => {
   const recorded = readRow(recordedRows);
+
   const pending: ToolCallUpdate = {
     ...recorded,
     status: 'pending',
@@ -223,14 +224,17 @@ const voiceLine = (position: number): VoiceTranscript => ({
 
 it('pairs a call with its record across a row that has no Turn', () => {
   const agent = operationCall('turn-1', 'agent', 1);
+  const after = [agent, voiceLine(2), operationCall('turn-1', 'engine', 3)];
 
   expectReuseEqualsFresh(
     { rows: [agent], snapshot },
-    {
-      rows: [agent, voiceLine(2), operationCall('turn-1', 'engine', 3)],
-      snapshot,
-    },
+    { rows: after, snapshot },
   );
+  expect(
+    toFeedView(after, snapshot).items.flatMap((item) =>
+      item.type === 'tool_call' ? [item.row.id] : [],
+    ),
+  ).toEqual([operationFeedRowId('call-1')]);
 });
 
 it('leaves a call and a record of different Turns unpaired', () => {
@@ -253,4 +257,7 @@ it('draws a Turn that gains rows at its head as translating it again', () => {
   const [, ...newer] = turn;
 
   expectReuseEqualsFresh({ rows: newer, snapshot }, { rows: turn, snapshot });
+  expect(
+    translateFeed(turn, snapshot, translateFeed(newer, snapshot).turns).turns,
+  ).toHaveLength(1);
 });
