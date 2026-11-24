@@ -18,10 +18,6 @@ import {
 import { useSessionListUpdates } from '#features/sessions';
 import { ConnectionBanner } from '../src/features/connection/components/connection-banner/connection-banner';
 import { feedKey, snapshotKey } from '../src/features/feed/api/feed-query';
-import {
-  DeviceFeedContext,
-  type RetrieveKept,
-} from '../src/features/feed/api/restore-feed';
 import { useSessionFeed } from '../src/features/feed/hooks/use-session-feed';
 import {
   emptyFeed,
@@ -47,7 +43,7 @@ function seededDevice(storage: PersisterStorage): Promise<void[]> {
     queryClient: seeding,
   });
 
-  const persister = serverQueryPersister(serverId, storage);
+  const persister = serverQueryPersister(serverId, { storage });
   const listKey = trpc.session.list.queryOptions({ archived: false }).queryKey;
 
   seeding.setQueryData(listKey, activeSessions);
@@ -64,13 +60,16 @@ function seededDevice(storage: PersisterStorage): Promise<void[]> {
   );
 }
 
+// A Device that answers at once, only when released, or with an error.
+export type DeviceMode = 'ready' | 'slow' | 'failing';
+
 interface Device {
   storage: PersisterStorage;
   release: () => void;
 }
 
 // The Device's storage in memory, seeded; `getItem` waits for `release`, as a slow disk does.
-function device(slow: boolean): Device {
+function device(mode: DeviceMode): Device {
   const values = new Map<string, string>();
   const gate = Promise.withResolvers<void>();
   const seeded = Promise.withResolvers<void>();
@@ -79,12 +78,16 @@ function device(slow: boolean): Device {
     getItem: async (key) => {
       await Promise.all([seeded.promise, gate.promise]);
 
+      if (mode === 'failing') throw new Error('The storage cannot be read');
+
       return values.get(key) ?? null;
     },
     setItem: (key, value) => {
       values.set(key, String(value));
     },
     removeItem: (key) => {
+      if (mode === 'failing') throw new Error('The storage cannot be written');
+
       values.delete(key);
     },
     entries: () => [...values.entries()],
@@ -92,7 +95,7 @@ function device(slow: boolean): Device {
 
   void seededDevice(storage).then(() => seeded.resolve());
 
-  if (!slow) gate.resolve();
+  if (mode !== 'slow') gate.resolve();
 
   return { storage, release: () => gate.resolve() };
 }
@@ -107,8 +110,6 @@ export interface ServerCacheFixture {
   opened: string[];
   // How many `session.listUpdates` subscriptions the App opened.
   listUpdates: () => number;
-  // How a Feed is read off the Device.
-  retrieve: RetrieveKept;
   // The Device answers what it kept.
   release: () => void;
 }
@@ -155,17 +156,17 @@ const connectionIn = (state: ConnectionState): Connection => ({
 // An App that has run before: its Device holds a Feed at revision 0 and the Session list.
 export function serverCacheFixture(
   state: ConnectionState,
-  { slow }: { slow: boolean },
+  mode: DeviceMode,
 ): ServerCacheFixture {
   const queryClient = createQueryClient();
-  const kept = device(slow);
+  const kept = device(mode);
   const asked: Asked = { opened: [], listUpdates: 0 };
   const client = unreachableClient(asked);
   const trpc = createTRPCOptionsProxy<AppRouter>({ client, queryClient });
 
   keepServerLists(queryClient, trpc);
 
-  const retrieve = restoreFromDevice(queryClient, trpc, {
+  restoreFromDevice(queryClient, trpc, {
     serverId,
     storage: kept.storage,
   });
@@ -176,7 +177,6 @@ export function serverCacheFixture(
     connection: connectionIn(state),
     opened: asked.opened,
     listUpdates: () => asked.listUpdates,
-    retrieve,
     release: kept.release,
   };
 }
@@ -186,11 +186,12 @@ function Screens(): JSX.Element {
   const trpc = useTRPC();
   const connection = useConnectionState();
   const feed = useSessionFeed(sessionId);
-  useSessionListUpdates();
 
-  const { data } = useQuery(
+  const { data, isPending } = useQuery(
     trpc.session.list.queryOptions({ archived: false }),
   );
+
+  useSessionListUpdates(!isPending);
 
   return (
     <>
@@ -219,9 +220,7 @@ export function ServerCachePreview({
           trpcClient={fixture.client}
           queryClient={fixture.queryClient}
         >
-          <DeviceFeedContext.Provider value={fixture.retrieve}>
-            <Screens />
-          </DeviceFeedContext.Provider>
+          <Screens />
         </TRPCProvider>
       </QueryClientProvider>
     </ConnectionContext.Provider>

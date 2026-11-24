@@ -24,7 +24,7 @@ const settleMs = 150;
 // A Device that answers late must not let the Feed open cold: the subscription waits for what the Device kept.
 export const OpensTheFeedAfterTheStoredRevisionOnceASlowDeviceAnswers: Story = {
   play: async ({ mount, canvas }) => {
-    const fixture = serverCacheFixture('open', { slow: true });
+    const fixture = serverCacheFixture('open', 'slow');
     await mount(<ServerCachePreview fixture={fixture} />);
     await new Promise((wait) => setTimeout(wait, settleMs));
 
@@ -43,7 +43,7 @@ export const OpensTheFeedAfterTheStoredRevisionOnceASlowDeviceAnswers: Story = {
 // With the Server unreachable the Session list and a Feed seen before still draw, beside the Connection's own banner.
 export const DrawsWhatTheDeviceKeptBesideTheCannotReachBanner: Story = {
   play: async ({ mount, canvas }) => {
-    const fixture = serverCacheFixture('offline', { slow: false });
+    const fixture = serverCacheFixture('offline', 'ready');
     await mount(<ServerCachePreview fixture={fixture} />);
 
     await expect(await canvas.findAllByText(firstTitle)).not.toHaveLength(0);
@@ -51,5 +51,16 @@ export const DrawsWhatTheDeviceKeptBesideTheCannotReachBanner: Story = {
     await expect(await canvas.findByRole('status')).toHaveTextContent(
       /Can't reach/,
     );
+  },
+};
+
+// Storage that fails reads as nothing kept: the Feed opens cold and its subscription goes live.
+export const OpensTheFeedColdWhenTheDeviceCannotBeRead: Story = {
+  play: async ({ mount, canvas }) => {
+    const fixture = serverCacheFixture('open', 'failing');
+    await mount(<ServerCachePreview fixture={fixture} />);
+
+    await waitFor(() => expect(fixture.opened).toEqual(['']));
+    await expect(canvas.getByText('No Feed')).toBeVisible();
   },
 };

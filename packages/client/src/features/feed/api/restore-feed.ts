@@ -5,37 +5,54 @@ import {
   type QueryClient,
   useQueryClient,
 } from '@tanstack/react-query';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FeedState } from '../view/feed-state';
 import { feedKey, snapshotKey } from './feed-query';
 
-// Reads one query's copy off the Device by its hash, calling back with what it kept; the persister's own `retrieveQuery`. Not given where the Device keeps nothing.
+// Reads one query's copy off the Device by its hash, calling back with what it kept; the persister's own `retrieveQuery`.
 export type RetrieveKept = (
   queryHash: string,
   restored: (kept: PersistedQuery) => void,
 ) => Promise<FeedState | SessionSnapshot | undefined>;
 
-export const DeviceFeedContext = createContext<RetrieveKept | undefined>(
-  undefined,
-);
+// Where the Device's persister leaves its `retrieveQuery`, in the kept queries' default `meta`.
+export const keptOnDevice = 'keptOnDevice';
 
-// A kept copy lands in the cache with the age it had on the Device, unless the cache already holds something.
+const isRetrieve = (value: unknown): value is RetrieveKept =>
+  typeof value === 'function';
+
+function retrieveFor(
+  queryClient: QueryClient,
+  key: readonly unknown[],
+): RetrieveKept | undefined {
+  const retrieve = queryClient.getQueryDefaults(key).meta?.[keptOnDevice];
+
+  return isRetrieve(retrieve) ? retrieve : undefined;
+}
+
+/*
+ * A kept copy lands in the cache with the age it had on the Device, unless the cache already holds something. A copy
+ * that cannot be read, because the storage fails or what it holds is corrupt, counts as nothing kept: the persister
+ * has already removed a key it could not parse, and this settles either way.
+ */
 function restoreQuery(
   retrieve: RetrieveKept,
   queryClient: QueryClient,
   key: readonly unknown[],
 ): Promise<void> {
   return new Promise((done) => {
-    void retrieve(hashKey(key), (kept) => {
+    retrieve(hashKey(key), (kept) => {
       if (queryClient.getQueryData(key) === undefined)
         queryClient.setQueryData(key, kept.state.data, {
           updatedAt: kept.state.dataUpdatedAt,
         });
 
       done();
-    }).then((found) => {
-      if (found === undefined) done();
-    });
+    })
+      .then((found) => {
+        if (found === undefined) done();
+      })
+      .catch(() => done());
   });
 }
 
@@ -45,8 +62,8 @@ function restoreQuery(
  * True until that is done; false at once where nothing is kept on the Device, or the cache already holds the Feed.
  */
 export function useRestoreFeed(cacheId: string, held: boolean): boolean {
-  const retrieve = useContext(DeviceFeedContext);
   const queryClient = useQueryClient();
+  const retrieve = retrieveFor(queryClient, feedKey(cacheId));
   const [restored, setRestored] = useState<string | null>(null);
 
   useEffect(() => {

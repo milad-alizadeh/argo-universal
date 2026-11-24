@@ -2,7 +2,7 @@ import type { SessionListUpdate } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TRPCSubscriptionResult } from '@trpc/tanstack-react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { applySessionListUpdate } from '../api/apply-session-list-update';
@@ -62,59 +62,14 @@ function useSessionListRefresh(): SessionListRefresh {
   }, [queryClient, trpc, started, mountedAt]);
 }
 
-/*
- * A list still being restored from the Device, or read for the first time, holds nothing for an update to land on, and the Device's copy would overwrite one that did. The screen's own lists start reading as it mounts, so the first look waits a microtask for them. True from the first look at which none is empty, and then for good, so a list read later for another view never closes a subscription that is open.
- */
-function useListsRestored(): boolean {
-  const queryClient = useQueryClient();
-  const trpc = useTRPC();
-  const [restored, setRestored] = useState(false);
-
-  useEffect(() => {
-    const emptyLists = (): boolean =>
-      queryClient.isFetching({
-        ...trpc.session.list.pathFilter(),
-        predicate: (query): boolean => query.state.data === undefined,
-      }) > 0;
-
-    let stop = (): void => {};
-
-    let live = true;
-
-    const look = (): void => {
-      if (emptyLists()) return;
-
-      setRestored(true);
-      stop();
-    };
-
-    // The first look is after the screen's own lists have started; from then on each change in the cache is one.
-    queueMicrotask(() => {
-      if (!live) return;
-
-      look();
-      stop = queryClient.getQueryCache().subscribe(look);
-    });
-
-    return (): void => {
-      live = false;
-      stop();
-    };
-  }, [queryClient, trpc]);
-
-  return restored;
-}
-
-// Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
+// Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus. The screen that owns the list passes `enabled` false until its query holds rows, from the Device or the Server, so an update has rows to land on.
 export function useSessionListUpdates(enabled = true): SessionListSubscription {
   const trpc = useTRPC();
   const { catchUp, apply } = useSessionListRefresh();
 
-  const restored = useListsRestored();
-
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
-      enabled: enabled && restored,
+      enabled,
       onStarted: catchUp,
       onData: apply,
     }),

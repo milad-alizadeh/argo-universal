@@ -8,7 +8,11 @@ import type { TRPC } from '#features/connection';
 import { page, streamed } from '../mocks/feed-state.mocks';
 import { memoryStorage } from '../mocks/memory-storage';
 import { applyFeedEvents } from './features/feed/api/apply-feed-events';
-import { feedKey, snapshotKey } from './features/feed/api/feed-query';
+import {
+  feedKey,
+  feedPageSize,
+  snapshotKey,
+} from './features/feed/api/feed-query';
 import {
   emptyFeed,
   type FeedState,
@@ -28,6 +32,8 @@ const sessions = [{ id: 'session-1' }];
 
 const hourMs = 3_600_000;
 
+const feedsKept = 20;
+
 const writeWindowMs = 2500;
 
 const serverAsked = 'the Server was asked';
@@ -40,6 +46,7 @@ beforeEach(() => {
 afterEach(() => {
   onlineManager.setOnline(true);
   vi.useRealTimers();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
@@ -99,6 +106,25 @@ const keysOf = async (serverId: string): Promise<string[]> =>
   (await AsyncStorage.getAllKeys()).filter((key) =>
     key.startsWith(`query-cache:${serverId}:`),
   );
+
+// A window of `size` rows, as paging back through a long Session leaves it.
+function longFeed(size: number): FeedState {
+  const held = heldFeed.rows;
+
+  const rowsHeld = Array.from(
+    { length: Math.ceil(size / held.length) },
+    (_, copy) =>
+      held.map((row, index) => ({
+        ...row,
+        id: `${row.id}-${copy}`,
+        position: copy * held.length + index,
+      })),
+  )
+    .flat()
+    .slice(0, size);
+
+  return { ...heldFeed, rows: rowsHeld, hasOlder: false, startCursor: 0 };
+}
 
 const revised = (by: number): FeedState => ({
   ...heldFeed,
@@ -265,6 +291,57 @@ it('does not make a copy younger by restoring it', async () => {
   await vi.advanceTimersByTimeAsync(writeWindowMs);
 
   await expect(third.read(feedKey('session-1'))).rejects.toThrow(serverAsked);
+});
+
+it('restores a long Feed window as its newest rows, with older history to page in', async () => {
+  const long = longFeed(400);
+  const first = startApp('studio');
+  first.queryClient.setQueryData(feedKey('session-1'), long);
+  await first.quit();
+
+  const restored = await startApp('studio').read<FeedState>(
+    feedKey('session-1'),
+  );
+
+  expect(restored.rows).toEqual(long.rows.slice(-feedPageSize));
+  expect(restored).toMatchObject({
+    epoch: long.epoch,
+    revision: long.revision,
+    hasOlder: true,
+    startCursor: restored.rows[0]?.position,
+  });
+});
+
+it('keeps only the most recently written Feeds of a Server', async () => {
+  const app = startApp('studio');
+
+  for (let session = 0; session < feedsKept + 5; session += 1) {
+    app.queryClient.setQueryData(feedKey(`session-${session}`), heldFeed);
+    await vi.advanceTimersByTimeAsync(writeWindowMs);
+  }
+
+  await app.quit();
+  const restarted = startApp('studio');
+  await vi.advanceTimersByTimeAsync(writeWindowMs);
+
+  await expect(restarted.read(feedKey('session-0'))).rejects.toThrow(
+    serverAsked,
+  );
+  expect(await restarted.read(feedKey('session-5'))).toEqual(heldFeed);
+  expect(await restarted.read(feedKey(`session-${feedsKept + 4}`))).toEqual(
+    heldFeed,
+  );
+});
+
+it('reads storage that fails as nothing kept', async () => {
+  const first = startApp('studio');
+  first.queryClient.setQueryData(feedKey('session-1'), heldFeed);
+  await first.quit();
+
+  vi.spyOn(AsyncStorage, 'getItem').mockRejectedValue(new Error('unreadable'));
+  const second = startApp('studio');
+
+  await expect(second.read(feedKey('session-1'))).rejects.toThrow(serverAsked);
 });
 
 it('wipes one Server when the Device is unpaired from it, though a write was queued, and no other', async () => {

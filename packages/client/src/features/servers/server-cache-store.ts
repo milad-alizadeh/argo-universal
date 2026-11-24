@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   type AsyncStorage as PersisterStorage,
+  type PersistedQuery,
   experimental_createQueryPersister,
 } from '@tanstack/query-persist-client-core';
 
@@ -27,6 +28,15 @@ const forgotten = new Set<string>();
 type Entries = [key: string, value: string][];
 
 async function entriesUnder(prefix: string): Promise<Entries> {
+  try {
+    return await readEntriesUnder(prefix);
+  } catch {
+    // Storage that cannot be read holds nothing the App can use.
+    return [];
+  }
+}
+
+async function readEntriesUnder(prefix: string): Promise<Entries> {
   const keys = (await AsyncStorage.getAllKeys()).filter((key) =>
     key.startsWith(prefix),
   );
@@ -43,21 +53,42 @@ export function serverCacheStorage(serverId: string): PersisterStorage {
   const prefix = prefixOf(serverId);
 
   return {
-    getItem: (key) => AsyncStorage.getItem(key),
+    // Storage that cannot be read holds nothing the App can use; it is read as empty.
+    getItem: async (key) => {
+      try {
+        return await AsyncStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    },
     setItem: async (key, value) => {
       if (!forgotten.has(serverId)) await AsyncStorage.setItem(key, value);
     },
-    removeItem: (key) => AsyncStorage.removeItem(key),
+    removeItem: async (key) => {
+      try {
+        await AsyncStorage.removeItem(key);
+      } catch {
+        // A key that cannot be removed is read again, and dropped, next time.
+      }
+    },
     entries: () => entriesUnder(prefix),
   };
 }
 
+interface PersisterOptions {
+  // The Device's own storage except where a story slows it down or breaks it.
+  storage?: PersisterStorage;
+  // How a query is written: the whole state, unless the caller trims it.
+  serialize?: (kept: PersistedQuery) => string;
+}
+
 export function serverQueryPersister(
   serverId: string,
-  storage: PersisterStorage = serverCacheStorage(serverId),
+  { storage = serverCacheStorage(serverId), serialize }: PersisterOptions = {},
 ): ReturnType<typeof experimental_createQueryPersister> {
   return experimental_createQueryPersister({
     storage,
+    serialize,
     prefix: prefixOf(serverId),
     maxAge: cacheMaxAge,
     buster,
