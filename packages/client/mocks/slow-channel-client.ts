@@ -1,3 +1,4 @@
+import type { FeedSubscribeInput, FeedSubscribeOutput } from '@repo/contracts';
 import type { OpenSocket } from '../src/features/connection/api/channel/byte-socket';
 import {
   createChannelTransport,
@@ -126,4 +127,61 @@ export async function coldOpenMs(
   subscription.unsubscribe();
 
   return { ms: performance.now() - started, rows: count };
+}
+
+// A catch-up read for an App that holds no rows of a Session but knows its sync point: how many messages and how long the Server's rows take to arrive, one per row (before) or in batches (after).
+export async function catchUpMs(
+  phone: Phone,
+  sessionId: string,
+  batched: boolean,
+): Promise<{ ms: number; messages: number; rows: number }> {
+  const newest = await phone.client.feed.page.query({
+    sessionId,
+    direction: 'tail',
+    limit: 1,
+  });
+
+  const caughtUp = Promise.withResolvers<void>();
+  const count = { messages: 0, rows: 0 };
+  const started = performance.now();
+  const input = catchUpInput(sessionId, newest.epoch, batched);
+
+  const subscription = phone.client.feed.subscribe.subscribe(input, {
+    onData: (received) => {
+      const event = 'type' in received ? received : received.data;
+
+      if (event.type === 'snapshot' || event.type === 'closed') return;
+      count.messages += 1;
+      count.rows += rowsIn(event);
+
+      if ('rev' in event && event.rev >= newest.maxRevision) caughtUp.resolve();
+    },
+    onError: caughtUp.reject,
+  });
+
+  await caughtUp.promise;
+  subscription.unsubscribe();
+
+  return { ms: performance.now() - started, ...count };
+}
+
+function catchUpInput(
+  sessionId: string,
+  epoch: number,
+  batched: boolean,
+): FeedSubscribeInput {
+  const input: FeedSubscribeInput = {
+    sessionId,
+    after: { epoch, revision: 0 },
+  };
+
+  if (batched) input.batched = true;
+
+  return input;
+}
+
+function rowsIn(event: FeedSubscribeOutput): number {
+  if (event.type === 'rows.upsert') return event.rows.length;
+
+  return event.type === 'row.upsert' ? 1 : 0;
 }

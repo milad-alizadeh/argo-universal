@@ -136,7 +136,8 @@ function requireRowEvent(
   if (
     event.type === 'closed' ||
     event.type === 'reset' ||
-    event.type === 'tail'
+    event.type === 'tail' ||
+    event.type === 'rows.upsert'
   )
     throw new Error(`Feed ${event.type} during runtime observation`);
 
