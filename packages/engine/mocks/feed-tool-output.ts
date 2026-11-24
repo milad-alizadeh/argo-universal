@@ -8,7 +8,7 @@ import { assert, expect, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
 
-export const previewBytes = 64 * 1024;
+export const previewBytes = 16 * 1024;
 
 const largeText = (label: string): string =>
   `${label}-head ${'x'.repeat(200_000)} ${label}-tail`;

@@ -21,6 +21,19 @@ export interface BlobUrl {
 
 export const BlobUrlContext = createContext<BlobUrl | null>(null);
 
+// How a Blob's bytes are read from the Server: its `/blobs/:id` route, over the channel for a paired Server.
+export type BlobRead = (path: string, init?: RequestInit) => Promise<Response>;
+
+export const BlobReadContext = createContext<BlobRead | null>(null);
+
+export function useBlobRead(): BlobRead {
+  const read = useContext(BlobReadContext);
+
+  if (!read) throw new Error('useBlobRead needs AppProviders');
+
+  return read;
+}
+
 // Where an image the Server stores is fetched: its `/blobs/:id` route, or a story's mock.
 export function useBlobUrl(): BlobUrl {
   const blobUrl = useContext(BlobUrlContext);
@@ -33,6 +46,11 @@ export function useBlobUrl(): BlobUrl {
 // The Server serves blobs over HTTP beside tRPC, on its WebSocket address.
 export function createServerBlobUrl(serverUrl: string): BlobUrl {
   return (blob) => serverHttpUrl(serverUrl, blobPath(blob.blobId));
+}
+
+// A Blob's bytes over HTTP from the Server on this Device, as the channel reads them for a paired Server.
+export function createServerBlobRead(serverUrl: string): BlobRead {
+  return (path, init) => fetch(serverHttpUrl(serverUrl, path), init);
 }
 
 // A Plugin's video or audio streams from the Server's asset route, never from the Plugin's host.

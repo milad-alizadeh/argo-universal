@@ -1,9 +1,11 @@
 import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
 import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
-import type { OpenConnection } from '#features/connection';
+import type { BlobRead, OpenConnection } from '#features/connection';
 import {
+  BlobReadContext,
   BlobUrlContext,
+  createServerBlobRead,
   createServerBlobUrl,
   createServerMediaUrl,
   useChannelUrls,
@@ -45,13 +47,13 @@ function ChannelServerUrls({
   const { blobUrl, mediaUrl } = useChannelUrls(read, serverId);
 
   return (
-    <UrlProviders blobUrl={blobUrl} mediaUrl={mediaUrl}>
+    <UrlProviders blobUrl={blobUrl} mediaUrl={mediaUrl} read={read}>
       {children}
     </UrlProviders>
   );
 }
 
-function useLoopbackUrls(serverUrl: string | undefined): ServerUrlFns {
+function useLoopbackUrls(serverUrl: string | undefined): LoopbackUrls {
   if (serverUrl === undefined)
     throw new Error('A Server with no URL needs a channel');
 
@@ -59,6 +61,7 @@ function useLoopbackUrls(serverUrl: string | undefined): ServerUrlFns {
     () => ({
       blobUrl: createServerBlobUrl(serverUrl),
       mediaUrl: createServerMediaUrl(serverUrl),
+      read: createServerBlobRead(serverUrl),
     }),
     [serverUrl],
   );
@@ -71,10 +74,10 @@ function LoopbackServerUrls({
   serverUrl: string | undefined;
   children: ReactNode;
 }): React.JSX.Element {
-  const { blobUrl, mediaUrl } = useLoopbackUrls(serverUrl);
+  const { blobUrl, mediaUrl, read } = useLoopbackUrls(serverUrl);
 
   return (
-    <UrlProviders blobUrl={blobUrl} mediaUrl={mediaUrl}>
+    <UrlProviders blobUrl={blobUrl} mediaUrl={mediaUrl} read={read}>
       {children}
     </UrlProviders>
   );
@@ -83,13 +86,19 @@ function LoopbackServerUrls({
 function UrlProviders({
   blobUrl,
   mediaUrl,
+  read,
   children,
-}: ServerUrlFns & { children: ReactNode }): React.JSX.Element {
+}: ServerUrlFns & {
+  read: BlobRead;
+  children: ReactNode;
+}): React.JSX.Element {
   return (
     <BlobUrlContext.Provider value={blobUrl}>
-      <MediaUrlContext.Provider value={mediaUrl}>
-        <LinkPreviewProvider>{children}</LinkPreviewProvider>
-      </MediaUrlContext.Provider>
+      <BlobReadContext.Provider value={read}>
+        <MediaUrlContext.Provider value={mediaUrl}>
+          <LinkPreviewProvider>{children}</LinkPreviewProvider>
+        </MediaUrlContext.Provider>
+      </BlobReadContext.Provider>
     </BlobUrlContext.Provider>
   );
 }
@@ -97,4 +106,8 @@ function UrlProviders({
 interface ServerUrlFns {
   blobUrl: ReturnType<typeof createServerBlobUrl>;
   mediaUrl: ReturnType<typeof createServerMediaUrl>;
+}
+
+interface LoopbackUrls extends ServerUrlFns {
+  read: BlobRead;
 }

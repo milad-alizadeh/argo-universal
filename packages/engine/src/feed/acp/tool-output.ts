@@ -32,9 +32,9 @@ interface CappedToolOutput {
   blobs: OutputBlob[];
 }
 
-const previewBytes = 65_536;
+const previewBytes = 16_384;
 
-const sideBytes = 32_768;
+const sideBytes = 8_192;
 
 const cutMark = '\n…\n';
 
@@ -56,7 +56,7 @@ const toOutputBlob = (text: string): OutputBlob => {
   };
 };
 
-// The first and last 32 KB of a text over 64 KB, cut on whole characters.
+// The first and last 8 KB of a text over 16 KB, cut on whole characters.
 const capText = (text: string): string | undefined => {
   const bytes = Buffer.from(text);
 
