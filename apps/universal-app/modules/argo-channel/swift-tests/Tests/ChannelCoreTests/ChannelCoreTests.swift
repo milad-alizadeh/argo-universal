@@ -146,49 +146,64 @@ final class ChannelCoreTests: XCTestCase {
     }
   }
 
-  // A send from one thread and a pong for a ping on another are numbered and delivered under one lock, so the Server reads the records in the order it counts them.
-  func testSendsAndPongsReachTheSocketInRecordOrder() throws {
+  // The first delivery stalls while a pong is answered on another thread. Delivery happens inside the session's lock, so the pong waits behind it and the Server reads the records in the order they were numbered.
+  func testAPongWaitsBehindADeliveryInProgress() throws {
     let vectors = try loadVectors()
-    let delivered = DeliveredRecords()
-    let session = session(vectors) { delivered.append($0) }
-    let pings = 200
+    let entered = DispatchSemaphore(value: 0)
+    let delivered = DeliveredRecords(onFirst: { entered.signal() })
+    let session = session(vectors) { delivered.began($0) }
     var server = RecordCipher(key: bytes(vectors.receiveKey), records: 1)
-    var incoming = Data()
-    incoming.append(framed(try server.seal(Data(upgradeAnswer(vectors.accept).utf8))))
-    for _ in 0..<pings { incoming.append(framed(try server.seal(Data([0x89, 0])))) }
+    var incoming = framed(try server.seal(Data(upgradeAnswer(vectors.accept).utf8)))
+    incoming.append(framed(try server.seal(Data([0x89, 0]))))
 
-    let receiving = DispatchQueue(label: "receive")
     let group = DispatchGroup()
-    receiving.async(group: group) {
-      var at = incoming.startIndex
-      while at < incoming.endIndex {
-        let end = min(at + 20, incoming.endIndex)
-        _ = try? session.receive(incoming[at..<end])
-        at = end
-      }
-    }
-    DispatchQueue.global().async(group: group) {
-      for index in 0..<pings { try? session.send(message: "m\(index)") }
-    }
+    DispatchQueue.global().async(group: group) { try? session.send(message: "first") }
+    XCTAssertEqual(entered.wait(timeout: .now() + 5), .success)
+    DispatchQueue.global().async(group: group) { _ = try? session.receive(incoming) }
     group.wait()
 
+    XCTAssertFalse(delivered.overlapped(), "a second record was delivered while the first was still being delivered")
     var opening = RecordCipher(key: bytes(vectors.sendKey), records: 1)
     let records = delivered.all()
-    XCTAssertEqual(records.count, pings * 2)
+    XCTAssertEqual(records.count, 2)
     for record in records {
       XCTAssertNoThrow(try opening.open(record.dropFirst(2)))
     }
   }
 }
 
+/// Records as the socket receives them. The first delivery stays in progress for a moment, so a second one that starts during it shows the session did not hold its lock across delivery.
 private final class DeliveredRecords {
   private let lock = NSLock()
+  private let onFirst: () -> Void
   private var records: [Data] = []
+  private var inProgress = 0
+  private var overlap = false
 
-  func append(_ record: Data) {
+  init(onFirst: @escaping () -> Void) {
+    self.onFirst = onFirst
+  }
+
+  func began(_ record: Data) {
     lock.lock()
+    inProgress += 1
+    if inProgress > 1 { overlap = true }
+    let first = records.isEmpty
     records.append(record)
     lock.unlock()
+    if first {
+      onFirst()
+      Thread.sleep(forTimeInterval: 0.3)
+    }
+    lock.lock()
+    inProgress -= 1
+    lock.unlock()
+  }
+
+  func overlapped() -> Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    return overlap
   }
 
   func all() -> [Data] {
