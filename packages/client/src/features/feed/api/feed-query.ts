@@ -13,6 +13,13 @@ export const feedKey = (cacheId: string): readonly string[] => [
   cacheId,
 ];
 
+// The Session a Feed or snapshot key belongs to; the id is the third part of both.
+export function sessionIdOf(queryKey: readonly unknown[]): string | undefined {
+  const id = queryKey[2];
+
+  return typeof id === 'string' ? id : undefined;
+}
+
 // The Session's status snapshot, written beside its rows.
 export const snapshotKey = (cacheId: string): readonly string[] => [
   ...snapshotKeyPrefix,
