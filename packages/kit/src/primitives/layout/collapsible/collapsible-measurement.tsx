@@ -12,6 +12,8 @@ interface ContentMeasurement {
   contentHeight: RefObject<number>;
   renderedHeight: number;
   measured: boolean;
+  // Whether the content is open and still, so a new height is only kept, for a drawing that does not use it yet.
+  resting: RefObject<boolean>;
   onLayout: (event: LayoutChangeEvent) => void;
   forget: () => void;
 }
@@ -27,28 +29,48 @@ function measureContent(
   });
 }
 
-function useMeasuredHeight(): Omit<
+function useMeasuredHeight(
+  open: boolean,
+): Omit<
   ContentMeasurement,
-  'content' | 'onLayout'
+  'content' | 'onLayout' | 'resting'
 > & { recordHeight: (height: number) => void } {
   const contentHeight = useRef(0);
+  // Opens at rest when it mounts open: it has no motion to size, so its first height costs no draw.
+  const resting = useRef(open);
   const [measured, setMeasured] = useState(false);
   const [renderedHeight, setRenderedHeight] = useState(0);
 
   const recordHeight = useCallback((height: number): void => {
     contentHeight.current = height;
+
+    if (resting.current) return;
+
     setRenderedHeight(height);
     setMeasured(true);
   }, []);
 
   const forget = useCallback((): void => setMeasured(false), []);
 
-  return { contentHeight, measured, renderedHeight, recordHeight, forget };
+  // The drawing reads the height once the content leaves rest, which is when it closes.
+  useLayoutEffect(() => {
+    if (!open && contentHeight.current !== renderedHeight)
+      setRenderedHeight(contentHeight.current);
+  }, [open, renderedHeight]);
+
+  return {
+    contentHeight,
+    measured,
+    renderedHeight,
+    resting,
+    recordHeight,
+    forget,
+  };
 }
 
 export function useContentMeasurement(open: boolean): ContentMeasurement {
   const content = useRef<ViewInstance>(null);
-  const { recordHeight, ...measurement } = useMeasuredHeight();
+  const { recordHeight, ...measurement } = useMeasuredHeight(open);
   useLayoutEffect(() => {
     if (open && !measurement.measured) measureContent(content, recordHeight);
   }, [open, measurement.measured, recordHeight]);
@@ -61,4 +83,13 @@ export function useContentMeasurement(open: boolean): ContentMeasurement {
       if (open) recordHeight(event.nativeEvent.layout.height);
     },
   };
+}
+
+export function useTrackResting(
+  { resting }: Pick<ContentMeasurement, 'resting'>,
+  isResting: boolean,
+): void {
+  useLayoutEffect(() => {
+    resting.current = isResting;
+  }, [resting, isResting]);
 }

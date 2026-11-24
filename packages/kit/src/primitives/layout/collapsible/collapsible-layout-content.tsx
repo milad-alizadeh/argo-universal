@@ -13,7 +13,10 @@ import {
   type CollapsibleLayoutSync,
 } from './collapsible-context';
 import { useLayoutMotion } from './collapsible-layout-motion';
-import { useContentMeasurement } from './collapsible-measurement';
+import {
+  useContentMeasurement,
+  useTrackResting,
+} from './collapsible-measurement';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
 import { CollapsibleRegion } from './collapsible-region';
 
@@ -50,6 +53,7 @@ function useLayoutContent(
     layoutMotionOptions(open, measurement, layoutSync),
   );
 
+  useTrackResting(measurement, open && progress === 1);
   useForgetWhenHidden(!open && progress === 0, measurement.forget);
   useSyncAtRest(progress, measurement.measured, layoutSync.syncLayout);
 

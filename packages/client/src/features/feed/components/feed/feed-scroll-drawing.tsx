@@ -1,6 +1,12 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { List } from '@repo/kit/primitives/lists/list';
-import { type RefObject, useCallback, useLayoutEffect, useState } from 'react';
+import {
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type * as React from 'react';
 import {
   type NativeScrollEvent,
@@ -14,6 +20,10 @@ import type { FeedListProps, feedListProps } from './feed-scroll';
 import { rememberFeedPosition } from './feed-scroll-memory';
 import { WebFeedViewport } from './follow-web-feed';
 import { useFeedWheel } from './scroll-web-feed';
+import { throttle } from './throttle';
+
+// A scroll event comes every frame; a few saves a second keep the read position close enough.
+const positionSaveInterval = 250;
 
 type ListRef = RefObject<LegendListRef | null>;
 
@@ -42,11 +52,16 @@ export function useFeedOnScroll(
   const focused = useScreenFocused();
   useWebViewport(list, sessionId, focused);
 
-  return useCallback(() => {
-    if (!focused) return;
+  const save = useMemo(
+    () =>
+      throttle(() => {
+        if (focused) rememberFeedPosition(sessionId, list);
+      }, positionSaveInterval),
+    [focused, sessionId, list],
+  );
+  useEffect(() => save.cancel, [save]);
 
-    rememberFeedPosition(sessionId, list);
-  }, [focused, sessionId, list]);
+  return save.call;
 }
 
 interface Drawing {
