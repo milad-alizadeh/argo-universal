@@ -1,4 +1,5 @@
-import type { SessionFeedState, SessionFeedStore } from '../stores';
+import { useCallback, useState } from 'react';
+import type { FeedCache } from '../api/feed-cache';
 import {
   findLiveToolCall,
   findPermissionToolCall,
@@ -6,32 +7,27 @@ import {
 import { toFeedView } from '../view/to-feed-view';
 import { newestWorkRevision } from '../view/work-revision';
 import type { SessionFeed } from './session-feed';
-import {
-  type FeedHistory,
-  type FeedSources,
-  type LiveChanges,
-  useFeedSources,
-} from './use-feed-sources';
+import { type FeedLive, useFeedLive } from './use-feed-live';
+import { type FeedWindow, useFeedWindow } from './use-feed-window';
 
-// A Session's held Feed view, paging and live changes (ADR 0007). While not `shown` the live subscription is closed and nothing commits; showing it again opens the subscription after the rows held.
+// A Session's Feed view, kept in the query cache with its paging and live changes (ADR 0007). While not `shown` the live subscription is closed and nothing is written; showing it again opens the subscription after the newest revision the cache holds.
 export function useSessionFeed(
   sessionId: string | undefined,
   translate = toFeedView,
   shown = true,
 ): SessionFeed {
-  const sources = useFeedSources(sessionId, translate, shown);
+  const window = useFeedWindow(sessionId, translate, {
+    cacheId: sessionId,
+    shown,
+    tail: true,
+  });
+  const live = useFeedLive(sessionId, window.cache, shown);
+  const older = useLoadOlder(window.cache);
 
-  return feedOf(sessionId, sources);
-}
-
-function feedOf(
-  sessionId: string | undefined,
-  { store, state, history, changes }: FeedSources,
-): SessionFeed {
   return {
-    ...feedDisplay(state, sessionId),
-    ...feedPaging(history),
-    ...feedConnection(store, { state, changes }),
+    ...feedDisplay(window, sessionId),
+    ...feedPaging(window, older),
+    ...feedConnection(window, live),
   };
 }
 
@@ -48,22 +44,16 @@ type FeedDisplay = Pick<
   | 'historyCursor'
 >;
 
-const feedRevisions = (
-  feed: SessionFeedState['feed'],
-): Pick<SessionFeed, 'revision' | 'workRevision'> => ({
-  revision: feed.revision,
-  workRevision: newestWorkRevision(feed.rows),
-});
-
 function feedDisplay(
-  { feed, view, snapshot }: SessionFeedState,
+  { feed, view, snapshot }: FeedWindow,
   sessionId: string | undefined,
 ): FeedDisplay {
   return {
     view,
     hasOlder: feed.epoch === null || feed.hasOlder,
     historyCursor: feed.startCursor,
-    ...feedRevisions(feed),
+    revision: feed.revision,
+    workRevision: newestWorkRevision(feed.rows),
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
     permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),
     snapshot,
@@ -71,30 +61,51 @@ function feedDisplay(
   };
 }
 
+interface OlderHistory {
+  loading: boolean;
+  load: () => Promise<void>;
+}
+
+// Older rows merge into the same query; a failed page is not a Feed error, and scrolling asks again.
+function useLoadOlder(cache: FeedCache): OlderHistory {
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async (): Promise<void> => {
+    setLoading(true);
+
+    try {
+      await cache.loadOlder();
+    } catch {
+      // The next start-reached signal asks for the page again.
+    } finally {
+      setLoading(false);
+    }
+  }, [cache]);
+
+  return { loading, load };
+}
+
 function feedPaging(
-  history: FeedHistory,
+  { query }: FeedWindow,
+  older: OlderHistory,
 ): Pick<SessionFeed, 'error' | 'retry' | 'loadingOlder' | 'loadOlder'> {
   return {
-    error: history.isFetchNextPageError ? null : history.error,
-    retry: () => void history.refetch(),
-    loadingOlder: history.isFetchingNextPage,
-    loadOlder: history.loadOlder,
+    error: query.error,
+    retry: () => void query.refetch(),
+    loadingOlder: older.loading,
+    loadOlder: older.load,
   };
 }
 
 function feedConnection(
-  store: SessionFeedStore,
-  { state, changes }: { state: SessionFeedState; changes: LiveChanges },
+  { cache }: FeedWindow,
+  { changes, closure, retryOpen }: FeedLive,
 ): Pick<SessionFeed, 'openError' | 'retryOpen' | 'resumeAfterCommand'> {
-  const retryOpen = (): void => {
-    if (store.retryOpen()) changes.reset();
-  };
-
   return {
-    openError: state.closure?.error ?? changes.error,
+    openError: closure?.error ?? changes.error,
     retryOpen,
     resumeAfterCommand: () => {
-      if (store.getState().closure) retryOpen();
+      if (closure && cache.isShown()) retryOpen();
     },
   };
 }

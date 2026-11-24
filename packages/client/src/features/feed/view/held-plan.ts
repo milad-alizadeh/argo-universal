@@ -28,6 +28,8 @@ export function laterPlan(
 }
 
 // The rows the Feed view reads: the window, and the Plan held before it.
-export function shownRows(feed: FeedState): readonly SessionUpdate[] {
+export function shownRows(
+  feed: Pick<FeedState, 'rows' | 'plan'>,
+): readonly SessionUpdate[] {
   return feed.plan ? keepNewerRevisions(feed.rows, [feed.plan]) : feed.rows;
 }
