@@ -6,6 +6,7 @@ import type { ListRef } from '../../../list-ref';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
+import type { ListEntry } from './list-entries';
 
 // Kit-only: scrolling, padding, accessibility, content lanes and section grouping.
 export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
@@ -47,6 +48,8 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'keyboardShouldPersistTaps'
   > & {
     ref?: Ref<ListRef>;
+    // Kit-only: rows and Sections as data, drawn by `renderItem`, in place of children.
+    entries?: readonly ListEntry<Item>[];
     header?: ReactNode;
     endContent?: ReactNode;
     startContent?: ReactNode;

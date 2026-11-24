@@ -4,6 +4,7 @@ import type { ListProps } from './list-props';
 export type ChildrenOptions = Omit<
   ListProps<ListChild>,
   | 'items'
+  | 'entries'
   | 'renderItem'
   | 'getSelectionId'
   | 'getSectionKey'
@@ -15,6 +16,7 @@ export type ChildrenOptions = Omit<
 
 export function childrenOptions<Item>({
   items: _items,
+  entries: _entries,
   renderItem: _render,
   getSectionKey: _section,
   getSelectionId: _selection,

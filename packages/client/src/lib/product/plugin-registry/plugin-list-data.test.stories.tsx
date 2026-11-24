@@ -97,3 +97,69 @@ export const ChangedRowDrawsAlone: Story = {
     await expect(counts.ListItem).toHaveProperty('mounts', 0);
   },
 };
+
+const sectionOf = (key: string, rows: WireNode[]): WireNode => ({
+  type: 'List.Section',
+  key,
+  props: { title: `Section ${key}` },
+  slots: {},
+  children: rows,
+});
+
+const sectioned: WireNode = {
+  ...firstPage,
+  children: [
+    sectionOf('one', firstPage.children.slice(0, 6)),
+    sectionOf('two', firstPage.children.slice(6)),
+  ],
+};
+
+// The same change inside a Section: its row draws alone, and Sections and moves keep reading it as they did.
+const retitledInSection: WireNode = {
+  ...sectioned,
+  children: [
+    {
+      ...sectioned.children[0],
+      children:
+        sectioned.children[0]?.children.map((child, index) =>
+          index === 2
+            ? { ...child, props: { ...child.props, title: 'Retitled issue' } }
+            : child,
+        ) ?? [],
+    } as WireNode,
+    ...sectioned.children.slice(1),
+  ],
+};
+
+function SectionedList(): React.JSX.Element {
+  const [tree, setTree] = useState(sectioned);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Button label="Change list" onPress={() => setTree(retitledInSection)} />
+      <Profiler id={renders.id} onRender={renders.onRender}>
+        <View style={{ height: 1200 }}>
+          <PluginTree root={tree} onPageCall={fn(async () => {})} />
+        </View>
+      </Profiler>
+    </View>
+  );
+}
+
+export const ChangedRowInSectionDrawsAlone: Story = {
+  render: () => <SectionedList />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await settleLayout('wide');
+    await canvas.findByText('Section two');
+
+    const counts = await renders.during(canvasElement, async () => {
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Change list' }),
+      );
+      await canvas.findByText('Retitled issue');
+    });
+
+    await expect(counts.ListItem?.updates).toHaveLength(1);
+    await expect(counts.ListItem).toHaveProperty('mounts', 0);
+  },
+};

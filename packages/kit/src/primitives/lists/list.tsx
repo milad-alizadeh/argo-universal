@@ -1,8 +1,9 @@
 import { listDefaults } from '@repo/contracts/kit-tokens';
-import type { ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { InRowFrameContext } from '#primitives/fields/field-row';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
+import { flatChildren } from '../../flattened-children';
 import type { ListLook } from '../../list-look';
 import {
   ListLookContext,
@@ -12,6 +13,7 @@ import {
 import { ListBehaviours } from './list/list-behaviours';
 import { ChildRows } from './list/list-child-rows';
 import { DataList } from './list/list-data-list';
+import { entryNodes } from './list/list-entries';
 import { ListMenuRows } from './list/list-menu-rows';
 import { NativeGroupedList } from './list/list-native-grouped';
 import { drawsNativeGroupedList } from './list/list-native-rows';
@@ -93,12 +95,29 @@ const CardEdge = ({
 }): ReactElement =>
   card ? <View className="-mx-1">{children}</View> : children;
 
+// A List of `entries` reads the nodes they make as its children, so its Sections, moves, search and selection read them as ever.
+function useEntryChildren<Item>(props: ListProps<Item>): ListProps<Item> {
+  const { entries, renderItem, ...rest } = props;
+
+  const children = useMemo(
+    () =>
+      entries && renderItem
+        ? flatChildren(entryNodes(entries, renderItem))
+        : undefined,
+    [entries, renderItem],
+  );
+
+  return children === undefined
+    ? props
+    : { ...rest, items: undefined, children };
+}
+
 /*
  * A Plugin's List, whose props its wire checked: plugin-kit's types keep `onMove` off a List of `items` there. A List
  * inside a row's frame starts outside it: only its own grouped cells frame its rows.
  */
 export function PluginList<Item>(props: ListProps<Item>): ReactElement {
-  const list = useListContent(props);
+  const list = useListContent(useEntryChildren(props));
   const look = useLook(list);
 
   return (

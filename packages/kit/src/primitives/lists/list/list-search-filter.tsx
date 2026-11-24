@@ -100,7 +100,7 @@ const orderOf = (
 
 // A search shows some rows; a move among them reaches the owner counted in its full order.
 const searchedMove = (
-  { children, onMove }: ListProps<never>,
+  { children, onMove }: Pick<ListProps<never>, 'children' | 'onMove'>,
   shown: ReactNode[],
 ): ListProps<never>['onMove'] =>
   onMove &&

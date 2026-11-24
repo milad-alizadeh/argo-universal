@@ -1,4 +1,9 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
+import type {
+  ListEntry,
+  ListSectionProps,
+} from '@repo/kit/primitives/lists/list';
 
 /*
  * What a List hands its list as data: the nodes the Server sent, keyed by node key and typed by node type, so a list
@@ -49,3 +54,58 @@ export const tableRowsOf = (
   node: WireNode,
 ): Pick<ListRows, 'items'> | undefined =>
   node.type === 'Table' ? { items: node.children } : undefined;
+
+// A row of an entry List: its node, and the address it draws at, so a row keeps its state wherever the List reads it.
+export interface RowItem {
+  node: WireNode;
+  key: string;
+}
+
+export type SectionDrawing = Omit<ListSectionProps, 'children'>;
+
+// A native grouped List draws FieldGroup rows from its children alone.
+const holdsNativeRow = (nodes: readonly WireNode[]): boolean =>
+  nodes.some(
+    (child) =>
+      isNativeRow(child) ||
+      (child.type === 'List.Section' && holdsNativeRow(child.children)),
+  );
+
+interface Entries {
+  nodes: readonly WireNode[];
+  parent: string;
+  sectionProps: (section: WireNode, key: string) => SectionDrawing;
+}
+
+function entriesIn({
+  nodes,
+  parent,
+  sectionProps,
+}: Entries): ListEntry<RowItem>[] {
+  return nodes.map((child) => {
+    const key = childNodeKey(parent, child.key);
+
+    if (child.type !== 'List.Section')
+      return { key: child.key, item: { node: child, key } };
+
+    return {
+      key: child.key,
+      section: sectionProps(child, key),
+      entries: entriesIn({ nodes: child.children, parent: key, sectionProps }),
+    };
+  });
+}
+
+/*
+ * A List's Sections and rows as the kit's entries, the structure its children would spell, for a List that is not a
+ * flat run of rows: Sections, nested rows, moves, grids and lanes. `sectionProps` draws a Section's own props.
+ */
+export function listEntriesOf(
+  node: WireNode,
+  key: string,
+  sectionProps: Entries['sectionProps'],
+): ListEntry<RowItem>[] | undefined {
+  if (node.type !== 'List' || holdsNativeRow(node.children)) return undefined;
+
+  return entriesIn({ nodes: node.children, parent: key, sectionProps });
+}

@@ -9,7 +9,13 @@ import {
 } from '@repo/contracts/plugins/wire-node-key';
 import { Fragment, createElement, type ElementType } from 'react';
 import { pluginEntries } from './plugin-entries';
-import { listRowsOf, tableRowsOf } from './plugin-list-rows';
+import {
+  listEntriesOf,
+  listRowsOf,
+  tableRowsOf,
+  type RowItem,
+  type SectionDrawing,
+} from './plugin-list-rows';
 import type * as Rendering from './plugin-rendering';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
@@ -61,8 +67,17 @@ function renderComponent(
   const props = context.controls(input);
 
   const rows = listRowsOf(node) ?? tableRowsOf(node);
+  const entries = rows
+    ? undefined
+    : listEntriesOf(node, context.key, sectionProps(context));
 
   if (rows) Object.assign(props, rows, { renderItem: rowRenderer(context) });
+  else if (entries)
+    Object.assign(props, {
+      entries,
+      renderItem: entryRenderer(context),
+      recycleItems: true,
+    });
   else if (definition.children)
     props.children = renderedChildren(node.children, context);
 
@@ -81,6 +96,40 @@ const rowRenderer =
       node,
       context: { ...context, key: childNodeKey(context.key, node.key) },
     });
+
+// A row of an entry List, drawn at its own address, from the same cache of drawn nodes.
+const entryRenderer =
+  (context: Rendering.RenderContext) =>
+  ({ node, key }: RowItem): React.JSX.Element | null =>
+    RenderNode({ node, context: { ...context, key } });
+
+/*
+ * A Section's own props, held as the element they draw, so a Section its node left as it was has the same props and
+ * the kit keeps the header and footer it drew.
+ */
+const sectionProps =
+  (context: Rendering.RenderContext) =>
+  (node: WireNode, key: string): SectionDrawing => {
+    const scoped = { ...context, key };
+    const held = scoped.drawn.get(key, node);
+
+    if (held) return held.props as SectionDrawing;
+
+    const definition = kitComponent(node.type);
+    const component = registry.get(node.type);
+
+    if (!definition || !component) return {};
+
+    const input = { node, definition, context: scoped, source: node.props };
+    const props = {
+      ...scoped.controls(input),
+      ...renderedSlots(node, definition, scoped),
+    };
+
+    scoped.drawn.set(key, node, createElement(component, props));
+
+    return props as SectionDrawing;
+  };
 
 function renderedChildren(
   nodes: WireNode[],

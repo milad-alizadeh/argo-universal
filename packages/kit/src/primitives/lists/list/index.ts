@@ -12,6 +12,8 @@ export { ListSection } from './list-section';
 
 export { ListSectionHeader } from './list-section-parts';
 
+export type { ListEntry } from './list-entries';
+
 export type { ListProps, ListSectionProps } from './list-props';
 
 export {
