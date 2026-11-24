@@ -7,8 +7,13 @@ interface Pending {
   settle: (body: string) => void;
 }
 
+interface SlowServer {
+  read: typeof fetch;
+  pending: Pending[];
+}
+
 // A Server the test answers by hand: each read waits in `pending` until `settle`.
-function slowServer(): { read: typeof fetch; pending: Pending[] } {
+function slowServer(): SlowServer {
   const pending: Pending[] = [];
 
   const read: typeof fetch = (input, init) =>
@@ -16,7 +21,7 @@ function slowServer(): { read: typeof fetch; pending: Pending[] } {
       const signal = init?.signal ?? undefined;
       signal?.addEventListener('abort', () => reject(new Error('aborted')));
       pending.push({
-        path: String(input),
+        path: typeof input === 'string' ? input : '',
         signal,
         settle: (body) =>
           resolve(

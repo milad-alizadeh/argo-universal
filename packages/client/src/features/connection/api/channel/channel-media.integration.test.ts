@@ -103,7 +103,7 @@ it('records what a Feed of images costs over bad Wi-Fi, a channel each and on on
   for (let round = 0; round < rounds; round += 1)
     for (const [name, reader] of Object.entries(readers)) {
       const run = await timed(reader());
-      (times[name] ??= []).push(run.ms);
+      times[name] = [...(times[name] ?? []), run.ms];
       handshakes[name] = run.handshakes;
     }
 
