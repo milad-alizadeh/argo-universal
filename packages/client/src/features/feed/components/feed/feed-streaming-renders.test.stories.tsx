@@ -39,10 +39,16 @@ type FeedRowUpdate = RenderCount['updates'][number];
 
 const streamedId = 'streamed-answer';
 
-// Inline syntax ahead of the words, so the answer takes the lexer's path for a line that may hold an unfinished span.
+// The words streamed so far, as the Feed draws them.
 const chunkWords = (chunks: number): string =>
-  '`code` [link](http://example.com) ' +
   Array.from({ length: chunks }, (_unused, index) => `chunk${index}`).join(' ');
+
+// Inline syntax ahead of the words, so the answer takes the lexer's path for a line that may hold an unfinished span; it draws as `code link`.
+const answerText = (chunks: number): string =>
+  `\`code\` [link](http://example.com) ${chunkWords(chunks)}`;
+
+const drawnAnswer = (chunks: number): string =>
+  `code link ${chunkWords(chunks)}`;
 
 const answerAfter = (chunks: number): SessionUpdate => ({
   ...recordedAgentMessage('agent-1', 'edit-and-command'),
@@ -50,7 +56,7 @@ const answerAfter = (chunks: number): SessionUpdate => ({
   position: lastRow.position + 1,
   revision: longSnapshot.maxRevision + chunks,
   state: 'open',
-  content: [{ type: 'text', text: chunkWords(chunks) }],
+  content: [{ type: 'text', text: answerText(chunks) }],
 });
 
 interface Stream {
@@ -118,7 +124,9 @@ export const ChunkDrawsOnlyTheStreamedRowAndLiveHeader: Story = {
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
     await waitFor(() => expect(stream.send).not.toBeNull(), settleWait);
-    await waitFor(() => expect(canvasElement.textContent).toContain('chunk0'));
+    await waitFor(() =>
+      expect(canvasElement.textContent).toContain(drawnAnswer(1)),
+    );
     const lex = spyOn(Lexer.prototype, 'lex');
     const lexed: number[] = [];
 
@@ -128,7 +136,7 @@ export const ChunkDrawsOnlyTheStreamedRowAndLiveHeader: Story = {
         stream.send?.();
 
         await waitFor(() =>
-          expect(canvasElement.textContent).toContain(`chunk${chunk - 1}`),
+          expect(canvasElement.textContent).toContain(drawnAnswer(chunk)),
         );
         lexed.push(lex.mock.calls.length);
       }

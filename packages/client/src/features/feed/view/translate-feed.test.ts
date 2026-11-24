@@ -1,6 +1,19 @@
-import type { SessionUpdate } from '@repo/contracts';
+import {
+  permissionOptions,
+  type SessionSnapshot,
+  type SessionUpdate,
+  type ToolCallUpdate,
+  type VoiceTranscript,
+} from '@repo/contracts';
+import { operationFeedRowId } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
-import { workMocks } from '../../../../mocks/feed-view.mocks';
+import { readRow, workMocks } from '../../../../mocks/feed-view.mocks';
+import {
+  spawnPromptRow,
+  spawnRow,
+  subagentSnapshot,
+} from '../../../../mocks/subagent-rows.mocks';
+import { call } from './feed-row-facts.mocks';
 import {
   type FeedTranslator,
   toFeedView,
@@ -14,6 +27,8 @@ const recorded = workMocks[0];
 if (!recorded) throw new Error('Recorded catalog needs an edit-and-command');
 
 const { snapshot } = recorded;
+
+const recordedRows = recorded.rows;
 
 // The recording once per Turn, with every id its own, until the Feed holds a thousand rows.
 const copies = Math.ceil(1000 / recorded.rows.length);
@@ -94,4 +109,148 @@ it('draws the same items as translating every row again', () => {
   expect(translateFeed(streamed, snapshot, first.turns).view).toEqual(
     toFeedView(streamed, snapshot),
   );
+});
+
+// What a draw that keeps its Turns must show: the same as translating every row again, here for a change that reaches a Turn whose own rows did not change.
+function expectReuseEqualsFresh(
+  before: { rows: SessionUpdate[]; snapshot: SessionSnapshot },
+  after: { rows: SessionUpdate[]; snapshot: SessionSnapshot },
+): void {
+  const first = translateFeed(before.rows, before.snapshot);
+  const reused = translateFeed(after.rows, after.snapshot, first.turns);
+
+  expect(reused.view).toEqual(toFeedView(after.rows, after.snapshot));
+}
+
+const inTurn = (row: SessionUpdate, turnId: string | null): SessionUpdate => ({
+  ...row,
+  turnId,
+});
+
+it('draws a Permission request that resolves as the Tool call it was', () => {
+  const recorded = readRow(recordedRows);
+  const pending: ToolCallUpdate = {
+    ...recorded,
+    status: 'pending',
+    state: 'open',
+  };
+
+  const asking: SessionSnapshot = {
+    ...snapshot,
+    pendingPermission: {
+      requestId: 'request-1',
+      toolCallId: pending.toolCallId,
+      title: 'Allow read?',
+      options: permissionOptions,
+    },
+  };
+
+  const before = { rows: [pending], snapshot: asking };
+  const after = { rows: [pending], snapshot };
+
+  expectReuseEqualsFresh(before, after);
+  expect(toFeedView(before.rows, before.snapshot).items).toEqual([
+    expect.objectContaining({ title: 'Awaiting approval' }),
+  ]);
+  expect(
+    translateFeed(
+      after.rows,
+      after.snapshot,
+      translateFeed(before.rows, before.snapshot).turns,
+    ).view.items,
+  ).not.toEqual(toFeedView(before.rows, before.snapshot).items);
+});
+
+it('folds a Subagent prompt when its spawn pages in above in an earlier Turn', () => {
+  const prompt = inTurn(spawnPromptRow, 'turn-b');
+  const spawn = inTurn(spawnRow, 'turn-a');
+
+  expectReuseEqualsFresh(
+    { rows: [prompt], snapshot: subagentSnapshot },
+    { rows: [spawn, prompt], snapshot: subagentSnapshot },
+  );
+  expect(
+    toFeedView([spawn, prompt], subagentSnapshot).items.map(
+      (item) => item.type,
+    ),
+  ).toEqual(['subagent']);
+});
+
+const params = { sessionId: 'a', limit: 3 };
+
+const operationCall = (
+  turnId: string | null,
+  kind: 'agent' | 'engine',
+  position: number,
+): ToolCallUpdate =>
+  kind === 'agent'
+    ? call({
+        id: '["tool_call_update","acp",["upstream","toolu_1"]]',
+        toolCallId: 'toolu_1',
+        turnId,
+        position,
+        name: 'operation_run',
+        title: 'argo: operation_run',
+        kind: 'other',
+        state: 'settled',
+        status: 'completed',
+        rawInput: { id: 'session.feed', params },
+      })
+    : call({
+        id: operationFeedRowId('call-1'),
+        toolCallId: 'call-1',
+        turnId,
+        position,
+        name: 'session.feed',
+        title: 'Read Session messages',
+        kind: 'other',
+        state: 'settled',
+        status: 'completed',
+        rawInput: params,
+      });
+
+const voiceLine = (position: number): VoiceTranscript => ({
+  id: 'voice',
+  sessionId: 'session',
+  turnId: null,
+  position,
+  revision: 1,
+  state: 'settled',
+  sessionUpdate: 'voice_transcript',
+  messageId: 'voice',
+  content: [{ type: 'text', text: "I'll pull that up." }],
+});
+
+it('pairs a call with its record across a row that has no Turn', () => {
+  const agent = operationCall('turn-1', 'agent', 1);
+
+  expectReuseEqualsFresh(
+    { rows: [agent], snapshot },
+    {
+      rows: [agent, voiceLine(2), operationCall('turn-1', 'engine', 3)],
+      snapshot,
+    },
+  );
+});
+
+it('leaves a call and a record of different Turns unpaired', () => {
+  const agent = operationCall('turn-1', 'agent', 1);
+  const after = [agent, operationCall('turn-2', 'engine', 2)];
+
+  expectReuseEqualsFresh(
+    { rows: [agent], snapshot },
+    { rows: after, snapshot },
+  );
+  expect(
+    toFeedView(after, snapshot).items.flatMap((item) =>
+      item.type === 'tool_call' ? [item.row.id] : [],
+    ),
+  ).toHaveLength(2);
+});
+
+it('draws a Turn that gains rows at its head as translating it again', () => {
+  const turn = copy(0).map((row) => inTurn(row, 'turn-head'));
+  const [, ...newer] = turn;
+
+  expectReuseEqualsFresh({ rows: newer, snapshot }, { rows: turn, snapshot });
 });
