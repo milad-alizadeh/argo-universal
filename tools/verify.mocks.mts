@@ -13,6 +13,7 @@ import { resolveExecutable } from '@repo/executables';
 
 export const verifyScripts = [
   'verify.mts',
+  'verify-admission.mts',
   'verify-scope.mts',
   'verify-base.mts',
   'verify-stamp.mts',
@@ -56,7 +57,7 @@ function gitIn(root: string, args: string[]): void {
   if (result.status !== 0) throw new Error(result.stderr);
 }
 
-// VERIFY_BASE is cleared so the caller's own does not leak into the checkout.
+// Give each fixture a clean base and keep its nested Verify out of the host admission queue.
 function verifyIn(
   root: string,
   args: string[],
@@ -67,7 +68,7 @@ function verifyIn(
   const result = spawnSync(process.execPath, [script, ...args], {
     cwd: root,
     encoding: 'utf8',
-    env: { ...process.env, VERIFY_BASE: '', ...env },
+    env: { ...process.env, CI: 'true', VERIFY_BASE: '', ...env },
   });
 
   return { status: result.status, output: result.stdout + result.stderr };
