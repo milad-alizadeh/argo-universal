@@ -19,6 +19,7 @@ import {
   setFeedTestHost,
   setScriptedAgent,
 } from '#mocks/feed-suite';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -44,12 +45,12 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   });
 
   const updates = (
-    await feedTestHost
-      .createCaller({ signal: controller.signal })
-      .feed.subscribe({
+    await plain(
+      feedTestHost.createCaller({ signal: controller.signal }).feed.subscribe({
         sessionId: 'session-1',
         after: { epoch: 3, revision: 5 },
-      })
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   const first = await updates.next();
@@ -88,12 +89,12 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   });
 
   const resumed = (
-    await feedTestHost
-      .createCaller({ signal: controller.signal })
-      .feed.subscribe({
+    await plain(
+      feedTestHost.createCaller({ signal: controller.signal }).feed.subscribe({
         sessionId: 'session-1',
         after: { epoch: 3, revision: heldRevision },
-      })
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   const resumedFirst = await resumed.next();

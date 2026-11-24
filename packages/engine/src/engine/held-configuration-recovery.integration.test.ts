@@ -5,6 +5,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
 import { heldRecoveryScenario } from '#mocks/held-configuration-recovery';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const cases = fixtureAgents.flatMap((identity) =>
@@ -51,10 +52,12 @@ it.each(cases)(
         })),
       };
     } else {
-      const events = await host.caller.feed.subscribe({
-        ...created,
-        after: null,
-      });
+      const events = await plain(
+        host.caller.feed.subscribe({
+          ...created,
+          after: null,
+        }),
+      );
 
       const process = requireScriptedProcessAt(host.agent.processes);
       process.exited.resolve();

@@ -1,125 +1,185 @@
-import type { FeedSubscribeOutput, FeedSyncPoint } from '@repo/contracts';
-import { focusManager } from '@tanstack/react-query';
+import {
+  type FeedSubscribeOutput,
+  feedEventId,
+  type SessionUpdate,
+} from '@repo/contracts';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   type TRPCSubscriptionResult,
   useSubscription,
 } from '@trpc/tanstack-react-query';
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ClientError,
-  useConnectionState,
+  useResubscribeOnReconnect,
   useTRPC,
 } from '#features/connection';
-import { type FeedCache, resumeAfter, samePoint } from '../api/feed-cache';
+import { applyFeedEvents } from '../api/apply-feed-events';
+import { feedKey } from '../api/feed-query';
 import { closedFeedError } from '../utils/closed-feed-error';
+import { emptyFeed, type FeedState, syncPointOf } from '../view/feed-state';
+import { waitForFrame } from './frame-wait';
 
-type LiveChanges = TRPCSubscriptionResult<FeedSubscribeOutput, ClientError>;
+type Changes = Exclude<FeedSubscribeOutput, { type: 'closed' }>;
 
-// The Server closed the Feed, with or without an error to show.
-type FeedClosure = { error: Error | null } | null;
+// `feed.subscribe` gives each event but the last an id; tRPC hands it over with the event.
+type Received = FeedSubscribeOutput | { id: string; data: FeedSubscribeOutput };
+
+interface LiveOptions {
+  cacheId: string | undefined;
+  shown: boolean;
+  // The Feed has rows to resume after.
+  loaded: boolean;
+}
 
 export interface FeedLive {
-  changes: LiveChanges;
-  closure: FeedClosure;
-  // Reopens live changes after the newest revision the cache holds.
+  changes: TRPCSubscriptionResult<Received, ClientError>;
+  // The Server closed the Feed, with or without an error to show.
+  closure: { error: Error | null } | null;
+  // Opens live changes again, after a closure.
   retryOpen: () => void;
 }
 
-interface LiveState {
-  cache: FeedCache;
-  openAt: FeedSyncPoint | null;
-  closure: FeedClosure;
-}
+const eventOf = (received: Received): FeedSubscribeOutput =>
+  'type' in received ? received : received.data;
 
-// The point and closure belong to one Session's cache; another cache starts afresh.
-function useLiveState(
-  cache: FeedCache,
-): [LiveState, (change: Partial<Omit<LiveState, 'cache'>>) => void] {
-  const [live, setLive] = useState<LiveState>(() => ({
-    cache,
-    openAt: cache.syncPoint(),
-    closure: null,
-  }));
-
-  if (live.cache !== cache) {
-    const next = { cache, openAt: cache.syncPoint(), closure: null };
-    setLive(next);
-
-    return [next, (change) => setLive((held) => ({ ...held, ...change }))];
-  }
-
-  return [live, (change) => setLive((held) => ({ ...held, ...change }))];
-}
-
-// The live subscription, open only while shown. It opens after the newest revision the cache holds: on the first rows, on a return from hiding, on a reconnect and on a return to the foreground.
-export function useFeedLive(
+// Live changes gather for a frame, then are written once; what arrives after the Session is hidden is dropped.
+function useFrames(
   sessionId: string | undefined,
-  cache: FeedCache,
-  shown: boolean,
-): FeedLive {
-  const [live, setLive] = useLiveState(cache);
-  const held = cache.syncPoint();
-
-  // While nothing is open the next open is after the rows held; an open subscription keeps its own point.
-  if ((!shown || live.openAt === null) && !samePoint(live.openAt, held))
-    setLive({ openAt: held });
-
-  const options = useTRPC().feed.subscribe.subscriptionOptions({
-    sessionId: sessionId ?? '',
-    after: shown ? live.openAt : null,
-  });
-
-  const changes = useSubscription({
-    ...options,
-    enabled: sessionId !== undefined && shown && live.openAt !== null,
-    onData: (event) => {
-      if (event.type !== 'closed') return cache.receive(event);
-
-      if (cache.isShown())
-        setLive({ closure: { error: closedFeedError(event) } });
-    },
-  });
-
-  // Read the point from the ref: a reconnect can land before the render that shows the last one.
-  const openedAt = useRef(live.openAt);
-  useEffect(() => {
-    openedAt.current = live.openAt;
-  });
-
-  const retryOpen = (): void => {
-    if (!shown) return;
-
-    setLive({ closure: null });
-    const { point, restart } = resumeAfter(openedAt.current, cache.syncPoint());
-
-    if (restart) changes.reset();
-    else {
-      openedAt.current = point;
-      setLive({ openAt: point });
-    }
-  };
-
-  useResumeOnReturn(retryOpen);
-
-  return { changes, closure: live.closure, retryOpen };
-}
-
-// Live changes reopen after the rows held whenever the Connection reopens or the window regains focus, whether or not the subscription noticed it died.
-function useResumeOnReturn(retryOpen: () => void): void {
-  const state = useConnectionState();
-  const previous = useRef(state);
-  const resume = useEffectEvent(retryOpen);
-
-  useEffect(() => {
-    if (previous.current !== 'open' && state === 'open') resume();
-    previous.current = state;
-  }, [state]);
+  { cacheId, shown }: { cacheId: string; shown: boolean },
+): (event: Changes) => void {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const batch = useRef<Changes[]>([]);
+  const frame = useRef<(() => void) | null>(null);
 
   useEffect(
-    () =>
-      focusManager.subscribe((focused) => {
-        if (focused) resume();
-      }),
-    [],
+    () => (): void => {
+      frame.current?.();
+      frame.current = null;
+      batch.current = [];
+    },
+    [cacheId, shown],
   );
+
+  const fetchRow = (id: string): Promise<SessionUpdate> =>
+    queryClient.fetchQuery({
+      ...trpc.feed.row.queryOptions({ sessionId: sessionId ?? '', id }),
+      staleTime: 0,
+      gcTime: 0,
+    });
+
+  const flush = (): void => {
+    frame.current = null;
+    const events = batch.current;
+    batch.current = [];
+    applyFeedEvents({ queryClient, cacheId, fetchRow }, events);
+  };
+
+  return (event): void => {
+    batch.current.push(event);
+    frame.current ??= waitForFrame(flush);
+  };
+}
+
+type Opening = Pick<LiveOptions, 'shown' | 'loaded'>;
+
+// Where a subscription opening now resumes: after the newest revision the cache holds.
+function pointToOpen(
+  queryClient: QueryClient,
+  cacheId: string,
+  { shown, loaded }: Opening,
+): string | undefined {
+  if (!shown || !loaded) return;
+
+  const point = syncPointOf(
+    queryClient.getQueryData<FeedState>(feedKey(cacheId)) ?? emptyFeed,
+  );
+
+  return point ? feedEventId(point) : undefined;
+}
+
+// A reopen's id, good for the open it was read for.
+interface Reopened {
+  opening: string | undefined;
+  id: string | undefined;
+}
+
+interface ResumePoint {
+  lastEventId: string | undefined;
+  // The id an open now would carry.
+  read: () => string | undefined;
+  // Opens again with `id`, which the cache holds a newer revision than the id it opened with.
+  reopenAt: (id: string | undefined) => void;
+}
+
+// The id the subscription opens with, read when it opens (on the first rows and on a return from hiding), not on every row, and read again for a reopen. From then on tRPC's client sends the id of the last event it received when its socket reconnects.
+function useResumePoint(cacheId: string, opening: Opening): ResumePoint {
+  const queryClient = useQueryClient();
+  const [reopened, setReopened] = useState<Reopened | null>(null);
+
+  const opened = useMemo(
+    () =>
+      pointToOpen(queryClient, cacheId, {
+        shown: opening.shown,
+        loaded: opening.loaded,
+      }),
+    [queryClient, cacheId, opening.shown, opening.loaded],
+  );
+
+  return {
+    lastEventId:
+      reopened !== null && reopened.opening === opened ? reopened.id : opened,
+    read: (): string | undefined => pointToOpen(queryClient, cacheId, opening),
+    reopenAt: (id): void => setReopened({ opening: opened, id }),
+  };
+}
+
+export function useFeedLive(
+  sessionId: string | undefined,
+  { cacheId = '', shown, loaded }: LiveOptions,
+): FeedLive {
+  const trpc = useTRPC();
+  const [closure, setClosure] = useState<FeedLive['closure']>(null);
+  const receive = useFrames(sessionId, { cacheId, shown });
+
+  const { lastEventId, read, reopenAt } = useResumePoint(cacheId, {
+    shown,
+    loaded,
+  });
+
+  const changes = useSubscription(
+    trpc.feed.subscribe.subscriptionOptions(
+      { sessionId: sessionId ?? '', after: null, lastEventId },
+      {
+        enabled: sessionId !== undefined && lastEventId !== undefined,
+        onData: (received) => {
+          const event = eventOf(received);
+
+          if (event.type === 'closed')
+            setClosure({ error: closedFeedError(event) });
+          else receive(event);
+        },
+      },
+    ),
+  );
+
+  // A new open starts after the newest revision the cache holds: a new id opens it by itself, the same one starts it again.
+  const reopen = (): void => {
+    const next = read();
+
+    if (next === lastEventId) changes.reset();
+    else reopenAt(next);
+  };
+
+  useResubscribeOnReconnect({ status: changes.status, reset: reopen });
+
+  return {
+    changes,
+    closure,
+    retryOpen: (): void => {
+      setClosure(null);
+      reopen();
+    },
+  };
 }

@@ -4,6 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { readThrough, isQueuedTool } from '#mocks/feed-stream-reading';
+import { plain } from '#mocks/plain-feed';
 
 it('partial ACP tools remain readable during storage failure and retry commits the newest complete row', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -43,7 +44,7 @@ it('partial ACP tools remain readable during storage failure and retry commits t
   const created = await host.caller.session.new(emptySessionInput);
 
   const events = (
-    await host.caller.feed.subscribe({ ...created, after: null })
+    await plain(host.caller.feed.subscribe({ ...created, after: null }))
   )[Symbol.asyncIterator]();
 
   await events.next();

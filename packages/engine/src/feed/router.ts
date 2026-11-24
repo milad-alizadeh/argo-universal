@@ -12,9 +12,9 @@ import {
   publicProcedure,
   router,
   routerFactory,
-  zAsyncIterable,
+  zTrackedAsyncIterable,
 } from '../rpc';
-import { type FeedDeps, readFeedPage, readFeedRow, streamFeed } from './feed';
+import { type FeedDeps, readFeedPage, readFeedRow, trackedFeed } from './feed';
 
 const createFeedReadRouter = routerFactory((deps: FeedDeps) =>
   router({
@@ -35,15 +35,11 @@ const createFeedReadRouter = routerFactory((deps: FeedDeps) =>
 
 const createFeedStreamRouter = routerFactory((deps: FeedDeps) =>
   router({
+    // Every event but `closed` carries an id (`tracked`): tRPC's client keeps the newest one as `lastEventId` and sends it again on a reconnect, and an event without an id would clear it (@trpc/client wsLink, `handleResponseMessage`).
     subscribe: publicProcedure
       .input(FeedSubscribeInput)
-      .output(zAsyncIterable({ yield: FeedSubscribeOutput }))
-      .subscription(async function* ({
-        input,
-        signal,
-      }): AsyncGenerator<FeedSubscribeOutput, void> {
-        yield* streamFeed(deps, input, signal);
-      }),
+      .output(zTrackedAsyncIterable({ yield: FeedSubscribeOutput }))
+      .subscription(({ input, signal }) => trackedFeed(deps, input, signal)),
   }),
 );
 

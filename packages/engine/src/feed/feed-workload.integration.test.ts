@@ -8,6 +8,7 @@ import {
   measureSlowdown,
   readUntilIdle,
 } from '#mocks/feed-workload-observation';
+import { plain } from '#mocks/plain-feed';
 
 // Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms). Work that reads a whole message again for each chunk, as #2425's voice-mark stream did, puts p95 near 60 ms on that same machine.
 const retainedByteBudget = 8_388_608;
@@ -104,7 +105,7 @@ const measureWorkload = async (): Promise<Measurement> => {
 
   const subscriptions = await Promise.all(
     sessions.map((created) =>
-      host.caller.feed.subscribe({ ...created, after: null }),
+      plain(host.caller.feed.subscribe({ ...created, after: null })),
     ),
   );
 
