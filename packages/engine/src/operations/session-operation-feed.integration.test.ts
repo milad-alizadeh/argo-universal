@@ -14,7 +14,7 @@ it('records discovery and a refused Operation in the calling Session Feed withou
     }),
   ).rejects.toMatchObject({ data: { code: 'BAD_REQUEST' } });
 
-  // A row whose output went to a Blob is stored once the Blob file is written, so it can come a moment after the call ends.
+  // The output of `operations.list` is over 16 KB, so its row goes through a Blob and is stored once the Blob file is written, a moment after the call ends.
   const page = await vi.waitFor(async () => {
     const tail = await fixture.host.caller.feed.page({
       sessionId: session.sessionId,

@@ -1,6 +1,7 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
+import { useMemo } from 'react';
 import { useBlobRead } from '#features/connection';
 import { blobTextQuery, createBlobTextReader } from '../api/blob-text-query';
 import { fullOutputBlobIds, withFullOutput } from '../view/full-tool-output';
@@ -8,7 +9,8 @@ import { FullToolOutputContext } from './full-tool-output-context';
 
 // The text of one Blob, read when an opened row asks and not before.
 function useBlobText(blobId: string | undefined): string | undefined {
-  const read = createBlobTextReader(useBlobRead());
+  const blobRead = useBlobRead();
+  const read = useMemo(() => createBlobTextReader(blobRead), [blobRead]);
 
   return useQuery({
     ...blobTextQuery(read, blobId ?? ''),

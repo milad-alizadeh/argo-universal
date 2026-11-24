@@ -118,7 +118,7 @@ it('opens a Feed of heavy tool output small over bad Wi-Fi, and reads one whole 
   expect(bytesOf(page)).toBeLessThan(toolCallCount * 18_000);
   expect(Buffer.byteLength(text)).toBeGreaterThan(200_000);
 
-  // 200 KB cannot cross a link of 500 KB/s in less than 0.4 s, whatever the machine.
+  // 200 KB cannot cross a link of 500 KB/s in less than 0.4 s; a cold read (handshake included) measures about 0.8 s, and three times that is the most it may take.
   expect(readMs).toBeGreaterThanOrEqual(350);
-  expect(readMs).toBeLessThan(30_000);
+  expect(readMs).toBeLessThan(2400);
 });

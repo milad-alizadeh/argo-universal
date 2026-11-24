@@ -1,9 +1,19 @@
-import type { BlobRef, ToolCallUpdate } from '@repo/contracts';
+import { type BlobRef, blobPath, type ToolCallUpdate } from '@repo/contracts';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { type JSX, type ReactNode, useEffect, useState } from 'react';
+import { BlobReadContext } from '#features/connection';
 import { FullToolOutputContext } from '../../src/features/feed/hooks/full-tool-output-context';
+import { FullToolOutputProvider } from '../../src/features/feed/hooks/use-full-tool-output-query';
+import { createQueryClient } from '../../src/query-cache';
 
 const contentBlob: BlobRef = {
   blobId: 'c'.repeat(64),
+  mime: 'application/json',
+  bytes: 200_000,
+};
+
+const rawOutputBlob: BlobRef = {
+  blobId: 'd'.repeat(64),
   mime: 'application/json',
   bytes: 200_000,
 };
@@ -24,7 +34,7 @@ export function truncatedToolCall(row: ToolCallUpdate): ToolCallUpdate {
       argo: {
         ...row._meta?.argo,
         truncated: true,
-        fullOutput: { content: contentBlob },
+        fullOutput: { content: contentBlob, rawOutput: rawOutputBlob },
       },
     },
   };
@@ -72,4 +82,54 @@ export function fullOutputFixture(): FullOutputFixture {
       </FullToolOutputContext.Provider>
     ),
   };
+}
+
+export interface ServerBlobs {
+  // The Blob route paths read so far, in order.
+  reads: () => string[];
+  contentPath: string;
+  read: (path: string) => Promise<Response>;
+}
+
+// The Server's Blob route: it answers the two Blobs a truncated tool call names, and counts what is read.
+export function serverBlobs(): ServerBlobs {
+  const reads: string[] = [];
+  const contentPath = blobPath(contentBlob.blobId);
+
+  return {
+    reads: () => reads,
+    contentPath,
+    read: (path) => {
+      reads.push(path);
+
+      return Promise.resolve(
+        new Response(
+          path === contentPath
+            ? JSON.stringify([
+                { type: 'content', content: { type: 'text', text: wholeText } },
+              ])
+            : JSON.stringify({ whole: true }),
+        ),
+      );
+    },
+  };
+}
+
+// The Feed's shell as the App builds it: a query client, a Blob route, and the real hook for a row's whole output.
+export function RealHookPreview({
+  blobs,
+  children,
+}: {
+  blobs: ServerBlobs;
+  children: ReactNode;
+}): JSX.Element {
+  const [queryClient] = useState(createQueryClient);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BlobReadContext.Provider value={blobs.read}>
+        <FullToolOutputProvider>{children}</FullToolOutputProvider>
+      </BlobReadContext.Provider>
+    </QueryClientProvider>
+  );
 }
