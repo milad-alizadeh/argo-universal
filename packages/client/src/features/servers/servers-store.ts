@@ -1,5 +1,4 @@
 import type { KnownServer } from '#features/connection';
-import { forgetServerCache } from '../../server-cache';
 import { type AppServer, ownAppServer, pairedAppServer } from './app-server';
 import {
   forgetKnownServer,
@@ -8,6 +7,7 @@ import {
   loadKnownServers,
   loadLookedAtServer,
 } from './known-servers';
+import { forgetServerCache, rememberServerCache } from './server-cache-store';
 import { forgetServerHistory, notePaired } from './server-history';
 
 export interface ServersSnapshot {
@@ -79,6 +79,7 @@ class AppServersStore implements ServersStore {
       read: true,
     });
     keepLookedAtServer(added.id);
+    rememberServerCache(added.id);
     void keepKnownServer(known);
     void notePaired(known.key, Date.now());
   };

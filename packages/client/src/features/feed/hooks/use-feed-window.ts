@@ -7,7 +7,6 @@ import type {
 import {
   type UseMutationResult,
   type UseQueryResult,
-  skipToken,
   useMutation,
   useQuery,
   useQueryClient,
@@ -69,6 +68,8 @@ export interface FeedWindow {
   view: FeedView | null;
   // The query that holds the window.
   query: UseQueryResult<FeedState>;
+  // The snapshot is still being restored from the Device, so a subscription opened now could be overwritten by it.
+  restoring: boolean;
 }
 
 // The Session's Feed from the query cache, drawn as a view: a Session seen before draws at once, with no page read.
@@ -93,16 +94,21 @@ export function useFeedWindow(
     enabled: sessionId !== undefined,
   });
 
-  const { data: snapshot = null } = useQuery<SessionSnapshot | null>({
-    ...snapshotQueryDefaults,
-    queryKey: snapshotKey(cacheId),
-    queryFn: skipToken,
-  });
+  /*
+   * Nothing reads a snapshot from the Server: the subscription writes it. The read is for the Device's copy, which a
+   * persisted query restores in place of it, and answers null when there is none.
+   */
+  const { data: snapshot = null, isFetching: restoringSnapshot } =
+    useQuery<SessionSnapshot | null>({
+      ...snapshotQueryDefaults,
+      queryKey: snapshotKey(cacheId),
+      queryFn: () => null,
+    });
 
   const feed = query.data ?? emptyFeed;
   const view = useFeedView({ feed, snapshot, translate });
 
-  return { cacheId, feed, snapshot, view, query };
+  return { cacheId, feed, snapshot, view, query, restoring: restoringSnapshot };
 }
 
 // Older rows merge into the same query; a failed page is not a Feed error, and scrolling asks again.

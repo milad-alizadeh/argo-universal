@@ -20,7 +20,7 @@ export function useSessionFeed(
 ): SessionFeed {
   const readPage = useSessionPages(sessionId);
 
-  const { cacheId, feed, snapshot, view, query } = useFeedWindow(
+  const { cacheId, feed, snapshot, view, query, restoring } = useFeedWindow(
     sessionId,
     translate,
     { cacheId: sessionId, readPage },
@@ -29,7 +29,8 @@ export function useSessionFeed(
   const live = useFeedLive(sessionId, {
     cacheId,
     shown,
-    loaded: feed.epoch !== null,
+    // Open only once the Feed, and its snapshot, hold what the Device kept, so the subscription resumes after the revision it stored.
+    loaded: feed.epoch !== null && !restoring,
   });
 
   const older = useOlderHistory(cacheId, readPage);

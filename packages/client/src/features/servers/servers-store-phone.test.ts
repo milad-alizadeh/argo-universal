@@ -59,12 +59,13 @@ describe("a phone's list of Servers", () => {
 
   it('wipes what it kept of a Server when it is removed', async () => {
     const store = await phoneKeeping([studio]);
-    await AsyncStorage.setItem(`query-cache:${studioKey}`, '{}');
+    const kept = `query-cache:${studioKey}:-feed`;
+    await AsyncStorage.setItem(kept, '{}');
 
     store.remove(studioKey);
 
     await vi.waitFor(async () =>
-      expect(await AsyncStorage.getItem(`query-cache:${studioKey}`)).toBeNull(),
+      expect(await AsyncStorage.getItem(kept)).toBeNull(),
     );
   });
 });

@@ -4,7 +4,6 @@ import {
   QueryClientProvider,
   useQueryClient,
 } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import type * as React from 'react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
@@ -14,7 +13,7 @@ import { TRPCProvider, useTRPC } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
 import { createQueryClient, keepServerLists } from './query-cache';
-import { serverCache } from './server-cache';
+import { restoreFromDevice, writeToDevice } from './server-cache';
 import { ServerUrls } from './server-urls';
 
 export interface LookedAtServerProps {
@@ -105,18 +104,17 @@ function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   useState(() => keepServerLists(queryClient, trpc));
-  // This Server's own cache on the Device: drawn first, then caught up by the Connection.
-  const [persistOptions] = useState(() => serverCache(props.server.id, trpc));
+  // This Server's own cache on the Device: each kept query draws from it first, then is caught up by the Connection.
+  useState(() =>
+    restoreFromDevice(queryClient, trpc, { serverId: props.server.id }),
+  );
+  useEffect(
+    () => writeToDevice(queryClient, trpc, { serverId: props.server.id }),
+    [queryClient, trpc, props.server.id],
+  );
   useCacheOnline(props.connection.connection);
 
-  return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={persistOptions}
-    >
-      <ServerContexts {...props} />
-    </PersistQueryClientProvider>
-  );
+  return <ServerContexts {...props} />;
 }
 
 function ServerContexts({
