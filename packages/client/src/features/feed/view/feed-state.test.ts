@@ -155,7 +155,10 @@ describe('applySubscriptionEvent', () => {
       limit: 2,
     });
 
-    const result = applySubscriptionEvent(emptyFeed, { type: 'tail', page: tail });
+    const result = applySubscriptionEvent(emptyFeed, {
+      type: 'tail',
+      page: tail,
+    });
 
     expect(result.feed).toEqual(mergeNewestPage(emptyFeed, tail));
     expect(syncPointOf(result.feed)).toEqual({

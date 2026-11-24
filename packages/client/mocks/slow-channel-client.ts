@@ -79,6 +79,7 @@ export async function coldOpenMs(
         const event = 'type' in received ? received : received.data;
 
         if (event.type === 'tail') rows.resolve(event.page.rows.length);
+
         if (event.type === 'snapshot') snapshot.resolve();
       },
       onError: snapshot.reject,

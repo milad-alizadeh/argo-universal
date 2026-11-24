@@ -123,8 +123,7 @@ function useResumePoint(cacheId: string, opening: Opening): ResumePoint {
   const [reopened, setReopened] = useState<Reopened | null>(null);
 
   const opened = useMemo(
-    () =>
-      pointToOpen(queryClient, cacheId, { shown: opening.shown }),
+    () => pointToOpen(queryClient, cacheId, { shown: opening.shown }),
     [queryClient, cacheId, opening.shown],
   );
 
@@ -143,6 +142,7 @@ export function useFeedLive(
   const trpc = useTRPC();
   const [closure, setClosure] = useState<FeedLive['closure']>(null);
   const [tailed, setTailed] = useState<string | null>(null);
+
   const receive = useFrames(sessionId, { cacheId, shown }, () =>
     setTailed(cacheId),
   );
