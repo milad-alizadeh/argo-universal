@@ -114,9 +114,9 @@ export const OpensFromHeaderAndInspectorAndClosesEachShellIndependently: Story =
       // The title in the title bar opens the Session's menu.
       await userEvent.click(await titleTrigger(canvas));
       const menu = within(document.body);
-      await expect(
-        await menu.findByRole('menuitem', { name: 'Rename' }),
-      ).toBeVisible();
+      const rename = await menu.findByRole('menuitem', { name: 'Rename' });
+      await settleOverlays(rename);
+      await expect(rename).toBeVisible();
       await expect(
         menu.queryByRole('menuitem', { name: newTerminal }),
       ).toBeNull();

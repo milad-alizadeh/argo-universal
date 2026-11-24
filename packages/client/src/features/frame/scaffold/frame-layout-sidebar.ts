@@ -7,8 +7,16 @@ import type { FrameLayout, FrameLayoutInput } from './frame-layout-types';
 
 type Thresholds = FrameLayout['thresholds'];
 
-const listContentFloor = (input: FrameLayoutInput): number =>
-  input.inspectorState === 'expanded' ? 0 : contentFloor(input);
+function listContentFloor(input: FrameLayoutInput): number {
+  if (input.inspectorState === 'expanded') return 0;
+
+  // Dragging the Inspector must not bring back a sidebar that did not fit when it opened.
+  return contentFloor(
+    input.sidebarRequested
+      ? input
+      : { ...input, draggedContentFloor: undefined },
+  );
+}
 
 const minimumInspectorRegion = (input: FrameLayoutInput): number =>
   input.inspectorState === 'closed'

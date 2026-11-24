@@ -13,6 +13,7 @@ import {
   type ScaffoldPlayContext,
   type ScaffoldStory,
 } from './scaffold-test.mocks';
+import { glassHasOpaqueAncestors } from './scaffold-workbench-motion.test.mocks';
 import { ScaffoldMock } from './scaffold.mocks';
 
 const windowBand = 'window-band';
@@ -469,5 +470,36 @@ export const PageWithoutASessionDropsTheTrailingControls: ScaffoldStory = {
     }
 
     await expect(bandGeometry(canvas)).toEqual(withSession);
+  }),
+};
+
+export const SidebarAndInspectorGlassKeepTheirBackdrop: ScaffoldStory = {
+  args: { band: sessionBand },
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await settleLayout(1728);
+    await controlled.render({ sidebarShown: false, inspectorState: 'closed' });
+    const root = canvas.getByTestId('wide-frame');
+    const glass = root.querySelectorAll(
+      '[data-sidebar-glass-fill], [data-testid="inspector-glass"]',
+    );
+    await expect(glass).toHaveLength(2);
+
+    for (const state of [
+      { sidebarShown: true, inspectorState: 'open' },
+      { sidebarShown: false, inspectorState: 'closed' },
+    ] as const) {
+      await controlled.render(state);
+
+      for (let frame = 0; frame < motionFrames; frame += 1) {
+        for (const surface of glass) {
+          await expect(getComputedStyle(surface).backdropFilter).not.toBe(
+            'none',
+          );
+          await expect(glassHasOpaqueAncestors(surface)).toBe(true);
+        }
+
+        await nextFrame();
+      }
+    }
   }),
 };

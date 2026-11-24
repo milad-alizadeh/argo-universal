@@ -78,6 +78,10 @@ function preservesGlassBackdrop(workbench: HTMLElement): boolean {
 
   if (!glass) throw new Error('The Workbench needs a backdrop-filter surface.');
 
+  return glassHasOpaqueAncestors(glass);
+}
+
+export function glassHasOpaqueAncestors(glass: Element): boolean {
   for (
     let ancestor = glass.parentElement;
     ancestor;

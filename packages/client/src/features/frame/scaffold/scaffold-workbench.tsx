@@ -107,7 +107,7 @@ const scrollProps = {
 function WorkbenchScroll(props: { children: ReactNode }): ReactElement {
   return (
     <View pointerEvents="auto" className="max-h-full">
-      <Surface kind="glass">
+      <Surface kind="glass" fill={Platform.OS === 'web'}>
         <View className="min-h-0 shrink overflow-hidden rounded-2xl">
           <ScrollView {...scrollProps}>{props.children}</ScrollView>
         </View>
