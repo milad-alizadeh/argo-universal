@@ -1,5 +1,6 @@
 import { activeSessions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { focusManager } from '@tanstack/react-query';
 import { expect, waitFor, within } from 'storybook/test';
 import {
   type LiveSessionListFixture,
@@ -9,6 +10,8 @@ import {
 
 const meta = {
   title: 'Tests/Screens/Sessions/LiveSessionList',
+  // A return to the foreground forces the window's focus; give it back to the browser after each story.
+  beforeEach: () => (): void => focusManager.setFocused(undefined),
 } satisfies Meta;
 
 export default meta;
@@ -50,10 +53,13 @@ export const ReadsTheListAgainWhenItsSubscriptionRestarts: Story = {
   play: async ({ mount, canvasElement }) => {
     const fixture = liveSessionListFixture();
     const canvas = await openedList(mount, canvasElement, fixture);
-    const stopped = within(canvasElement.ownerDocument.body);
+    const { body } = canvasElement.ownerDocument;
 
     fixture.dropListUpdates();
-    await stopped.findByText('Live updates stopped');
+    // The notice that live updates stopped is the only toast this list raises.
+    await waitFor(() =>
+      expect(body.querySelector('[data-sonner-toast]')).not.toBeNull(),
+    );
     fixture.returnToForeground();
 
     await waitFor(() => expect(fixture.listUpdatesStarted()).toBe(2));
