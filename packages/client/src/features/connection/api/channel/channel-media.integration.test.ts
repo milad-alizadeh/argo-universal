@@ -41,9 +41,7 @@ async function feedWithImages(
 }
 
 async function readAll(read: typeof fetch, paths: string[]): Promise<string[]> {
-  return Promise.all(
-    paths.map(async (path) => (await read(path)).text()),
-  );
+  return Promise.all(paths.map(async (path) => (await read(path)).text()));
 }
 
 it('reads every image of a Feed on one channel, with one handshake', async () => {
@@ -52,7 +50,9 @@ it('reads every image of a Feed on one channel, with one handshake', async () =>
 
   const bodies = await readAll(phone.media, paths);
 
-  expect(bodies).toEqual(Array.from({ length: imageCount }, (_, i) => bodyOf(i)));
+  expect(bodies).toEqual(
+    Array.from({ length: imageCount }, (_, i) => bodyOf(i)),
+  );
   expect(phone.handshakes() - before).toBe(1);
 });
 
@@ -69,7 +69,9 @@ it('keeps reading on the same channel for images that are asked for later', asyn
 it('records what a Feed of images costs over bad Wi-Fi, a channel each and on one', async () => {
   const { phone, paths } = await feedWithImages(badWifi);
 
-  const timed = async (read: typeof fetch): Promise<{ ms: number; handshakes: number }> => {
+  const timed = async (
+    read: typeof fetch,
+  ): Promise<{ ms: number; handshakes: number }> => {
     const handshakesBefore = phone.handshakes();
     const started = performance.now();
 

@@ -1,11 +1,11 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
-import type { ImageUrl } from '../feed-image';
 import { CollapsibleLayoutSyncContext } from '@repo/kit/primitives/layout/collapsible';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { createContext, memo, useContext, useMemo } from 'react';
 import { View } from 'react-native';
 import { feedTrayInsetClass, SessionColumn } from '#lib/product/session-column';
+import type { ImageUrl } from '../feed-image';
 import { FeedItem } from '../feed-item';
 import { FeedRowVisibility } from '../feed-row-visibility';
 import { type FeedEntry, entryKey } from './feed-entry';

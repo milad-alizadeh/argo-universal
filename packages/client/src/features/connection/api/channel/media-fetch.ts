@@ -234,6 +234,7 @@ function start(queue: Queue, job: Job): void {
 
     return;
   }
+
   queue.lane ??= openLane(queue).catch((cause: unknown) => {
     queue.lane = undefined;
     throw cause;

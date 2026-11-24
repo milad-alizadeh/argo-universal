@@ -12,14 +12,16 @@ const whole = (body: string, headers = ''): Uint8Array =>
     `HTTP/1.1 200 OK\r\ncontent-length: ${body.length}\r\n${headers}\r\n${body}`,
   );
 
-// A channel the test plays the Server on: it records the requests written and sends what the test says.
-function fakeChannel(): {
+interface FakeChannel {
   channel: MediaChannel;
   requests: string[];
   send: (bytes: Uint8Array) => void;
   answer: (body: string) => void;
   hangUp: () => void;
-} {
+}
+
+// A channel the test plays the Server on: it records the requests written and sends what the test says.
+function fakeChannel(): FakeChannel {
   const requests: string[] = [];
   let listener: StreamListener | undefined;
 
@@ -42,12 +44,15 @@ function fakeChannel(): {
   };
 }
 
-type FakeChannel = ReturnType<typeof fakeChannel>;
+interface MediaOver {
+  read: typeof fetch;
+  openCount: () => number;
+}
 
 function mediaOver(
   channels: FakeChannel[],
   fallback: typeof fetch = () => Promise.reject(new Error('no fallback')),
-): { read: typeof fetch; openCount: () => number } {
+): MediaOver {
   let opened = 0;
 
   const read = mediaFetch({
@@ -193,7 +198,9 @@ it('leaves a response with no length to a channel of its own', async () => {
   const pending = read('/plugin-assets/p/h.mp4');
   await vi.waitFor(() => expect(server.requests).toHaveLength(1));
 
-  server.send(textBytes('HTTP/1.1 200 OK\r\ncontent-type: video/mp4\r\n\r\nabc'));
+  server.send(
+    textBytes('HTTP/1.1 200 OK\r\ncontent-type: video/mp4\r\n\r\nabc'),
+  );
 
   expect(await (await pending).text()).toBe('streamed');
   expect(fallback).toHaveBeenCalledOnce();

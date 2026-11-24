@@ -6,13 +6,13 @@ import type {
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
-import type { ImageUrl } from '../feed-image';
 import { ComposerCover } from '#lib/product/composer-cover';
 import { NewSessionQuestion } from '#lib/product/new-session-question';
 import { useFeedTrayInset } from '#lib/product/session-column';
 import type { FeedViewItem } from '../../view/feed-view';
 import { usePartialTranscripts } from '../../view/use-partial-transcripts';
 import { drawnFeedItems } from '../drawn-feed-item';
+import type { ImageUrl } from '../feed-image';
 import { FeedImages } from '../feed-images';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
