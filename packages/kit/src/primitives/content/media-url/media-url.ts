@@ -14,11 +14,12 @@ export type MediaAsset =
 
 /*
  * A URL, or a story's bundled asset: Metro gives a bundled file as a number.
- * `watch` is for a source whose answer arrives later, such as bytes read from the Server: it tells one asset's readers, and no others, to ask again.
+ * `watch` is for a source whose answer arrives later, such as bytes read from the Server: it tells the readers of one asset, and no others, to ask again. The source names an asset with `keyOf` and `watch` takes that name, so two objects for one asset are one subscription.
  */
 export interface MediaUrl {
   (asset: MediaAsset): string | number;
-  watch?: (asset: MediaAsset, changed: () => void) => () => void;
+  keyOf?: (asset: MediaAsset) => string;
+  watch?: (key: string, changed: () => void) => () => void;
 }
 
 export const MediaUrlContext = createContext<MediaUrl | null>(null);
@@ -41,13 +42,13 @@ export function useMediaUri(
   asset: MediaAsset | undefined,
 ): string | number | undefined {
   const mediaUrl = useMediaUrl();
-  // An asset is a small plain object, new on each render; what it names is what keeps the subscription.
-  const key = asset === undefined ? undefined : JSON.stringify(asset);
+  // An asset is a new object on each render; the source's own name for it is what keeps the subscription.
+  const key = asset === undefined ? undefined : mediaUrl.keyOf?.(asset);
 
   const subscribe = useCallback(
     (changed: () => void): (() => void) =>
       key !== undefined && mediaUrl.watch
-        ? mediaUrl.watch(JSON.parse(key), changed)
+        ? mediaUrl.watch(key, changed)
         : nobody,
     [mediaUrl, key],
   );

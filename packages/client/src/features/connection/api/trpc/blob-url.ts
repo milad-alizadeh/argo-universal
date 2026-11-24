@@ -62,8 +62,9 @@ export function useChannelUrls(read: typeof fetch): ServerUrls {
       mediaUrl: Object.assign(
         (asset: MediaAsset) => media.urlFor(pluginAssetPath(asset)),
         {
-          watch: (asset: MediaAsset, changed: () => void) =>
-            media.watch(pluginAssetPath(asset), changed),
+          keyOf: (asset: MediaAsset) => pluginAssetPath(asset),
+          watch: (path: string, changed: () => void) =>
+            media.watch(path, changed),
         },
       ),
     }),

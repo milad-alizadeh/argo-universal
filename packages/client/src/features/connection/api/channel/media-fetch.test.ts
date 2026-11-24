@@ -247,6 +247,28 @@ it('drops a read that is aborted while it waits, so it never holds the queue', a
   expect(await (await kept).text()).toBe('kept');
 });
 
+it('reads an aborted response to its end, so the next read on the channel gets its own bytes', async () => {
+  const server = fakeChannel();
+  const { read, openCount } = mediaOver([server]);
+  const gone = new AbortController();
+
+  const aborted = read('/blobs/gone', { signal: gone.signal });
+  const next = read('/blobs/next');
+  await vi.waitFor(() => expect(server.requests).toHaveLength(2));
+
+  const bytes = concatBytes(whole('first image'), whole('second image'));
+  const partway = 40;
+
+  server.send(bytes.subarray(0, partway));
+  gone.abort();
+  await expect(aborted).rejects.toMatchObject({ name: 'AbortError' });
+
+  server.send(bytes.subarray(partway));
+
+  expect(await (await next).text()).toBe('second image');
+  expect(openCount()).toBe(1);
+});
+
 it('rejects a read that was aborted before it began', async () => {
   const { read, openCount } = mediaOver([fakeChannel()]);
   const gone = new AbortController();
