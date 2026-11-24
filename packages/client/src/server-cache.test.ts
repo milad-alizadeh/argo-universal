@@ -102,10 +102,9 @@ const heldFeed = mergeNewestPage(emptyFeed, page(rows, 9));
 
 const tree = { pluginId: 'tracker', path: '/', pageState: {} };
 
-// The queries kept for a Server, and with `index` the key that notes when its Feeds were written.
-const keysOf = async (serverId: string, index = false): Promise<string[]> =>
+const keysOf = async (serverId: string): Promise<string[]> =>
   (await AsyncStorage.getAllKeys()).filter((key) =>
-    key.startsWith(`query-cache:${serverId}:${index ? '' : '-'}`),
+    key.startsWith(`query-cache:${serverId}:`),
   );
 
 // A window of `size` rows, as paging back through a long Session leaves it.
@@ -126,14 +125,6 @@ function longFeed(size: number): FeedState {
 
   return { ...heldFeed, rows: rowsHeld, hasOlder: false, startCursor: 0 };
 }
-
-// The keys of the queries written, leaving out the one that notes when Feeds were written.
-const writtenQueries = (written: {
-  mock: { calls: readonly (readonly unknown[])[] };
-}): string[] =>
-  written.mock.calls
-    .map(([key]) => String(key))
-    .filter((key) => key.includes(':-'));
 
 const revised = (by: number): FeedState => ({
   ...heldFeed,
@@ -253,10 +244,8 @@ it('writes only the query that changed', async () => {
   app.queryClient.setQueryData(feedKey('session-1'), revised(1));
   await vi.advanceTimersByTimeAsync(writeWindowMs);
 
-  const queries = writtenQueries(written);
-
-  expect(queries).toHaveLength(1);
-  expect(queries[0]).toContain('session-1');
+  expect(written).toHaveBeenCalledOnce();
+  expect(written.mock.calls[0]?.[0]).toContain('session-1');
 });
 
 it('writes a Feed streaming rows once per window, not once per row', async () => {
@@ -269,7 +258,7 @@ it('writes a Feed streaming rows once per window, not once per row', async () =>
     app.queryClient.setQueryData(feedKey('session-1'), revised(step));
   await vi.advanceTimersByTimeAsync(writeWindowMs);
 
-  expect(writtenQueries(written).length).toBeLessThanOrEqual(2);
+  expect(written.mock.calls.length).toBeLessThanOrEqual(2);
 });
 
 it('drops a copy older than a day', async () => {
@@ -369,7 +358,7 @@ it('wipes one Server when the Device is unpaired from it, though a write was que
   await forgetServerCache('studio');
   await studio.quit();
 
-  expect(await keysOf('studio', true)).toEqual([]);
+  expect(await keysOf('studio')).toEqual([]);
   expect(await keysOf('laptop')).toHaveLength(1);
 });
 

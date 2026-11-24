@@ -95,88 +95,6 @@ export function serverQueryPersister(
   });
 }
 
-// The key the persister gives a query of this Server.
-export const serverCacheKey = (serverId: string, queryHash: string): string =>
-  `${prefixOf(serverId)}-${queryHash}`;
-
-/*
- * When each Feed of a Server was last written, in one small key of its own, so which Feeds to drop is decided without
- * reading any Feed. It is a map from the Feed's cache id to a time in milliseconds; the persister's own keys all
- * carry a dash after the prefix, so it never reads this one.
- */
-type FeedWrites = Record<string, number>;
-
-const indexKeyOf = (serverId: string): string => `${prefixOf(serverId)}feeds`;
-
-// Changes to the index wait for one another, so none overwrites another's.
-let indexChanges = Promise.resolve();
-
-async function readIndex(serverId: string): Promise<FeedWrites> {
-  const stored = await serverCacheStorage(serverId).getItem(
-    indexKeyOf(serverId),
-  );
-
-  if (stored === null || stored === undefined) return {};
-
-  try {
-    return JSON.parse(stored);
-  } catch {
-    return {};
-  }
-}
-
-function changeIndex(
-  serverId: string,
-  change: (writes: FeedWrites) => FeedWrites,
-): Promise<void> {
-  indexChanges = indexChanges.then(async () => {
-    const next = change(await readIndex(serverId));
-
-    await serverCacheStorage(serverId).setItem(
-      indexKeyOf(serverId),
-      JSON.stringify(next),
-    );
-  });
-
-  return indexChanges.catch(() => {});
-}
-
-// A Feed was written just now.
-export const noteFeedWritten = (
-  serverId: string,
-  cacheId: string,
-  at: number,
-): Promise<void> =>
-  changeIndex(serverId, (writes) => ({ ...writes, [cacheId]: at }));
-
-/*
- * The Feeds past the newest `kept`, or older than a copy lives, which leave the index and are returned for the caller
- * to remove. The Feeds `persisterGc` already removed for age leave with them.
- */
-export async function takeOldFeeds(
-  serverId: string,
-  kept: number,
-  now: number,
-): Promise<string[]> {
-  const dropped: string[] = [];
-
-  await changeIndex(serverId, (writes) => {
-    const newest = Object.entries(writes)
-      .filter(([, at]) => now - at <= cacheMaxAge)
-      .sort(([, a], [, b]) => b - a);
-
-    const keep = new Set(newest.slice(0, kept).map(([cacheId]) => cacheId));
-
-    dropped.push(
-      ...Object.keys(writes).filter((cacheId) => !keep.has(cacheId)),
-    );
-
-    return Object.fromEntries(newest.filter(([cacheId]) => keep.has(cacheId)));
-  });
-
-  return dropped;
-}
-
 // A Server paired again is written to again.
 export function rememberServerCache(serverId: string): void {
   forgotten.delete(serverId);
@@ -186,5 +104,4 @@ export function rememberServerCache(serverId: string): void {
 export async function forgetServerCache(serverId: string): Promise<void> {
   forgotten.add(serverId);
   await serverQueryPersister(serverId).removeQueries();
-  await serverCacheStorage(serverId).removeItem(indexKeyOf(serverId));
 }
