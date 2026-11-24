@@ -1,6 +1,6 @@
 import { hmac } from '@noble/hashes/hmac.js';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { aead as platformAead, type Aead, type AeadParams } from './aead';
+import { aead, type AeadParams } from './aead';
 import { concatBytes } from './bytes';
 
 export const tagBytes = 16;
@@ -36,10 +36,7 @@ const nonceFor = (records: bigint): Uint8Array => {
 export class CipherState {
   private records = 0n;
 
-  public constructor(
-    private key?: Uint8Array,
-    private readonly aead: Aead = platformAead,
-  ) {}
+  public constructor(private key?: Uint8Array) {}
 
   public rekey(key: Uint8Array): void {
     this.key = key;
@@ -47,11 +44,11 @@ export class CipherState {
   }
 
   public seal(associated: Uint8Array, plaintext: Uint8Array): Uint8Array {
-    return this.aead.seal(this.next(associated), plaintext);
+    return aead.seal(this.next(associated), plaintext);
   }
 
   public open(associated: Uint8Array, record: Uint8Array): Uint8Array {
-    return this.aead.open(this.next(associated), record);
+    return aead.open(this.next(associated), record);
   }
 
   private next(associated: Uint8Array): AeadParams {

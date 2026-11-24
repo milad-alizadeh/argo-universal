@@ -1,15 +1,18 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { QueryClientProvider } from '@tanstack/react-query';
+import {
+  focusManager,
+  QueryClientProvider,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type * as React from 'react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import type { Connection, OpenConnection } from '#features/connection';
 import { ConnectionContext, holdCacheOnline } from '#features/connection';
-import { TRPCProvider } from '#features/connection';
+import { TRPCProvider, useTRPC } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
-import { followAppForegroundOnNative } from './follow-app-foreground';
-import { createQueryClient } from './query-cache';
+import { createQueryClient, keepServerLists } from './query-cache';
 import { ServerUrls } from './server-urls';
 
 export interface LookedAtServerProps {
@@ -39,8 +42,17 @@ export function LookedAtServer(
   );
 }
 
+// TanStack's React Native recipe: a phone has no tab focus, so the App's foreground state stands in for it.
 function followsAppForeground(): (() => void) | undefined {
-  return followAppForegroundOnNative(Platform.OS, AppState);
+  if (Platform.OS === 'web') return undefined;
+
+  const subscription = AppState.addEventListener('change', (state) => {
+    focusManager.setFocused(state === 'active');
+  });
+
+  return (): void => {
+    subscription.remove();
+  };
 }
 
 // A Server with somewhere to open a Connection, and the Connection opened to it.
@@ -87,6 +99,10 @@ function ConnectionProviders({
 }
 
 function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
+  // Once, and before any cache restore: restored queries take the defaults in force when they are hydrated (#2703).
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  useState(() => keepServerLists(queryClient, trpc));
   useCacheOnline(props.connection.connection);
 
   return <ServerContexts {...props} />;
