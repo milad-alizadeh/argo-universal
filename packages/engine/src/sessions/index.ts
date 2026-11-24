@@ -50,6 +50,8 @@ export { createSessionReader, readSessionRow } from './session-record';
 
 export { sessionChangesSelection } from './changes-selection';
 
+export { storeSessionChanges } from './session-changes';
+
 export { createSessionActorInput } from './session-actor-input';
 
 export { recoverAfterRestart } from './recovery';

@@ -6,7 +6,13 @@ import {
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { SessionRow } from './session-row';
-import { issueItem } from './session-row-fixtures';
+import {
+  checkoutChangesPullRequestSession,
+  checkoutChangesSession,
+  checkoutChangesShellSession,
+  checkoutNoLinesSession,
+  issueItem,
+} from './session-row-fixtures';
 import { crowdedMetaSession } from './session-row-pull-request-fixtures';
 
 const meta = {
@@ -60,5 +66,62 @@ export const CrowdedEndsOnMore: Story = {
     await expect(
       within(list).queryByText(issueItem.pluginName),
     ).not.toBeInTheDocument();
+  },
+};
+
+const additions = '+128';
+
+const deletions = '\u221214';
+
+// The Checkout's totals stand in a Change's place on the line, ahead of a running Shell's count.
+export const CheckoutTotalsLeadTheLine: Story = {
+  args: checkoutChangesShellSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    const added = await canvas.findByText(additions);
+    const shells = canvas.getByLabelText(/^Background Tasks: 1 running/);
+
+    await expect(canvas.getByText(deletions)).toBeVisible();
+    await expect(added.getBoundingClientRect().right).toBeLessThan(
+      shells.getBoundingClientRect().left,
+    );
+  },
+};
+
+// A Change replaces the totals; the row never draws both.
+export const ChangeReplacesCheckoutTotals: Story = {
+  args: checkoutChangesPullRequestSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    await expect(
+      await canvas.findByTestId('session-pull-request-slot'),
+    ).toBeVisible();
+    await expect(canvas.queryByText(additions)).not.toBeInTheDocument();
+    await expect(canvas.queryByText(deletions)).not.toBeInTheDocument();
+  },
+};
+
+// Totals of no lines draw nothing.
+export const NoLinesDrawNothing: Story = {
+  args: checkoutNoLinesSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    await expect(canvas.getByRole('button')).toBeVisible();
+    await expect(
+      canvas.queryByTestId('session-changes-slot'),
+    ).not.toBeInTheDocument();
+  },
+};
+
+// Totals alone draw on the line.
+export const CheckoutTotalsDraw: Story = {
+  args: checkoutChangesSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    await expect(await canvas.findByText(additions)).toBeVisible();
   },
 };

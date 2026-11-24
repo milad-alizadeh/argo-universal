@@ -6,6 +6,7 @@ import {
   type FeedInput,
 } from '../feed';
 import { sessionChangesSelection } from './changes-selection';
+import { storeSessionChanges } from './session-changes';
 import type { SessionContext } from './session-context';
 
 type FeedPosition = Pick<
@@ -47,10 +48,20 @@ const findUnaddressedPlan = (
     acpSessionId,
   });
 
-const refreshChanges = (
+// Reads the Checkout totals and stores them for the Session list.
+const refreshChanges = async (
   context: SessionContext,
-): ReturnType<typeof readChangesSummary> =>
-  readChangesSummary(sessionChangesSelection(context.input.database, context));
+): ReturnType<typeof readChangesSummary> => {
+  const { database, writer } = context.input;
+
+  const changes = await readChangesSummary(
+    sessionChangesSelection(database, context),
+  );
+
+  storeSessionChanges({ database, writer }, context.sessionId, changes);
+
+  return changes;
+};
 
 // The Session's Feed reads stored and queued rows from its opened position.
 export const sessionFeedInput = (

@@ -176,3 +176,36 @@ export const longPluginItemsCompactSession = {
     more: pluginItemsSession.plugins.more,
   },
 } satisfies SessionRowFixture;
+
+const checkoutTotals = { files: 4, additions: 128, deletions: 14 };
+
+// No Change opened yet: the Checkout's line totals stand in the Change's place.
+export const checkoutChangesSession = {
+  ...unreadSession,
+  pullRequest: undefined,
+  session: { ...unreadSession.session, changes: checkoutTotals },
+} satisfies SessionRowFixture;
+
+// A running Shell follows the totals on the meta line.
+export const checkoutChangesShellSession = {
+  ...checkoutChangesSession,
+  session: {
+    ...checkoutChangesSession.session,
+    shells: { running: 1, total: 1 },
+  },
+} satisfies SessionRowFixture;
+
+// A Change replaces the totals: the row never draws both.
+export const checkoutChangesPullRequestSession = {
+  ...checkoutChangesSession,
+  pullRequest: { number: 45, stage: 'open' },
+} satisfies SessionRowFixture;
+
+// Totals of no lines, such as an untouched Checkout, draw nothing.
+export const checkoutNoLinesSession = {
+  ...checkoutChangesSession,
+  session: {
+    ...checkoutChangesSession.session,
+    changes: { files: 0, additions: 0, deletions: 0 },
+  },
+} satisfies SessionRowFixture;

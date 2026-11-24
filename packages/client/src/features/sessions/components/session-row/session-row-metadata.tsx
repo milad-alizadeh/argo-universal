@@ -2,6 +2,8 @@ import { Icon } from '@repo/kit/primitives/content/icon';
 import { ListItemInert } from '@repo/kit/primitives/lists/list-item';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
+import { View } from 'react-native';
+import { DiffDeltas } from '../change-diff-total';
 import {
   ChangeStage,
   type ChangeStageProps,
@@ -45,6 +47,35 @@ function pullRequestPart({ pullRequest }: SessionRowMetadataProps): MetaPart[] {
     inertPart(
       entry,
       <ChangeStage {...pullRequest} testID="session-pull-request-slot" />,
+    ),
+  ];
+}
+
+// The Checkout's line totals stand where a Change would; a Change replaces them, and none shows for no lines or no read yet.
+function changesPart({
+  session,
+  pullRequest,
+}: SessionRowMetadataProps): MetaPart[] {
+  const { changes } = session;
+
+  if (pullRequest || !changes) return [];
+
+  if (changes.additions === 0 && changes.deletions === 0) return [];
+
+  const entry = {
+    key: 'changes',
+    text: `+${changes.additions} −${changes.deletions}`,
+  };
+
+  return [
+    inertPart(
+      entry,
+      <View
+        className="flex-row items-center gap-1"
+        testID="session-changes-slot"
+      >
+        <DiffDeltas {...changes} />
+      </View>,
     ),
   ];
 }
@@ -101,10 +132,11 @@ function runningParts(props: SessionRowMetadataProps): MetaPart[] {
   ];
 }
 
-// The Change leads the active Background Task and Agent counts; the Plugins' items follow them on the line.
+// The Change, or else the Checkout's totals, leads the active Background Task and Agent counts; the Plugins' items follow them on the line.
 export function argoMetaParts(props: SessionRowMetadataProps): MetaPart[] {
   return [
     ...pullRequestPart(props),
+    ...changesPart(props),
     ...runningParts(props),
     ...archivedPart(props),
   ];

@@ -25,6 +25,7 @@ import {
   createSessionReader,
   createSessionSnapshotWatcher,
   sessionChangesSelection,
+  storeSessionChanges,
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
@@ -100,19 +101,34 @@ export function createAppRouterDeps(
     ...setup,
     chartPreview: new ChartPreview(),
     readSession,
-    readStoredChangesSummary: createStoredChangesReader(input, readSession),
+    readStoredChangesSummary: createStoredChangesReader(
+      input,
+      sources,
+      readSession,
+    ),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
 }
 
 function createStoredChangesReader(
   input: AppRouterInput,
+  sources: Pick<FeedSources, 'findWriter'>,
   readSession: ReturnType<typeof createSessionReader>,
 ): FeedDeps['readStoredChangesSummary'] {
-  return (sessionId) => {
+  return async (sessionId) => {
     const session = readSession(sessionId);
 
-    return readChangesSummary(sessionChangesSelection(input.database, session));
+    const changes = await readChangesSummary(
+      sessionChangesSelection(input.database, session),
+    );
+
+    storeSessionChanges(
+      { database: input.database, writer: sources.findWriter() },
+      sessionId,
+      changes,
+    );
+
+    return changes;
   };
 }
 
