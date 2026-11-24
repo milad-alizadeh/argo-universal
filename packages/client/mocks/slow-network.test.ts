@@ -3,6 +3,7 @@ import type { ByteSocket } from '../src/features/connection/api/channel/byte-soc
 import { slowNetwork } from './slow-network';
 
 beforeEach(() => vi.useFakeTimers());
+
 afterEach(() => vi.useRealTimers());
 
 function fakeSocket(): ByteSocket & { written: Uint8Array[] } {
@@ -46,6 +47,7 @@ it('holds bytes arriving down for the down latency, not the up one', async () =>
     up: { latencyMs: 500 },
     down: { latencyMs: 40 },
   });
+
   const received: number[] = [];
 
   slow.onData = (chunk): number => received.push(chunk.length);
@@ -80,6 +82,7 @@ it('limits each direction on its own', async () => {
     up: {},
     down: { bytesPerSecond: 100 },
   });
+
   const received: number[] = [];
 
   slow.onData = (chunk): number => received.push(chunk.length);
@@ -98,6 +101,7 @@ it('delivers a close after the bytes that came before it', async () => {
     up: {},
     down: { latencyMs: 50, bytesPerSecond: 1000 },
   });
+
   const events: string[] = [];
 
   slow.onData = (): number => events.push('data');

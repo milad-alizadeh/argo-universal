@@ -1,24 +1,24 @@
 import { openAcpFeedSession } from '@repo/engine/mocks/acp-feed';
 import { afterEach, expect, it } from 'vitest';
-import { badWifi, slowNetwork } from '../../../../../mocks/slow-network';
 import {
   endpointOf,
   nodeChannelPlatform,
   pairedNodeDevice,
 } from '../../../../../mocks/node-channel-platform';
+import { badWifi, slowNetwork } from '../../../../../mocks/slow-network';
 import { channelServerUrl, createTRPCClient } from '../trpc/create-trpc-client';
 import { createChannelTransport } from './channel-transport';
 
-const closers: (() => void)[] = [];
+const closers: (() => Promise<void> | void)[] = [];
 
-afterEach(() => {
-  for (const close of closers.splice(0)) close();
+afterEach(async () => {
+  for (const close of closers.splice(0)) await close();
 });
 
 const messageCount = 60;
-const paragraph = 'A line of an Agent reply, long enough to cost bytes. '.repeat(
-  40,
-);
+
+const paragraph =
+  'A line of an Agent reply, long enough to cost bytes. '.repeat(40);
 
 const seeded = Array.from({ length: messageCount }, (_, index) => ({
   sessionUpdate: 'agent_message_chunk' as const,

@@ -55,8 +55,7 @@ function slowed(inner: ByteSocket, profile: NetworkProfile): ByteSocket {
 
   inner.onData = (chunk): void =>
     down.send(() => slow.onData(chunk), chunk.length);
-  inner.onClose = (error): void =>
-    down.send(() => slow.onClose(error), 0);
+  inner.onClose = (error): void => down.send(() => slow.onClose(error), 0);
 
   return slow;
 }
