@@ -4,11 +4,12 @@ import {
   findLiveToolCall,
   findPermissionToolCall,
 } from '../view/live-tool-call';
-import { toFeedView } from '../view/to-feed-view';
+import { translateFeed } from '../view/to-feed-view';
 import { newestWorkRevision } from '../view/work-revision';
 import type { SessionFeed } from './session-feed';
 import { useFeedLive } from './use-feed-live';
 import {
+  type FeedViewTranslator,
   useFeedWindow,
   useOlderHistory,
   useSessionPages,
@@ -17,7 +18,7 @@ import {
 // A Session's Feed view, kept in the query cache with its paging and live changes (ADR 0007). While not `shown` the live subscription is closed and nothing is written; showing it again opens the subscription after the newest revision the cache holds.
 export function useSessionFeed(
   sessionId: string | undefined,
-  translate = toFeedView,
+  translate: FeedViewTranslator = translateFeed,
   shown = true,
 ): SessionFeed {
   const readPage = useSessionPages(sessionId);

@@ -30,12 +30,14 @@ import {
 import type { FeedView } from '../view/feed-view';
 import { shownRows } from '../view/held-plan';
 import { keepUnchangedItems } from '../view/keep-unchanged-items';
+import type { TranslatedFeed, TranslatedTurn } from '../view/to-feed-view';
 
-// Translates Feed rows to the Feed view, such as the Session's own or a subagent's.
+// Translates Feed rows to the Feed view, such as the Session's own or a subagent's. The last draw's Turns come with the rows, so only the Turns that changed are translated again.
 export type FeedViewTranslator = (
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
-) => FeedView;
+  previous?: readonly TranslatedTurn[],
+) => TranslatedFeed;
 
 type FeedPageCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
 
@@ -135,6 +137,11 @@ export function useOlderHistory(
   });
 }
 
+// What the last draw showed, and the Turns it was translated from.
+type Drawn = Pick<TranslatedFeed, 'view' | 'turns'>;
+
+const none: Partial<Drawn> = {};
+
 interface ViewInputs {
   feed: FeedState;
   snapshot: SessionSnapshot | null;
@@ -150,23 +157,26 @@ function useFeedView({
   snapshot,
   translate,
 }: ViewInputs): FeedView | null {
-  const drawn = useRef<FeedView | null>(null);
+  const drawn = useRef<Drawn | null>(null);
 
-  const view = useMemo(() => {
+  const next = useMemo((): Drawn | null => {
     if (!snapshot) return null;
 
-    // eslint-disable-next-line react/refs -- the last draw is what the items are kept from
-    const previous = drawn.current;
+    // eslint-disable-next-line react/refs -- the last draw is what the Turns and items are kept from
+    const { view: lastView = null, turns: lastTurns } = drawn.current ?? none;
 
-    return keepUnchangedItems(
-      previous,
-      translate(shownRows({ rows, plan }), snapshot),
+    const { view, turns } = translate(
+      shownRows({ rows, plan }),
+      snapshot,
+      lastTurns,
     );
+
+    return { view: keepUnchangedItems(lastView, view), turns };
   }, [rows, plan, snapshot, translate]);
 
   useEffect(() => {
-    drawn.current = view;
-  }, [view]);
+    drawn.current = next;
+  }, [next]);
 
-  return view;
+  return next?.view ?? null;
 }
