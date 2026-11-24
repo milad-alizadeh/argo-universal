@@ -6,6 +6,7 @@ import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
 import { realClock, type PluginClock } from '../clock';
 import type { ProcessCall } from '../protocol/runtime';
+import { HostSlots, concurrentCommandLimit } from './plugin-host-slots';
 import { pluginContentLimitBytes, pluginTimeoutMs } from './plugin-limits';
 
 // A run or spawn reaches here only after the checker gave it its working directory and environment.
@@ -25,6 +26,7 @@ type Timer = () => void;
 // A Plugin's commands: run by argv with no shell, output capped, killed at the timeout and when released.
 export class PluginProcesses {
   constructor(private readonly clock: PluginClock = realClock) {}
+  private readonly slots = new HostSlots(concurrentCommandLimit);
   private readonly running = new Map<string, Running>();
   private readonly live = new Set<ChildProcess>();
   private readonly timers = new Set<Timer>();
@@ -40,8 +42,12 @@ export class PluginProcesses {
   }
 
   // Core callers use the same bounded argv runner for fixed Server commands.
-  public async run(command: CheckedCommand): Promise<ProcessResult> {
-    return this.start(await withLoginPath(command), pluginTimeoutMs).done;
+  public run(command: CheckedCommand): Promise<ProcessResult> {
+    return this.slots.run('commands', async () => {
+      const started = this.start(await withLoginPath(command), pluginTimeoutMs);
+
+      return started.done;
+    });
   }
 
   private control(call: Control): Promise<ProcessResult> | null {

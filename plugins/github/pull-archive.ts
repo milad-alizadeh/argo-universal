@@ -17,7 +17,7 @@ export const archiveOf = (on: boolean): AutomationState => ({
 
 // What Auto-archive's Watch turn works with: the Sessions it archives, and the pull requests it is on for.
 export type Archiving = {
-  sessions: Pick<Argo['sessions'], 'archive'>;
+  sessions: Pick<Argo['sessions'], 'archive' | 'get'>;
   archive: ArchiveStore;
 };
 
@@ -49,12 +49,26 @@ async function archived(
   return true;
 }
 
+// A Session that is gone has its choice forgotten; one in another Project keeps it, as it can move back, and waits.
+async function sessionStays(
+  { sessions, archive }: Archiving,
+  link: PullLink,
+): Promise<boolean> {
+  const session = await sessions.get(link.sessionId);
+
+  if (!session) await archive.disable(link);
+
+  return session?.projectId === link.projectId;
+}
+
 // Once the Session is archived Auto-archive is spent, so unarchiving it is not undone by the next Watch.
 async function archiveOne(
   archiving: Archiving,
   fresh: Fresh,
   link: PullLink,
 ): Promise<boolean> {
+  if (!(await sessionStays(archiving, link))) return false;
+
   if (!(await settled(fresh, link)) || !(await archived(archiving, link)))
     return false;
 
