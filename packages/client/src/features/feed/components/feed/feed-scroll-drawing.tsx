@@ -59,6 +59,7 @@ export function useFeedOnScroll(
       }, positionSaveInterval),
     [focused, sessionId, list],
   );
+
   useEffect(() => save.cancel, [save]);
 
   return save.call;

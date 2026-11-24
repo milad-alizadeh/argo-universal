@@ -4,16 +4,16 @@ import { flowchartDiagram } from './diagram-fixtures';
 import { drawnState } from './diagram-drawn-state';
 
 const palette: DiagramPalette = {
-  background: '#ffffff',
-  text: '#111111',
-  textSecondary: '#444444',
-  textMuted: '#777777',
-  line: '#777777',
-  arrow: '#111111',
-  nodeFill: '#eeeeee',
-  nodeStroke: '#cccccc',
-  groupHeader: '#eeeeee',
-  innerStroke: '#cccccc',
+  background: 'colour',
+  text: 'colour',
+  textSecondary: 'colour',
+  textMuted: 'colour',
+  line: 'colour',
+  arrow: 'colour',
+  nodeFill: 'colour',
+  nodeStroke: 'colour',
+  groupHeader: 'colour',
+  innerStroke: 'colour',
   tones: {},
 };
 
@@ -27,9 +27,10 @@ it('reuses the drawing of a diagram a row draws again after it remounts', () => 
 
 it('draws the same diagram again when the theme changes its colours', () => {
   const light = drawnState(flowchartDiagram.source, palette);
+
   const dark = drawnState(flowchartDiagram.source, {
     ...palette,
-    background: '#000000',
+    background: 'other colour',
   });
 
   expect(dark).not.toBe(light);

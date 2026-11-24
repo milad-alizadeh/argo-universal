@@ -33,7 +33,7 @@ function useMeasuredHeight(
   open: boolean,
 ): Omit<
   ContentMeasurement,
-  'content' | 'onLayout' | 'resting'
+  'content' | 'onLayout'
 > & { recordHeight: (height: number) => void } {
   const contentHeight = useRef(0);
   // Opens at rest when it mounts open: it has no motion to size, so its first height costs no draw.
