@@ -1,4 +1,7 @@
-import { QueryClient } from '@tanstack/react-query';
+import type { AppRouter } from '@repo/engine/router';
+import { QueryClient, type QueryKey } from '@tanstack/react-query';
+import { createTRPCClient } from '@trpc/client';
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 
 const minuteMs = 60_000,
   minutesKept = 30;
@@ -18,19 +21,30 @@ const pageTreesKeptFor = hoursKept * 60 * minuteMs;
  *
  * In memory only: nothing is written to the Device, so a cold start loads from the Server as it always did.
  */
-const keptQueries: readonly (readonly string[])[] = [
-  ['agents', 'servers'],
-  ['agents', 'registry'],
-  ['projects', 'list'],
-  ['system', 'info'],
-];
+const listsFreshFor = 30_000;
+
+// Each kept list is a tRPC path, read from the router's own procedures so a renamed procedure cannot leave its key dead (finding 8 of #2685).
+function keptListKeys(queryClient: QueryClient): readonly QueryKey[] {
+  const trpc = createTRPCOptionsProxy<AppRouter>({
+    client: createTRPCClient<AppRouter>({ links: [] }),
+    queryClient,
+  });
+
+  return [
+    trpc.agent.list.pathKey(),
+    trpc.registry.get.pathKey(),
+    trpc.project.list.pathKey(),
+    trpc.session.list.pathKey(),
+    trpc.system.info.pathKey(),
+  ];
+}
 
 // A kept list is still asked for again on every visit; what it keeps is what the reader sees meanwhile.
 export function createQueryClient(): QueryClient {
   const client = new QueryClient();
 
-  for (const path of keptQueries)
-    client.setQueryDefaults([path], { gcTime: keptFor });
+  for (const key of keptListKeys(client))
+    client.setQueryDefaults(key, { gcTime: keptFor, staleTime: listsFreshFor });
 
   client.setQueryDefaults(['pluginPageTree'], { gcTime: pageTreesKeptFor });
 
