@@ -3,10 +3,11 @@ import {
   QueryClient,
   QueryObserver,
 } from '@tanstack/react-query';
-import { afterEach, expect, it, vi } from 'vitest';
+import { expect, it, type Mock, vi } from 'vitest';
 import {
   type AppStateSource,
   followAppForeground,
+  followAppForegroundOnNative,
 } from './follow-app-foreground';
 
 interface MovableAppState extends AppStateSource {
@@ -33,18 +34,15 @@ function fakeAppState(): MovableAppState {
   };
 }
 
-afterEach(() => {
-  focusManager.setEventListener(() => (): void => {
-    // Nothing to release.
-  });
-});
-
 const ignore = (): void => {
   // The test reads the Server's calls, not the result.
 };
 
-// Watches one list, sends the App to the background and back, and returns how many times the Server was asked.
-async function askedAfterReturning(staleTime: number): Promise<number> {
+// Watches one list, sends the App to the background and back, and returns the Server's calls once `settled` holds.
+async function askedAfterReturning(
+  staleTime: number,
+  settled: (queryFn: Mock<() => Promise<string>>) => Promise<void>,
+): Promise<number> {
   const queryFn = vi.fn<() => Promise<string>>(() => Promise.resolve('rows'));
 
   // QueryClientProvider mounts its client; a mounted client is what listens for focus.
@@ -64,7 +62,7 @@ async function askedAfterReturning(staleTime: number): Promise<number> {
 
   appState.move('background');
   appState.move('active');
-  await new Promise((resolve) => setTimeout(resolve, 20));
+  await settled(queryFn);
 
   unsubscribe();
   stop();
@@ -74,9 +72,35 @@ async function askedAfterReturning(staleTime: number): Promise<number> {
 }
 
 it('refetches a stale query when the App returns to the foreground', async () => {
-  expect(await askedAfterReturning(0)).toBe(2);
+  const calls = await askedAfterReturning(0, (queryFn) =>
+    vi.waitFor(() => expect(queryFn).toHaveBeenCalledTimes(2)),
+  );
+
+  expect(calls).toBe(2);
 });
 
 it('leaves a fresh query alone when the App returns to the foreground', async () => {
-  expect(await askedAfterReturning(60_000)).toBe(1);
+  const calls = await askedAfterReturning(
+    60_000,
+    () => new Promise((resolve) => setTimeout(resolve, 20)),
+  );
+
+  expect(calls).toBe(1);
+});
+
+it('follows the App on a phone and leaves the browser tab focus alone on the web', () => {
+  const phone = fakeAppState();
+  const web = fakeAppState();
+  const addPhone = vi.spyOn(phone, 'addEventListener');
+  const addWeb = vi.spyOn(web, 'addEventListener');
+
+  const stopPhone = followAppForegroundOnNative('ios', phone);
+  const stopWeb = followAppForegroundOnNative('web', web);
+  focusManager.subscribe(ignore)();
+
+  expect(stopWeb).toBeUndefined();
+  expect(addPhone).toHaveBeenCalledOnce();
+  expect(addWeb).not.toHaveBeenCalled();
+
+  stopPhone?.();
 });

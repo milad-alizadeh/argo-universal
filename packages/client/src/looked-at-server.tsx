@@ -8,7 +8,7 @@ import { ConnectionContext, holdCacheOnline } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
-import { followAppForeground } from './follow-app-foreground';
+import { followAppForegroundOnNative } from './follow-app-foreground';
 import { createQueryClient } from './query-cache';
 import { ServerUrls } from './server-urls';
 
@@ -39,9 +39,8 @@ export function LookedAtServer(
   );
 }
 
-// On a phone the App's foreground state stands in for a browser tab's focus.
 function followsAppForeground(): (() => void) | undefined {
-  return Platform.OS === 'web' ? undefined : followAppForeground(AppState);
+  return followAppForegroundOnNative(Platform.OS, AppState);
 }
 
 // A Server with somewhere to open a Connection, and the Connection opened to it.
