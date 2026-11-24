@@ -88,6 +88,29 @@ it('does not hold in memory what a forgotten Server could not keep on the disk',
   expect(memory.store('server-a').find('/blobs/a')).toBeNull();
 });
 
+it('keeps the URL of an image kept twice alive', async () => {
+  const urls = countingUrls();
+  const store = memoryMedia(urls).store('server-a');
+
+  const first = await store.keep('/blobs/a', bytes, 'image/png');
+  const second = await store.keep('/blobs/a', bytes, 'image/png');
+
+  expect(second).toBe(first);
+  expect(urls.revoked).toEqual([]);
+  expect(store.find('/blobs/a')).toBe(first);
+});
+
+it('says so, and makes no URL, for an image larger than memory may hold', async () => {
+  const urls = countingUrls();
+  const store = memoryMedia(urls, 2).store('server-a');
+
+  await expect(store.keep('/blobs/a', bytes, 'image/png')).rejects.toThrow(
+    'too large',
+  );
+  expect(store.find('/blobs/a')).toBeNull();
+  expect(urls.revoked).toEqual([]);
+});
+
 it('gives back the least recently used image once memory holds more than its size', async () => {
   const urls = countingUrls();
   const store = memoryMedia(urls, 5).store('server-a');

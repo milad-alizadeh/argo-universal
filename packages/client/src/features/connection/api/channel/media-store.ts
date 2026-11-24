@@ -74,7 +74,17 @@ export function memoryMedia(
         if (forgotten.has(serverId))
           return Promise.reject(new ForgottenError());
         const mine = heldBy(serverId);
-        const url = mine.get(path)?.url ?? urls.make(bytes, mime);
+        const already = mine.get(path);
+
+        // Kept again: the URL an image may be drawing from stays, and is not given back.
+        if (already) return Promise.resolve(already.url);
+
+        // The cache would drop it at once and its URL would never be given back.
+        if (bytes.length > maxBytes)
+          return Promise.reject(
+            new Error(`${path} is too large to hold in memory`),
+          );
+        const url = urls.make(bytes, mime);
 
         mine.set(path, { url, size: bytes.length });
 

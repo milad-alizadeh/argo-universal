@@ -84,7 +84,7 @@ class AppServersStore implements ServersStore {
     void keepKnownServer(known);
     void notePaired(known.key, Date.now());
 
-    for (const added of this.hooks.onAdded) added(known.key);
+    for (const remember of this.hooks.onAdded) remember(known.key);
   };
 
   public readonly remove = (id: string): void => {
