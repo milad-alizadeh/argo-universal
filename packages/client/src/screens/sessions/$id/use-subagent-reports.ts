@@ -67,7 +67,7 @@ export function useSubagentReports(parentId: string, childId: string): Reports {
     hasOlder: feed.hasOlder,
     loading: older.isPending,
     loadOlder: () => older.mutate(),
-    error: query.error ?? live.closure?.error ?? live.changes.error,
+    error: query.error ?? live.openError,
     retry: () => {
       void query.refetch();
       live.retryOpen();

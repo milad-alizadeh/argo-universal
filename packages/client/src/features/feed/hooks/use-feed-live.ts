@@ -43,6 +43,8 @@ export interface FeedLive {
   changes: TRPCSubscriptionResult<Received, ClientError>;
   // The Server closed the Feed, with or without an error to show.
   closure: { error: Error | null } | null;
+  // Why live changes stopped, if they have: the Server closed the Feed, or the subscription failed. A refusal of the event id keys is not one: the Feed opens again with `after`.
+  openError: Error | ClientError | null;
   // Opens live changes again, after a closure.
   retryOpen: () => void;
 }
@@ -182,6 +184,12 @@ function subscribeInput(
   return input;
 }
 
+// A refusal that has moved the Feed to the old input is answered, so it is not shown while that open starts.
+const shownError = (
+  error: ClientError | null,
+  refused: boolean,
+): ClientError | null => (error && refused && isRefusal(error) ? null : error);
+
 const isRefusal = (error: ClientError): boolean =>
   error.data?.code === 'BAD_REQUEST';
 
@@ -236,7 +244,7 @@ function useReopen({
 
     if (lastEventId === undefined) reset();
     else reopenCold();
-  });
+  }, [rebuilt, coldOnRebuild, lastEventId, reset, reopenCold]);
 
   // A new open starts after the newest revision the cache holds: a new id opens it by itself. The same one (none, for a cold open, which is also what a Feed with nothing held opens with) would not re-key the subscription, so it is reset instead, which opens it again with the same input.
   return (): void => {
@@ -294,6 +302,7 @@ export function useFeedLive(
   return {
     changes,
     closure,
+    openError: closure?.error ?? shownError(changes.error, refused),
     retryOpen: (): void => {
       setClosure(null);
       reopen();

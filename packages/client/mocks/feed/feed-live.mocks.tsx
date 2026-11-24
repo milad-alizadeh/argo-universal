@@ -222,6 +222,8 @@ export interface FeedLiveFixture {
   // What the screen holds of the Session's Feed, as of its last render.
   held: () => ReturnType<typeof useSessionFeed> | undefined;
   hold: (feed: ReturnType<typeof useSessionFeed>) => void;
+  // Every open error the screen has drawn.
+  openErrors: () => Error[];
   // The rows the Session's Feed query holds.
   window: () => FeedState | undefined;
   // The tail page arrives.
@@ -277,6 +279,7 @@ export function feedLiveFixture({
   const server = newServer(answer.promise, oldServer);
   const watching = watchConnection(link);
   let held: ReturnType<typeof useSessionFeed> | undefined;
+  const drawnErrors: Error[] = [];
   let setShown: ((shown: boolean) => void) | undefined;
 
   if (seeded) seed(queryClient);
@@ -297,7 +300,9 @@ export function feedLiveFixture({
     connection: connectionOf(link),
     client: clientOf(server),
     held: () => held,
+    openErrors: () => drawnErrors,
     hold: (feed) => {
+      if (feed.openError) drawnErrors.push(new Error(feed.openError.message));
       held = feed;
     },
     window: () => queryClient.getQueryData(feedKey(sessionId)),

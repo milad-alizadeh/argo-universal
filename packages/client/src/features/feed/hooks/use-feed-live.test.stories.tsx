@@ -120,6 +120,8 @@ export const OpensOnAServerThatRefusesTheNewKeys: Story = {
 
     // Asked once more with the new keys, and not again.
     await expect(fixture.server.refused).toBe(1);
+    // The refusal is not shown as a failure: the Feed goes live.
+    await expect(fixture.openErrors()).toEqual([]);
   },
 };
 

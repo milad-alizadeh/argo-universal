@@ -57,7 +57,7 @@ export function useSessionFeed(
     loadOlder: async () => {
       if (!older.isPending) await older.mutateAsync().catch(() => {});
     },
-    openError: live.closure?.error ?? live.changes.error,
+    openError: live.openError,
     retryOpen: live.retryOpen,
     resumeAfterCommand: () => {
       if (live.closure) live.retryOpen();
