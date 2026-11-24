@@ -1,21 +1,35 @@
-import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+import type {
+  FeedPageInput,
+  FeedPageOutput,
+  SessionSnapshot,
+  SessionUpdate,
+} from '@repo/contracts';
 import {
-  skipToken,
+  type UseMutationResult,
   type UseQueryResult,
+  skipToken,
+  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTRPCClient } from '#features/connection';
 import {
-  FeedCache,
-  type FeedCachePorts,
+  feedKey,
+  feedPageSize,
   feedQueryDefaults,
-} from '../api/feed-cache';
-import { emptyFeed, type FeedState } from '../view/feed-state';
+  snapshotKey,
+  snapshotQueryDefaults,
+} from '../api/feed-query';
+import {
+  emptyFeed,
+  type FeedState,
+  mergeNewestPage,
+  mergeOlderPage,
+} from '../view/feed-state';
 import type { FeedView } from '../view/feed-view';
-import { createFeedViewMemo } from '../view/feed-view-memo';
-import { waitForFrame } from './frame-wait';
+import { shownRows } from '../view/held-plan';
+import { keepUnchangedItems } from '../view/keep-unchanged-items';
 
 // Translates Feed rows to the Feed view, such as the Session's own or a subagent's.
 export type FeedViewTranslator = (
@@ -23,16 +37,33 @@ export type FeedViewTranslator = (
   snapshot: SessionSnapshot,
 ) => FeedView;
 
+type FeedPageCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
+
+// Reads a page of the Feed's rows: the Session's own, or a subagent's reports.
+export type FeedPageReader = (
+  cursor: FeedPageCursor,
+) => Promise<FeedPageOutput>;
+
+// The Session's own pages, `feed.page`.
+export function useSessionPages(sessionId: string | undefined): FeedPageReader {
+  const client = useTRPCClient();
+
+  return (cursor) =>
+    client.feed.page.query({
+      sessionId: sessionId ?? '',
+      limit: feedPageSize,
+      ...cursor,
+    });
+}
+
 interface FeedWindowOptions {
   // The key of the Feed the App keeps; the Session's id unless a screen shows another Feed of it.
   cacheId: string | undefined;
-  shown: boolean;
-  // The Session's own tail pages itself; a window fed by other pages, such as a subagent's reports, does not.
-  tail: boolean;
+  readPage: FeedPageReader;
 }
 
 export interface FeedWindow {
-  cache: FeedCache;
+  cacheId: string;
   feed: FeedState;
   snapshot: SessionSnapshot | null;
   view: FeedView | null;
@@ -40,71 +71,100 @@ export interface FeedWindow {
   query: UseQueryResult<FeedState>;
 }
 
-// The Session's Feed from the query cache, drawn as a view. It commits only while the screen is shown (a hidden retained page holds its rows and writes nothing).
+// The Session's Feed from the query cache, drawn as a view: a Session seen before draws at once, with no page read.
 export function useFeedWindow(
   sessionId: string | undefined,
   translate: FeedViewTranslator,
-  { cacheId, shown, tail }: FeedWindowOptions,
+  { cacheId = '', readPage }: FeedWindowOptions,
 ): FeedWindow {
-  const cache = useFeedCache(sessionId, cacheId);
-  useEffect(() => (shown ? cache.start() : undefined), [cache, shown]);
+  const queryClient = useQueryClient();
 
   const query = useQuery<FeedState>({
     ...feedQueryDefaults,
-    queryKey: cache.key,
-    queryFn: tail ? cache.loadTail : skipToken,
+    queryKey: feedKey(cacheId),
+    queryFn: async (): Promise<FeedState> => {
+      const page = await readPage({ direction: 'tail' });
+
+      return mergeNewestPage(
+        queryClient.getQueryData<FeedState>(feedKey(cacheId)) ?? emptyFeed,
+        page,
+      );
+    },
     enabled: sessionId !== undefined,
   });
 
   const { data: snapshot = null } = useQuery<SessionSnapshot | null>({
-    ...feedQueryDefaults,
-    queryKey: cache.snapshotKey,
+    ...snapshotQueryDefaults,
+    queryKey: snapshotKey(cacheId),
     queryFn: skipToken,
   });
 
   const feed = query.data ?? emptyFeed;
-  const view = useFeedViewOf(feed, snapshot, translate);
+  const view = useFeedView({ feed, snapshot, translate });
 
-  return { cache, feed, snapshot, view, query };
+  return { cacheId, feed, snapshot, view, query };
 }
 
-// One cache per Session, over the App's query cache.
-function useFeedCache(
-  sessionId: string | undefined,
-  cacheId: string | undefined,
-): FeedCache {
+// Older rows merge into the same query; a failed page is not a Feed error, and scrolling asks again.
+export function useOlderHistory(
+  cacheId: string,
+  readPage: FeedPageReader,
+): UseMutationResult<void, Error, void> {
   const queryClient = useQueryClient();
-  const client = useTRPCClient();
 
-  return useMemo(
-    () => new FeedCache(queryClient, cacheId ?? '', portsOf(client, sessionId)),
-    [queryClient, client, cacheId, sessionId],
-  );
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      const { epoch, hasOlder, startCursor } =
+        queryClient.getQueryData<FeedState>(feedKey(cacheId)) ?? emptyFeed;
+
+      if (epoch === null || !hasOlder || startCursor === null) return;
+
+      const page = await readPage({
+        direction: 'before',
+        cursor: startCursor,
+        epoch,
+      });
+
+      queryClient.setQueryData<FeedState>(
+        feedKey(cacheId),
+        (held = emptyFeed) => mergeOlderPage(held, page),
+      );
+    },
+  });
 }
 
-function portsOf(
-  client: ReturnType<typeof useTRPCClient>,
-  sessionId: string | undefined,
-): FeedCachePorts {
-  const id = sessionId ?? '';
-
-  return {
-    frame: waitForFrame,
-    fetchPage: (cursor) =>
-      client.feed.page.query({ sessionId: id, limit: pageSize, ...cursor }),
-    fetchRow: (rowId) => client.feed.row.query({ sessionId: id, id: rowId }),
-  };
+interface ViewInputs {
+  feed: FeedState;
+  snapshot: SessionSnapshot | null;
+  translate: FeedViewTranslator;
 }
 
-const pageSize = 150;
+/*
+ * The view follows the rows, the Plan and the snapshot, not the revision, and keeps the items the last draw had.
+ * `useQuery({ select })` cannot do this alone: its result is shared with `replaceData(previous, selected, options)`, and an observer's `structuralSharing` option is also the one the query writes its own data with (queryObserver.ts `setOptions`, query.ts `setData`). The window must stay unshared, so a shared view would need a function that tells the two apart.
+ */
+function useFeedView({
+  feed: { rows, plan },
+  snapshot,
+  translate,
+}: ViewInputs): FeedView | null {
+  const drawn = useRef<FeedView | null>(null);
 
-// The view is translated again only when its rows or snapshot changed, and keeps the items that did not change.
-function useFeedViewOf(
-  feed: FeedState,
-  snapshot: SessionSnapshot | null,
-  translate: FeedViewTranslator,
-): FeedView | null {
-  const [viewOf] = useState(createFeedViewMemo);
+  const view = useMemo(() => {
+    if (!snapshot) return null;
 
-  return viewOf(feed, snapshot, translate);
+    // eslint-disable-next-line react/refs -- the last draw is what the items are kept from
+    const previous = drawn.current;
+
+    return keepUnchangedItems(
+      previous,
+      translate(shownRows({ rows, plan }), snapshot),
+    );
+  }, [rows, plan, snapshot, translate]);
+
+  useEffect(() => {
+    drawn.current = view;
+  }, [view]);
+
+  return view;
 }

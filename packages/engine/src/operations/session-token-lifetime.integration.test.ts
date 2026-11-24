@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   sessionAccessHost,
@@ -60,10 +61,12 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
     message: expect.stringMatching(/unknown operation/i),
   });
 
-  const events = await fixture.host.caller.feed.subscribe({
-    sessionId: second.sessionId,
-    after: null,
-  });
+  const events = await plain(
+    fixture.host.caller.feed.subscribe({
+      sessionId: second.sessionId,
+      after: null,
+    }),
+  );
 
   requireScriptedProcessAt(fixture.host.agent.processes, 1).exited.resolve();
 

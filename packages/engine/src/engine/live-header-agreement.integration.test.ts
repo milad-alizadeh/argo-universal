@@ -6,6 +6,7 @@ import {
   startLiveHeaderHost,
   type LiveHeaderHost,
 } from '#mocks/live-header-composition';
+import { plain } from '#mocks/plain-feed';
 
 async function listActivity(
   context: LiveHeaderHost,
@@ -18,7 +19,9 @@ async function firstSnapshot(
   context: LiveHeaderHost,
 ): Promise<FeedSubscribeOutput | void> {
   const events = (
-    await context.caller.feed.subscribe({ sessionId: 'session-1', after: null })
+    await plain(
+      context.caller.feed.subscribe({ sessionId: 'session-1', after: null }),
+    )
   )[Symbol.asyncIterator]();
 
   const { value } = await events.next();

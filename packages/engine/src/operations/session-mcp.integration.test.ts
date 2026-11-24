@@ -11,6 +11,7 @@ import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { resourceInitialization } from '#mocks/acp-resource';
 import { closeTestSession } from '#mocks/close-session';
 import { operationCaller } from '#mocks/operations';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { discoverOptions } from '#mocks/session-access';
 
@@ -128,10 +129,12 @@ it.each(['session/resume', 'session/load'] as const)(
 
     await waitForAcpSessionIdle(host, created.sessionId);
 
-    const events = await host.caller.feed.subscribe({
-      ...created,
-      after: null,
-    });
+    const events = await plain(
+      host.caller.feed.subscribe({
+        ...created,
+        after: null,
+      }),
+    );
 
     requireScriptedProcessAt(host.agent.processes).exited.resolve();
 

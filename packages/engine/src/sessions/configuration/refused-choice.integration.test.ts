@@ -4,6 +4,7 @@ import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { plain } from '#mocks/plain-feed';
 
 const configuredSessionId = 'configured-session';
 
@@ -42,7 +43,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     ).rejects.toThrow(unavailableModel);
 
     const feed = (
-      await host.caller.feed.subscribe({ ...created, after: null })
+      await plain(host.caller.feed.subscribe({ ...created, after: null }))
     )[Symbol.asyncIterator]();
 
     expect((await feed.next()).value).toMatchObject({

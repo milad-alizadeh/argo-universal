@@ -1,37 +1,36 @@
 import {
+  FeedPageInput,
+  type FeedPageOutput,
   type FeedSubscribeOutput,
+  feedEventId,
   FeedSubscribeInput,
-  type FeedSyncPoint,
+  syncPointOfEventId,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import { focusManager, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import {
   createTRPCClient,
   TRPCClientError,
   type TRPCClient,
 } from '@trpc/client';
 import { type Observer, observable } from '@trpc/server/observable';
-import { type JSX, useEffect } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import {
   ConnectionContext,
+  useConnectionState,
   TRPCProvider,
   type Connection,
   type ConnectionState,
 } from '#features/connection';
-import { feedKey, snapshotKey } from '../../src/features/feed/api/feed-cache';
-import {
-  type FeedLive,
-  useFeedLive,
-} from '../../src/features/feed/hooks/use-feed-live';
-import { useFeedWindow } from '../../src/features/feed/hooks/use-feed-window';
+import { feedKey, snapshotKey } from '../../src/features/feed/api/feed-query';
+import { useSessionFeed } from '../../src/features/feed/hooks/use-session-feed';
 import {
   emptyFeed,
   type FeedState,
   mergeNewestPage,
 } from '../../src/features/feed/view/feed-state';
-import { toFeedView } from '../../src/features/feed/view/to-feed-view';
 import { createQueryClient } from '../../src/query-cache';
-import { page, streamed } from '../feed-state.mocks';
+import { page, rowEvents, streamed } from '../feed-state.mocks';
 
 const sessionId = 'session-1';
 
@@ -60,16 +59,81 @@ function connectionOf(link: Link): Connection {
 }
 
 type Wire = Observer<
-  { result: { type: 'data'; data: FeedSubscribeOutput } | { type: 'started' } },
+  {
+    result:
+      | {
+          type: 'data';
+          data: FeedSubscribeOutput | FeedPageOutput;
+          id?: string;
+        }
+      | { type: 'started' };
+  },
   TRPCClientError<AppRouter>
 >;
 
-// A Server that answers `feed.subscribe` and records after which point each one opened.
+// A Server that answers the Feed's reads and subscription from the recorded stream, and records what it was asked.
 interface Server {
-  opened: (FeedSyncPoint | null)[];
+  // The `lastEventId` of each `feed.subscribe` the App opened.
+  opened: (string | undefined)[];
+  // Each `feed.page` the App read.
+  pageReads: FeedPageInput[];
   open: Wire | undefined;
-  // What the Server sends when a subscription opens after a point; nothing when the Session has finished.
-  serve: (after: FeedSyncPoint | null) => FeedSubscribeOutput[];
+  // How many `feed.subscribe` the App has closed.
+  closed: number;
+  // The tail page the Server answers; null holds the answer back.
+  tail: Promise<FeedPageOutput>;
+}
+
+// Every change in the recorded stream above the revision the App holds, as the Server replays them; none once the App holds the newest.
+function replayAbove(lastEventId: string | undefined): FeedSubscribeOutput[] {
+  const held = lastEventId ? syncPointOfEventId(lastEventId) : null;
+
+  return rowEvents(streamed.stream).filter(
+    (event) => !('rev' in event) || event.rev > (held?.revision ?? -1),
+  );
+}
+
+// The tail waits for the test; the page before a cursor is the recorded rows before it.
+function answerPage(server: Server, wire: Wire, input: FeedPageInput): void {
+  server.pageReads.push(input);
+
+  const answer =
+    input.direction === 'before'
+      ? Promise.resolve(
+          page(streamed.rows, streamed.snapshot.maxRevision, {
+            before: input.cursor,
+            limit: 2,
+          }),
+        )
+      : server.tail;
+
+  void answer.then((data) => {
+    wire.next({ result: { type: 'data', data } });
+    wire.complete();
+  });
+}
+
+function openSubscription(
+  server: Server,
+  wire: Wire,
+  { lastEventId }: FeedSubscribeInput,
+): void {
+  server.opened.push(lastEventId);
+  server.open = wire;
+  wire.next({ result: { type: 'started' } });
+
+  // Each row event has the id tRPC's client resumes from.
+  for (const data of replayAbove(lastEventId))
+    wire.next({
+      result: {
+        type: 'data',
+        data,
+        id:
+          'rev' in data
+            ? feedEventId({ epoch: 0, revision: data.rev })
+            : undefined,
+      },
+    });
 }
 
 function clientOf(server: Server): TRPCClient<AppRouter> {
@@ -78,16 +142,20 @@ function clientOf(server: Server): TRPCClient<AppRouter> {
       () =>
         ({ op }) =>
           observable((wire: Wire) => {
+            if (op.path === 'feed.page') {
+              answerPage(server, wire, FeedPageInput.parse(op.input));
+
+              return (): void => {};
+            }
+
             if (op.path !== 'feed.subscribe')
               throw new Error(`Unexpected request: ${op.path}`);
 
-            const { after } = FeedSubscribeInput.parse(op.input);
-            server.opened.push(after);
-            server.open = wire;
-            wire.next({ result: { type: 'started' } });
+            openSubscription(server, wire, FeedSubscribeInput.parse(op.input));
 
-            for (const data of server.serve(after))
-              wire.next({ result: { type: 'data', data } });
+            return (): void => {
+              server.closed += 1;
+            };
           }),
     ],
   });
@@ -98,22 +166,25 @@ export interface FeedLiveFixture {
   server: Server;
   // How many times the Session's Feed query was written.
   feedWrites: () => number;
-  held: () => FeedState | undefined;
   // Sends the open subscription an event, as the Server does.
   send: (event: FeedSubscribeOutput) => void;
   // Ends the open subscription with an error, as a dropped socket does.
   fail: () => void;
-  // Moves the Connection to another state.
-  connect: (state: ConnectionState) => void;
-  // The window regains focus, as the App returns to the foreground.
-  returnToForeground: () => void;
+  // The Connection changes state; this settles once the screen has drawn it.
+  connect: (state: ConnectionState) => Promise<void>;
+  noteConnection: (state: ConnectionState) => void;
+  // The Session is shown to the reader, or hidden from them.
+  show: (shown: boolean) => void;
+  onShown: (set: (shown: boolean) => void) => void;
   connection: Connection;
   client: TRPCClient<AppRouter>;
-  // What the screen holds of the live changes, as of its last render.
-  live: () => FeedLive | undefined;
-  hold: (live: FeedLive) => void;
-  // The Feed's first rows arrive, as the tail page does for a Session not seen before.
-  loadTail: () => void;
+  // What the screen holds of the Session's Feed, as of its last render.
+  held: () => ReturnType<typeof useSessionFeed> | undefined;
+  hold: (feed: ReturnType<typeof useSessionFeed>) => void;
+  // The rows the Session's Feed query holds.
+  window: () => FeedState | undefined;
+  // The tail page arrives.
+  answerTail: (tail?: FeedPageOutput) => void;
 }
 
 function countWrites(
@@ -133,50 +204,88 @@ function countWrites(
   return () => writes;
 }
 
-// A Session's Feed held in the cache as an App that opened it before holds it, with a Server whose `feed.subscribe` a fake link answers.
+function seed(queryClient: ReturnType<typeof createQueryClient>): void {
+  queryClient.setQueryData(
+    feedKey(sessionId),
+    mergeNewestPage(emptyFeed, page([], 0)),
+  );
+  queryClient.setQueryData(snapshotKey(sessionId), streamed.snapshot);
+}
+
+const newServer = (tail: Promise<FeedPageOutput>): Server => ({
+  opened: [],
+  pageReads: [],
+  open: undefined,
+  closed: 0,
+  tail,
+});
+
+interface ConnectionWatch {
+  connect: (state: ConnectionState) => Promise<void>;
+  note: (state: ConnectionState) => void;
+}
+
+// Moves the Connection, and settles once the screen has drawn the state it moved to.
+function watchConnection(link: Link): ConnectionWatch {
+  let drawn: ConnectionState = 'open';
+  const waiting: [ConnectionState, () => void][] = [];
+
+  return {
+    connect: (state) => {
+      link.state = state;
+
+      for (const listener of link.listeners) listener();
+
+      return drawn === state
+        ? Promise.resolve()
+        : new Promise((resolve) => void waiting.push([state, resolve]));
+    },
+    note: (state) => {
+      drawn = state;
+
+      for (const [wanted, resolve] of waiting.splice(0))
+        if (wanted === state) resolve();
+        else waiting.push([wanted, resolve]);
+    },
+  };
+}
+
+// A Session's Feed as an App that opened it before holds it (unless `seeded` is false, and then its tail page waits for `answerTail`), with a Server whose answers a fake link gives.
 export function feedLiveFixture({
   seeded = true,
 }: { seeded?: boolean } = {}): FeedLiveFixture {
   const queryClient = createQueryClient();
   const link: Link = { state: 'open', listeners: new Set() };
-  const server: Server = { opened: [], open: undefined, serve: () => [] };
+  const answer = Promise.withResolvers<FeedPageOutput>();
 
-  let held: FeedLive | undefined;
+  const server = newServer(answer.promise);
+  const watching = watchConnection(link);
+  let held: ReturnType<typeof useSessionFeed> | undefined;
+  let setShown: ((shown: boolean) => void) | undefined;
 
-  const loadTail = (): void => {
-    queryClient.setQueryData(
-      feedKey(sessionId),
-      mergeNewestPage(emptyFeed, page([], 0)),
-    );
-    queryClient.setQueryData(snapshotKey(sessionId), streamed.snapshot);
-  };
-
-  if (seeded) loadTail();
+  if (seeded) seed(queryClient);
 
   return {
     queryClient,
     server,
     feedWrites: countWrites(queryClient),
-    held: () => queryClient.getQueryData(feedKey(sessionId)),
     send: (data) => server.open?.next({ result: { type: 'data', data } }),
     fail: () =>
       server.open?.error(TRPCClientError.from(new Error('Socket lost'))),
-    connect: (state) => {
-      link.state = state;
-
-      for (const listener of link.listeners) listener();
-    },
-    returnToForeground: () => {
-      focusManager.setFocused(false);
-      focusManager.setFocused(true);
+    connect: watching.connect,
+    noteConnection: watching.note,
+    show: (shown) => setShown?.(shown),
+    onShown: (set) => {
+      setShown = set;
     },
     connection: connectionOf(link),
     client: clientOf(server),
-    live: () => held,
-    hold: (live) => {
-      held = live;
+    held: () => held,
+    hold: (feed) => {
+      held = feed;
     },
-    loadTail,
+    window: () => queryClient.getQueryData(feedKey(sessionId)),
+    answerTail: (tail = page([], 0)) => answer.resolve(tail),
   };
 }
 
@@ -188,19 +297,15 @@ function Screen({
   fixture: FeedLiveFixture;
   shown: boolean;
 }): JSX.Element {
-  const window = useFeedWindow(sessionId, toFeedView, {
-    cacheId: sessionId,
-    shown,
-    tail: false,
-  });
+  const [visible, setVisible] = useState(shown);
+  const feed = useSessionFeed(sessionId, undefined, visible);
+  const connection = useConnectionState();
 
-  const live = useFeedLive(sessionId, window.cache, shown);
+  useEffect(() => fixture.hold(feed));
+  useEffect(() => fixture.onShown(setVisible), [fixture]);
+  useEffect(() => fixture.noteConnection(connection), [fixture, connection]);
 
-  useEffect(() => fixture.hold(live));
-
-  return (
-    <span>{`${window.feed.revision} ${live.closure?.error?.message ?? ''}`}</span>
-  );
+  return <span>{`${feed.revision} ${feed.openError?.message ?? ''}`}</span>;
 }
 
 export function FeedLivePreview({

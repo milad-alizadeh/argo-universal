@@ -3,6 +3,7 @@ import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const configuredSessionId = 'configured-session';
@@ -60,7 +61,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     );
 
     const feed = (
-      await host.caller.feed.subscribe({ ...created, after: null })
+      await plain(host.caller.feed.subscribe({ ...created, after: null }))
     )[Symbol.asyncIterator]();
 
     const expected = [

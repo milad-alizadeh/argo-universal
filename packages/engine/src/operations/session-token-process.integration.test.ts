@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { operationCaller, runOperation } from '#mocks/operations';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   sessionAccessHost,
@@ -21,10 +22,12 @@ async function exitFirstProcess(): Promise<ExitedProcess> {
   const fixture = await sessionAccessHost();
   const first = await openAccessSession(fixture, 'First');
 
-  const events = await fixture.host.caller.feed.subscribe({
-    sessionId: first.sessionId,
-    after: null,
-  });
+  const events = await plain(
+    fixture.host.caller.feed.subscribe({
+      sessionId: first.sessionId,
+      after: null,
+    }),
+  );
 
   requireScriptedProcessAt(fixture.host.agent.processes, 0).exited.resolve();
 
