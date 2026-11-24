@@ -38,6 +38,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'maintainScrollAtEndThreshold'
     | 'maintainVisibleContentPosition'
     | 'onStartReached'
+    | 'onReady'
     | 'onStartReachedThreshold'
     | 'drawDistance'
     | 'viewabilityConfig'

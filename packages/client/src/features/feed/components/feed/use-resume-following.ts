@@ -1,7 +1,9 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
+import type { LegendListState } from '@legendapp/list/react-native';
 import { type RefObject, useLayoutEffect, useRef } from 'react';
 
-type FollowList = Pick<LegendListRef, 'getState'>;
+type FollowList = {
+  getState: () => Pick<LegendListState, 'isAtEnd' | 'isFollowingEnd'>;
+};
 
 const stillFollowing = (list: FollowList): boolean => {
   const { isAtEnd, isFollowingEnd } = list.getState();

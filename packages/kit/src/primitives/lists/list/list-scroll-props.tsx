@@ -49,6 +49,7 @@ function streamProps<Item>(
   return {
     ...anchorProps(props),
     onStartReached: props.onStartReached,
+    onReady: props.onReady,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
     estimatedItemSize: props.estimatedItemSize,
