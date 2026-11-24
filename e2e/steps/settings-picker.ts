@@ -2,17 +2,15 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, Then, When } from './fixtures';
 import { reloadApp } from './frame';
-
-const settings = (page: Page): Locator =>
-  page.getByRole('dialog', { name: 'Settings', exact: true });
+import { settingsModal } from './navigation';
 
 const picker = (page: Page, title: string): Locator =>
-  settings(page).getByRole('button', { name: title, exact: true });
+  settingsModal(page).getByRole('button', { name: title, exact: true });
 
 When(
   'I open {string} from the Settings list',
   async ({ page }, name: string) => {
-    await settings(page).getByRole('link', { name, exact: true }).click();
+    await settingsModal(page).getByRole('link', { name, exact: true }).click();
   },
 );
 
@@ -37,16 +35,27 @@ When(
 Then(
   '{string} shows {string} in the Settings modal',
   async ({ page }, title: string, value: string) => {
-    await expect(settings(page)).toBeVisible();
+    await expect(settingsModal(page)).toBeVisible();
     await expect(picker(page, title)).toContainText(value);
   },
 );
 
-When('I press Escape in the Settings picker', async ({ page }) => {
-  const listbox = page.getByRole('listbox');
-  await expect(listbox).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(listbox).toHaveCount(0);
+When(
+  /^I press Escape in the Settings (listbox|menu)$/,
+  async ({ page }, role: 'listbox' | 'menu') => {
+    const popup = page.getByRole(role);
+    await expect(popup).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(popup).toHaveCount(0);
+  },
+);
+
+Then('the Settings picker offers {string}', async ({ page }, name: string) => {
+  await expect(page.getByRole('option', { name, exact: true })).toBeVisible();
+});
+
+Then('the Settings modal remains open', async ({ page }) => {
+  await expect(settingsModal(page)).toBeVisible();
 });
 
 Given(
@@ -60,10 +69,18 @@ Given(
 When(
   'I drag from the dim to the {string} Settings picker',
   async ({ page }, title: string) => {
-    const box = await picker(page, title).boundingBox();
-    if (!box) throw new Error('The Settings picker has no bounds.');
+    const tile = page.getByRole('button', {
+      name: 'Settings',
+      exact: true,
+      includeHidden: true,
+    });
+    const [dim, box] = await Promise.all([
+      tile.boundingBox(),
+      picker(page, title).boundingBox(),
+    ]);
+    if (!dim || !box) throw new Error('The rail tile or picker has no bounds.');
 
-    await page.mouse.move(20, 100);
+    await page.mouse.move(dim.x + dim.width / 2, dim.y + dim.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.up();
