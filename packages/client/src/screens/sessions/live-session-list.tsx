@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
-import { loadedAgents, useInstalledAgents } from '#features/agents';
+import {
+  type InstalledAgents,
+  loadedAgents,
+  useInstalledAgents,
+} from '#features/agents';
 import {
   useConnectionState,
   useTRPC,
@@ -15,6 +19,7 @@ import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
   liveUpdatesStopped,
+  type QueryProgress,
   RenameSessionDialog,
   type SessionRowCall,
   type SessionsView,
@@ -44,9 +49,21 @@ export interface LiveSessionListProps {
   selectedSessionId?: string;
 }
 
-type SessionListLookups = Pick<SessionListViewProps, 'projects' | 'agents'>;
+type SessionListLookups = Pick<SessionListViewProps, 'projects' | 'agents'> & {
+  progress: QueryProgress[];
+};
 
-// The Projects and Installed Agents each Session row is drawn with; rows draw without them and their names fill in when they arrive.
+const queryProgress = (query: {
+  isError: boolean;
+  isPending: boolean;
+}): QueryProgress => ({ failed: query.isError, pending: query.isPending });
+
+const agentsProgress = ({ status }: InstalledAgents): QueryProgress => ({
+  failed: status === 'failed',
+  pending: status === 'loading',
+});
+
+// The Projects and Installed Agents each Session row is drawn with.
 function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.project.list.queryOptions());
@@ -55,6 +72,7 @@ function useSessionListLookups(): SessionListLookups {
   return {
     projects: projects.data ?? [],
     agents: loadedAgents(agents),
+    progress: [queryProgress(projects), agentsProgress(agents)],
   };
 }
 
@@ -135,7 +153,7 @@ function useRowMarks(
 function useSessionsViewProps(
   props: LiveSessionListProps,
 ): SessionListViewProps {
-  const lookups = useSessionListLookups();
+  const { progress: lookupProgress, ...lookups } = useSessionListLookups();
   const { progress: pageProgress, ...pages } = useSessionPages(props);
 
   return {
@@ -145,7 +163,7 @@ function useSessionsViewProps(
     ...useRowMarks(pages.sessions),
     ...useLiveUpdatesStatus(),
     ...useSessionsNavigation(),
-    loadState: sessionsLoadState([pageProgress]),
+    loadState: sessionsLoadState([...lookupProgress, pageProgress]),
   };
 }
 
