@@ -1,6 +1,8 @@
+import type { FeedSubscribeOutput } from '@repo/contracts';
+import { feedEventId } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
+import { page, rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
 import {
   FeedLivePreview,
   feedLiveFixture,
@@ -10,6 +12,10 @@ import {
 const { snapshot, stream } = streamed;
 
 const newest = { epoch: 0, revision: snapshot.maxRevision };
+
+const seeded = feedEventId({ epoch: 0, revision: 0 });
+
+const newestId = feedEventId(newest);
 
 const meta = {
   title: 'Tests/Feed/UseFeedLive',
@@ -21,123 +27,158 @@ type Story = StoryObj<typeof meta>;
 
 type Mount = Parameters<NonNullable<Story['play']>>[0]['mount'];
 
-// Lets React draw the Connection's last state, as the seconds of a real outage do.
-const settled = (): Promise<void> =>
-  new Promise((resolve) => void setTimeout(resolve, 50));
+// A change newer than anything the recorded stream holds, which the screen draws as one more revision.
+function newerChange(): FeedSubscribeOutput {
+  const [first] = rowEvents(stream);
 
-// The screen has shown the Session, and the Server has sent every change in the recorded stream.
+  if (first?.type !== 'row.upsert')
+    throw new Error('Recorded stream starts with a row');
+
+  return { ...first, rev: newest.revision + 1 };
+}
+
+// The screen has shown a Session the App held, and the Server has replayed every change in the recorded stream above the cached revision.
 async function streamedSession(mount: Mount): Promise<FeedLiveFixture> {
   const fixture = feedLiveFixture();
   await mount(<FeedLivePreview fixture={fixture} />);
   await waitFor(() => expect(fixture.server.opened).toHaveLength(1));
-
-  for (const event of rowEvents(stream)) fixture.send(event);
-  await waitFor(() =>
-    expect(fixture.held()?.revision).toBe(snapshot.maxRevision),
-  );
+  await waitFor(() => expect(fixture.held()?.revision).toBe(newest.revision));
 
   return fixture;
 }
 
-// A Server with nothing newer than the cached revision sends no rows, so the Feed is not written again.
-export const ReopensAfterTheCachedRevisionAfterAReconnect: Story = {
+// One more change reaches the screen: what a later state is waited on by.
+async function laterChange(fixture: FeedLiveFixture): Promise<void> {
+  fixture.send(newerChange());
+  await waitFor(() =>
+    expect(fixture.held()?.revision).toBe(newest.revision + 1),
+  );
+}
+
+export const DrawsASessionSeenBeforeFromTheCacheWithNoPageRead: Story = {
   play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
+    const fixture = feedLiveFixture();
+    await mount(<FeedLivePreview fixture={fixture} />);
 
-    fixture.fail();
-    await settled();
-    fixture.connect('reconnecting');
-    await settled();
-    fixture.connect('open');
-
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
+    await waitFor(() => expect(fixture.held()?.ready).toBe(true));
+    await expect(fixture.server.pageReads).toEqual([]);
   },
 };
 
-// The socket died without an error, so the subscription is still pending when the Connection comes back.
-export const ReopensAfterTheCachedRevisionWhenTheSocketDiedSilently: Story = {
-  play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
-
-    fixture.connect('reconnecting');
-    await settled();
-    fixture.connect('open');
-
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
-  },
-};
-
-export const ReopensAfterTheCachedRevisionOnReturnToTheForeground: Story = {
-  play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
-
-    fixture.returnToForeground();
-
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
-  },
-};
-
-// Two returns in a row each open after the revision the cache holds then, not the one the screen last drew.
-export const ReopensAfterTheRevisionHeldAtEachReturn: Story = {
-  play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-
-    fixture.returnToForeground();
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    fixture.returnToForeground();
-
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(3));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-  },
-};
-
-// A closure shows why the Feed closed until the reader retries; the retry reopens after the rows held, and writes nothing.
-export const ShowsWhyTheFeedClosedUntilTheReaderRetries: Story = {
-  play: async ({ mount }) => {
-    const fixture = await streamedSession(mount);
-    const writes = fixture.feedWrites();
-
-    fixture.send({ type: 'closed', failure: 'Agent exited' });
-    await waitFor(() =>
-      expect(fixture.live()?.closure?.error?.message).toBe('Agent exited'),
-    );
-
-    fixture.live()?.retryOpen();
-
-    await waitFor(() => expect(fixture.live()?.closure).toBeNull());
-    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
-    await expect(fixture.server.opened.at(-1)).toEqual(newest);
-    await expect(fixture.feedWrites()).toBe(writes);
-  },
-};
-
-// Before the Feed has rows there is nothing to open after, so a retry opens nothing until they arrive.
-export const OpensNothingOnRetryUntilRowsArrive: Story = {
+export const OpensOnTheTailPageOfASessionNotSeenBefore: Story = {
   play: async ({ mount }) => {
     const fixture = feedLiveFixture({ seeded: false });
     await mount(<FeedLivePreview fixture={fixture} />);
-    await waitFor(() => expect(fixture.live()).toBeDefined());
 
-    fixture.live()?.retryOpen();
-    await settled();
+    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+    await waitFor(() => expect(fixture.held()).toBeDefined());
 
+    // Nothing to open after until the first rows are held.
     await expect(fixture.server.opened).toEqual([]);
-    await expect(fixture.live()?.closure).toBeNull();
 
-    fixture.loadTail();
+    fixture.answerTail();
 
+    await waitFor(() => expect(fixture.server.opened).toEqual([seeded]));
+  },
+};
+
+// The Server replayed several changes on open: they are one write.
+export const WritesABurstOfLiveChangesOncePerFrame: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+
+    await expect(rowEvents(stream).length).toBeGreaterThan(1);
+    await expect(fixture.feedWrites()).toBe(1);
+  },
+};
+
+export const KeepsTheSnapshotItHoldsWhenTheNextIsEqual: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+    const held = fixture.held()?.snapshot;
+
+    fixture.send({ type: 'snapshot', snapshot: { ...snapshot } });
+    await laterChange(fixture);
+
+    await expect(fixture.held()?.snapshot).toBe(held);
+  },
+};
+
+// The subscription opens once, after the cached revision, and the rows it replays and later ones do not open it again.
+export const OpensOnceAfterTheCachedRevision: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+
+    await laterChange(fixture);
+
+    await expect(fixture.server.opened).toEqual([seeded]);
+  },
+};
+
+// tRPC's client resumes a lost socket by itself (the integration test proves it); a subscription that failed opens again when the Connection reopens, after the newest revision the cache holds then.
+export const ReopensAFailedSubscriptionAfterTheNewestCachedRevision: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+
+    fixture.fail();
+    await waitFor(() => expect(fixture.held()?.openError).not.toBeNull());
+    await fixture.connect('reconnecting');
+    await fixture.connect('open');
+
+    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
+    await expect(fixture.server.opened.at(-1)).toBe(newestId);
+  },
+};
+
+// A closure shows why the Feed closed until the reader retries; the retry opens it again after the newest revision the cache holds.
+export const ShowsWhyTheFeedClosedUntilTheReaderRetries: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+
+    fixture.send({ type: 'closed', failure: 'Agent exited' });
     await waitFor(() =>
-      expect(fixture.server.opened).toEqual([{ epoch: 0, revision: 0 }]),
+      expect(fixture.held()?.openError?.message).toBe('Agent exited'),
     );
+
+    fixture.held()?.retryOpen();
+
+    await waitFor(() => expect(fixture.held()?.openError).toBeNull());
+    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
+    await expect(fixture.server.opened.at(-1)).toBe(newestId);
+  },
+};
+
+// Hidden, the subscription closes; shown again, it opens after the newest revision the cache holds and has nothing newer to write.
+export const OpensAfterTheCachedRevisionWhenShownAgain: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+    const writes = fixture.feedWrites();
+
+    fixture.show(false);
+    await waitFor(() => expect(fixture.server.closed).toBe(1));
+
+    fixture.show(true);
+    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
+
+    await expect(fixture.server.opened.at(-1)).toBe(newestId);
+    await laterChange(fixture);
+    await expect(fixture.feedWrites()).toBe(writes + 1);
+  },
+};
+
+// A frame the reader did not stay to see is dropped, not written once they are back.
+export const DropsAFrameHeldWhenTheReaderLeaves: Story = {
+  play: async ({ mount }) => {
+    const fixture = await streamedSession(mount);
+
+    fixture.send(newerChange());
+    fixture.show(false);
+    await waitFor(() => expect(fixture.server.closed).toBe(1));
+
+    fixture.show(true);
+    await waitFor(() => expect(fixture.server.opened).toHaveLength(2));
+
+    await expect(fixture.window()?.revision).toBe(newest.revision);
   },
 };
 
@@ -145,12 +186,37 @@ export const RetriesNothingForASessionItDoesNotShow: Story = {
   play: async ({ mount }) => {
     const fixture = feedLiveFixture();
     await mount(<FeedLivePreview fixture={fixture} shown={false} />);
-    await waitFor(() => expect(fixture.live()).toBeDefined());
+    await waitFor(() => expect(fixture.held()).toBeDefined());
 
-    fixture.live()?.retryOpen();
-    fixture.returnToForeground();
-    await settled();
+    fixture.held()?.retryOpen();
+    await fixture.connect('reconnecting');
+    await fixture.connect('open');
 
     await expect(fixture.server.opened).toEqual([]);
+  },
+};
+
+// The page before the window merges into the same query, and the newer rows stay.
+export const LoadsOlderHistoryIntoTheSameWindow: Story = {
+  play: async ({ mount }) => {
+    const fixture = feedLiveFixture({ seeded: false });
+    await mount(<FeedLivePreview fixture={fixture} />);
+    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+
+    fixture.answerTail({
+      ...page(streamed.rows, newest.revision, { limit: 2 }),
+      hasOlder: true,
+    });
+    await waitFor(() => expect(fixture.window()?.rows).toHaveLength(2));
+    const newer = fixture.window()?.rows;
+
+    await fixture.held()?.loadOlder();
+
+    const merged = fixture.window()?.rows ?? [];
+    await expect(merged.length).toBeGreaterThan(2);
+    await expect(merged.slice(-2)).toEqual(newer);
+    await expect(fixture.server.pageReads.at(-1)).toMatchObject({
+      direction: 'before',
+    });
   },
 };

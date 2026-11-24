@@ -12,6 +12,7 @@ import {
 } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const backgroundScenario = 'subagent-background';
@@ -38,10 +39,12 @@ async function expectLiveChildMessage(
   host: Awaited<ReturnType<typeof openAcpFeedSession>>['host'],
   sessionId: string,
 ): Promise<void> {
-  const stream = await host.caller.feed.subscribe({
-    sessionId,
-    after: { epoch: 0, revision: 0 },
-  });
+  const stream = await plain(
+    host.caller.feed.subscribe({
+      sessionId,
+      after: { epoch: 0, revision: 0 },
+    }),
+  );
 
   for await (const event of stream) if (isAgentMessage(event)) return;
 
@@ -257,10 +260,12 @@ it.each(['idle', 'cancelled'] as const)(
 
     if (!child) throw new Error(missingSubagent);
 
-    const stream = await host.caller.feed.subscribe({
-      sessionId: child.sessionId,
-      after: null,
-    });
+    const stream = await plain(
+      host.caller.feed.subscribe({
+        sessionId: child.sessionId,
+        after: null,
+      }),
+    );
 
     const iterator = stream[Symbol.asyncIterator]();
     await waitForSnapshot(iterator);

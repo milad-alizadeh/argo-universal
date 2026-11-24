@@ -10,6 +10,7 @@ import {
   isTurnComplete,
   readThrough,
 } from '#mocks/feed-stream-reading';
+import { plain } from '#mocks/plain-feed';
 
 type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
 
@@ -74,7 +75,7 @@ describe('an Agent that rejects a prompt', () => {
     const { host, session } = await startSession([{ error: providerError }]);
 
     const stream = (
-      await host.caller.feed.subscribe({ ...session, after: null })
+      await plain(host.caller.feed.subscribe({ ...session, after: null }))
     )[Symbol.asyncIterator]();
 
     await stream.next();

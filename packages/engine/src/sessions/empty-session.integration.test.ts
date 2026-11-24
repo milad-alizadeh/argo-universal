@@ -10,6 +10,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { projectPathFor } from './empty-session.test.mocks';
 
@@ -36,10 +37,12 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     });
 
     const feed = (
-      await host.caller.feed.subscribe({
-        sessionId: created.sessionId,
-        after: null,
-      })
+      await plain(
+        host.caller.feed.subscribe({
+          sessionId: created.sessionId,
+          after: null,
+        }),
+      )
     )[Symbol.asyncIterator]();
 
     const first = await feed.next();

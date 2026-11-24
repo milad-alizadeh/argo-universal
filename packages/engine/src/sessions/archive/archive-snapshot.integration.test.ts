@@ -5,6 +5,7 @@ import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { promptedArchiveSession } from '#mocks/archive';
 import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
+import { plain } from '#mocks/plain-feed';
 
 const mainCheckout = { type: 'main' as const };
 
@@ -32,9 +33,9 @@ it('republishes an open Session page snapshot when its Session is archived and u
   const host = await startAcpEngine({ steps: [] });
   const { sessionId } = await promptedArchiveSession(host, mainCheckout);
 
-  const events = (await host.caller.feed.subscribe({ sessionId, after: null }))[
-    Symbol.asyncIterator
-  ]();
+  const events = (
+    await plain(host.caller.feed.subscribe({ sessionId, after: null }))
+  )[Symbol.asyncIterator]();
 
   expect(await nextSnapshot(events, false)).toMatchObject({ archivedAt: null });
   await host.caller.session.archive({ sessionId });

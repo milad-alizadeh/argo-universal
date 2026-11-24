@@ -3,6 +3,7 @@ import type { FeedSubscribeOutput } from '@repo/contracts';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { plain } from '#mocks/plain-feed';
 import { uploadBlob, blobsFolderIn } from '../../blob';
 
 function isIdleSnapshot(update: FeedSubscribeOutput): boolean {
@@ -206,7 +207,7 @@ describe.each(appFixtureAgentIds)(
       const created = await host.caller.session.new(sessionInput);
 
       const feed = (
-        await host.caller.feed.subscribe({ ...created, after: null })
+        await plain(host.caller.feed.subscribe({ ...created, after: null }))
       )[Symbol.asyncIterator]();
 
       await feed.next();

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 import {
   requireScriptedProcessAt,
   type ScriptedProcess,
@@ -126,7 +127,9 @@ it('appends the Argo instructions again when a Session resumes on a new process'
 
   await waitForAcpSessionIdle(host, created.sessionId);
 
-  const events = await host.caller.feed.subscribe({ ...created, after: null });
+  const events = await plain(
+    host.caller.feed.subscribe({ ...created, after: null }),
+  );
 
   firstProcess(host).exited.resolve();
 

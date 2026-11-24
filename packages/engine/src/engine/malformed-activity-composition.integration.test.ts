@@ -2,6 +2,7 @@ import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { startLiveHeaderHost } from '#mocks/live-header-composition';
 import { publishHeaderConfiguration } from '#mocks/live-header-configuration';
+import { plain } from '#mocks/plain-feed';
 
 it('keeps the Feed subscription open after malformed stored activity', async (): Promise<void> => {
   const context = await startLiveHeaderHost();
@@ -73,10 +74,12 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
   ).rejects.toThrow('Invalid input: expected array, received string');
 
   const catchUp = (
-    await caller.feed.subscribe({
-      sessionId: 'session-1',
-      after: { epoch: initial.snapshot.epoch, revision: 0 },
-    })
+    await plain(
+      caller.feed.subscribe({
+        sessionId: 'session-1',
+        after: { epoch: initial.snapshot.epoch, revision: 0 },
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   await expect(catchUp.next()).rejects.toThrow(

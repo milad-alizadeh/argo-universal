@@ -15,6 +15,7 @@ import {
   startFeedTestHost,
   createFeedRouterCaller,
 } from '#mocks/feed-suite';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 it.each(fixtureAgents.map((adapter): string => adapter.agent))(
@@ -48,12 +49,14 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
     ).toMatchObject([{ sessionId: 'session-1', activity: queuedToolActivity }]);
 
     const updates = (
-      await feedTestHost
-        .createCaller({ signal: controller.signal })
-        .feed.subscribe({
-          sessionId: 'session-1',
-          after: { epoch: 3, revision: 6 },
-        })
+      await plain(
+        feedTestHost
+          .createCaller({ signal: controller.signal })
+          .feed.subscribe({
+            sessionId: 'session-1',
+            after: { epoch: 3, revision: 6 },
+          }),
+      )
     )[Symbol.asyncIterator]();
 
     await takeFeedChanges(updates, 1);
