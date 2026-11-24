@@ -1,6 +1,9 @@
 // How many requests one Plugin has open to one host at once; the rest wait their turn (#2197).
 export const concurrentPerHostLimit = 6;
 
+// How many commands one Plugin runs at once; a `gh` read per pull request must not start a process per pull request.
+export const concurrentCommandLimit = 6;
+
 type Host = { open: number; waiting: (() => void)[] };
 
 /*
@@ -9,6 +12,8 @@ type Host = { open: number; waiting: (() => void)[] };
  * any throttling of its own.
  */
 export class HostSlots {
+  constructor(private readonly limit = concurrentPerHostLimit) {}
+
   private readonly hosts = new Map<string, Host>();
 
   async run<T>(host: string, work: () => Promise<T>): Promise<T> {
@@ -26,7 +31,7 @@ export class HostSlots {
 
     this.hosts.set(host, state);
 
-    if (state.open < concurrentPerHostLimit) {
+    if (state.open < this.limit) {
       state.open += 1;
 
       return Promise.resolve();

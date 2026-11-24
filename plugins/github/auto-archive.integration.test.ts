@@ -163,3 +163,23 @@ it(
   },
   slow,
 );
+
+it(
+  'forgets its choice for a Session that no longer exists',
+  async () => {
+    const run = await attached();
+    const home = { ...run.sessions[sessionId] };
+
+    await tapArchive(run, true);
+    Reflect.deleteProperty(run.sessions, sessionId);
+    end(run, 12, 'merged');
+    await watch(run);
+
+    // Were the choice kept, the Session coming back would be archived by the next Watch.
+    run.sessions[sessionId] = home;
+    await watch(run);
+
+    expect(archivedSessions(run)).toEqual([]);
+  },
+  slow,
+);
