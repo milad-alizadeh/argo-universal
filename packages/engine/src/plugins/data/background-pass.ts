@@ -30,7 +30,7 @@ export const passTerms: Record<PassKind, { name: string; floorMs: number }> = {
 
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
   kind: PassKind;
-  draws: PluginDraws;
+  draws: Pick<PluginDraws, 'load'>;
   // A removed Project's kept answers end with its passes.
   projectRemoved: (projectId: string) => void;
 };
@@ -61,10 +61,18 @@ export class BackgroundPass {
   }
 
   private async run(): Promise<void> {
-    const leave = await this.services.enter();
+    const gate = await this.services.enter();
+    let left = false;
+
+    // An overrunning pass leaves the shared gate at its budget, and once more when it ends, so it never leaves twice.
+    const leave = (): void => {
+      if (left) return;
+      left = true;
+      gate();
+    };
 
     try {
-      await this.activateAndPass();
+      await this.activateAndPass(leave);
     } catch (cause) {
       this.line(`failed: ${runtimeError(cause)}`);
     } finally {
@@ -75,12 +83,12 @@ export class BackgroundPass {
   }
 
   // Closing while the pass waited its turn at the gate, or while the Plugin started, ends it here.
-  private async activateAndPass(): Promise<void> {
+  private async activateAndPass(leave: () => void): Promise<void> {
     if (this.closed) return;
     await this.entry.activate();
 
     if (this.closed) return;
-    await this.pass();
+    await this.pass(leave);
   }
 
   private schedule(): void {
@@ -91,22 +99,33 @@ export class BackgroundPass {
     );
   }
 
-  // The budget is scheduled before the load's own limit of the same length, so on that clock it ends first.
-  private async pass(): Promise<void> {
-    const ended = Promise.withResolvers<string>();
+  /*
+   * The load has no limit of its own, so it ends when the Plugin's code does or its worker ends, and this Project's
+   * next pass waits for that. At the budget the pass says so and leaves the gate, so other Plugins' and Projects'
+   * passes run; each interval after, it says it is still running. Nothing here ends the worker.
+   */
+  private async pass(leave: () => void): Promise<void> {
+    const closed = Promise.withResolvers<string>();
+    let cancel: (() => void) | undefined;
 
-    const deadline = this.services.clock.schedule((): void => {
-      ended.resolve(`reached ${backgroundBudgetMs} ms`);
-    }, backgroundBudgetMs);
+    const remind = (afterMs: number, message: string): void => {
+      cancel = this.services.clock.schedule((): void => {
+        this.line(message);
+        leave();
+        remind(this.entry.declaration.interval, 'still running');
+      }, afterMs);
+    };
+
+    remind(backgroundBudgetMs, `reached ${backgroundBudgetMs} ms`);
 
     this.finish = (): void => {
-      ended.resolve('closed');
+      closed.resolve('closed');
     };
 
     try {
-      this.line(await Promise.race([this.load(), ended.promise]));
+      this.line(await Promise.race([this.load(), closed.promise]));
     } finally {
-      deadline();
+      cancel?.();
       this.finish = (): void => {};
     }
   }
@@ -121,7 +140,7 @@ export class BackgroundPass {
         projectId: this.projectId,
         ...(this.services.kind === 'watch' && { watch: true }),
       },
-      backgroundBudgetMs,
+      null,
     );
 
     return loaded.ok ? 'completed' : `failed: ${loaded.error}`;
