@@ -51,7 +51,12 @@ export const opener = (
   shared: SharedOpening = sharedOpening(target, platform),
 ): (() => Promise<OpenedChannel>) => {
   return async () =>
-    shared.route.open(at(target, platform, await shared.deviceKey()));
+    shared.route.open(
+      at(target, platform, await shared.deviceKey()),
+      (opened) => {
+        opened.stream.close();
+      },
+    );
 };
 
 // What every channel to one Server shares, whichever socket carries it: where the Server answers, and the one read of the Device Key.

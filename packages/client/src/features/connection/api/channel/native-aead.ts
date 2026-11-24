@@ -14,11 +14,11 @@ interface Transform {
   final(): Chunk;
 }
 
-export interface Sealer extends Transform {
+interface Sealer extends Transform {
   getAuthTag(): Chunk;
 }
 
-export interface Opener extends Transform {
+interface Opener extends Transform {
   setAuthTag(tag: Uint8Array): object;
 }
 

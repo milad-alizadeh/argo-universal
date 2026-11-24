@@ -4,7 +4,7 @@ import type {
 } from '../src/features/connection/api/channel/byte-socket';
 
 // One direction of a link. Latency is how long a byte takes to cross; bandwidth is how many bytes per second the link carries, so a big chunk occupies it and the next waits. Leave either out for none.
-export interface Link {
+interface Link {
   latencyMs?: number;
   bytesPerSecond?: number;
 }

@@ -13,10 +13,7 @@ import {
 import { type FeedCache, resumeAfter, samePoint } from '../api/feed-cache';
 import { closedFeedError } from '../utils/closed-feed-error';
 
-export type LiveChanges = TRPCSubscriptionResult<
-  FeedSubscribeOutput,
-  ClientError
->;
+type LiveChanges = TRPCSubscriptionResult<FeedSubscribeOutput, ClientError>;
 
 // The Server closed the Feed, with or without an error to show.
 type FeedClosure = { error: Error | null } | null;
