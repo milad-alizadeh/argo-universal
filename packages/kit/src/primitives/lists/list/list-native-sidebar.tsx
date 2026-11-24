@@ -1,3 +1,7 @@
+import {
+  isIconName,
+  type SystemSymbolSource,
+} from '@repo/contracts/kit-symbols';
 import { isValidElement, useState, type ReactNode } from 'react';
 import type { ListItemProps } from '#primitives/lists/list-item';
 import { flattenedChildren } from '../../../flattened-children';
@@ -10,7 +14,23 @@ import type { DrawnIcon } from '../../../symbols/icon-symbol';
 import { isSection } from './list-level-entries';
 import type { ListProps, ListSectionProps } from './list-props';
 
-function iconOf(node: ReactNode): DrawnIcon | undefined {
+// The Plugin wire already validated the symbol names before preparing the row.
+function isSystemSymbol(node: unknown): node is SystemSymbolSource {
+  return (
+    node !== null &&
+    typeof node === 'object' &&
+    'sf' in node &&
+    typeof node.sf === 'string' &&
+    'material' in node &&
+    typeof node.material === 'string'
+  );
+}
+
+function iconOf(node: ListItemProps['leading']): DrawnIcon | undefined {
+  if (typeof node === 'string' && isIconName(node)) return node;
+  if (isSystemSymbol(node)) return node;
+  if (!isValidElement(node) && !Array.isArray(node)) return undefined;
+
   const [leading] = flattenedChildren(node);
 
   return isValidElement<{ name?: DrawnIcon }>(leading)
