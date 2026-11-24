@@ -1,6 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { expect, it, vi } from 'vitest';
 import { memoryStorage } from '../mocks/memory-storage';
+import {
+  forgetServerMedia,
+  rememberServerMedia,
+} from './features/connection/api/channel/media-store';
+import {
+  forgetServerCache,
+  rememberServerCache,
+} from './features/servers/server-cache-store';
 import { createServersStore } from './features/servers/servers-store';
 import { serversStoreHooks } from './servers-store-hooks';
 
@@ -21,6 +29,8 @@ it('wipes what the App kept of a Server through the hooks the App uses', async (
 });
 
 it('wipes both the images and the query cache, and lifts both when a Server is added again', () => {
-  expect(serversStoreHooks.onForgotten).toHaveLength(2);
-  expect(serversStoreHooks.onAdded).toHaveLength(2);
+  expect(serversStoreHooks).toEqual({
+    onForgotten: [forgetServerMedia, forgetServerCache],
+    onAdded: [rememberServerMedia, rememberServerCache],
+  });
 });

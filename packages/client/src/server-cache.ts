@@ -9,16 +9,16 @@ import {
   partialMatchKey,
 } from '@tanstack/react-query';
 import type { TRPC } from '#features/connection';
+import type { FeedState } from './features/feed';
+// Leaf imports below: a node test cannot import a feature's index (React Native, "Flow is not supported").
 import {
   feedKeyPrefix,
   feedPageSize,
+  sessionIdOf,
   snapshotKeyPrefix,
 } from './features/feed/api/feed-query';
 import { keptOnDevice } from './features/feed/api/restore-feed';
-import {
-  type FeedState,
-  keepNewestRows,
-} from './features/feed/view/feed-state';
+import { keepNewestRows } from './features/feed/view/feed-state';
 import {
   serverCacheStorage,
   serverQueryPersister,
@@ -114,9 +114,8 @@ async function keepNewestFeeds({
   const dropped = [...entries]
     .filter(({ queryKey }) => partialMatchKey(queryKey, feedKeyPrefix))
     .sort((a, b) => b.at - a.at)
-
     .slice(feedsKept)
-    .map(({ queryKey }) => queryKey[2]);
+    .map(({ queryKey }) => sessionIdOf(queryKey));
 
   const gone = new Set(dropped);
 
@@ -124,7 +123,7 @@ async function keepNewestFeeds({
     if (
       (partialMatchKey(entry.queryKey, feedKeyPrefix) ||
         partialMatchKey(entry.queryKey, snapshotKeyPrefix)) &&
-      gone.has(entry.queryKey[2])
+      gone.has(sessionIdOf(entry.queryKey))
     )
       await storage.removeItem(entry.key);
 }
@@ -179,17 +178,10 @@ export function writeToDevice(
       await keepNewestFeeds(cache);
   };
 
-  const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-    if (event.type !== 'updated' || event.action.type !== 'success') return;
+  const shouldKeep = (query: Query): boolean =>
+    hasData(query) && kept.some((key) => partialMatchKey(query.queryKey, key));
 
-    const { query } = event;
-
-    if (
-      !hasData(query) ||
-      !kept.some((key) => partialMatchKey(query.queryKey, key))
-    )
-      return;
-
+  const writerFor = (query: Query): LiteThrottler<() => void> => {
     const writer =
       writers.get(query.queryHash) ??
       new LiteThrottler<() => void>(() => void write(query), {
@@ -200,7 +192,14 @@ export function writeToDevice(
       });
 
     writers.set(query.queryHash, writer);
-    writer.maybeExecute();
+
+    return writer;
+  };
+
+  const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+    if (event.type !== 'updated' || event.action.type !== 'success') return;
+
+    if (shouldKeep(event.query)) writerFor(event.query).maybeExecute();
   });
 
   return (): void => {

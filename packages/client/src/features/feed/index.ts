@@ -37,3 +37,5 @@ export { FileHeader as DiffFileHeader } from './components/diff-view/diff-file-h
 export { isDeleted as isDeletedFile } from './components/diff-view/diff-deleted-pill';
 
 export { permissionDetails } from './view/permission-details';
+
+export type { FeedState } from './view/feed-state';
