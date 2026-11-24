@@ -1,11 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { memo, useMemo } from 'react';
-import {
-  type InstalledAgents,
-  loadedAgents,
-  useInstalledAgents,
-} from '#features/agents';
+import { loadedAgents, useInstalledAgents } from '#features/agents';
 import {
   useConnectionState,
   useTRPC,
@@ -58,12 +54,7 @@ const queryProgress = (query: {
   isPending: boolean;
 }): QueryProgress => ({ failed: query.isError, pending: query.isPending });
 
-const agentsProgress = ({ status }: InstalledAgents): QueryProgress => ({
-  failed: status === 'failed',
-  pending: status === 'loading',
-});
-
-// The Projects and Installed Agents each Session row is drawn with.
+// The Projects and Installed Agents each Session row is drawn with. The list waits for the Projects, which group its rows; a row whose Agent has not loaded draws without its logo, which fills in when the Agents arrive.
 function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.project.list.queryOptions());
@@ -72,7 +63,7 @@ function useSessionListLookups(): SessionListLookups {
   return {
     projects: projects.data ?? [],
     agents: loadedAgents(agents),
-    progress: [queryProgress(projects), agentsProgress(agents)],
+    progress: [queryProgress(projects)],
   };
 }
 
