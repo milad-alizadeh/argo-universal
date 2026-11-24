@@ -65,6 +65,18 @@ export const fewChanges = catalog(always(fewFiles));
 
 export const manyChanges = catalog(always(manyFiles));
 
+// More files than the list draws at once, so a press has many rows it must leave alone.
+export const hundredsOfChanges = catalog(
+  always(
+    Array.from({ length: 120 }, (_, index) => ({
+      ...recordedFile('agent-1'),
+      path: `/repo/src/module-${index + 1}/index.ts`,
+    })),
+  ),
+);
+
+export const hundredsFirstFile = '/repo/src/module-1/index.ts';
+
 // The few files against main, and nothing against anything else.
 export const changesOnMain = catalog(onMain(fewFiles));
 
