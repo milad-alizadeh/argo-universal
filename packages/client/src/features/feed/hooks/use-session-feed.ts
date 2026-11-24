@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRestoreFeed } from '../api/restore-feed';
 import {
   findLiveToolCall,
   findPermissionToolCall,
@@ -32,9 +33,12 @@ export function useSessionFeed(
     { cacheId: sessionId, readPage, readsPage: !shown || refused },
   );
 
+  // The subscription opens once what the Device kept of this Feed is in the cache, so it resumes after the stored revision, not cold.
+  const restoring = useRestoreFeed(cacheId, feed.epoch !== null);
+
   const live = useFeedLive(sessionId, {
     cacheId,
-    shown,
+    shown: shown && !restoring,
     held: feed.epoch !== null,
     refused,
     onRefused: () => setRefused(true),

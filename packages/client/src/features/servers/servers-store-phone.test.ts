@@ -56,6 +56,18 @@ describe("a phone's list of Servers", () => {
 
     expect(store.getSnapshot().servers).toEqual([]);
   });
+
+  it('wipes what it kept of a Server when it is removed', async () => {
+    const store = await phoneKeeping([studio]);
+    const kept = `query-cache:${studioKey}:-feed`;
+    await AsyncStorage.setItem(kept, '{}');
+
+    store.remove(studioKey);
+
+    await vi.waitFor(async () =>
+      expect(await AsyncStorage.getItem(kept)).toBeNull(),
+    );
+  });
 });
 
 const shows = (store: ServersStore): boolean => {
