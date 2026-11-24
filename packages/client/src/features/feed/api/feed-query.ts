@@ -7,8 +7,6 @@ export const feedKeyPrefix = ['feed', 'window'] as const;
 
 export const snapshotKeyPrefix = ['feed', 'snapshot'] as const;
 
-export const viewKeyPrefix = ['feed', 'view'] as const;
-
 // The merged window of one Session's Feed: its epoch, revision, rows, older history and Plan.
 export const feedKey = (cacheId: string): readonly string[] => [
   ...feedKeyPrefix,
@@ -18,12 +16,6 @@ export const feedKey = (cacheId: string): readonly string[] => [
 // The Session's status snapshot, written beside its rows.
 export const snapshotKey = (cacheId: string): readonly string[] => [
   ...snapshotKeyPrefix,
-  cacheId,
-];
-
-// The view drawn from the window, kept so the next draw reuses the items that did not change.
-export const viewKey = (cacheId: string): readonly string[] => [
-  ...viewKeyPrefix,
   cacheId,
 ];
 

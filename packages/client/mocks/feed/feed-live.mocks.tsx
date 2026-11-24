@@ -24,6 +24,7 @@ import { feedKey, snapshotKey } from '../../src/features/feed/api/feed-query';
 import { useSessionFeed } from '../../src/features/feed/hooks/use-session-feed';
 import {
   emptyFeed,
+  type FeedState,
   mergeNewestPage,
 } from '../../src/features/feed/view/feed-state';
 import { createQueryClient } from '../../src/query-cache';
@@ -86,10 +87,21 @@ function replayAbove(after: FeedSyncPoint | null): FeedSubscribeOutput[] {
 // Restores the shared focus manager, for the stories after this one.
 export const restoreForeground = (): void => focusManager.setFocused(undefined);
 
+// The tail waits for the test; the page before a cursor is the recorded rows before it.
 function answerPage(server: Server, wire: Wire, input: FeedPageInput): void {
   server.pageReads.push(input);
 
-  void server.tail.then((data) => {
+  const answer =
+    input.direction === 'before'
+      ? Promise.resolve(
+          page(streamed.rows, streamed.snapshot.maxRevision, {
+            before: input.cursor,
+            limit: 2,
+          }),
+        )
+      : server.tail;
+
+  void answer.then((data) => {
     wire.next({ result: { type: 'data', data } });
     wire.complete();
   });
@@ -148,8 +160,10 @@ export interface FeedLiveFixture {
   // What the screen holds of the Session's Feed, as of its last render.
   held: () => ReturnType<typeof useSessionFeed> | undefined;
   hold: (feed: ReturnType<typeof useSessionFeed>) => void;
+  // The rows the Session's Feed query holds.
+  window: () => FeedState | undefined;
   // The tail page arrives.
-  answerTail: () => void;
+  answerTail: (tail?: FeedPageOutput) => void;
 }
 
 function countWrites(
@@ -225,7 +239,8 @@ export function feedLiveFixture({
     hold: (feed) => {
       held = feed;
     },
-    answerTail: () => answer.resolve(page([], 0)),
+    window: () => queryClient.getQueryData(feedKey(sessionId)),
+    answerTail: (tail = page([], 0)) => answer.resolve(tail),
   };
 }
 

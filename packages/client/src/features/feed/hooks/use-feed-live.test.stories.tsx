@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
+import { page, rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
 import {
   FeedLivePreview,
   feedLiveFixture,
@@ -64,6 +64,31 @@ export const OpensOnTheTailPageOfASessionNotSeenBefore: Story = {
     await waitFor(() =>
       expect(fixture.server.opened).toEqual([{ epoch: 0, revision: 0 }]),
     );
+  },
+};
+
+// The page before the window merges into the same query, and the newer rows stay.
+export const LoadsOlderHistoryIntoTheSameWindow: Story = {
+  play: async ({ mount }) => {
+    const fixture = feedLiveFixture({ seeded: false });
+    await mount(<FeedLivePreview fixture={fixture} />);
+    await waitFor(() => expect(fixture.server.pageReads).toHaveLength(1));
+
+    fixture.answerTail({
+      ...page(streamed.rows, newest.revision, { limit: 2 }),
+      hasOlder: true,
+    });
+    await waitFor(() => expect(fixture.window()?.rows).toHaveLength(2));
+    const newer = fixture.window()?.rows;
+
+    await fixture.held()?.loadOlder();
+
+    const merged = fixture.window()?.rows ?? [];
+    await expect(merged.length).toBeGreaterThan(2);
+    await expect(merged.slice(-2)).toEqual(newer);
+    await expect(fixture.server.pageReads.at(-1)).toMatchObject({
+      direction: 'before',
+    });
   },
 };
 
