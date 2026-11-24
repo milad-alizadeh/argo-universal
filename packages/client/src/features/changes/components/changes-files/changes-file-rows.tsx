@@ -1,6 +1,6 @@
 import { DiffScroll } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
-import * as React from 'react';
+import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { DiffFileHeader, isDeletedFile } from '#features/feed';
@@ -33,8 +33,8 @@ const assertNever = (value: never): never => {
 };
 
 /*
- * Each row is memoised on the item it draws and, for a header, on its own file's open and Viewed marks. A press on one
- * file hands every drawn row a new context, and only that file's header takes in the change.
+ * The React Compiler skips a row whose props are unchanged. A press on one file hands every drawn row a new context,
+ * but a header is given only its own file's open and Viewed marks, so only that file's header takes in the change.
  */
 export function ChangesRow({
   item,
@@ -44,7 +44,15 @@ export function ChangesRow({
     case 'separator':
       return <SeparatorRow />;
     case 'header':
-      return <HeaderRow item={item} {...headerState(item, context)} />;
+      return (
+        <HeaderRow
+          item={item}
+          open={!context.folded.has(item.file.path)}
+          viewed={context.viewed.includes(item.file.path)}
+          setOpen={context.setOpen}
+          onViewedChange={context.onViewedChange}
+        />
+      );
     case 'page':
       return <PageRow item={item} />;
     case 'more':
@@ -62,9 +70,9 @@ export function ChangesRow({
   }
 }
 
-const SeparatorRow = React.memo(function SeparatorRow(): React.JSX.Element {
+function SeparatorRow(): React.JSX.Element {
   return <View className="h-px bg-border" />;
-});
+}
 
 interface HeaderState {
   open: boolean;
@@ -73,18 +81,8 @@ interface HeaderState {
   onViewedChange: RowContext['onViewedChange'];
 }
 
-const headerState = (
-  item: ItemOf<'header'>,
-  context: RowContext,
-): HeaderState => ({
-  open: !context.folded.has(item.file.path),
-  viewed: context.viewed.includes(item.file.path),
-  setOpen: context.setOpen,
-  onViewedChange: context.onViewedChange,
-});
-
 // Marking a file Viewed folds it; clearing the mark opens it again, as on GitHub.
-const HeaderRow = React.memo(function HeaderRow({
+function HeaderRow({
   item,
   open,
   viewed,
@@ -105,17 +103,15 @@ const HeaderRow = React.memo(function HeaderRow({
       }}
     />
   );
-});
+}
 
-const PageRow = React.memo(function PageRow({
-  item,
-}: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
+function PageRow({ item }: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
   return (
     <View className="bg-card medium:bg-content">
       <DiffScroll hunks={item.hunks} inline={false} path={item.file.path} />
     </View>
   );
-});
+}
 
 interface MoreRowProps {
   path: string;
@@ -124,7 +120,7 @@ interface MoreRowProps {
 }
 
 // Holds a place at the end of the pages so far, so the next is asked for only once the list draws it near the reader.
-const MoreRow = React.memo(function MoreRow({
+function MoreRow({
   path,
   nextPages,
   onLoadDiff,
@@ -134,7 +130,7 @@ const MoreRow = React.memo(function MoreRow({
   }, [path, onLoadDiff, nextPages]);
 
   return <View className="h-px bg-card medium:bg-content" />;
-});
+}
 
 function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
   return (
@@ -158,7 +154,7 @@ const emptyDiffText = (file: ChangedFile): string =>
   isDeletedFile(file) ? deletedFileText(file) : noLinesText(file);
 
 // Drawn under an opened file whose load failed or that has no lines to show.
-const StatusRow = React.memo(function StatusRow({
+function StatusRow({
   item,
 }: Pick<RowProps<'status'>, 'item'>): React.JSX.Element {
   return (
@@ -166,7 +162,7 @@ const StatusRow = React.memo(function StatusRow({
       <StatusContent file={item.file} diff={item.diff} />
     </View>
   );
-});
+}
 
 function StatusContent(props: {
   file: ChangedFile;
