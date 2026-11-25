@@ -46,7 +46,7 @@ export interface WholeLineClamp {
   leafRegistry: ClampLeafRegistry;
   content: React.RefObject<ContentView | null>;
   onContentLayout: (event: LayoutChangeEvent) => void;
-  // Bound the first layout, then refine the cut to a whole line after measuring the content.
+  // Bound every layout until a cut is measured, then cut at the last whole line that fits.
   clipHeight: number | undefined;
   overflowing: boolean;
 }
@@ -129,11 +129,10 @@ function useClipOnLayout(
   const passed = passedLimit(height, limit);
   const cut = useMeasuredCut(passed, { leaves, content, height });
 
-  const initialBound = height === 0 ? limit : passed;
-
   return {
     onContentLayout,
-    clipHeight: cut ?? initialBound,
+    // Until a cut is measured the content is held to the limit, with the 1px slack `passedLimit` allows so a block that fits is never shaved: a first layout can report one line before the real height arrives, and an unbounded frame would draw the content at full height meanwhile.
+    clipHeight: cut ?? (limit === undefined ? undefined : limit + 1),
     overflowing: cut !== undefined,
   };
 }
