@@ -1,5 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
+import { isKitElement } from '../../../typed-children';
+import { kitDrawingWrapper } from '../../../wrapped-component';
 import type {
   ActionProps,
   ActionSectionProps,
@@ -48,8 +50,7 @@ export function submenuGroups(
 }
 
 function childGroups(child: ReactNode): ActionGroup[] {
-  if (isValidElement<ActionProps>(child) && child.type === Action)
-    return actionGroup(child);
+  if (isKitElement<ActionProps>(child, Action)) return actionGroup(child);
 
   return nestedGroups(child);
 }
@@ -58,8 +59,12 @@ function childGroups(child: ReactNode): ActionGroup[] {
 function actionGroup(child: ReactElement<ActionProps>): ActionGroup[] {
   const id = encodeURIComponent(String(child.key));
 
-  if (isPressProps(child.props)) return [{ actions: [{ ...child.props, id }] }];
-  const submenu = declaredSubmenu(child.props, id);
+  const wrap = kitDrawingWrapper(child);
+
+  if (isPressProps(child.props))
+    return [{ actions: [{ ...child.props, id, wrap }] }];
+
+  const submenu = { ...declaredSubmenu(child.props, id), wrap };
 
   return submenu.sections.length ? [{ actions: [submenu] }] : [];
 }
@@ -100,7 +105,7 @@ function unexpectedElement(child: ReactElement): ActionGroup[] {
 }
 
 function sectionGroups(child: ReactElement<ActionSectionProps>): ActionGroup[] {
-  if (child.type !== ActionSection) return unexpectedElement(child);
+  if (!isKitElement(child, ActionSection)) return unexpectedElement(child);
 
   const groups = prefixedGroups(
     actionGroups(child.props.children),

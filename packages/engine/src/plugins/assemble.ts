@@ -5,10 +5,12 @@ import { PluginAccounts } from './accounts/plugin-accounts';
 import type { OAuthOptions } from './accounts/plugin-oauth';
 import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
+import { DraftReview } from './drafts/draft-review';
+import { PluginDrafts } from './drafts/plugin-drafts';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
 import { LocatedCache } from './located-cache';
-import { pluginManifest } from './located-plugins';
+import { pluginManifest, type PluginServiceDeps } from './located-plugins';
 import { runtimeFor } from './runtime-for';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
@@ -26,6 +28,8 @@ export type PluginServerOptions = {
   pluginClock?: PluginClock;
   // A dev Server watches Plugin sources and rebuilds on a change; any other builds each Plugin once.
   watchPlugins?: boolean;
+  // The launcher confirms the watch Server has a separate ARGO_HOME.
+  acceptLinkedDevPlugins?: boolean;
 };
 
 // What the Engine hands over; the Plugin module builds everything else.
@@ -43,11 +47,12 @@ export type PluginsOptions = PluginServerOptions & {
 
 type Discovery = Pick<
   PluginsOptions,
-  'home' | 'version' | 'firstPartyPluginsDirectory'
+  'home' | 'version' | 'firstPartyPluginsDirectory' | 'acceptLinkedDevPlugins'
 > & { located: LocatedCache };
 
 export type Assembled = {
   service: PluginService;
+  drafts: DraftReview;
   accounts: PluginAccounts;
   listChanges: PluginListChanges;
   runtime: PluginRuntime;
@@ -103,7 +108,16 @@ function foundations(options: PluginsOptions): Foundations {
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const located = new LocatedCache();
-  const discovery = { home, version, firstPartyPluginsDirectory, located };
+
+  const discovery = {
+    home,
+    version,
+    firstPartyPluginsDirectory,
+    located,
+    acceptLinkedDevPlugins:
+      options.watchPlugins === true && options.acceptLinkedDevPlugins === true,
+  };
+
   const parts = { secretStore, heldSecrets, discovery, listChanges };
 
   return {
@@ -114,23 +128,34 @@ function foundations(options: PluginsOptions): Foundations {
   };
 }
 
-function serviceFor(parts: Foundations, runtime: PluginRuntime): PluginService {
-  return new PluginService({
+function depsFor(
+  options: PluginsOptions,
+  parts: Foundations,
+  runtime: PluginRuntime,
+): PluginServiceDeps {
+  return {
+    ...(options.watchPlugins === true && { dev: true }),
     ...parts.discovery,
     pluginAccounts: parts.accounts,
     pluginRuntime: runtime,
     pluginSettings: parts.settings,
-  });
+  };
 }
 
 // The one place PluginService is built, with every dependency in hand.
 export function assemble(options: PluginsOptions): Assembled {
   const parts = foundations(options);
   const runtime = runtimeFor(options, parts);
-  const service = serviceFor(parts, runtime);
+  const deps = depsFor(options, parts, runtime);
+
+  if (options.watchPlugins)
+    runtime.changes.onRestarted((pluginId) =>
+      parts.listChanges.changed(pluginId),
+    );
 
   return {
-    service,
+    service: new PluginService(deps),
+    drafts: new DraftReview(deps, new PluginDrafts(options)),
     runtime,
     accounts: parts.accounts,
     listChanges: parts.listChanges,

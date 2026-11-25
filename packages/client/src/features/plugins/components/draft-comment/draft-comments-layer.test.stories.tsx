@@ -1,0 +1,448 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as pointer } from 'vitest/browser';
+import { draftComments } from '../../stores/draft-comments';
+import {
+  boardTree,
+  exactTargetTree,
+  fieldRowTree,
+  issuesPage,
+  longListTree,
+  sheetTree,
+  tableTree,
+} from './draft-comment-fixtures';
+import {
+  CommentingPage,
+  holdOn,
+  TogglingPage,
+} from './draft-comments-page.mocks';
+
+const meta = {
+  title: 'Tests/Plugins/DraftComments/Layer',
+  component: CommentingPage,
+  args: { commenting: true },
+} satisfies Meta<typeof CommentingPage>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// The editor opens in a portal, outside the story's canvas.
+const editor = (): ReturnType<typeof within> => within(document.body);
+
+const nameField = { name: 'Name' } as const;
+
+const stopCommenting = { name: 'Stop commenting' } as const;
+
+const commentMode = { name: 'Comment mode' } as const;
+
+const pairing = 'Pairing code expires';
+
+export const APointerPressPicksTheNodeUnderIt: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await pointer.click(await canvas.findByText(pairing));
+    await settleOverlays();
+
+    const note = await editor().findByRole('textbox', { name: 'Comment' });
+
+    const heading = await editor().findByText('List · rows');
+
+    await waitFor(() => expect(heading).toBeVisible());
+    await expect(
+      editor().getByRole('group', { name: 'List · A · row-409' }),
+    ).toBeVisible();
+    await userEvent.type(note, 'Use a coloured chip');
+    await userEvent.click(editor().getByRole('button', { name: 'Comment' }));
+
+    await waitFor(() =>
+      expect(draftComments.of(issuesPage).notes).toEqual([
+        {
+          address: expect.stringContaining('row-409'),
+          nodeKey: 'row-409',
+          region: 'list',
+          variant: 'rows',
+          note: 'Use a coloured chip',
+        },
+      ]),
+    );
+    await expect(
+      await canvas.findByRole('img', { name: 'Comment 1' }),
+    ).toBeVisible();
+  },
+};
+
+export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await pointer.click(await canvas.findByText('Issues'));
+    await settleOverlays();
+
+    const named = await editor().findByRole('group', { name: 'title' });
+
+    await waitFor(() =>
+      expect(within(named).getByText('Issues')).toBeVisible(),
+    );
+    await userEvent.type(
+      await editor().findByRole('textbox', { name: 'Comment' }),
+      'Bigger',
+    );
+    await userEvent.click(editor().getByRole('button', { name: 'Comment' }));
+
+    await waitFor(() =>
+      expect(draftComments.of(issuesPage).notes).toEqual([
+        expect.objectContaining({ nodeKey: 'title', note: 'Bigger' }),
+      ]),
+    );
+    await expect(draftComments.of(issuesPage).notes[0]).not.toHaveProperty(
+      'region',
+    );
+  },
+};
+
+export const CommentModeRunsNoNode: Story = {
+  args: { onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await expect(canvas.getByText('Composer drops a draft')).toBeVisible();
+    await expect(canvas.getByText('Open')).toBeVisible();
+    await pointer.click(await canvas.findByText(pairing));
+    await settleOverlays();
+
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const OutsideCommentModeAPressRunsTheNode: Story = {
+  args: { commenting: false, onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(await canvas.findByText(pairing));
+
+    await waitFor(() => expect(args.onPageCall).toHaveBeenCalledTimes(1));
+  },
+};
+
+export const KeyboardSelectsTheExactRowWithoutRunningIt: Story = {
+  args: { onPageCall: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const row = await canvas.findByRole('button', {
+      name: /Comment on.*row-409/,
+    });
+
+    await expect(row).toHaveAttribute('tabindex', '0');
+
+    for (let step = 0; document.activeElement !== row && step < 20; step++)
+      await userEvent.tab();
+
+    await expect(row).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await settleOverlays();
+
+    await expect(
+      await editor().findByRole('group', { name: 'List · A · row-409' }),
+    ).toBeVisible();
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const NothingIsPickedOutsideCommentMode: Story = {
+  args: { commenting: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(await canvas.findByText(pairing));
+    await settleOverlays();
+
+    await expect(
+      editor().queryByRole('textbox', { name: 'Comment' }),
+    ).toBeNull();
+  },
+};
+
+export const AMovingPressPicksNothing: Story = {
+  args: { longPressMilliseconds: 0 },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    const row = await canvas.findByText(pairing);
+
+    const { left, top } = row.getBoundingClientRect();
+
+    const at = (x: number): MouseEventInit => ({
+      bubbles: true,
+      clientX: left + x,
+      clientY: top + 4,
+    });
+
+    row.dispatchEvent(new MouseEvent('mousedown', at(4)));
+    row.dispatchEvent(new MouseEvent('mousemove', at(60)));
+    row.dispatchEvent(new MouseEvent('mouseup', at(60)));
+    await settleOverlays();
+
+    await expect(
+      editor().queryByRole('textbox', { name: 'Comment' }),
+    ).toBeNull();
+  },
+};
+
+export const TypedTextSurvivesTheToggle: Story = {
+  render: () => <TogglingPage root={fieldRowTree} regions={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const field = await canvas.findByRole('textbox', nameField);
+
+    await userEvent.type(field, 'Ada');
+    await userEvent.click(canvas.getByRole('button', commentMode));
+    await canvas.findByRole('button', stopCommenting);
+
+    const after = canvas.getByRole('textbox', nameField);
+
+    await expect(after).toBe(field);
+    await expect(after).toHaveValue('Ada');
+  },
+};
+
+const boxOf = (element: HTMLElement): string => {
+  const { left, top, width, height } = element.getBoundingClientRect();
+
+  return [left, top, width, height].join(',');
+};
+
+export const CommentModeKeepsAFieldFillingItsRow: Story = {
+  render: () => <TogglingPage root={fieldRowTree} regions={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const field = await canvas.findByRole('textbox', nameField);
+    const before = boxOf(field);
+
+    await userEvent.click(canvas.getByRole('button', commentMode));
+    await canvas.findByRole('button', stopCommenting);
+
+    await expect(boxOf(canvas.getByRole('textbox', nameField))).toBe(before);
+  },
+};
+
+export const CommentModeKeepsAListFillingAndScrolling: Story = {
+  render: () => <TogglingPage root={longListTree} regions={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const first = await canvas.findByText('Issue 0');
+    const before = boxOf(first);
+
+    await userEvent.click(canvas.getByRole('button', commentMode));
+    await canvas.findByRole('button', stopCommenting);
+
+    await expect(boxOf(canvas.getByText('Issue 0'))).toBe(before);
+    await expect(canvas.queryByText('Issue 29')).toBeNull();
+  },
+};
+
+export const CancelLeavesNoNote: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await pointer.click(await canvas.findByText(pairing));
+    await settleOverlays();
+    await userEvent.type(
+      await editor().findByRole('textbox', { name: 'Comment' }),
+      'Never mind',
+    );
+    await userEvent.click(editor().getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() =>
+      expect(editor().queryByRole('textbox', { name: 'Comment' })).toBeNull(),
+    );
+    await expect(draftComments.of(issuesPage).notes).toEqual([]);
+  },
+};
+
+export const APhonePicksOnALongPress: Story = {
+  args: { longPressMilliseconds: 60 },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+
+    const row = await canvas.findByText(pairing);
+
+    await holdOn(row, 0);
+    await settleOverlays();
+    await expect(
+      editor().queryByRole('textbox', { name: 'Comment' }),
+    ).toBeNull();
+
+    await holdOn(row, 120);
+    await expect(await editor().findByText('List · rows')).toBeVisible();
+    await expect(editor().queryByText(/Long-pressed/)).toBeNull();
+    await expect(
+      await editor().findByRole('textbox', { name: 'Comment' }),
+    ).toBeVisible();
+  },
+};
+
+export const ATableCellKeepsItsOwnCommentTarget: Story = {
+  args: { root: tableTree, regions: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const cell = await canvas.findByRole('cell');
+    await pointer.click(cell);
+    await settleOverlays();
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'issue-title' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+function exactTarget(
+  root: typeof tableTree,
+  shown: string,
+  key: string,
+): Story {
+  return {
+    args: { root, regions: false, onPageCall: fn() },
+    play: async ({ args, canvas }) => {
+      await settleLayout('wide');
+
+      const target = await canvas.findByText(shown);
+      await pointer.click(target);
+      await waitFor(() =>
+        expect(editor().getByRole('group', { name: key })).toBeVisible(),
+      );
+      await expect(args.onPageCall).not.toHaveBeenCalled();
+    },
+  };
+}
+
+export const ABoardColumnKeepsItsOwnCommentTarget = exactTarget(
+  boardTree,
+  'Open lane',
+  'open-column',
+);
+
+export const ABoardCardKeepsItsOwnCommentTarget = exactTarget(
+  boardTree,
+  'First card',
+  'first-card',
+);
+
+export const ACanvasDrawingKeepsItsOwnCommentTarget: Story = {
+  args: { root: exactTargetTree, regions: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await canvas.findByRole('button', { name: 'Comment on diagram-shape' });
+    await pointer.click(await canvas.findByLabelText('Draft diagram'));
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'diagram-shape' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const AnActionKeepsItsOwnCommentTarget: Story = {
+  args: { root: exactTargetTree, regions: false, onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(
+      await canvas.findByRole('button', { name: 'Copy link' }),
+    );
+    await waitFor(() =>
+      expect(editor().getByRole('group', { name: 'copy-link' })).toBeVisible(),
+    );
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const ASheetScreenKeepsItsOwnCommentTarget: Story = {
+  args: { root: sheetTree, regions: false },
+  play: async ({ userEvent }) => {
+    await settleLayout('wide');
+
+    const target = await editor().findByRole('button', {
+      name: 'Comment on issue-details',
+    });
+
+    target.focus();
+    await expect(target).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'issue-details' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const ACanvasPressSelectsTheVisibleDrawing: Story = {
+  args: { root: exactTargetTree, regions: false },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await canvas.findByRole('button', { name: 'Comment on diagram-circle' });
+
+    const drawing = await canvas.findByLabelText('Draft diagram');
+    const { width, height } = drawing.getBoundingClientRect();
+    await pointer.click(drawing, {
+      position: { x: (165 / 800) * width, y: (35 / 150) * height },
+    });
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'diagram-shape' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const APhoneTableTitleKeepsItsCellTarget: Story = {
+  args: { root: tableTree, regions: false, longPressMilliseconds: 60 },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    await holdOn(await canvas.findByText('First issue'), 120);
+    await waitFor(() =>
+      expect(
+        editor().getByRole('group', { name: 'issue-title' }),
+      ).toBeVisible(),
+    );
+  },
+};
+
+export const AnOverflowActionKeepsItsOwnCommentTarget: Story = {
+  args: { root: exactTargetTree, regions: false, onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(
+      await canvas.findByRole('button', { name: 'More actions' }),
+    );
+    await pointer.click(
+      await editor().findByRole('menuitem', { name: 'Share link' }),
+    );
+    await waitFor(() =>
+      expect(editor().getByRole('group', { name: 'share-link' })).toBeVisible(),
+    );
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const KeyboardSelectsAnOverflowActionWithoutRunningIt: Story = {
+  args: { root: exactTargetTree, regions: false, onPageCall: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout('wide');
+    await pointer.click(
+      await canvas.findByRole('button', { name: 'More actions' }),
+    );
+    const share = await editor().findByRole('menuitem', { name: 'Share link' });
+
+    share.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(editor().getByRole('group', { name: 'share-link' })).toBeVisible(),
+    );
+    await expect(editor().queryByRole('menu')).toBeNull();
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};

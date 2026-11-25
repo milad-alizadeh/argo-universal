@@ -1,7 +1,6 @@
 import {
   Children,
   createContext,
-  isValidElement,
   useContext,
   useMemo,
   type Dispatch,
@@ -9,7 +8,10 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
+import { View } from 'react-native';
 import { ListItem } from '#primitives/lists/list-item';
+import { isKitElement } from '../../../typed-children';
+import { kitDrawingWrapper, wrapKitDrawing } from '../../../wrapped-component';
 import {
   pushDestination,
   registerDestination,
@@ -48,7 +50,7 @@ export interface SheetScreenEntry {
 }
 
 // The sheet's Sheet.Screen children, the first one its root, so a sheet of one Sheet.Screen has one page, which carries the title the stack draws.
-function sheetScreens(children: ReactNode): SheetScreenEntry[] {
+export function sheetScreens(children: ReactNode): SheetScreenEntry[] {
   return Children.toArray(children)
     .filter(isScreen)
     .map((page) => ({
@@ -60,12 +62,23 @@ function sheetScreens(children: ReactNode): SheetScreenEntry[] {
       keepsHeaderInset: page.props.keepsHeaderInset,
       placeholder: page.props.placeholder,
       onExit: page.props.onExit,
-      content: page.props.children,
+      content: pageContent(page),
     }));
 }
 
+function pageContent(page: ReactElement<SheetScreenProps>): ReactNode {
+  const wrap = kitDrawingWrapper(page);
+
+  return wrap
+    ? wrapKitDrawing(
+        wrap,
+        <View className="min-h-0 grow">{page.props.children}</View>,
+      )
+    : page.props.children;
+}
+
 function isScreen(child: ReactNode): child is ReactElement<SheetScreenProps> {
-  return isValidElement(child) && child.type === SheetScreen;
+  return isKitElement<SheetScreenProps>(child, SheetScreen);
 }
 
 const SheetContext = createContext<SheetNavigation | undefined>(undefined);

@@ -8,6 +8,8 @@ import { readIconMarkup } from '../discovery/manifest-icon';
 import { runtimeError } from '../protocol/runtime';
 import { BuildError, buildDiagnostics } from './build-diagnostics';
 import type { PluginDiagnostic } from './diagnostics';
+import { inspectDraftLoaders } from './draft-loaders';
+import { draftManifestDiagnostics } from './drafts';
 import { inspectGlobals } from './globals';
 import { manifestDiagnostics } from './manifest-diagnostics';
 import {
@@ -16,8 +18,10 @@ import {
   type PluginSourceReport,
 } from './source';
 
+// `shipBlockers` are what keeps a valid Plugin from shipping, the Variants a Draft still declares.
 export type PluginValidation = PluginSourceReport & {
   manifest?: PluginManifest;
+  shipBlockers: PluginDiagnostic[];
 };
 
 type ManifestReport = PluginValidation & { manifest: PluginManifest };
@@ -26,11 +30,20 @@ export async function validatePlugin(
   directory: string,
   version = '0.0.0',
 ): Promise<PluginValidation> {
-  const report: PluginValidation = emptySourceReport();
+  const report: PluginValidation = {
+    ...emptySourceReport(),
+    shipBlockers: [],
+  };
+
   const manifest = await checkedManifest({ directory, version }, report);
 
   if (!manifest) return report;
   report.manifest = manifest;
+
+  const drafts = await draftManifestDiagnostics(directory, manifest);
+
+  report.diagnostics.push(...drafts.diagnostics);
+  report.shipBlockers.push(...drafts.shipBlockers);
   await inspectEntry(directory, { ...report, manifest });
 
   return report;
@@ -118,6 +131,7 @@ async function inspectFile(
   };
 
   addSourceReport(report, inspectSource(input, report.manifest));
+  report.diagnostics.push(...inspectDraftLoaders(input, report.manifest));
   report.diagnostics.push(...(await inspectGlobals(input)));
 }
 

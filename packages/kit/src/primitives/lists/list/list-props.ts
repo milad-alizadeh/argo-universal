@@ -5,6 +5,7 @@ import type { PhoneOverrides } from '../../../list-look';
 import type { ListRef } from '../../../list-ref';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
+import type { KitDrawingWrapper } from '../../../wrapped-component';
 import type { KitProps } from '../../kit-props';
 
 // Kit-only: scrolling, padding, accessibility, content lanes and section grouping.
@@ -78,6 +79,7 @@ export type MovesOrItems =
 export type ListSectionProps = KitProps<'List.Section'> &
   ListSelection & {
     count?: number;
+    wrapDrawing?: KitDrawingWrapper;
     tone?: 'danger';
     isExpanded?: boolean;
     onExpandedChange?: (expanded: boolean) => void;

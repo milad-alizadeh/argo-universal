@@ -25,9 +25,12 @@ async function untilPageReports(reduced: boolean): Promise<void> {
 
 async function emulate(reduced: boolean): Promise<void> {
   await cdp().send('Emulation.setEmulatedMedia', {
-    features: reduced
-      ? [{ name: 'prefers-reduced-motion', value: 'reduce' }]
-      : [],
+    features: [
+      {
+        name: 'prefers-reduced-motion',
+        value: reduced ? 'reduce' : 'no-preference',
+      },
+    ],
   });
   await untilPageReports(reduced);
 }

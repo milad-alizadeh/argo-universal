@@ -148,7 +148,7 @@ export const runOperations = {
     label: 'Guide to writing Run Configurations',
     icon: 'terminal',
     description:
-      'Get the .argo/run.json template and JSON Schema for manual setup.',
+      'Guide manual Run Configuration setup. Returns a .argo/run.json template and JSON Schema.',
     params: RunGuideParams,
     result: RunGuide,
     tier: 'read',
@@ -160,7 +160,7 @@ export const runOperations = {
     label: 'Draft Run Configurations',
     icon: 'terminal',
     description:
-      'Write a first .argo/run.json from package.json scripts, a Procfile, .vscode/launch.json and .claude/launch.json. It never runs them. To write the file by hand, use run.guide. To replace an existing file with a draft, pass overwrite: true.',
+      'Draft a Run Configuration file. Reads package.json scripts, a Procfile, .vscode/launch.json and .claude/launch.json without running them. To write the file by hand, use run.guide. To replace an existing file with a draft, pass overwrite: true.',
     params: RunDraftParams,
     result: RunDraftResult,
     tier: 'act',

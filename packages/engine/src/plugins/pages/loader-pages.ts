@@ -24,6 +24,7 @@ import type { PluginDraws } from './plugin-draws';
 // What drawing needs of the Plugin service: a running worker, started on the first draw as a page starts it.
 export type PagesHost = {
   activate: (pluginId: string) => Promise<PluginStatus>;
+  missingDraftState: (address: PageAddress) => Promise<string | null>;
 };
 
 // The Connection a draw is for.
@@ -61,17 +62,21 @@ export class LoaderPages {
     private readonly operations: PluginOperationService,
   ) {
     this.draws = draws;
-    this.unwatch = changes.listen((pluginId, addresses) =>
-      this.mark(pluginId, addresses),
+    this.unwatch = changes.listen((pluginId, addresses, region) =>
+      this.mark(pluginId, addresses, region),
     );
   }
 
   // A Plugin with no Loader pages has nothing to mark.
-  private mark(pluginId: string, addresses?: PageAddress[]): void {
+  private mark(
+    pluginId: string,
+    addresses?: PageAddress[],
+    region?: string,
+  ): void {
     if (addresses) return this.marks.send({ pluginId, addresses });
 
     if (this.draws.patternsOf(pluginId).length > 0)
-      this.marks.send({ pluginId });
+      this.marks.send(region ? { pluginId, region } : { pluginId });
   }
 
   public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {
@@ -92,6 +97,10 @@ export class LoaderPages {
 
     if (notStarted) return failedDraw(notStarted);
 
+    const missing = await this.host.missingDraftState({ pluginId, ...at });
+
+    if (missing) return failedDraw(missing);
+
     const address = { ...at, ...askedBy(asking) };
 
     return this.draws.answer({ pluginId, at: address }, known);
@@ -108,6 +117,10 @@ export class LoaderPages {
     const notStarted = await this.startFailure(pluginId);
 
     if (notStarted) return yield { kind: 'failed', error: notStarted };
+
+    const missing = await this.host.missingDraftState({ pluginId, ...at });
+
+    if (missing) return yield { kind: 'failed', error: missing };
 
     const address = { ...at, pages: 1, ...askedBy(asking) };
 

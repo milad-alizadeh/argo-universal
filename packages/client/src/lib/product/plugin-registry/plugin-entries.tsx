@@ -150,6 +150,7 @@ export const pluginEntries = {
   Icon,
   Alert,
   Sheet: PluginSheet,
+  'Sheet.Screen': Sheet.Screen,
 } satisfies {
   [Name in WireComponentName]: ComponentType<
     KitProps<Name, string, React.JSX.Element>

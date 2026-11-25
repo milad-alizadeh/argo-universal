@@ -24,6 +24,8 @@ export type PluginPageState = {
   // What the page draws under its Skeleton until `root` arrives: its first rows as this Device last drew them.
   loadingTree: LoadingTreeRead;
   onPageCall: OnPageCall;
+  // Why the page's latest draw failed, or null; `root` is then the last tree drawn, or the fallback.
+  error: string | null;
 };
 
 /*
@@ -48,7 +50,12 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
     pageCallsPorts(addresses, opening, useOperationRunner()),
   );
 
-  return { root, loadingTree: useLoadingTree(opening), onPageCall };
+  return {
+    root,
+    loadingTree: useLoadingTree(opening),
+    onPageCall,
+    error: answer?.ok === false ? answer.error : null,
+  };
 }
 
 /*

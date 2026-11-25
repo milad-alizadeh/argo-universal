@@ -1,11 +1,16 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import { menuDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
-import { Fragment } from 'react';
+import { createContext, Fragment, useContext, useRef } from 'react';
 import { View } from 'react-native';
 import { windowEdgeInset } from '#kit/menu-surface';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
+import {
+  KitDrawingSelectionContext,
+  type ScheduleDrawingSelection,
+  wrapKitDrawing,
+} from '../../../wrapped-component';
 import { MenuActionLabel } from './menu-action-label';
 import {
   ChoiceCheck,
@@ -33,17 +38,50 @@ import {
 
 type MenuActionsProps = ActionMenuProps & { focus: KeyboardFocus };
 
+const AfterMenuCloses = createContext<ScheduleDrawingSelection | null>(null);
+
+interface DrawingSelectionClose {
+  schedule: ScheduleDrawingSelection;
+  onCloseAutoFocus: (event: Event) => void;
+}
+
+function useAfterMenuCloses(): DrawingSelectionClose {
+  const pending = useRef<(() => void) | null>(null);
+
+  return {
+    schedule: (select: () => void): void => {
+      pending.current = select;
+    },
+    onCloseAutoFocus: (event: Event): void => {
+      const select = pending.current;
+
+      if (!select) return;
+
+      pending.current = null;
+      event.preventDefault();
+      select();
+    },
+  };
+}
+
 // An action menu's web drawing: compact rows, each running its action.
 export function MenuActions(props: MenuActionsProps): React.JSX.Element {
+  const { schedule, onCloseAutoFocus } = useAfterMenuCloses();
+
   return (
     <TextClassContext.Provider value="text-foreground">
-      {/* Radix's popper wrapper copies the content's z-index, so the content keeps it above other overlays. */}
-      <RadixMenu.Content {...actionContentProps(props)}>
-        <ChoiceGutterContext.Provider value={hasChoice(props.actions)}>
-          <View className={actionContentClassName}>
-            {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
-          </View>
-        </ChoiceGutterContext.Provider>
+      <RadixMenu.Content {...actionContentProps(props, onCloseAutoFocus)}>
+        <AfterMenuCloses value={schedule}>
+          <ChoiceGutterContext.Provider value={hasChoice(props.actions)}>
+            <View className={actionContentClassName}>
+              {props.loading ? (
+                <MenuLoadingRow />
+              ) : (
+                props.actions.map(actionItem)
+              )}
+            </View>
+          </ChoiceGutterContext.Provider>
+        </AfterMenuCloses>
       </RadixMenu.Content>
     </TextClassContext.Provider>
   );
@@ -51,13 +89,21 @@ export function MenuActions(props: MenuActionsProps): React.JSX.Element {
 
 function actionContentProps(
   props: MenuActionsProps,
+  finishSelection: (event: Event) => void,
 ): RadixMenu.DropdownMenuContentProps {
+  const focus = contentFocus(props.focus);
+
   return {
     align: props.align ?? menuDefaults.align,
     loop: true,
     collisionPadding: windowEdgeInset,
     className: 'z-50',
-    ...contentFocus(props.focus),
+    ...focus,
+    onCloseAutoFocus: (event) => {
+      finishSelection(event);
+
+      if (!event.defaultPrevented) focus.onCloseAutoFocus?.(event);
+    },
   };
 }
 
@@ -109,7 +155,8 @@ function SubmenuRows({
 function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
   const label = submenu.accessibilityLabel ?? submenu.label;
 
-  return (
+  return wrapKitDrawing(
+    submenu.wrap,
     <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
         <ChoiceCheck />
@@ -117,7 +164,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
         <SubmenuCount count={submenu.count} />
         <Chevron direction="right" />
       </View>
-    </RadixMenu.SubTrigger>
+    </RadixMenu.SubTrigger>,
   );
 }
 
@@ -128,10 +175,31 @@ function SubmenuCount({
 }
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
+  return wrapKitDrawing(action.wrap, <MenuActionDrawing action={action} />);
+}
+
+function MenuActionDrawing({
+  action,
+}: {
+  action: MenuAction;
+}): React.JSX.Element {
+  const selection = useContext(KitDrawingSelectionContext);
+  const afterClose = useContext(AfterMenuCloses);
+  const selectDrawing = action.wrap && afterClose && selection;
+
+  const onSelect = (): void => {
+    if (afterClose && selectDrawing?.(afterClose)) return;
+
+    action.onPress?.();
+  };
+
   return (
     <TextClassContext.Provider value={menuTextClass(action.tone)}>
-      <RadixMenu.Item {...actionItemProps(action)}>
-        <View {...actionRow(action)}>
+      <RadixMenu.Item {...actionItemProps(action)} onSelect={onSelect}>
+        <View
+          {...actionRow(action)}
+          {...(selectDrawing && { dataSet: { kitDrawingSelection: true } })}
+        >
           <ChoiceCheck selected={action.selected} />
           <MenuActionLabel {...action} />
         </View>
@@ -145,7 +213,6 @@ function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
     asChild: true,
     'aria-label': menuActionTitle(action),
     disabled: action.disabled,
-    onSelect: action.onPress,
     ...choiceRole(action.selected),
   };
 }

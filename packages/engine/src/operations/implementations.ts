@@ -82,7 +82,7 @@ export function createImplementations(
     ...createDiagramOperations(),
     ...createChartOperations(deps.chartPreview),
     ...sessionImplementations(deps.sessions),
-    ...createPluginOperations(deps.plugins.plugins),
+    ...createPluginOperations(deps.plugins, deps.sessions),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
     ...createRunOperations(deps),

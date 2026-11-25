@@ -89,13 +89,23 @@ export function TextArea(props: TextAreaProps): ReactElement {
   const { height, onContentSizeChange } = useEmptyHeight(props.value);
 
   return (
-    <View testID={props.testID} className={cardClass}>
+    <View
+      testID={props.testID}
+      className={
+        props.appearance === 'field'
+          ? 'w-full flex-row rounded-lg border border-border bg-content px-2.5'
+          : cardClass
+      }
+    >
       <TextInput
         {...inputProps(props)}
         onContentSizeChange={onContentSizeChange}
         placeholderTextColorClassName="accent-muted-foreground/70 dark:accent-muted-foreground"
         style={{ height, maxHeight: useMaxHeight() }}
-        className={fieldClass(props.disabled)}
+        className={cn(
+          fieldClass(props.disabled),
+          props.appearance === 'field' && 'min-h-14',
+        )}
       />
       <TextAreaAction action={props.action} />
     </View>

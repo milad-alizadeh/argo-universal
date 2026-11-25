@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
+import { PluginIdentifier } from '../plugins/plugin-settings';
 import {
   PluginActivation,
   PluginEnablement,
@@ -8,6 +10,12 @@ import {
   PluginSettings,
 } from '../plugins/plugins';
 import { PluginStatus } from '../plugins/runtime';
+import {
+  DraftChooseInput,
+  DraftChooseOutput,
+  DraftPickInput,
+  DraftPickOutput,
+} from './plugin-drafts';
 import {
   PluginGuide,
   PluginGuideInput,
@@ -47,6 +55,51 @@ export const pluginOperations = {
     tier: 'act',
     policy: 'allow',
     keywords: ['extensions', 'start', 'load'],
+  },
+  'plugin.draft.show': {
+    id: 'plugin.draft.show',
+    label: 'Show Draft',
+    icon: 'plug',
+    description:
+      'Rebuild the Draft mid-Turn. Call it after finishing a Draft region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only when the build passes. A broken build keeps the current worker, so the Draft on screen never blanks, and the build error is returned as the refusal. Every other source change still waits for the Turn to end. Needs a Server running with --watch.',
+    params: z.strictObject({
+      pluginId: PluginIdentifier,
+      // The region the Agent is writing next, which Apps frame until it lands; optional.
+      region: z.string().min(1).optional(),
+      sessionId: sessionColumns.shape.id
+        .optional()
+        .describe(
+          'The Session whose Agent draws this Draft, which the author’s Choose answers to; the calling Session when left out.',
+        ),
+    }),
+    result: z.strictObject({ ok: z.literal(true) }),
+    tier: 'act',
+    policy: 'allow',
+    keywords: ['draft', 'design', 'rebuild', 'reload', 'region', 'variant'],
+  },
+  'plugin.draft.choose': {
+    id: 'plugin.draft.choose',
+    label: 'Choose Draft',
+    icon: 'plug',
+    description:
+      'The author chooses in the App: records one Variant per region plus every comment for a Plugin’s Draft, and hands them to the Session whose Agent draws it. Only an App runs it.',
+    params: DraftChooseInput,
+    result: DraftChooseOutput,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['draft', 'choose', 'variant', 'comment', 'pick'],
+  },
+  'plugin.draft.pick': {
+    id: 'plugin.draft.pick',
+    label: 'Read Draft pick',
+    icon: 'plug',
+    description:
+      'Read the author’s last Draft choice. Returns one Variant per region and the comments sent with it, or null before a choice. Read it to resume after a restart, then write the chosen-variant file into the Plugin folder.',
+    params: DraftPickInput,
+    result: DraftPickOutput,
+    tier: 'read',
+    policy: 'allow',
+    keywords: ['draft', 'pick', 'variant', 'comment', 'design', 'resume'],
   },
   'plugin.setEnabled': {
     id: 'plugin.setEnabled',
@@ -111,7 +164,7 @@ export const pluginOperations = {
     label: 'New Plugin',
     icon: 'plugins',
     description:
-      'Write a working Plugin into a Session Checkout: one page, one Operation and one passing test. Run plugin.guide first.',
+      'Scaffold a Plugin in a Session Checkout. It has one page, one Operation and one passing test. Run plugin.guide first.',
     params: PluginNewInput,
     result: PluginNewOutput,
     tier: 'act',

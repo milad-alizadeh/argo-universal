@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { flattenedChildren } from './flattened-children';
+import { kitElementType } from './typed-children';
 
 /*
  * A row's place in a List's tree of ListItems (child ListItems nest under their parent). The List flattens the tree,
@@ -48,10 +49,16 @@ export function nestsChildren(type: RowComponent): void {
 
 type RowElement = ReactElement<{ children?: ReactNode }>;
 
-const nestingRow = (child: ReactNode): child is RowElement =>
-  isValidElement(child) &&
-  typeof child.type !== 'string' &&
-  nestingTypes.has(child.type);
+const nestingRow = (child: ReactNode): child is RowElement => {
+  const type = kitElementType(child);
+
+  return (
+    isValidElement(child) &&
+    typeof type !== 'string' &&
+    type !== undefined &&
+    nestingTypes.has(type)
+  );
+};
 
 // The ListItems written inside a row.
 export const nestedRows = (children: ReactNode): ReactElement[] =>

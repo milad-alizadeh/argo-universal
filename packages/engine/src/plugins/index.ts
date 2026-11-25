@@ -4,6 +4,8 @@ export { createPluginRuntime } from './runtime/create-runtime';
 
 export { PluginService } from './service';
 
+export type { DraftSessions } from './drafts/draft-review';
+
 export { PluginOperationService } from './operations';
 
 export { LoaderPages, type Asking } from './pages';

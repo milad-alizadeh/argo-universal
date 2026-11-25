@@ -65,6 +65,7 @@ const startEngine = (input: EngineProcessInput): ChildHandle =>
     {
       label: 'Engine',
       entry: input.entry ?? engineEntry,
+      args: input.watch ? ['--watch'] : [],
       execArgv: [
         '--import',
         import.meta.resolve('tsx'),

@@ -32,6 +32,7 @@ function menuEntry(entry: DeclaredEntry): MenuEntry {
 
   return {
     id: entry.id,
+    wrap: entry.wrap,
     label: entry.label,
     accessibilityLabel: submenuLabel(entry),
     icon: entry.icon,

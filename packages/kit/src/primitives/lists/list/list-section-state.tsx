@@ -9,6 +9,7 @@ import { SectionHeader } from './list-section-parts';
 
 export interface SectionState {
   key: string;
+  wrapDrawing?: ListSectionProps['wrapDrawing'];
   // The Section's own `id`, which a move reports.
   id?: string;
   title?: string;
@@ -26,6 +27,7 @@ export function prepareSection(
 ): SectionState {
   return {
     key,
+    wrapDrawing: props.wrapDrawing,
     id: props.id,
     title: props.title,
     children: props.isExpanded === false ? null : props.children,

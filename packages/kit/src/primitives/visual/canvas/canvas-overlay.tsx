@@ -30,7 +30,11 @@ const tooltip = {
   className: 'bg-primary rounded-sm px-2 py-1 shadow-control',
 } as const;
 
-function selectionBounds({ entry, view, bounds }: Props): Bounds | undefined {
+export function selectionBounds({
+  entry,
+  view,
+  bounds,
+}: Props): Bounds | undefined {
   if (bounds) return bounds;
 
   if (!entry) return undefined;

@@ -26,7 +26,11 @@ export function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
       {...focusTracking(focus)}
     >
       <View className={choiceItemClassName(focus.keyboardFocus)}>
-        <MenuRadioContent label={choice.label} icon={choice.icon} />
+        <MenuRadioContent
+          label={choice.label}
+          icon={choice.icon}
+          detail={choice.detail}
+        />
       </View>
     </RadixMenu.RadioItem>
   );
@@ -71,20 +75,33 @@ function choiceItemClassName(keyboardFocus: boolean): string {
 function MenuRadioContent(props: {
   label: string;
   icon?: IconName;
+  detail?: string;
 }): React.JSX.Element {
   return (
     <>
       <RadioIndicator />
       <RadioIcon icon={props.icon} />
-      <RadioLabel label={props.label} />
+      <RadioLabel label={props.label} detail={props.detail} />
+      {props.detail && (
+        <Text role="badge" tone="warning">
+          {props.detail}
+        </Text>
+      )}
     </>
   );
 }
 
-function RadioLabel(props: { label: string }): React.JSX.Element {
+function RadioLabel(props: {
+  label: string;
+  detail?: string;
+}): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="body" className={actionItemTextClassName}>
+      <Text
+        role="body"
+        tone={props.detail ? 'muted' : undefined}
+        className={props.detail ? 'select-none' : actionItemTextClassName}
+      >
         {props.label}
       </Text>
     </View>

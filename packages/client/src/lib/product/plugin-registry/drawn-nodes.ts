@@ -1,7 +1,13 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { ReactElement } from 'react';
+import { DraftWrappers } from './draft-node';
+import type { DraftSeam } from './draft-seam';
 
-type Drawn = { node: WireNode; element: ReactElement | null };
+type Drawn = {
+  node: WireNode;
+  wrapping: string;
+  element: ReactElement | null;
+};
 
 // Whether `key` is `other`, sits inside it, or holds it.
 const related = (key: string, other: string): boolean =>
@@ -18,15 +24,28 @@ const within = (child: string, key: string): boolean =>
 export class DrawnNodes {
   private readonly drawn = new Map<string, Drawn>();
 
-  // The element `node` drew as at `key`, or undefined when it has none.
-  public get(key: string, node: WireNode): ReactElement | null | undefined {
-    const drawn = this.drawn.get(key);
+  // The seam these elements were framed by: a kept element carries its frame, so another seam needs another cache.
+  public readonly wrappers: DraftWrappers;
 
-    return drawn?.node === node ? drawn.element : undefined;
+  public constructor(public readonly seam: DraftSeam | null = null) {
+    this.wrappers = new DraftWrappers(seam);
   }
 
-  public set(key: string, node: WireNode, element: ReactElement | null): void {
-    this.drawn.set(key, { node, element });
+  // The element `node` drew as at `key` in these wrappers, or undefined when it has none.
+  public get(
+    key: string,
+    node: WireNode,
+    wrapping: string,
+  ): ReactElement | null | undefined {
+    const drawn = this.drawn.get(key);
+
+    return drawn?.node === node && drawn.wrapping === wrapping
+      ? drawn.element
+      : undefined;
+  }
+
+  public set(key: string, drawn: Drawn): void {
+    this.drawn.set(key, drawn);
   }
 
   // The node at `key` draws again, with the nodes around it that hold it and the nodes inside it.
@@ -39,5 +58,7 @@ export class DrawnNodes {
   public keep(live: ReadonlySet<string>): void {
     for (const key of this.drawn.keys())
       if (!live.has(key)) this.drawn.delete(key);
+
+    this.wrappers.keep(live);
   }
 }

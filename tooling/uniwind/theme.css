@@ -243,6 +243,20 @@
   --spacing-sidebar-heading-gap: 8px;
   --spacing-sidebar-section-gap: 16px;
   --spacing-composer-tray-row: 32px;
+  --container-draft-feedback: 398px;
+  --container-draft-feedback-compact: 342px;
+  --radius-draft-feedback: 15px;
+  --text-draft-feedback-title: 14px;
+  --leading-draft-feedback-title: 19px;
+  --text-draft-feedback: 13px;
+  --leading-draft-feedback: 18px;
+  --spacing-draft-comment-toggle: 34px;
+  --spacing-draft-comment-pin: 23px;
+  --radius-draft-comment-pin-tail: 3px;
+  --color-draft-comment-selected: #424242;
+  --color-draft-comment-border: #858585;
+  --color-draft-comment-pin: #ff9d00;
+  --color-draft-comment-pin-foreground: #211400;
   /* Shadow colours (6%, 8% and 14% black) for every light drop shadow; the
      glass highlights and dark-mode edges keep their own. Hex, because
      Uniwind's native box-shadow parser adds px to the bare numbers in

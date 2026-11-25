@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { composeEngine } from '@repo/engine/compose';
-import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
+import {
+  hasIsolatedRuntimeDirectory,
+  resolveRuntimeDirectory,
+} from '@repo/engine/server-runtime';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
 import { firstPartyPluginsDirectory } from './first-party-plugins';
@@ -20,6 +23,9 @@ const port = z.coerce
 
 const home = resolveRuntimeDirectory();
 
+// Node consumes its watch option before starting the Engine script.
+const watchPlugins = process.argv.includes('--watch', 2);
+
 const engine = composeEngine({
   report: reportEngineLoad(),
   cliEntry: fileURLToPath(
@@ -31,8 +37,8 @@ const engine = composeEngine({
   port,
   version: packageJson.version,
   firstPartyPluginsDirectory,
-  // Only the dev Server (`node --watch`) rebuilds a Plugin when its sources change.
-  watchPlugins: process.execArgv.includes('--watch'),
+  watchPlugins,
+  acceptLinkedDevPlugins: watchPlugins && hasIsolatedRuntimeDirectory(home),
   startedAt: new Date().toISOString(),
 });
 

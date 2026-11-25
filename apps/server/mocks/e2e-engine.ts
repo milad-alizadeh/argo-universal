@@ -76,6 +76,9 @@ seed.$client.close();
 // A scenario that needs GitHub writes its fixture beside the Server; every other scenario reaches the real network.
 const githubFixture = process.env.ARGO_E2E_GITHUB;
 
+// A scenario that needs dev Plugins writes this file beside the Server; the Engine then watches Plugin sources, as `node --watch` does.
+const devPlugins = process.env.ARGO_E2E_DEV_PLUGINS;
+
 const pluginNetwork =
   githubFixture && existsSync(githubFixture)
     ? await startGitHubFixture(githubFixture)
@@ -88,6 +91,7 @@ const engine = composeEngine({
   version,
   firstPartyPluginsDirectory: join(home, 'shipped-plugins'),
   pluginNetwork,
+  watchPlugins: devPlugins !== undefined && existsSync(devPlugins),
   startedAt,
   now: Date.now,
   createId: randomUUID,

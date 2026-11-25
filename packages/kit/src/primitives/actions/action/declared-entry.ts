@@ -1,6 +1,10 @@
+import type { KitDrawingWrapper } from '../../../wrapped-component';
 import type { PressActionProps, SubmenuActionProps } from './action-props';
 
-export type DeclaredAction = PressActionProps & { id: string };
+export type DeclaredAction = PressActionProps & {
+  id: string;
+  wrap?: KitDrawingWrapper;
+};
 
 // A submenu Section's Actions, each with an id under the submenu's.
 export interface DeclaredSection {
@@ -10,6 +14,7 @@ export interface DeclaredSection {
 
 export type DeclaredSubmenu = Omit<SubmenuActionProps, 'children'> & {
   id: string;
+  wrap?: KitDrawingWrapper;
   sections: DeclaredSection[];
 };
 

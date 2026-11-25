@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { OutsideColumn } from '../../../content-column/content-column';
 import { cn } from '../../../utils';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { useBoardEnd } from './list-board-end';
 import { DragScrollView } from './list-drag-scroll-view';
 import { ListHeader } from './list-header';
@@ -61,12 +62,13 @@ function BoardLane({ lane, scroll }: LaneProps): ReactElement {
   const laneRef = useRef<ViewInstance>(null);
   const refuses = useLaneRefuses(sectionKey(lane.key));
 
-  return (
+  return wrapKitDrawing(
+    lane.wrapDrawing,
     <View ref={laneRef} collapsable={false} {...laneLook(lane.title, refuses)}>
       {lane.header}
       <LaneBody lane={lane} laneRef={laneRef} scroll={scroll} />
       {lane.footer}
-    </View>
+    </View>,
   );
 }
 

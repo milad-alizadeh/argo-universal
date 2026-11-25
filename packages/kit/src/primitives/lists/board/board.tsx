@@ -37,6 +37,7 @@ const cardRow = ({
   movesTo,
   column: _column,
   pending,
+  wrap,
   ...card
 }: BoardCard): ReactElement => (
   <ListItem
@@ -44,6 +45,7 @@ const cardRow = ({
     {...card}
     {...menuButton({ onPress: card.onPress, movesTo })}
     trailing={pendingMark(pending)}
+    wrapDrawing={wrap}
   />
 );
 
@@ -51,6 +53,7 @@ const columnLane = (column: BoardColumn): ReactElement => (
   <List.Section
     key={column.key}
     id={column.id}
+    wrapDrawing={column.wrap}
     title={column.title}
     count={column.count ?? column.cards.length}
   >

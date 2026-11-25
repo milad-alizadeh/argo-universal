@@ -624,14 +624,16 @@ Plugins refuse by returning an event's refusal answer. `argo.on` accepts a Hook 
 
 ## Dev reload
 
-To preview a Plugin on a development Server, link its folder into that Server's Plugin directory. For the default Server home, run from the repository root:
+To preview a Plugin on a development Server, set `ARGO_HOME` to a separate directory. Run from the repository root:
 
 ```sh
-mkdir -p ~/.argo/plugins
-ln -s "$PWD/plugins/my-plugin" ~/.argo/plugins/my-plugin
+export ARGO_HOME="$(mktemp -d)"
+mkdir -p "$ARGO_HOME/plugins"
+ln -s "$PWD/plugins/my-plugin" "$ARGO_HOME/plugins/my-plugin"
+pnpm --filter @repo/server dev
 ```
 
-Use the Server's configured home if it differs. If the destination exists, use the existing link only if it points to this checkout. Open the Plugin in the App and check the affected states.
+Set `ARGO_SERVER_PORT` to a free port if another Server uses the default port. Connect the App to the dev Server and check the affected states. Stop this Server when the preview is done.
 
 While any Turn runs, including a subagent's, the Server keeps the current Plugin worker and defers source rebuild results.
 After active Turns end, the Server rebuilds the latest source once. Intermediate syntax errors do not stop the current worker.

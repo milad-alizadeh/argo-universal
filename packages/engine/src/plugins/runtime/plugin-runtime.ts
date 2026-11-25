@@ -101,6 +101,10 @@ export class PluginRuntime {
     this.plugins.turnsChanged(active);
   }
 
+  showDraft(pluginId: string): Promise<string | null> {
+    return this.plugins.showDraft(pluginId);
+  }
+
   public renderFallback(fallback: Fallback): void {
     logFallback(this.log, 'runtime', fallback);
   }

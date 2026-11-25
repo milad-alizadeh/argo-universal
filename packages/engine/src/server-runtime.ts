@@ -1,13 +1,14 @@
 import {
   mkdirSync,
   readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
 import { productCompatibility } from '@repo/contracts/product-identity';
 import { jsonCodec } from './lib/json-codec';
@@ -23,10 +24,26 @@ let unrecognisedAddresses = 0;
 // The last damaged text reported, so a poller reports one damaged file once.
 let lastUnrecognisedText: string | null = null;
 
+const defaultRuntimeDirectory = (): string =>
+  join(homedir(), productCompatibility.directory);
+
 // The Server and desktop share the ARGO_HOME boundary, including an empty override.
 export const resolveRuntimeDirectory = (): string =>
   process.env[productCompatibility.environment.home] ??
-  join(homedir(), productCompatibility.directory);
+  defaultRuntimeDirectory();
+
+function canonicalDirectory(directory: string): string {
+  try {
+    return realpathSync(directory);
+  } catch {
+    return resolve(directory);
+  }
+}
+
+// A watch Server can admit explicitly linked dev Plugins only in a separate ARGO_HOME.
+export const hasIsolatedRuntimeDirectory = (home: string): boolean =>
+  Boolean(process.env[productCompatibility.environment.home]) &&
+  canonicalDirectory(home) !== canonicalDirectory(defaultRuntimeDirectory());
 
 // The user token's file, which the Server makes on its first start (ADR-0044).
 export const controlTokenPath = (home: string): string =>

@@ -1,5 +1,10 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
+import { kitChildrenOf } from '../../../typed-children';
+import {
+  kitDrawingWrapper,
+  type KitDrawingWrapper,
+} from '../../../wrapped-component';
 import type {
   TableCellProps,
   TableColumn,
@@ -8,12 +13,14 @@ import type {
 } from './table-props';
 
 export interface TableCell {
+  wrap?: KitDrawingWrapper;
   text: string;
   // A Pill, Label, StatusDot or Text drawn in the text's place.
   content?: ReactNode;
 }
 
 export interface TableRow {
+  wrap?: KitDrawingWrapper;
   key: string;
   id: string;
   accessibilityLabel: string;
@@ -39,22 +46,25 @@ export function TableCellPart(_props: TableCellProps): null {
   return null;
 }
 
-const isRow = (child: ReactNode): child is ReactElement<TableRowProps> =>
-  isValidElement(child) && child.type === TableRowPart;
-
-const isCell = (child: ReactNode): child is ReactElement<TableCellProps> =>
-  isValidElement(child) && child.type === TableCellPart;
-
 function cellEntry(child: ReactElement<TableCellProps>): [string, TableCell] {
   const { column, text, children } = child.props;
   const content = flattenedChildren(children);
 
   // A Plugin sends an empty children array for a text-only cell.
-  return [column, content.length > 0 ? { text, content } : { text }];
+  return [
+    column,
+    {
+      text,
+      wrap: kitDrawingWrapper(child),
+      ...(content.length > 0 && { content }),
+    },
+  ];
 }
 
 const cellsOf = (children: ReactNode): Map<string, TableCell> =>
-  new Map(flattenedChildren(children).filter(isCell).map(cellEntry));
+  new Map(
+    kitChildrenOf<TableCellProps>(children, TableCellPart).map(cellEntry),
+  );
 
 const spokenRow = (
   columns: TableProps['columns'],
@@ -75,6 +85,7 @@ function rowOf(
 
   return {
     ...row,
+    wrap: kitDrawingWrapper(child),
     key: String(child.key ?? index),
     cells,
     accessibilityLabel: accessibilityLabel ?? spokenRow(columns, cells),
@@ -86,9 +97,9 @@ export const tableRows = (
   children: ReactNode,
   columns: TableProps['columns'],
 ): TableRow[] =>
-  flattenedChildren(children)
-    .filter(isRow)
-    .map((child, index) => rowOf(child, index, columns));
+  kitChildrenOf<TableRowProps>(children, TableRowPart).map((child, index) =>
+    rowOf(child, index, columns),
+  );
 
 const positionRoles = ['title', 'subtitle'] as const;
 

@@ -8,6 +8,7 @@ import {
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
 import { Fragment, createElement, type ElementType } from 'react';
+import { draftWrapping, type DraftWrapping } from './draft-node';
 import { pluginEntries } from './plugin-entries';
 import type * as Rendering from './plugin-rendering';
 
@@ -19,18 +20,20 @@ type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
  * The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything
  * it could not draw is already its "Update Argo" note. A node it left as it was draws as the element it drew before,
  * so its row does not draw again. Kit components read their children's types and props, so a node draws as its kit
- * element itself, never inside a wrapper of its own.
+ * element itself, or as the one wrapper a Draft gives it (draft-node.tsx), which a parent reads as that kit element.
  */
 export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
-  const drawn = context.drawn.get(context.key, node);
+  const wrapping = draftWrapping(node, context);
+  const drawn = context.drawn.get(context.key, node, wrapping.id);
 
   if (drawn !== undefined) return drawn;
 
-  const element = drawNode({ node, context });
-  context.drawn.set(context.key, node, element);
+  const element = drawNode({ node, context, wrapping });
+
+  context.drawn.set(context.key, { node, wrapping: wrapping.id, element });
 
   return element;
 }
@@ -38,15 +41,18 @@ export function RenderNode({
 function drawNode({
   node,
   context,
-}: RenderNodeProps): React.JSX.Element | null {
+  wrapping,
+}: RenderNodeProps & { wrapping: DraftWrapping }): React.JSX.Element | null {
   const definition = kitComponent(node.type);
-  const component = registry.get(node.type);
+  const drawing = registry.get(node.type);
 
-  if (!definition || !component) return null;
+  if (!definition || !drawing) return null;
 
   const input = { node, definition, context, source: node.props };
 
   const slots = renderedSlots(node, definition, context);
+
+  const component = context.drawn.wrappers.of(drawing, node, wrapping);
 
   return renderComponent(component, input, slots);
 }

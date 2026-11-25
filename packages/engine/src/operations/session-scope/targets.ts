@@ -43,6 +43,9 @@ const defaults: Defaults = {
   'session.setTodos': callerSessionParam,
   'session.setTodoStep': callerSessionParam,
   'plugin.new': callerSessionParam,
+  'plugin.draft.show': ownSessionOnly(
+    'A Session records only itself as the one drawing a Draft; an App names any Session',
+  ),
   'conversation.end': callerSessionParam,
   'run.start': callerSessionParam,
   'run.stop': callerSessionParam,
@@ -54,7 +57,7 @@ const defaults: Defaults = {
   'run.draft': callerSessionParam,
   'terminal.read': callerSessionParam,
   'terminal.send': callerSessionParam,
-  'conversation.hangUp': ownSessionOnly,
+  'conversation.hangUp': ownSessionOnly(),
 };
 
 export function scopedParams<Id extends OperationId>(

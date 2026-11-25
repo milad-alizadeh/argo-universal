@@ -8,6 +8,7 @@ import {
   unique,
 } from 'drizzle-orm/sqlite-core';
 import { project } from '#schema-projects';
+import { session } from '#schema-sessions';
 
 /*
  * A row exists once the user changes a Plugin; without one it is on, with every setting at its default.
@@ -66,3 +67,19 @@ export const projectAccount = snakeCase.table(
     }).onDelete('cascade'),
   ],
 );
+
+/*
+ * The Draft of a dev Plugin (ADR-0057): the Session whose Agent draws it, and the author's last pick, one
+ * Variant per region, with every comment sent beside it. Read back by the Agent so it resumes after a restart.
+ */
+export const pluginDraft = snakeCase.table('plugin_draft', {
+  pluginId: text().primaryKey(),
+  sessionId: text().references(() => session.id, { onDelete: 'set null' }),
+  picks: text({ mode: 'json' })
+    .notNull()
+    .default(sql`'[]'`),
+  comments: text({ mode: 'json' })
+    .notNull()
+    .default(sql`'[]'`),
+  chosenAt: integer(),
+});

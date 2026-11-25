@@ -37,10 +37,21 @@ export function run(
   directory: string,
   timeout = 20_000,
 ): Promise<CommandResult> {
+  return runWith([command, directory], timeout);
+}
+
+// Runs `validate <directory> --ship`.
+export const runShip = (
+  directory: string,
+  timeout = 20_000,
+): Promise<CommandResult> =>
+  runWith(['validate', directory, '--ship'], timeout);
+
+function runWith(args: string[], timeout: number): Promise<CommandResult> {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
-      [cli, 'plugin', command, directory],
+      [cli, 'plugin', ...args],
       { timeout, cwd: tmpdir() },
       (error, output, stderr) =>
         resolve({ code: errorCode(error), output: output + stderr }),

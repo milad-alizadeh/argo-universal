@@ -7,9 +7,10 @@ import {
   tag,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
-import type {
-  SegmentedControlProps,
-  SegmentOption,
+import {
+  segmentTitle,
+  type SegmentedControlProps,
+  type SegmentOption,
 } from './segmented-control-props';
 
 export function SegmentedControlDrawing(
@@ -40,7 +41,7 @@ const pickerProps = (
 function Option(props: SegmentOption): ReactElement {
   return (
     <Text modifiers={[tag(props.value), disabled(props.disabled === true)]}>
-      {props.label}
+      {segmentTitle(props)}
     </Text>
   );
 }

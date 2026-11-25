@@ -7,6 +7,7 @@ const appOnly = new Set([
   'session.handoff',
   'session.submit',
   'session.queue',
+  'plugin.draft.choose',
   'session.confirmSkill',
   'conversation.status',
   'conversation.start',

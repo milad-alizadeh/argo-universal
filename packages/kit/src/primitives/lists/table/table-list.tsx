@@ -1,9 +1,10 @@
-import { use, type ReactElement } from 'react';
+import { createElement, Fragment, use, type ReactElement } from 'react';
 import type { ListLook } from '#kit/list-look';
 import { useListLook } from '#kit/list-look-context';
 import { ContextActions } from '#primitives/actions/action';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
+import { wrapKitDrawing } from '../../../wrapped-component';
 import { nodeValue } from './table-cell';
 import type { TableProps } from './table-props';
 import { TableRowDetail, TableRowDetailHost } from './table-row-detail';
@@ -58,10 +59,11 @@ type RowProps = ListProps & {
 };
 
 function CompactRow(props: RowProps): ReactElement {
-  return (
+  return wrapKitDrawing(
+    props.row.wrap,
     <ContextActions actions={props.row.actions}>
       <ListItem {...useItemProps(props)} />
-    </ContextActions>
+    </ContextActions>,
   );
 }
 
@@ -76,6 +78,7 @@ function useItemProps({ roles, row, ...props }: RowProps): ListItemProps {
     accessibilityLabel: row.accessibilityLabel,
     onPress,
     disclosure: look.pushChevron && !!onPress,
+    wrapLabels: cellLabels(row, roles, look),
     ...lines(row, roles, look),
   };
 }
@@ -95,6 +98,29 @@ function useRowOpen(props: RowProps): (() => void) | undefined {
     );
 }
 
+const underTitle = 'under-title';
+
+function cellLabels(
+  row: TableRow,
+  roles: CompactColumns,
+  { valuePlacement }: ListLook,
+): ListItemProps['wrapLabels'] {
+  const title = cellOf(row, roles.title).wrap;
+  const subtitle = cellOf(row, roles.subtitle);
+  const value = cellOf(row, roles.value);
+
+  const subtitleWrap =
+    subtitle.wrap ??
+    (valuePlacement === underTitle && !value.content ? value.wrap : undefined);
+
+  return {
+    title,
+    subtitle: subtitleWrap,
+    value:
+      valuePlacement === underTitle || value.content ? undefined : value.wrap,
+  };
+}
+
 type Lines = Pick<ListItemProps, 'subtitle' | 'value' | 'trailing' | 'meta'>;
 
 // Android writes the value after the subtitle, "main · 2 min ago", as its other ListItems do.
@@ -103,7 +129,7 @@ const textValue = (
   value: string,
   { valuePlacement }: ListLook,
 ): Lines =>
-  valuePlacement === 'under-title'
+  valuePlacement === underTitle
     ? { subtitle: [subtitle, value].filter(Boolean).join(' · ') }
     : { subtitle, value };
 
@@ -112,7 +138,15 @@ function lines(row: TableRow, roles: CompactColumns, look: ListLook): Lines {
   const value = cellOf(row, roles.value);
 
   if (value.content)
-    return { subtitle, ...nodeValue(value.content, look.valuePlacement) };
+    return {
+      subtitle,
+      ...nodeValue(
+        value.wrap
+          ? value.wrap(createElement(Fragment, null, value.content))
+          : value.content,
+        look.valuePlacement,
+      ),
+    };
 
   return textValue(subtitle, value.text, look);
 }

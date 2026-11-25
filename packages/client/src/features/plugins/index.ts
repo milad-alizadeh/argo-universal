@@ -84,3 +84,5 @@ export { useDeclaredItems } from './hooks/use-declared-items';
 export { type PluginEntry, usePluginEntries } from './hooks/use-plugin-entries';
 
 export { invalidatePluginState } from './utils/plugin-state-refresh';
+
+export { DraftPage } from './components/draft-page/draft-page';

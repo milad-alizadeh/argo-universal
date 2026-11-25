@@ -1,4 +1,6 @@
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
+import { isKitElement } from '../../../typed-children';
+import { kitDrawingWrapper } from '../../../wrapped-component';
 import type {
   CanvasDrawing,
   DrawingData,
@@ -19,32 +21,32 @@ import {
 } from './canvas-shapes';
 
 const rect = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<RectProps>(child) && child.type === CanvasRect
+  isKitElement<RectProps>(child, CanvasRect)
     ? { kind: 'rect', props: child.props }
     : undefined;
 
 const circle = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<CircleProps>(child) && child.type === CanvasCircle
+  isKitElement<CircleProps>(child, CanvasCircle)
     ? { kind: 'circle', props: child.props }
     : undefined;
 
 const line = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<LineProps>(child) && child.type === CanvasLine
+  isKitElement<LineProps>(child, CanvasLine)
     ? { kind: 'line', props: child.props }
     : undefined;
 
 const path = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<PathProps>(child) && child.type === CanvasPath
+  isKitElement<PathProps>(child, CanvasPath)
     ? { kind: 'path', props: child.props }
     : undefined;
 
 const text = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<CanvasTextProps>(child) && child.type === CanvasText
+  isKitElement<CanvasTextProps>(child, CanvasText)
     ? { kind: 'text', props: child.props }
     : undefined;
 
 const group = (child: ReactNode): DrawingData | undefined =>
-  isValidElement<GroupProps>(child) && child.type === CanvasGroup
+  isKitElement<GroupProps>(child, CanvasGroup)
     ? {
         kind: 'group',
         props: child.props,
@@ -86,5 +88,5 @@ function keyedDrawing(child: React.ReactElement): CanvasDrawing {
 
   if (!data) throw new Error('Canvas only accepts drawing children');
 
-  return { ...data, key: String(child.key) };
+  return { ...data, key: String(child.key), wrap: kitDrawingWrapper(child) };
 }

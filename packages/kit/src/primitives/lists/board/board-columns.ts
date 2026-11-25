@@ -1,5 +1,9 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { flattenedChildren } from '../../../flattened-children';
+import type { ReactElement, ReactNode } from 'react';
+import { kitChildrenOf } from '../../../typed-children';
+import {
+  kitDrawingWrapper,
+  type KitDrawingWrapper,
+} from '../../../wrapped-component';
 import type { BoardCardProps, BoardColumnProps } from './board-props';
 
 // A column the Board reads: its id, title, count and cards.
@@ -13,10 +17,12 @@ export function BoardCardPart(_props: BoardCardProps): null {
 }
 
 export interface BoardCard extends BoardCardProps {
+  wrap?: KitDrawingWrapper;
   key: string;
 }
 
 export interface BoardColumn {
+  wrap?: KitDrawingWrapper;
   key: string;
   id: string;
   title: string;
@@ -24,14 +30,9 @@ export interface BoardColumn {
   cards: BoardCard[];
 }
 
-const isColumn = (child: ReactNode): child is ReactElement<BoardColumnProps> =>
-  isValidElement(child) && child.type === BoardColumnPart;
-
-const isCard = (child: ReactNode): child is ReactElement<BoardCardProps> =>
-  isValidElement(child) && child.type === BoardCardPart;
-
 const cardOf = (child: ReactElement<BoardCardProps>): BoardCard => ({
   ...child.props,
+  wrap: kitDrawingWrapper(child),
   key: String(child.key ?? child.props.id),
 });
 
@@ -45,8 +46,15 @@ const written = (child: ReactElement<BoardColumnProps>): WrittenColumn => {
   const { id, title, count, children } = child.props;
 
   return {
-    column: { key: String(child.key ?? id), id, title, count, cards: [] },
-    cards: flattenedChildren(children).filter(isCard).map(cardOf),
+    column: {
+      key: String(child.key ?? id),
+      id,
+      title,
+      count,
+      cards: [],
+      wrap: kitDrawingWrapper(child),
+    },
+    cards: kitChildrenOf<BoardCardProps>(children, BoardCardPart).map(cardOf),
   };
 };
 
@@ -67,7 +75,9 @@ function placeCards(read: readonly WrittenColumn[]): void {
  * it is written.
  */
 export function boardColumns(children: ReactNode): BoardColumn[] {
-  const read = flattenedChildren(children).filter(isColumn).map(written);
+  const read = kitChildrenOf<BoardColumnProps>(children, BoardColumnPart).map(
+    written,
+  );
 
   placeCards(read);
 

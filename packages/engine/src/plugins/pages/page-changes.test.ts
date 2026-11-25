@@ -74,3 +74,31 @@ it('tells its listeners when a new worker of a Plugin starts running, so its kep
 
   expect(marked).toEqual(['tracker']);
 });
+
+it('names the Draft region the Agent is writing on the mark of the worker that follows', () => {
+  const { changes, workers } = pageChanges();
+  const marked: (string | undefined)[] = [];
+
+  changes.listen((_pluginId, _addresses, region) => marked.push(region));
+  workers.run('tracker', 1);
+
+  const done = changes.drawing('tracker', 'list');
+
+  changes.restarted('tracker');
+  changes.restarted('tracker');
+  done();
+
+  expect(marked).toEqual(['list', undefined]);
+});
+
+it('forgets the region when the Draft swapped no worker', () => {
+  const { changes, workers } = pageChanges();
+  const marked: (string | undefined)[] = [];
+
+  changes.listen((_pluginId, _addresses, region) => marked.push(region));
+  workers.run('tracker', 1);
+  changes.drawing('tracker', 'list')();
+  changes.restarted('tracker');
+
+  expect(marked).toEqual([undefined]);
+});

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   context,
   build,
@@ -7,6 +9,7 @@ import {
   type OutputFile,
   type BuildOptions,
 } from 'esbuild';
+import { requirePluginFile } from '../access/plugin-files';
 import type { PluginEntry } from '../protocol/runtime';
 import { pluginFiles } from './files';
 import { DevVersion } from './version';
@@ -59,7 +62,7 @@ function watchPlugins(directory: string, callbacks: BundleCallbacks): Plugin[] {
 
   return [
     pluginFiles(directory, version.record),
-    reloadPlugin({ callbacks, version }),
+    reloadPlugin(directory, { callbacks, version }),
   ];
 }
 
@@ -68,13 +71,28 @@ const registrationSource = (path: string): string =>
 
 type Completion = { callbacks: BundleCallbacks; version: DevVersion };
 
-const reloadPlugin = (completion: Completion): Plugin => ({
+const reloadPlugin = (directory: string, completion: Completion): Plugin => ({
   name: 'argo-reload',
   setup: (api): void => {
-    api.onStart(completion.version.reset);
+    api.onStart(() => recordManifest(directory, completion.version));
     api.onEnd((result) => completed(result, completion));
   },
 });
+
+// Manifest-only edits still change what the open App can draw.
+async function recordManifest(
+  directory: string,
+  version: DevVersion,
+): Promise<void> {
+  version.reset();
+
+  const path = await requirePluginFile(
+    directory,
+    join(directory, 'plugin.json'),
+  );
+
+  version.record(path, await readFile(path, 'utf8'));
+}
 
 function completed(result: BuildResult, completion: Completion): void {
   if (result.errors.length) {

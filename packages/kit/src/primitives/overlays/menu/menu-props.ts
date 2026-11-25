@@ -3,6 +3,7 @@ import type { ActionShortcut } from '#primitives/content/kbd';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
+import type { KitDrawingWrapper } from '../../../wrapped-component';
 import type { KitProps } from '../../kit-props';
 
 type DerivedMenu<Value extends string = string> = KitProps<'Menu', Value>;
@@ -13,6 +14,7 @@ type Actions = Extract<DerivedMenu, { actions: readonly unknown[] }>;
 export type MenuAction = Actions['actions'][number] & {
   id?: string;
   content?: ReactNode;
+  wrap?: KitDrawingWrapper;
   section?: { title?: string };
   shortcut?: ActionShortcut;
   tone?: 'danger';
@@ -25,6 +27,7 @@ export type MenuAction = Actions['actions'][number] & {
 
 // Kit-only: a row that opens a nested menu of its own rows, as a submenu Action does in a header's overflow menu.
 export interface MenuSubmenu {
+  wrap?: KitDrawingWrapper;
   id?: string;
   label: string;
   // The row's spoken name when it says more than the label, such as the count.
@@ -52,7 +55,7 @@ export function isMenuSubmenu(entry: MenuEntry): entry is MenuSubmenu {
 export type MenuOption<Value extends string> = Extract<
   DerivedMenu<Value>,
   { options: readonly unknown[] }
->['options'][number];
+>['options'][number] & { detail?: string };
 
 /*
  * The labelled trigger a Menu, Picker or Composer overlay opens from: a leading icon, the label and a down chevron.
@@ -85,16 +88,20 @@ type MenuTrigger = {
 
 export const menuLoadingLabel = 'Loading options…';
 
-export type ChoiceMenuProps<Value extends string> = Extract<
-  DerivedMenu<Value>,
-  { options: readonly unknown[] }
+export type ChoiceMenuProps<Value extends string> = Omit<
+  Extract<DerivedMenu<Value>, { options: readonly unknown[] }>,
+  'options'
 > &
-  MenuTrigger;
+  MenuTrigger & { options: readonly MenuOption<Value>[] };
 
-export type MenuChoiceGroup = Extract<
+type DerivedGroup = Extract<
   DerivedMenu,
   { groups: readonly unknown[] }
 >['groups'][number];
+
+export type MenuChoiceGroup = Omit<DerivedGroup, 'options'> & {
+  options: readonly MenuOption<string>[];
+};
 
 export type GroupedChoiceMenuProps = Extract<
   DerivedMenu,

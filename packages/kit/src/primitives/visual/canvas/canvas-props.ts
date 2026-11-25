@@ -1,3 +1,4 @@
+import type { KitDrawingWrapper } from '../../../wrapped-component';
 import type { KitProps } from '../../kit-props';
 
 export type CanvasProps = KitProps<'Canvas'>;
@@ -22,7 +23,10 @@ export type DrawingData =
   | { kind: 'text'; props: CanvasTextProps }
   | { kind: 'group'; props: GroupProps; children: CanvasDrawing[] };
 
-export type CanvasDrawing = DrawingData & { key: string };
+export type CanvasDrawing = DrawingData & {
+  key: string;
+  wrap?: KitDrawingWrapper;
+};
 
 export interface Point {
   x: number;

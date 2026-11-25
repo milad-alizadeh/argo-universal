@@ -1,4 +1,7 @@
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { PluginGuide } from '@repo/contracts/operations/plugin-guide';
+import { draftStateIds } from '@repo/contracts/plugins/drafts';
 import { kitComponents } from '@repo/contracts/plugins/kit';
 import { expect, it } from 'vitest';
 import { runOperation } from '#mocks/operations';
@@ -56,4 +59,39 @@ it('is found by what an Agent filters on when asked to build a Plugin', async ()
     expect(await found(filter)).toContain('plugin.guide');
 
   expect(await found('scaffold')).toContain('plugin.new');
+});
+
+it('answers the Draft step, naming each Operation, the ship gate and the Variant key, before the step that writes real data code', async () => {
+  const text = await guide({});
+
+  for (const phrase of [
+    'plugin.draft.show',
+    'plugin.draft.pick',
+    'argo plugin validate --ship',
+    'draftVariant.<regionId>',
+  ])
+    expect(text).toContain(phrase);
+
+  // Step 3 points to the Drafts section; step 4 is the one that writes the real Plugin.
+  expect(text.indexOf('`## Drafts`')).toBeLessThan(text.indexOf('\n4. '));
+});
+
+it('answers the minimum state set, every state the contracts declare, once', async () => {
+  const text = await guide({});
+
+  for (const id of draftStateIds)
+    expect(text.split(`- \`${id}\`: `)).toHaveLength(2);
+});
+
+it('is the definition the Draft authoring doc points to, without restating the state set', async () => {
+  const doc = await readFile(
+    fileURLToPath(
+      new URL('../../../../docs/agents/plugin-drafts.md', import.meta.url),
+    ),
+    'utf8',
+  );
+
+  expect(doc).toContain(guideId);
+
+  for (const id of draftStateIds) expect(doc).not.toContain(`- \`${id}\`: `);
 });

@@ -2,10 +2,26 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import { PluginTreeContext } from '@repo/kit/plugin-tree-context';
 import { SvgBudget } from '@repo/kit/primitives/visual';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useReducedMotionNow } from '@repo/kit/use-reduced-motion-now';
+import {
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useRef,
+} from 'react';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
 import { pageCallRefused } from './component-event-props';
+import {
+  drawn as drawnDraft,
+  startDrawing,
+  type DraftView,
+  type DraftNaming,
+} from './draft-drawing';
+import { DraftDrawingContext } from './draft-node';
+import { DraftSeamContext } from './draft-seam';
 import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
 import type { OnPageCall } from './plugin-rendering';
@@ -20,6 +36,7 @@ export interface PluginTreeProps {
   onOpenPage?: OpenPluginPage;
   // A Loader page's Page state changes and Operation calls.
   onPageCall?: OnPageCall;
+  draft?: { naming: DraftNaming | null; regions?: readonly string[] };
 }
 
 /*
@@ -41,6 +58,8 @@ function useLatest<Args extends unknown[], Result>(
   );
 }
 
+const none: ReadonlySet<string> = new Set();
+
 type TreeIdentity = Pick<PluginTreeProps, 'pluginId'> & { key: string };
 
 function treeIdentity({ root, pluginId }: PluginTreeProps): TreeIdentity {
@@ -49,7 +68,12 @@ function treeIdentity({ root, pluginId }: PluginTreeProps): TreeIdentity {
 
 // One tree: overlays are ordinary nodes in it.
 export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
-  const [drawn] = useState(() => new DrawnNodes());
+  const seam = useContext(DraftSeamContext);
+  const [kept, keep] = useState(() => new DrawnNodes(seam));
+  const drawn = kept.seam === seam ? kept : new DrawnNodes(seam);
+  const draft = useDraftDrawing(props);
+
+  if (drawn !== kept) keep(drawn);
 
   const context = {
     ...treeIdentity(props),
@@ -57,11 +81,42 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
     controls: useComponentEvents(props.root, drawn),
     pageCall: useLatest(props.onPageCall, pageCallRefused),
     drawn,
+    draft,
+    seam,
   };
+
+  // The wrappers read this from inside, and only a frame arming or dissolving, or the motion setting, changes it.
+  const drawing = useMemo(
+    () => ({ reduced: draft?.reduced ?? false, framed: draft?.framed ?? none }),
+    [draft?.reduced, draft?.framed],
+  );
 
   return (
     <PluginTreeContext value>
-      <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
+      <DraftDrawingContext value={drawing}>
+        <SvgBudget>{RenderNode({ node: props.root, context })}</SvgBudget>
+      </DraftDrawingContext>
     </PluginTreeContext>
   );
+}
+
+function useDraftDrawing({
+  root,
+  draft,
+}: PluginTreeProps): DraftView | undefined {
+  const [state, setState] = useState(() => startDrawing(draft?.naming ?? null));
+  const reduced = useReducedMotionNow();
+
+  if (!draft) return undefined;
+
+  const next = drawnDraft(state, root, draft.naming);
+
+  if (next !== state) setState(next);
+
+  // A declared region is wrapped from its first draw, so framing it later does not draw its subtree again.
+  return {
+    reduced,
+    ...next,
+    regions: new Set([...next.regions, ...(draft.regions ?? [])]),
+  };
 }
