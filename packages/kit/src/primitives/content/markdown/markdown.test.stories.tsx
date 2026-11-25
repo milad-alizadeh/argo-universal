@@ -140,9 +140,11 @@ export const ClampHoldsWhenContentGrowsAfterFirstLayout: Story = {
 
     observer.observe(frame);
 
-    await waitFor(() => expect(tallest).toBeGreaterThan(oneLine));
-
-    observer.disconnect();
+    try {
+      await waitFor(() => expect(tallest).toBeGreaterThan(oneLine));
+    } finally {
+      observer.disconnect();
+    }
 
     await expect(tallest).toBeLessThanOrEqual(oneLine * 4 + 1);
   },

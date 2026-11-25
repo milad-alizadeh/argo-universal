@@ -48,7 +48,7 @@ it(
   slow,
 );
 
-// The Server refuses a Prompt taken back from a Session of another Project, so a Closed pull request's shortcut waits for the Session to be home.
+// The Server refuses a Prompt taken back from a Session of another Project, so a Closed pull request's waiting Prompt is taken back only once the Session is home.
 it(
   'leaves the Closed pull request of a Session in another Project alone, and takes its Prompt back once it is back',
   async () => {
