@@ -46,7 +46,7 @@ function VideoLoading({ poster }: { poster?: MediaAsset }): React.JSX.Element {
 }
 
 function Poster({ poster }: { poster: MediaAsset }): React.JSX.Element {
-  const url = useMediaUri(poster) ?? '';
+  const url = useMediaUri(poster);
 
   return (
     <Image

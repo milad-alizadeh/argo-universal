@@ -13,6 +13,7 @@ import { withdrawStale } from './pull-fix-withdraw';
 import { freshOf } from './pull-fresh';
 import type { PullInfo } from './pull-info';
 import { shortHead } from './pull-reads';
+import { sessionStays } from './pull-stays';
 import { takeTurns } from './pull-turns';
 
 const short = (head: string): string => head.slice(0, shortHead);
@@ -107,16 +108,10 @@ function fixRead(step: Step, read: LinkRead): Promise<boolean> | false {
  * any other. A Session that is gone has its record forgotten. One that moved to another Project keeps its record,
  * as it can move back, and is left alone meanwhile.
  */
-async function inProject(
+const inProject = (
   { sessions, fix }: Fixing,
   record: FixRecord,
-): Promise<boolean> {
-  const session = await sessions.get(record.sessionId);
-
-  if (!session) await fix.forget(record);
-
-  return session?.projectId === record.projectId;
-}
+): Promise<boolean> => sessionStays(sessions, record, () => fix.forget(record));
 
 async function fixOne(
   fixing: Fixing,

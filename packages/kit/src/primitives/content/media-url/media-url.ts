@@ -38,6 +38,10 @@ const nobody = (): void => {};
 /*
  * The URL of one asset. When it comes later, only the components that ask for this asset draw again, not every component that reads a media URL.
  */
+export function useMediaUri(asset: MediaAsset): string | number;
+export function useMediaUri(
+  asset: MediaAsset | undefined,
+): string | number | undefined;
 export function useMediaUri(
   asset: MediaAsset | undefined,
 ): string | number | undefined {

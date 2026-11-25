@@ -16,9 +16,8 @@ const updateInterval = 250;
 
 // expo-audio plays the clip on every platform: AVPlayer on iOS, Media3 on Android, an audio element on the web.
 export function Audio(props: AudioProps): React.JSX.Element {
-  const source = useMediaUri(props.source) ?? '';
-  const url = (): string | number => source;
-  const { player, status } = useClip(source);
+  const url = useMediaUri(props.source);
+  const { player, status } = useClip(url);
 
   return (
     <AudioTransport
@@ -58,9 +57,9 @@ const playback = (status: AudioStatus): AudioPhase =>
 function toggle(
   player: AudioPlayer,
   status: AudioStatus,
-  url: () => string | number,
+  url: string | number,
 ): void {
-  if (status.error) return player.replace(url());
+  if (status.error) return player.replace(url);
 
   if (status.playing) return player.pause();
 

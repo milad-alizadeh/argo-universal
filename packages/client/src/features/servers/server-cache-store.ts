@@ -4,16 +4,13 @@ import {
   type PersistedQuery,
   experimental_createQueryPersister,
 } from '@tanstack/query-persist-client-core';
+import { keptForMs } from '../../kept-for';
 
 /*
  * Where one Server's cache is kept on the Device (ADR-0045, amended 2026-11-24): TanStack's per-query persister over
  * the storage the App already uses, AsyncStorage on a phone and its localStorage on the web. Each query is a key of
  * its own under the Server's prefix, so one write is one query and a wipe is every key under the prefix.
  */
-const hourMs = 3_600_000;
-
-// The Feed and Plugin page trees are kept in memory for 24 hours, and the copy on the Device lives as long.
-export const cacheMaxAge = 24 * hourMs;
 
 // Raised when the shape of a kept query changes, so an older copy is dropped rather than misread.
 const buster = '1';
@@ -61,8 +58,13 @@ export function serverCacheStorage(serverId: string): PersisterStorage {
         return null;
       }
     },
+    // TanStack's persister does not await a write, so one the Device refuses is dropped here; the query is written again when it next changes.
     setItem: async (key, value) => {
-      if (!forgotten.has(serverId)) await AsyncStorage.setItem(key, value);
+      try {
+        if (!forgotten.has(serverId)) await AsyncStorage.setItem(key, value);
+      } catch {
+        // The copy on the Device stays as it was.
+      }
     },
     removeItem: async (key) => {
       try {
@@ -90,7 +92,8 @@ export function serverQueryPersister(
     storage,
     serialize,
     prefix: prefixOf(serverId),
-    maxAge: cacheMaxAge,
+    // The copy on the Device lives as long as the Feed and the Plugin page trees do in memory.
+    maxAge: keptForMs,
     buster,
   });
 }

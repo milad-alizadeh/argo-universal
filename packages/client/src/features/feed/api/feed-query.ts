@@ -1,7 +1,7 @@
-const hourMs = 3_600_000;
+import { keptForMs } from '../../../kept-for';
 
 // The subscription keeps a Feed current, so it never goes stale on a clock; it is kept long enough that a Session seen today opens from here.
-const feedKeptMs = 24 * hourMs;
+const feedKeptMs = keptForMs;
 
 export const feedKeyPrefix = ['feed', 'window'] as const;
 

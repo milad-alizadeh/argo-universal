@@ -14,7 +14,7 @@ export const FeedSyncPoint = z.strictObject({
 
 export type FeedSyncPoint = z.infer<typeof FeedSyncPoint>;
 
-// Not strict: a Server ignores a key it does not know, so a later App can ask for more without Servers built after this refusing it (ADR-0045). A Server built before this does refuse `lastEventId` and `tail`; the App opens such a Server again with `after` alone.
+// Not strict: a Server with this schema ignores a key it does not know, so a later App can ask for more of it (ADR-0045). A Server from before `lastEventId`, `tail` and `batched` refuses them with `BAD_REQUEST`; the App opens such a Server again with `after` alone (ADR-0007, amended 2026-11-24).
 export const FeedSubscribeInput = z.object({
   sessionId: sessionColumns.shape.id,
   after: FeedSyncPoint.nullable(),
@@ -110,9 +110,14 @@ export const feedEventId = ({ epoch, revision }: FeedSyncPoint): string =>
 
 // The sync point a `lastEventId` names; null for an id this Server did not give.
 export function syncPointOfEventId(id: string): FeedSyncPoint | null {
-  const [epoch, revision, ...rest] = id.split(':').map(Number);
+  const parts = /^(\d+):(\d+)$/.exec(id);
 
-  if (rest.length > 0) return null;
+  if (!parts) return null;
 
-  return FeedSyncPoint.safeParse({ epoch, revision }).data ?? null;
+  return (
+    FeedSyncPoint.safeParse({
+      epoch: Number(parts[1]),
+      revision: Number(parts[2]),
+    }).data ?? null
+  );
 }
