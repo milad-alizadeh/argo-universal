@@ -2,6 +2,7 @@ import type { DiagramDrawing } from '@repo/contracts/kit-diagram';
 import type * as React from 'react';
 import { Pressable, type ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import { svgHiddenProps } from '../../../svg-hidden-props';
 
 // A tall diagram is scaled down to this height in the Feed; the full-screen view shows it at any size.
 const diagramMaxHeight = 480;
@@ -24,7 +25,7 @@ export function DiagramSvg({
 }): React.JSX.Element {
   return (
     <SvgXml
-      accessible={false}
+      {...svgHiddenProps}
       xml={drawing.svg}
       width="100%"
       height="100%"
