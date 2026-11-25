@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppProviders } from './app-providers';
-import { DesktopConversationProvider } from './features/conversation';
 import {
   isPaired,
   openConnection,
@@ -11,6 +10,7 @@ import {
   type ServerEndpoint,
 } from './features/connection';
 import { useTRPCClient } from './features/connection/api/trpc/context';
+import { DesktopConversationProvider } from './features/conversation';
 import { useAppServers } from './features/servers';
 import {
   currentReport,

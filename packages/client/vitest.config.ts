@@ -16,6 +16,10 @@ const nodeQuickCrypto = fileURLToPath(
   new URL('mocks/quick-crypto-node.ts', import.meta.url),
 );
 
+const nodeFileSystem = fileURLToPath(
+  new URL('mocks/expo-file-system-node.ts', import.meta.url),
+);
+
 // Node projects cover non-UI code; the Storybook browser project covers stories.
 export default defineProject({
   test: {
@@ -32,7 +36,10 @@ export default defineProject({
         include: native,
         resolve: {
           extensions: ['.native.ts', '.ts', '.tsx', '.mjs', '.js', '.json'],
-          alias: { 'react-native-quick-crypto': nodeQuickCrypto },
+          alias: {
+            'react-native-quick-crypto': nodeQuickCrypto,
+            'expo-file-system': nodeFileSystem,
+          },
         },
       }),
     ],
