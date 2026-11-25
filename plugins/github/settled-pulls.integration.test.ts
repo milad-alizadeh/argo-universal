@@ -50,3 +50,40 @@ it(
   },
   slow,
 );
+
+// GitHub refusing every read, as it does while the network is down or the rate limit is spent.
+const unavailable = 503;
+
+// A failed read must not undo what a Closed pull request's last good read said: each one that did read it again on every draw.
+it(
+  'asks GitHub nothing more for a Closed pull request whose latest read failed, and shows it as last read',
+  async () => {
+    const run = await attached(1, 2);
+
+    changePull(run, 1, { state: 'closed' });
+    await refreshed(run);
+
+    run.github.failWith.status = unavailable;
+    await refreshed(run);
+
+    const shown = await openChanges(run).next();
+    expect(shown).toMatchObject([
+      { id: idOf(1), stage: 'closed' },
+      { id: idOf(2), stage: 'open', stale: 'failed' },
+    ]);
+    expect(shown[0]).not.toHaveProperty('stale');
+    await run.test.settled();
+    const [closedReads, openReads] = [readsOf(run, 1), readsOf(run, 2)];
+
+    // Time passes and the App draws the Changes again, as each Session row and Inspector does.
+    for (const _ of [1, 2]) {
+      await tick(run);
+      await openChanges(run).next();
+      await run.test.settled();
+    }
+
+    expect(readsOf(run, 1)).toBe(closedReads);
+    expect(readsOf(run, 2)).toBeGreaterThan(openReads);
+  },
+  slow,
+);

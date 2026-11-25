@@ -12,7 +12,9 @@ import type { FixRecord, FixStore } from './pull-fix-store';
 import { withdrawStale } from './pull-fix-withdraw';
 import { freshOf } from './pull-fresh';
 import type { PullInfo } from './pull-info';
+import { sameLink } from './pull-kept';
 import { shortHead } from './pull-reads';
+import { settled } from './pull-settled';
 import { takeTurns } from './pull-turns';
 
 const short = (head: string): string => head.slice(0, shortHead);
@@ -102,11 +104,41 @@ function fixRead(step: Step, read: LinkRead): Promise<boolean> | false {
   return pull ? fixPull(step, pull, read) : false;
 }
 
+// The pull request as it was last read, without asking GitHub.
+async function keptOf(
+  { pulls }: Fresh,
+  record: FixRecord,
+): Promise<LinkRead | undefined> {
+  const reads = await pulls.known([record.sessionId]);
+
+  return reads.find((read) => sameLink(read.link, record));
+}
+
+/*
+ * A settled pull request cannot change, so its turn asks GitHub nothing: Auto-fix left on for every merged one would
+ * otherwise re-read them all on each Watch and spend GitHub's rate limit. Its waiting Prompts are still taken back.
+ */
+function settledTurn(
+  fixing: Fixing,
+  record: FixRecord,
+  kept: LinkRead | undefined,
+): Promise<boolean> | undefined {
+  const pull = kept?.pull.data;
+
+  return kept && pull && settled(kept)
+    ? withdrawStale({ ...fixing, record }, pull)
+    : undefined;
+}
+
 async function fixOne(
   fixing: Fixing,
   fresh: Fresh,
   record: FixRecord,
 ): Promise<boolean> {
+  const done = settledTurn(fixing, record, await keptOf(fresh, record));
+
+  if (done) return done;
+
   const read = await freshOf(fresh, record);
 
   return read ? fixRead({ ...fixing, record }, read) : false;
