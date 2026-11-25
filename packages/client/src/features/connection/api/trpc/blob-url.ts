@@ -1,18 +1,38 @@
 import { type BlobRef, blobPath } from '@repo/contracts';
 import { pluginAssetPath } from '@repo/contracts/plugins/assets';
-import type { MediaUrl } from '@repo/kit/primitives/content/media-url';
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useSyncExternalStore,
-} from 'react';
+import type {
+  MediaAsset,
+  MediaUrl,
+} from '@repo/kit/primitives/content/media-url';
+import { createContext, useContext, useMemo } from 'react';
 import { ChannelMedia } from '../channel/channel-media';
+import { createMediaStore } from '../channel/media-store';
 import { serverHttpUrl } from './create-trpc-client';
 
-export type BlobUrl = (blob: BlobRef) => string;
+/*
+ * `watch` is there when the URL arrives later: it starts the read, tells the readers of this one Blob, and no others, to ask again, and stops the read when the last of them leaves.
+ * `preload` is for a caller that cannot watch, such as a card drawn once.
+ */
+export interface BlobUrl {
+  (blob: BlobRef): string;
+  watch?: (blobId: string, changed: () => void) => () => void;
+  preload?: (blob: BlobRef) => void;
+}
 
 export const BlobUrlContext = createContext<BlobUrl | null>(null);
+
+// How a Blob's bytes are read from the Server: its `/blobs/:id` route, over the channel for a paired Server.
+export type BlobRead = (path: string, init?: RequestInit) => Promise<Response>;
+
+export const BlobReadContext = createContext<BlobRead | null>(null);
+
+export function useBlobRead(): BlobRead {
+  const read = useContext(BlobReadContext);
+
+  if (!read) throw new Error('useBlobRead needs AppProviders');
+
+  return read;
+}
 
 // Where an image the Server stores is fetched: its `/blobs/:id` route, or a story's mock.
 export function useBlobUrl(): BlobUrl {
@@ -28,6 +48,11 @@ export function createServerBlobUrl(serverUrl: string): BlobUrl {
   return (blob) => serverHttpUrl(serverUrl, blobPath(blob.blobId));
 }
 
+// A Blob's bytes over HTTP from the Server on this Device, as the channel reads them for a paired Server.
+export function createServerBlobRead(serverUrl: string): BlobRead {
+  return (path, init) => fetch(serverHttpUrl(serverUrl, path), init);
+}
+
 // A Plugin's video or audio streams from the Server's asset route, never from the Plugin's host.
 export function createServerMediaUrl(serverUrl: string): MediaUrl {
   return (asset) => serverHttpUrl(serverUrl, pluginAssetPath(asset));
@@ -38,18 +63,39 @@ export interface ServerUrls {
   mediaUrl: MediaUrl;
 }
 
-// A paired Server has no URL for a Blob or an asset, so its images come out of its channel instead and read as empty until they have arrived (ADR-0045).
-export function useChannelUrls(read: typeof fetch): ServerUrls {
-  const media = useMemo(() => new ChannelMedia(read), [read]);
-  const version = useSyncExternalStore(media.subscribe, media.getVersion);
+/*
+ * A paired Server has no URL for a Blob or an asset, so its images come out of its channel instead and read as empty until they have arrived (ADR-0045).
+ * What arrives is kept on the Device under `serverId`, apart from every other Server's, until that Server is removed.
+ */
+export function useChannelUrls(
+  read: typeof fetch,
+  serverId: string,
+): ServerUrls {
+  const media = useMemo(
+    () => new ChannelMedia(read, createMediaStore(serverId)),
+    [read, serverId],
+  );
 
-  // The version is why these are new functions once something has arrived, so the screens reading them draw again.
+  // Stable, so an arriving image does not hand every reader new functions; each reader watches its own path.
   return useMemo(
     () => ({
-      blobUrl: (blob) => media.urlFor(blobPath(blob.blobId)),
-      mediaUrl: (asset) => media.urlFor(pluginAssetPath(asset)),
+      blobUrl: Object.assign(
+        (blob: BlobRef) => media.urlFor(blobPath(blob.blobId)),
+        {
+          watch: (blobId: string, changed: () => void) =>
+            media.watch(blobPath(blobId), changed),
+          preload: (blob: BlobRef) => media.preload(blobPath(blob.blobId)),
+        },
+      ),
+      mediaUrl: Object.assign(
+        (asset: MediaAsset) => media.urlFor(pluginAssetPath(asset)),
+        {
+          keyOf: (asset: MediaAsset) => pluginAssetPath(asset),
+          watch: (path: string, changed: () => void) =>
+            media.watch(path, changed),
+        },
+      ),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the version is the point
-    [media, version],
+    [media],
   );
 }

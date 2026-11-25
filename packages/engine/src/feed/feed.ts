@@ -7,7 +7,7 @@ import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
 
-export { streamFeed } from './feed-stream';
+export { trackedFeed } from './feed-stream';
 
 type SnapshotEvent = Extract<
   FeedSubscribeOutput,

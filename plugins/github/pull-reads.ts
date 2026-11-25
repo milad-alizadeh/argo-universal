@@ -1,4 +1,5 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
+import { valueAt, type Json } from './json';
 import { checksPageSize, parseChecks, type CheckInfo } from './pull-checks';
 import { parsePull, type PullInfo } from './pull-info';
 import type { PullReference } from './pull-reference';
@@ -47,17 +48,23 @@ export const rateLimited = (message: string): boolean =>
 
 type Reply = NonNullable<Awaited<ReturnType<Fetch>>>;
 
-const headerOf = ({ headers }: Reply, name: string): string | undefined =>
-  Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
+// One header of an answer, its name in lower case.
+export type HeaderOf = (name: string) => string | undefined;
+
+const headerOf =
+  ({ headers }: Reply): HeaderOf =>
+  (name) =>
+    Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
 
 // GitHub refuses a spent limit with 429, or with 403 and the headers that say so; any other 403 is a refusal.
-const saysSpent = (reply: Reply): boolean =>
-  headerOf(reply, 'retry-after') !== undefined ||
-  headerOf(reply, 'x-ratelimit-remaining') === '0';
+export const limitSpent = (status: number, header: HeaderOf): boolean =>
+  status === tooManyStatus ||
+  (status === forbiddenStatus &&
+    (header('retry-after') !== undefined ||
+      header('x-ratelimit-remaining') === '0'));
 
-const isRateLimit = (reply: Reply): boolean =>
-  reply.status === tooManyStatus ||
-  (reply.status === forbiddenStatus && saysSpent(reply));
+export const isRateLimit = (reply: Reply): boolean =>
+  limitSpent(reply.status, headerOf(reply));
 
 const refusals = new Map<number, (subject: string) => string>([
   [unauthorizedStatus, (): string => signInMessage],
@@ -71,11 +78,43 @@ const refusals = new Map<number, (subject: string) => string>([
 const refusalMessage = (status: number, subject: string): string =>
   refusals.get(status)?.(subject) ?? `GitHub answered ${status}.`;
 
+// GitHub's own words in the body of a refusal, when it sent any.
+function bodyMessage(body: string): string | undefined {
+  try {
+    const json: Json = JSON.parse(body);
+    const message = valueAt(json, ['message']);
+
+    return typeof message === 'string' && message.trim() !== ''
+      ? message.trim()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Why GitHub refused, in its own words: the body's message, the SSO step its header asks for, and the scopes it wanted.
+function reasonOf(reply: Reply): string {
+  const header = headerOf(reply);
+
+  const parts = [
+    bodyMessage(reply.body),
+    header('x-github-sso') && `SSO: ${header('x-github-sso')}`,
+    header('x-accepted-oauth-scopes') &&
+      `Accepted scopes: ${header('x-accepted-oauth-scopes')}`,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? ` ${parts.join('. ')}` : '';
+}
+
+// A 401 and a 404 already say what to do; any other refusal also says why GitHub gave it.
+const refusalText = (reply: Reply, subject: string): string =>
+  refusals.has(reply.status)
+    ? refusalMessage(reply.status, subject)
+    : `${refusalMessage(reply.status, subject)}${reasonOf(reply)}`;
+
 const refusalOf = (reply: Reply, subject: string): Error =>
   new Error(
-    isRateLimit(reply)
-      ? rateLimitMessage
-      : refusalMessage(reply.status, subject),
+    isRateLimit(reply) ? rateLimitMessage : refusalText(reply, subject),
   );
 
 export const call = (path: string, projectId: string): Parameters<Fetch> => [

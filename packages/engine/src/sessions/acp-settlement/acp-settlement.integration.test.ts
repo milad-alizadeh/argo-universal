@@ -12,6 +12,7 @@ import {
   isTurnComplete,
   readThrough,
 } from '#mocks/feed-stream-reading';
+import { plain } from '#mocks/plain-feed';
 import { recoverAfterRestart } from '../recovery';
 import {
   toolUpdates,
@@ -84,7 +85,7 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
       });
 
       const stream = (
-        await host.caller.feed.subscribe({ ...created, after: null })
+        await plain(host.caller.feed.subscribe({ ...created, after: null }))
       )[Symbol.asyncIterator]();
 
       await stream.next();

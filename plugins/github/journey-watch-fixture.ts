@@ -7,6 +7,7 @@ import {
   caller,
   changesSlot,
   journey,
+  rowSlot,
   type Caller,
   type Journey,
 } from './journey-fixture';
@@ -64,11 +65,12 @@ const listOf = (
 export function openChanges(
   { test }: Journey,
   session: Caller = caller,
+  slotId: typeof changesSlot | typeof rowSlot = changesSlot,
 ): OpenChanges {
   const controller = new AbortController();
 
   const answers = test.slotItems(
-    { slotId: changesSlot, contexts: [session] },
+    { slotId, contexts: [session] },
     { signal: controller.signal },
   );
 

@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { Image, Pressable, View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
-import { type MediaAsset, useMediaUrl } from '#primitives/content/media-url';
+import { type MediaAsset, useMediaUri } from '#primitives/content/media-url';
 import { Spinner } from '#primitives/status/spinner';
 import type { VideoControls } from './video-controls';
 import type { VideoProps } from './video-props';
@@ -46,7 +46,7 @@ function VideoLoading({ poster }: { poster?: MediaAsset }): React.JSX.Element {
 }
 
 function Poster({ poster }: { poster: MediaAsset }): React.JSX.Element {
-  const url = useMediaUrl()(poster);
+  const url = useMediaUri(poster);
 
   return (
     <Image

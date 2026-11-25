@@ -41,6 +41,10 @@ export const session = snakeCase.table(
     keepCheckout: integer({ mode: 'boolean' }).notNull().default(false),
     seenRevision: integer().notNull().default(0),
     activityAt: integer().notNull().default(0),
+    // The Checkout's totals as last read; all three are null until a read stores them.
+    changesFiles: integer(),
+    changesAdditions: integer(),
+    changesDeletions: integer(),
     failure: text(),
     vendorSessionId: text(),
     parentSessionId: text().references((): AnySQLiteColumn => session.id, {

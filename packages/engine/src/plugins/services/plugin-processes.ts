@@ -6,6 +6,7 @@ import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
 import { realClock, type PluginClock } from '../clock';
 import type { ProcessCall } from '../protocol/runtime';
+import { HostSlots, concurrentCommandLimit } from './plugin-host-slots';
 import { pluginContentLimitBytes, pluginTimeoutMs } from './plugin-limits';
 
 // A run or spawn reaches here only after the checker gave it its working directory and environment.
@@ -16,6 +17,9 @@ export type CheckedProcessCall =
 
 type Running = { child: ChildProcess; done: Promise<ProcessResult> };
 
+// Every command shares one cap, so they are one key to the limiter.
+const commandsSlot = 'commands';
+
 type Control = Extract<ProcessCall, { action: 'wait' | 'kill' }>;
 
 type Run = { timedOut: boolean; truncated: boolean };
@@ -24,12 +28,14 @@ type Timer = () => void;
 
 // A Plugin's commands: run by argv with no shell, output capped, killed at the timeout and when released.
 export class PluginProcesses {
-  constructor(private readonly clock: PluginClock = realClock) {}
+  private readonly slots = new HostSlots(concurrentCommandLimit);
   private readonly running = new Map<string, Running>();
   private readonly live = new Set<ChildProcess>();
   private readonly timers = new Set<Timer>();
 
-  async handle(
+  public constructor(private readonly clock: PluginClock = realClock) {}
+
+  public async handle(
     call: CheckedProcessCall,
   ): Promise<ProcessResult | string | null> {
     if (call.action === 'run') return this.run(call);
@@ -40,8 +46,12 @@ export class PluginProcesses {
   }
 
   // Core callers use the same bounded argv runner for fixed Server commands.
-  public async run(command: CheckedCommand): Promise<ProcessResult> {
-    return this.start(await withLoginPath(command), pluginTimeoutMs).done;
+  public run(command: CheckedCommand): Promise<ProcessResult> {
+    return this.slots.run(commandsSlot, async () => {
+      const started = this.start(await withLoginPath(command), pluginTimeoutMs);
+
+      return started.done;
+    });
   }
 
   private control(call: Control): Promise<ProcessResult> | null {

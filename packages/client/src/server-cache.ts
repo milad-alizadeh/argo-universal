@@ -1,0 +1,257 @@
+import type { AppRouter } from '@repo/engine/router';
+import { LiteThrottler } from '@tanstack/pacer-lite';
+import type {
+  AsyncStorage as PersisterStorage,
+  PersistedQuery,
+} from '@tanstack/query-persist-client-core';
+import {
+  type Query,
+  type QueryClient,
+  partialMatchKey,
+} from '@tanstack/react-query';
+import { createTRPCClient } from '@trpc/client';
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import type { TRPC } from '#features/connection';
+import type { FeedState } from './features/feed';
+// Leaf imports below: a node test cannot import a feature's index (React Native, "Flow is not supported").
+import {
+  feedKeyPrefix,
+  feedPageSize,
+  sessionIdOf,
+  snapshotKeyPrefix,
+} from './features/feed/api/feed-query';
+import { keptOnDevice } from './features/feed/api/restore-feed';
+import { keepNewestRows } from './features/feed/view/feed-state';
+import {
+  serverCacheStorage,
+  serverQueryPersister,
+} from './features/servers/server-cache-store';
+import { createQueryClient, keepServerLists } from './query-cache';
+
+/*
+ * What the App has been sent, kept on the Device so it draws at once after a restart and on a bad Connection
+ * (ADR-0045, amended 2026-11-24). A cache, not an offline mode: it is read-only, the Server stays the one source of
+ * truth, and a Feed catches up from the revision it holds.
+ *
+ * TanStack's per-query persister: each kept query restores itself the first time it is fetched, so a Feed read is
+ * the only Feed read parsed, and each writes a key of its own when it changes.
+ *
+ * `maxAge` is the Feed's own time in memory (24 hours). A query's `gcTime` need not match it: the whole-cache
+ * persister needs that because it saves what memory still holds, but here a query dropped from memory keeps its key
+ * until `persisterGc` finds it past `maxAge`, and is restored from it the next time it is read.
+ */
+
+// A Feed changes with every streamed row; its key is rewritten at most this often.
+const writeEveryMs = 2000;
+
+// How many Feeds a Server keeps on the Device; the ones written least recently go first, with their snapshots.
+const feedsKept = 20;
+
+const pageTreeKey = ['pluginPageTree'] as const;
+
+// The Session list, every Feed and its snapshot, and the Plugin page trees: what a screen waits on before it can draw.
+function keptKeys(trpc: TRPC): readonly (readonly unknown[])[] {
+  return [
+    trpc.session.list.pathKey(),
+    feedKeyPrefix,
+    snapshotKeyPrefix,
+    pageTreeKey,
+  ];
+}
+
+const hasData = (query: Query): boolean => query.state.data != null;
+
+interface DeviceCache {
+  serverId: string;
+  // The Device's own storage except where a story slows it down or breaks it.
+  storage?: PersisterStorage;
+}
+
+const isFeedState = (data: unknown): data is FeedState =>
+  typeof data === 'object' && data !== null && 'rows' in data;
+
+// A Feed is kept as its newest page; what is older pages in again, as it does for a Session opened cold.
+function trimmed(kept: PersistedQuery): string {
+  const { data } = kept.state;
+
+  if (!partialMatchKey(kept.queryKey, feedKeyPrefix) || !isFeedState(data))
+    return JSON.stringify(kept);
+
+  const state = { ...kept.state, data: keepNewestRows(data, feedPageSize) };
+
+  return JSON.stringify({ ...kept, state });
+}
+
+const persisterOf = ({
+  serverId,
+  storage,
+}: DeviceCache): ReturnType<typeof serverQueryPersister> =>
+  serverQueryPersister(serverId, { storage, serialize: trimmed });
+
+interface KeptEntry {
+  key: string;
+  queryKey: readonly unknown[];
+  at: number;
+}
+
+async function keptEntries(storage: PersisterStorage): Promise<KeptEntry[]> {
+  const entries = (await storage.entries?.()) ?? [];
+
+  return entries.flatMap(([key, value]): KeptEntry[] => {
+    try {
+      const kept: PersistedQuery = JSON.parse(value);
+
+      return [{ key, queryKey: kept.queryKey, at: kept.state.dataUpdatedAt }];
+    } catch {
+      return [];
+    }
+  });
+}
+
+// Drops the Feeds beyond the newest `feedsKept`, and the snapshot kept beside each.
+async function keepNewestFeeds({
+  serverId,
+  storage = serverCacheStorage(serverId),
+}: DeviceCache): Promise<void> {
+  const entries = await keptEntries(storage);
+
+  const dropped = [...entries]
+    .filter(({ queryKey }) => partialMatchKey(queryKey, feedKeyPrefix))
+    .sort((a, b) => b.at - a.at)
+    .slice(feedsKept)
+    .map(({ queryKey }) => sessionIdOf(queryKey));
+
+  const gone = new Set(dropped);
+
+  for (const entry of entries)
+    if (
+      (partialMatchKey(entry.queryKey, feedKeyPrefix) ||
+        partialMatchKey(entry.queryKey, snapshotKeyPrefix)) &&
+      gone.has(sessionIdOf(entry.queryKey))
+    )
+      await storage.removeItem(entry.key);
+}
+
+/*
+ * Makes the kept queries restore from this Server's cache on the Device the first time each is read. Run once, after
+ * `keepServerLists` and before any query is read: a query takes the defaults in force when it first runs. A Feed is
+ * also read off the Device ahead of its subscription (`useRestoreFeed`), through the persister left in the defaults'
+ * meta. It only sets defaults; `trimDevice` is the part that touches the Device.
+ */
+export function restoreFromDevice(
+  queryClient: QueryClient,
+  trpc: TRPC,
+  cache: DeviceCache,
+): void {
+  const persister = persisterOf(cache);
+
+  for (const key of keptKeys(trpc)) {
+    const defaults = queryClient.getQueryDefaults(key);
+
+    queryClient.setQueryDefaults(key, {
+      ...defaults,
+      persister: persister.persisterFn,
+      meta: { ...defaults.meta, [keptOnDevice]: persister.retrieveQuery },
+      // The first read restores from the Device, so it runs with the Connection down; only a read of the Server waits for it.
+      networkMode: 'offlineFirst',
+    });
+  }
+}
+
+// Drops the copies on the Device that are past their age, then the Feeds beyond the newest ones.
+export async function trimDevice(cache: DeviceCache): Promise<void> {
+  await persisterOf(cache).persisterGc();
+  await keepNewestFeeds(cache);
+}
+
+/*
+ * The query client of one Server, with its kept lists named and its Device restore set before anything reads a query,
+ * so a Feed's restore is in force ahead of its subscription (#2703). It reads no query and writes nothing, so it is
+ * safe to build where React builds a client. The names come from a proxy over no links: only its keys are read, and the
+ * Connection's own client is not open yet.
+ */
+export function createServerQueryClient(serverId: string): QueryClient {
+  const queryClient = createQueryClient();
+
+  const trpc = createTRPCOptionsProxy<AppRouter>({
+    client: createTRPCClient<AppRouter>({ links: [] }),
+    queryClient,
+  });
+
+  keepServerLists(queryClient, trpc);
+  restoreFromDevice(queryClient, trpc, { serverId });
+
+  return queryClient;
+}
+
+interface DeviceWriter {
+  // Writes what is still waiting, such as when the App goes to the background and may not run again.
+  flush: () => void;
+  // Stops writing, saving what was still waiting.
+  stop: () => void;
+}
+
+// Writes each kept query to the Device as it changes.
+export function writeToDevice(
+  queryClient: QueryClient,
+  trpc: TRPC,
+  cache: DeviceCache,
+): DeviceWriter {
+  const persister = persisterOf(cache);
+  const kept = keptKeys(trpc);
+  const writers = new Map<string, LiteThrottler<() => void>>();
+
+  const written = new Set<string>();
+
+  // The first write of a Feed is the one that can take a Server past its limit.
+  const write = async (query: Query): Promise<void> => {
+    const first = !written.has(query.queryHash);
+    written.add(query.queryHash);
+    await persister.persistQuery(query);
+
+    if (first && partialMatchKey(query.queryKey, feedKeyPrefix))
+      await keepNewestFeeds(cache);
+  };
+
+  const shouldKeep = (query: Query): boolean =>
+    hasData(query) && kept.some((key) => partialMatchKey(query.queryKey, key));
+
+  const writerFor = (query: Query): LiteThrottler<() => void> => {
+    const writer =
+      writers.get(query.queryHash) ??
+      new LiteThrottler<() => void>(
+        () => {
+          // A write the Device refuses is lost; the query is written again when it next changes.
+          write(query).catch(() => {});
+        },
+        {
+          wait: writeEveryMs,
+          // Not at once: a restored query is written with the age the Device kept it at, which the persister sets just after the restore.
+          leading: false,
+          trailing: true,
+        },
+      );
+
+    writers.set(query.queryHash, writer);
+
+    return writer;
+  };
+
+  const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+    if (event.type !== 'updated' || event.action.type !== 'success') return;
+
+    if (shouldKeep(event.query)) writerFor(event.query).maybeExecute();
+  });
+
+  const flush = (): void => {
+    for (const writer of writers.values()) writer.flush();
+  };
+
+  return {
+    flush,
+    stop: (): void => {
+      unsubscribe();
+      flush();
+    },
+  };
+}

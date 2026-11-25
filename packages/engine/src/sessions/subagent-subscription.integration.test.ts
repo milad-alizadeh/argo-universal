@@ -4,6 +4,7 @@ import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 
 async function collectFeed(
   iterator: AsyncIterator<FeedSubscribeOutput>,
@@ -65,10 +66,12 @@ it.each(['open', 'closed'] as const)(
     onTestFinished(() => controller.abort());
     const caller = host.createCaller({ signal: controller.signal });
 
-    const stream = await caller.feed.subscribe({
-      sessionId: child.sessionId,
-      after: null,
-    });
+    const stream = await plain(
+      caller.feed.subscribe({
+        sessionId: child.sessionId,
+        after: null,
+      }),
+    );
 
     const iterator = stream[Symbol.asyncIterator]();
     expect((await iterator.next()).value).toMatchObject({ type: 'snapshot' });

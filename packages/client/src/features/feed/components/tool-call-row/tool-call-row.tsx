@@ -7,6 +7,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { use } from 'react';
 import { View } from 'react-native';
+import { useOpenedToolCall } from '../../hooks/full-tool-output-context';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import { fileName } from '../../view/file-edit-label';
 import { toolCallImages, withoutImages } from '../../view/tool-call-images';
@@ -126,9 +127,12 @@ function ToolCallRowOutput({
 }: {
   row: ToolCallUpdate;
 }): React.JSX.Element {
+  // The previews stand in while the whole output comes.
+  const opened = useOpenedToolCall(row);
+
   return (
     <>
-      <ToolCallBody row={row} />
+      <ToolCallBody row={opened} />
       <SettledStatus status={row.status} />
     </>
   );

@@ -25,6 +25,7 @@ export const previewSession: SessionInfo = {
   subagents: { running: 0, total: 0 },
   shells: { running: 0, total: 0 },
   archivedAt: null,
+  changes: null,
   pullRequest: null,
   createdAt: startedAt,
   updatedAt: startedAt + workingFor,

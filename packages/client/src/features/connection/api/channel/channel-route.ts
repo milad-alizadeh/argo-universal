@@ -30,12 +30,23 @@ function inOrder(addresses: readonly ChannelAddress[]): ChannelAddress[] {
   ];
 }
 
+interface Opened<T> {
+  channel: T;
+}
+
 const nothingAnnounced: LocateServer = async () => [];
 
 const differentFrom =
   (skip: ChannelAddress | undefined) =>
   (address: ChannelAddress): boolean =>
     skip === undefined || keyOf(address) !== keyOf(skip);
+
+interface RouteOptions {
+  // The other addresses Pairing kept.
+  readonly others?: readonly ChannelAddress[];
+  // A one-shot Pairing Ticket is spent by the first address that sees it, so a ticketed route asks one address at a time.
+  readonly oneAtATime?: boolean;
+}
 
 /*
  * Where a paired Server's channels open (ADR-0045). The address that last proved the Server's key is tried first, so a channel per Blob does not ask the network each time.
@@ -48,16 +59,22 @@ export class ChannelRoute {
   public constructor(
     private readonly keptAddress: ChannelAddress,
     private readonly locate: LocateServer = nothingAnnounced,
-    private readonly otherKeptAddresses: readonly ChannelAddress[] = [],
+    private readonly options: RouteOptions = {},
   ) {}
 
   public async open<T>(
     attempt: (address: ChannelAddress) => Promise<T>,
+    discard: (channel: T) => void,
   ): Promise<T> {
     const causes: unknown[] = [];
 
-    for await (const address of this.candidates()) {
-      const result = await this.tryAt(address, attempt, causes);
+    const tryAt = (address: ChannelAddress): Promise<Opened<T> | undefined> =>
+      this.tryAt(address, attempt, causes);
+
+    for await (const stage of this.stages()) {
+      const result = this.options.oneAtATime
+        ? await firstInTurn(stage, tryAt)
+        : await firstOf(stage.map(tryAt), discard);
 
       if (result) return result.channel;
     }
@@ -65,29 +82,33 @@ export class ChannelRoute {
     throw new ServerUnreachable(causes);
   }
 
-  private async *candidates(): AsyncGenerator<ChannelAddress> {
+  // Each stage is asked together; the next is asked only when none of it answered. The kept addresses go in one stage, so a stale home address that never answers does not hold up the tailnet one.
+  private async *stages(): AsyncGenerator<ChannelAddress[]> {
     const last = this.proven;
 
-    if (last) yield last;
+    if (last) yield [last];
     const announcing = this.lookAgain();
-    const kept = inOrder([this.keptAddress, ...this.otherKeptAddresses]);
+
+    const kept = inOrder([this.keptAddress, ...(this.options.others ?? [])]);
 
     const direct = kept
       .filter(differentFrom(last))
       .filter((a) => !linkLocal(a));
 
-    yield* direct;
-    const everywhere = inOrder([...kept, ...(await announcing)]);
+    yield direct;
     const asked = new Set([last, ...direct].map((a) => a && keyOf(a)));
+    const everywhere = inOrder([...kept, ...(await announcing)]);
 
-    yield* everywhere.filter((address) => !asked.has(keyOf(address)));
+    for (const address of everywhere.filter((a) => !asked.has(keyOf(a)))) {
+      yield [address];
+    }
   }
 
   private async tryAt<T>(
     address: ChannelAddress,
     attempt: (address: ChannelAddress) => Promise<T>,
     causes: unknown[],
-  ): Promise<{ channel: T } | undefined> {
+  ): Promise<Opened<T> | undefined> {
     try {
       const channel = await attempt(address);
 
@@ -117,4 +138,52 @@ export class ChannelRoute {
 // A Server that answered and refused this Device is the Server: no other address would say otherwise.
 function throwIfRefused(cause: unknown): void {
   if (cause instanceof PairingRefused) throw cause;
+}
+
+// The first attempt to open wins and the rest are let go: one that opens later is discarded. A Server that refused this Device ends the race at once, whatever the other addresses are still doing. When none opens, there is no winner.
+async function firstOf<T>(
+  tries: readonly Promise<Opened<T> | undefined>[],
+  discard: (channel: T) => void,
+): Promise<Opened<T> | undefined> {
+  const refusal = Promise.withResolvers<never>();
+
+  const opens = tries.map(async (attempt) => {
+    const opened = await attempt.catch((cause: unknown) => {
+      refusal.reject(cause);
+      throw cause;
+    });
+
+    if (!opened) throw new Error('Did not open');
+
+    return opened;
+  });
+
+  try {
+    const winner = await Promise.race([Promise.any(opens), refusal.promise]);
+
+    for (const attempt of tries) {
+      void attempt.then((opened) => {
+        if (opened && opened !== winner) discard(opened.channel);
+      });
+    }
+
+    return winner;
+  } catch (cause) {
+    if (cause instanceof AggregateError) return;
+    throw cause;
+  }
+}
+
+// The addresses are asked in turn; the first that opens wins, and none is asked while another is still answering.
+async function firstInTurn<T>(
+  addresses: readonly ChannelAddress[],
+  tryAt: (address: ChannelAddress) => Promise<Opened<T> | undefined>,
+): Promise<Opened<T> | undefined> {
+  for (const address of addresses) {
+    const opened = await tryAt(address);
+
+    if (opened) return opened;
+  }
+
+  return undefined;
 }

@@ -2,14 +2,17 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
-export {
-  useFeedHistoryPages,
-  useFeedLiveChanges,
-} from './hooks/use-feed-sources';
+export { useFeedLive } from './hooks/use-feed-live';
 
 export { useSessionFeed } from './hooks/use-session-feed';
 
-export { useSessionFeedStore } from './hooks/use-session-feed-store';
+export { FullToolOutputProvider } from './hooks/use-full-tool-output-query';
+
+export {
+  type FeedPageReader,
+  useFeedWindow,
+  useOlderHistory,
+} from './hooks/use-feed-window';
 
 export type { SessionFeed } from './hooks/session-feed';
 
@@ -34,3 +37,5 @@ export { FileHeader as DiffFileHeader } from './components/diff-view/diff-file-h
 export { isDeleted as isDeletedFile } from './components/diff-view/diff-deleted-pill';
 
 export { permissionDetails } from './view/permission-details';
+
+export type { FeedState } from './view/feed-state';

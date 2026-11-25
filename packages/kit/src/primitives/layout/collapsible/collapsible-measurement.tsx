@@ -27,28 +27,55 @@ function measureContent(
   });
 }
 
-function useMeasuredHeight(): Omit<
-  ContentMeasurement,
-  'content' | 'onLayout'
-> & { recordHeight: (height: number) => void } {
+function useMeasuredHeight(
+  open: boolean,
+  resting: RefObject<boolean>,
+): Omit<ContentMeasurement, 'content' | 'onLayout'> & {
+  recordHeight: (height: number) => void;
+} {
   const contentHeight = useRef(0);
   const [measured, setMeasured] = useState(false);
   const [renderedHeight, setRenderedHeight] = useState(0);
 
-  const recordHeight = useCallback((height: number): void => {
-    contentHeight.current = height;
-    setRenderedHeight(height);
-    setMeasured(true);
-  }, []);
+  const recordHeight = useCallback(
+    (height: number): void => {
+      contentHeight.current = height;
+
+      if (resting.current) return;
+
+      setRenderedHeight(height);
+      setMeasured(true);
+    },
+    [resting],
+  );
 
   const forget = useCallback((): void => setMeasured(false), []);
 
-  return { contentHeight, measured, renderedHeight, recordHeight, forget };
+  // The drawing reads the height once the content leaves rest, which is when it closes.
+  useLayoutEffect(() => {
+    if (!open && contentHeight.current !== renderedHeight)
+      setRenderedHeight(contentHeight.current);
+  }, [open, renderedHeight]);
+
+  return {
+    contentHeight,
+    measured,
+    renderedHeight,
+    recordHeight,
+    forget,
+  };
 }
 
-export function useContentMeasurement(open: boolean): ContentMeasurement {
+/*
+ * `resting` is whether the content is open and still. Then a new height is only kept, for a drawing that does not use it
+ * yet, so content that mounts open costs no second draw.
+ */
+export function useContentMeasurement(
+  open: boolean,
+  resting: RefObject<boolean>,
+): ContentMeasurement {
   const content = useRef<ViewInstance>(null);
-  const { recordHeight, ...measurement } = useMeasuredHeight();
+  const { recordHeight, ...measurement } = useMeasuredHeight(open, resting);
   useLayoutEffect(() => {
     if (open && !measurement.measured) measureContent(content, recordHeight);
   }, [open, measurement.measured, recordHeight]);

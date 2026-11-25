@@ -11,6 +11,7 @@ import { failureMessage, known, type Known } from './pull-known';
 import { readOpenOnly, type OpenReads } from './pull-open-reads';
 import type { PullReads } from './pull-reads';
 import type { PullRecords } from './pull-records';
+import { settled } from './pull-settled';
 import type { PullKey, PullLink, PullStore } from './pull-store';
 import type { ViewerReads } from './pull-viewer';
 
@@ -82,7 +83,10 @@ const checksOf = ({ checks }: LinkRead): Pick<Refresh, 'checks'> =>
     ? { checks: checks.data.map(({ name, state }) => ({ name, state })) }
     : {};
 
+// A settled pull request's last good read is final, so a failure since is no reason to call it stale.
 const staleOf = (read: LinkRead): Pick<Refresh, 'stale'> => {
+  if (settled(read)) return {};
+
   const { failure } = failureOfRead(read);
 
   return failure ? { stale: failure.reason } : {};

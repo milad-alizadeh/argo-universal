@@ -5,6 +5,7 @@ import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { plain } from '#mocks/plain-feed';
 
 const configuredSessionId = 'configured-session';
 
@@ -43,7 +44,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const created = await host.caller.session.new(sessionInput);
 
     const feed = (
-      await host.caller.feed.subscribe({ ...created, after: null })
+      await plain(host.caller.feed.subscribe({ ...created, after: null }))
     )[Symbol.asyncIterator]();
 
     const update = await feed.next();

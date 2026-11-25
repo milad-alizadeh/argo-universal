@@ -8,6 +8,7 @@ import type { FeedSubscribeOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   promptInput,
@@ -243,7 +244,7 @@ it('streams Session snapshots only when projected configuration changes', async 
   const created = await host.caller.session.new(emptySessionInput);
 
   const updates = (
-    await host.caller.feed.subscribe({ ...created, after: null })
+    await plain(host.caller.feed.subscribe({ ...created, after: null }))
   )[Symbol.asyncIterator]();
 
   expect((await updates.next()).value).toMatchObject({
@@ -336,10 +337,12 @@ it('attaches live Feed updates when a subscription starts while the Session open
   await opening.promise;
 
   const updates = (
-    await host.caller.feed.subscribe({
-      ...created,
-      after: null,
-    })
+    await plain(
+      host.caller.feed.subscribe({
+        ...created,
+        after: null,
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   expect((await updates.next()).value).toMatchObject({

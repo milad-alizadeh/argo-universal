@@ -6,7 +6,8 @@ import {
 } from 'react';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { flattenedChildren } from '../../../flattened-children';
+import { flatChildren, flattenedChildren } from '../../../flattened-children';
+import { sectionNodeOf, withRows } from './list-entries';
 import { isSection } from './list-level-entries';
 import type { ListSectionProps } from './list-props';
 
@@ -78,8 +79,15 @@ const withPlaceholderRows = (props: ListSectionProps): ListSectionProps =>
 
 // A List's children inside a loading Skeleton: each Section with no rows of its own takes placeholder rows.
 export const placeholderChildren = (children: ReactNode): ReactNode =>
-  flattenedChildren(children).map((child) =>
-    isSection(child)
-      ? cloneElement(child, withPlaceholderRows(child.props))
-      : child,
-  );
+  flatChildren(flattenedChildren(children).map(withPlaceholderSection));
+
+function withPlaceholderSection(child: ReactNode): ReactNode {
+  if (isSection(child))
+    return cloneElement(child, withPlaceholderRows(child.props));
+
+  const section = sectionNodeOf(child);
+
+  if (!section || !hasNoRows(section.props)) return child;
+
+  return withRows(section, placeholderRows());
+}

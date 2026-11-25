@@ -29,6 +29,7 @@ export type GptLiveOptions = {
   lostLinkMs?: number;
   // How often the control link is checked with a ping.
   pingMs?: number;
+  missedPong?: () => void;
 };
 
 const lostLinkLimitMs = 5000;
@@ -41,6 +42,7 @@ const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
   linkUrl: 'wss://api.openai.com/v1/live',
   lostLinkMs: lostLinkLimitMs,
   pingMs: pingEveryMs,
+  missedPong: (): void => {},
   ...options,
 });
 
@@ -121,6 +123,7 @@ export class GptLiveProvider implements ConversationProvider {
       rejoin: () => joinLink(url, token),
       lostLinkMs: this.settings.lostLinkMs,
       pingMs: this.settings.pingMs,
+      missedPong: this.settings.missedPong,
     });
   }
 

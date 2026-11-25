@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./group": "./src/group.ts",
+    "./process-table": "./src/process-table.ts",
     "./pty-session": "./src/pty-session.ts",
     "./tcp": "./src/tcp.ts"
   },

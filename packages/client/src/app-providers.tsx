@@ -13,6 +13,7 @@ import {
   useServerConnections,
 } from '#features/servers';
 import { LookedAtServer } from './looked-at-server';
+import { serversStoreHooks } from './servers-store-hooks';
 
 export interface AppProvidersProps {
   // The Server on this Device, where it runs one: the desktop app and the web App do, a phone or tablet does not.
@@ -28,7 +29,7 @@ export interface AppProvidersProps {
  */
 export function AppProviders(props: AppProvidersProps): React.JSX.Element {
   const store = useMemo(
-    () => createServersStore(props.serverUrl),
+    () => createServersStore(props.serverUrl, serversStoreHooks),
     [props.serverUrl],
   );
 

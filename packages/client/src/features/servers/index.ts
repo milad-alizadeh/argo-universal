@@ -1,5 +1,7 @@
 export { type AppServer, type AppServerState } from './app-server';
 
+export type { ServersStoreHooks } from './servers-store';
+
 export {
   ServerConnectionsContext,
   type OpenServerConnection,

@@ -6,6 +6,7 @@ import { freshReads } from './pull-fresh';
 import type { PullInfo } from './pull-info';
 import { sameLink } from './pull-kept';
 import type { Known } from './pull-known';
+import { sessionStays } from './pull-stays';
 import type { PullLink } from './pull-store';
 import { takeTurns } from './pull-turns';
 
@@ -17,7 +18,7 @@ export const archiveOf = (on: boolean): AutomationState => ({
 
 // What Auto-archive's Watch turn works with: the Sessions it archives, and the pull requests it is on for.
 export type Archiving = {
-  sessions: Pick<Argo['sessions'], 'archive'>;
+  sessions: Pick<Argo['sessions'], 'archive' | 'get'>;
   archive: ArchiveStore;
 };
 
@@ -49,12 +50,20 @@ async function archived(
   return true;
 }
 
+const stays = (
+  { sessions, archive }: Archiving,
+  link: PullLink,
+): Promise<boolean> =>
+  sessionStays(sessions, link, () => archive.disable(link));
+
 // Once the Session is archived Auto-archive is spent, so unarchiving it is not undone by the next Watch.
 async function archiveOne(
   archiving: Archiving,
   fresh: Fresh,
   link: PullLink,
 ): Promise<boolean> {
+  if (!(await stays(archiving, link))) return false;
+
   if (!(await settled(fresh, link)) || !(await archived(archiving, link)))
     return false;
 

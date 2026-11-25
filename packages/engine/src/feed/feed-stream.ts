@@ -1,9 +1,21 @@
-import type { FeedSubscribeInput, FeedSubscribeOutput } from '@repo/contracts';
+import {
+  defaultPageRows,
+  feedEventId,
+  type FeedSubscribeInput,
+  type FeedSubscribeOutput,
+  type FeedSyncPoint,
+  syncPointOfEventId,
+} from '@repo/contracts';
+import { tracked, type TrackedEnvelope } from '@trpc/server';
 import type { FeedDeps } from './feed';
 import { FeedDelivery } from './feed-delivery';
 import { FeedListener } from './feed-listener';
+import { readFeedPage } from './feed-page';
 
-type SubscriptionStart = FeedSubscribeInput & {
+type SubscriptionStart = Pick<
+  FeedSubscribeInput,
+  'sessionId' | 'after' | 'tail' | 'batched'
+> & {
   epoch: number;
   maxRevision: number;
 };
@@ -81,13 +93,39 @@ async function* deliverSubscription(
 
   if (isReset(start)) yield { type: 'reset', epoch: start.epoch };
 
+  // An App with no rows opens on the newest ones, read with the sync point so no change falls between them.
+  if (start.tail && start.after === null)
+    yield {
+      type: 'tail',
+      page: readFeedPage(resources, {
+        sessionId: start.sessionId,
+        direction: 'tail',
+        limit: defaultPageRows,
+      }),
+    };
+
   const delivery = new FeedDelivery(resources, start.sessionId, {
     after: initialRevision(start),
     storedRevision: start.maxRevision,
+    batched: start.batched === true,
   });
 
   yield* delivery.readCatchUp();
   yield* deliverLive(listener, delivery);
+}
+
+// Where an App resumes: the event id tRPC sends again after a reconnect names the rows it has, unless the App already held higher ones (ADR-0007: the higher revision wins).
+function resumePoint({
+  after,
+  lastEventId,
+}: Pick<FeedSubscribeInput, 'after' | 'lastEventId'>): FeedSyncPoint | null {
+  const last = lastEventId ? syncPointOfEventId(lastEventId) : null;
+
+  if (!last) return after;
+
+  if (after?.epoch !== last.epoch) return last;
+
+  return after.revision > last.revision ? after : last;
 }
 
 export async function* streamFeed(
@@ -95,7 +133,12 @@ export async function* streamFeed(
   input: FeedSubscribeInput,
   signal: AbortSignal | undefined,
 ): AsyncGenerator<FeedSubscribeOutput> {
-  const start = { ...input, ...resources.readSession(input.sessionId) };
+  const start = {
+    ...input,
+    after: resumePoint(input),
+    ...resources.readSession(input.sessionId),
+  };
+
   const listener = new FeedListener(resources, input.sessionId, signal);
 
   try {
@@ -103,5 +146,67 @@ export async function* streamFeed(
     yield* deliverSubscription(resources, start, listener);
   } finally {
     listener.stop();
+  }
+}
+
+// The default of an exhaustive switch: the compiler rejects it while an event type is missing.
+function assertNever(event: never): never {
+  throw new Error(`Unhandled feed event: ${JSON.stringify(event)}`);
+}
+
+// A snapshot moves nothing: the Server's revision it carries may be ahead of rows still waiting for their batch, so it keeps the point the App has reached.
+function pointOfEvent(
+  reached: FeedSyncPoint,
+  event: FeedSubscribeOutput,
+): FeedSyncPoint | null {
+  const { epoch } = reached;
+
+  switch (event.type) {
+    case 'closed':
+      return null;
+    case 'reset':
+      return { epoch: event.epoch, revision: 0 };
+    case 'tail':
+      return { epoch: event.page.epoch, revision: event.page.maxRevision };
+    case 'snapshot':
+      return reached;
+    case 'row.upsert':
+    case 'rows.upsert':
+    case 'row.append':
+    case 'row.patch':
+      return { epoch, revision: event.rev };
+    default:
+      return assertNever(event);
+  }
+}
+
+// An App that sends a `lastEventId`, or asks for the tail or for batches, keeps event ids.
+const hasEventIds = ({
+  lastEventId,
+  tail,
+  batched,
+}: FeedSubscribeInput): boolean =>
+  lastEventId !== undefined || tail === true || batched === true;
+
+/*
+ * `feed.subscribe`'s events with ids (tRPC's `tracked`), so the client's own reconnect sends the newest as `lastEventId` and the Feed resumes after it. A snapshot has one too, since an event without an id would clear the one before it; a closed Feed ends the subscription and needs none. An App that gives none of `lastEventId`, `tail` and `batched` is one from before event ids, which reads plain events.
+ */
+export async function* trackedFeed(
+  resources: FeedDeps,
+  input: FeedSubscribeInput,
+  signal: AbortSignal | undefined,
+): AsyncGenerator<FeedSubscribeOutput | TrackedEnvelope<FeedSubscribeOutput>> {
+  let reached = resumePoint(input) ?? {
+    epoch: resources.readSession(input.sessionId).epoch,
+    revision: 0,
+  };
+
+  for await (const event of streamFeed(resources, input, signal)) {
+    const point = pointOfEvent(reached, event);
+
+    reached = point ?? reached;
+    yield point && hasEventIds(input)
+      ? tracked(feedEventId(point), event)
+      : event;
   }
 }

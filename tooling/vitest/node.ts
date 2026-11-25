@@ -16,7 +16,7 @@ const nodeTest = {
 
 type NodeTestOptions = Pick<
   TestUserConfig,
-  'include' | 'testTimeout' | 'expect'
+  'include' | 'exclude' | 'testTimeout' | 'expect'
 > & {
   // Test files that measure time, such as event-loop delay or a Hook's budget: they run alone, after the rest.
   budget?: string[];
@@ -24,19 +24,32 @@ type NodeTestOptions = Pick<
   integrationSetup?: string;
 };
 
-type ProjectOptions = Omit<NodeTestOptions, 'budget'> & { budget: string[] };
+type ProjectOptions = Omit<NodeTestOptions, 'budget'> & {
+  budget: string[];
+  name?: string;
+  resolve?: TestProjectInlineConfiguration['resolve'];
+};
 
 const createUnitProject = ({
   budget,
+  exclude = [],
   integrationSetup: _unused,
+  name = 'unit',
+  resolve,
   ...options
 }: ProjectOptions): TestProjectInlineConfiguration => ({
   extends: false,
+  ...(resolve && { resolve }),
   test: {
     ...nodeTest,
     ...options,
-    name: 'unit',
-    exclude: [...configDefaults.exclude, '**/*.integration.test.*', ...budget],
+    name,
+    exclude: [
+      ...configDefaults.exclude,
+      '**/*.integration.test.*',
+      ...budget,
+      ...exclude,
+    ],
     setupFiles: [fileURLToPath(new URL('./unit-setup.ts', import.meta.url))],
   },
 });
@@ -89,3 +102,10 @@ export const createNodeTestProjects = ({
     ? [...projects, createBudgetProject({ ...options, budget })]
     : projects;
 };
+
+// A unit project that resolves modules its own way, such as the phone's `.native.ts` files, and otherwise runs as the others do.
+export const createResolvedUnitProject = (
+  options: Pick<NodeTestOptions, 'include'> &
+    Pick<ProjectOptions, 'name' | 'resolve'>,
+): TestProjectInlineConfiguration =>
+  createUnitProject({ ...options, budget: [] });

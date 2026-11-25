@@ -4,6 +4,7 @@ import {
   caller,
   changesSlot,
   project,
+  rowSlot,
   sessionId,
   type Caller,
   type Journey,
@@ -51,8 +52,6 @@ export async function detach(
     caller: as,
   });
 }
-
-const rowSlot = 'argo/session/row/v1';
 
 type SlotId = typeof changesSlot | typeof rowSlot;
 

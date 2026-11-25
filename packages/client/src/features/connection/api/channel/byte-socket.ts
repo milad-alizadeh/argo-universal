@@ -14,4 +14,10 @@ export interface ByteSocket {
   onClose: (error?: Error) => void;
 }
 
-export type OpenSocket = (address: ChannelAddress) => Promise<ByteSocket>;
+// Headers for the WebSocket upgrade, which only the native module can set; a browser's WebSocket cannot, and the JavaScript carrier sends none.
+export type UpgradeHeaders = Readonly<Record<string, string>>;
+
+export type OpenSocket = (
+  address: ChannelAddress,
+  headers?: UpgradeHeaders,
+) => Promise<ByteSocket>;

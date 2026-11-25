@@ -1,0 +1,48 @@
+import type { ToolCallUpdate } from '@repo/contracts';
+import { useQuery } from '@tanstack/react-query';
+import type * as React from 'react';
+import { useMemo } from 'react';
+import { useBlobRead } from '#features/connection';
+import { blobTextQuery, createBlobTextReader } from '../api/blob-text-query';
+import { fullOutputBlobIds, withFullOutput } from '../view/full-tool-output';
+import { FullToolOutputContext } from './full-tool-output-context';
+
+// The text of one Blob, read when an opened row asks and not before.
+function useBlobText(blobId: string | undefined): string | undefined {
+  const blobRead = useBlobRead();
+  const read = useMemo(() => createBlobTextReader(blobRead), [blobRead]);
+
+  return useQuery({
+    ...blobTextQuery(read, blobId ?? ''),
+    enabled: blobId !== undefined,
+  }).data;
+}
+
+/*
+ * A row's previews stand in until the Blobs with its whole output have come; then the whole output takes their place.
+ * Only an opened row calls this, so a closed row costs the Feed no read.
+ */
+function useFullToolOutput(row: ToolCallUpdate): ToolCallUpdate {
+  const blobs = fullOutputBlobIds(row);
+  const content = useBlobText(blobs.content);
+
+  // A row draws its raw output only when it has no content blocks, so a row with some never reads it.
+  const rawOutput = useBlobText(
+    row.content.length === 0 ? blobs.rawOutput : undefined,
+  );
+
+  return withFullOutput(row, { content, rawOutput });
+}
+
+// Supplies `useFullToolOutput` to every tool call below it.
+export function FullToolOutputProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <FullToolOutputContext.Provider value={useFullToolOutput}>
+      {children}
+    </FullToolOutputContext.Provider>
+  );
+}

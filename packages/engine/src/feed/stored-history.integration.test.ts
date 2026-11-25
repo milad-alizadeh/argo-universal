@@ -6,6 +6,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { closeStream } from '#mocks/feed-stream-reading';
+import { plain } from '#mocks/plain-feed';
 
 // The `feed_row` layout every Server has written since payload version 1: the envelope in columns, the rest as JSON.
 const insertStoredRow = (database: Database, row: SessionUpdate): void => {
@@ -88,10 +89,12 @@ it.each(recordedFeedMocks)(
   'catches up $agent $recording history stored before ACP from its first revision',
   async ({ rows }): Promise<void> => {
     const updates = (
-      await caller.feed.subscribe({
-        sessionId: readRecordedSessionId(rows),
-        after: { epoch: 0, revision: 0 },
-      })
+      await plain(
+        caller.feed.subscribe({
+          sessionId: readRecordedSessionId(rows),
+          after: { epoch: 0, revision: 0 },
+        }),
+      )
     )[Symbol.asyncIterator]();
 
     const received: SessionUpdate[] = [];

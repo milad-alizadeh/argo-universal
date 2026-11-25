@@ -8,6 +8,7 @@ import type {
   Turn,
 } from '@repo/contracts';
 import { type LiveSession } from '../../live-header';
+import { rowChangesSummary } from '../../session-changes';
 import { toSessionCheckout } from '../../session-record';
 import type { SessionListState } from '../state';
 import { SessionInfoActivity } from './activity';
@@ -130,13 +131,14 @@ function sessionDetails(
   input: SessionInfoInput,
 ): Pick<
   SessionListState[number]['information'],
-  'plan' | 'subagents' | 'shells' | 'archivedAt' | 'pullRequest'
+  'plan' | 'subagents' | 'shells' | 'archivedAt' | 'changes' | 'pullRequest'
 > {
   return {
     plan: planSummary(input.plan),
     subagents: input.subagents,
     shells: input.shells ?? { total: 0, running: 0 },
     archivedAt: input.row.archivedAt,
+    changes: rowChangesSummary(input.row),
     pullRequest: null,
   };
 }

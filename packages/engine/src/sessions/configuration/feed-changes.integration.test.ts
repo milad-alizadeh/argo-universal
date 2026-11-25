@@ -1,4 +1,5 @@
 import { expect, it, onTestFinished } from 'vitest';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   startSessionJourney,
@@ -21,9 +22,11 @@ it('returns the chosen config value and delivers later Agent changes through the
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
 
-  const updates = await createCaller({
-    signal: controller.signal,
-  }).feed.subscribe({ sessionId, after: null });
+  const updates = await plain(
+    createCaller({
+      signal: controller.signal,
+    }).feed.subscribe({ sessionId, after: null }),
+  );
 
   const iterator = updates[Symbol.asyncIterator]();
   await iterator.next();

@@ -15,7 +15,7 @@ import {
   readBlobText,
 } from '#mocks/feed-tool-output';
 
-it('large tool output keeps a 64 KB head and tail, marks the row truncated and stores the full output as Blobs', async () => {
+it('large tool output keeps a 16 KB head and tail, marks the row truncated and stores the full output as Blobs', async () => {
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: output } }],
     rawOutput: { stdout },
@@ -50,7 +50,7 @@ it('large tool output keeps a 64 KB head and tail, marks the row truncated and s
   ).toEqual({ stdout });
 });
 
-it('tool output within 64 KB is stored whole without a truncation mark', async () => {
+it('tool output within 16 KB is stored whole without a truncation mark', async () => {
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: 'Done' } }],
     rawOutput: { stdout: 'ok' },

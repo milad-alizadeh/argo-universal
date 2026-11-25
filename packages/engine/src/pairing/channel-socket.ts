@@ -4,6 +4,7 @@ import type { ChannelCipher } from './channel-cipher';
 import { channelFailure } from './channel-failure';
 import { tagBytes } from './cipher-state';
 import { FrameReader, frameRecord, maxRecordBytes } from './frames';
+import { leadingBytes, packRecord, unpackRecord } from './record-compression';
 
 const maxPlaintextBytes = maxRecordBytes - tagBytes;
 
@@ -19,6 +20,8 @@ export class ChannelSocket extends Duplex {
   public constructor(
     private readonly socket: ChannelCarrier,
     private readonly cipher: ChannelCipher,
+    // Whether the App offered compression and this Server agreed: every record then opens with the byte that says which (ADR-0045).
+    private readonly compression = false,
   ) {
     super();
     this.remoteAddress = socket.remoteAddress;
@@ -58,13 +61,36 @@ export class ChannelSocket extends Duplex {
     _encoding: BufferEncoding,
     done: (error?: Error | null) => void,
   ): void {
+    if (this.compression) {
+      this.writeDeflated(chunk).then(
+        () => done(),
+        (error: Error) => done(channelFailure(error)),
+      );
+
+      return;
+    }
+
     try {
-      for (const piece of pieces(chunk))
+      for (const piece of pieces(chunk, this.pieceBytes()))
         this.socket.write(frameRecord(this.cipher.seal(piece)));
       done();
     } catch (error) {
       done(channelFailure(error));
     }
+  }
+
+  // Deflating a piece takes a thread of Node's pool, not the event loop. A Duplex starts no write until the last one is done, and the pieces are awaited one at a time, so records are sealed and written in the order they were numbered.
+  private async writeDeflated(chunk: Buffer): Promise<void> {
+    for (const piece of pieces(chunk, this.pieceBytes()))
+      this.socket.write(frameRecord(this.cipher.seal(await packRecord(piece))));
+  }
+
+  // A WebSocket writes a message's header and payload back to back, so they are joined into one record rather than sealed as two.
+  public override _writev(
+    chunks: { chunk: Buffer }[],
+    done: (error?: Error | null) => void,
+  ): void {
+    this._write(Buffer.concat(chunks.map(({ chunk }) => chunk)), 'utf8', done);
   }
 
   public override _final(done: (error?: Error | null) => void): void {
@@ -99,11 +125,26 @@ export class ChannelSocket extends Duplex {
   }
 
   private pushRecord(record: Buffer): void {
-    if (!this.push(this.cipher.open(record))) this.socket.pause();
+    const plaintext = this.cipher.open(record);
+
+    if (!this.push(this.unpack(plaintext))) this.socket.pause();
+  }
+
+  // The leading byte takes a byte of every record, so a piece is one byte shorter.
+  private pieceBytes(): number {
+    return this.compression
+      ? maxPlaintextBytes - leadingBytes
+      : maxPlaintextBytes;
+  }
+
+  private unpack(plaintext: Buffer): Buffer {
+    return this.compression
+      ? unpackRecord(plaintext, this.pieceBytes())
+      : plaintext;
   }
 }
 
-function* pieces(chunk: Buffer): Generator<Buffer> {
-  for (let start = 0; start < chunk.length; start += maxPlaintextBytes)
-    yield chunk.subarray(start, start + maxPlaintextBytes);
+function* pieces(chunk: Buffer, size: number): Generator<Buffer> {
+  for (let start = 0; start < chunk.length; start += size)
+    yield chunk.subarray(start, start + size);
 }

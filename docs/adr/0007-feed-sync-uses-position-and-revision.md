@@ -18,6 +18,8 @@ Spec 0009 bounds slow readers and failing storage (owner, 2026-10-10, #358). A s
 
 Stored rows keep payload version 1. The ACP contracts only widened row shapes, so rows written by the native integration read back unchanged without migration or reset. Hydration reads one payload version; an incompatible change ships one migration rewriting stored payloads to the new version, not a reader for every past shape.
 
+Amended 2026-11-24 (owner, #2685): the sync protocol gained four additions, each asked for by the App, so an App from before them still reads the Feed (ADR-0045). `feed.subscribe` gives each event that moves an App's sync point a `tracked()` id, `epoch:revision`, which tRPC's client sends again as `lastEventId` after a reconnect; it stands in for `after` when its revision is the higher (#2690). An App with no rows for a Session may ask for the `tail`: the newest page, sent as the first event, so it reads no `feed.page` first (#2699). An App may ask for `batched` catch-up, in which stored rows go out as `rows.upsert` events of up to about 256 KB each, whose id resumes after the whole batch, in place of one `row.upsert` per row (#2701). An App that sends none of `lastEventId`, `tail` or `batched` is sent plain events with no ids, as before. A Server from before these refuses the new input keys with `BAD_REQUEST`, and the App then opens the subscription again with `after` alone.
+
 ## Considered Options
 
 - Send the whole row again on every change. Rejected: it costs 20 to 100 times more data, and the cost grows with the square of the message length.

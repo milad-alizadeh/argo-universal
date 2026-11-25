@@ -10,6 +10,7 @@ import {
   controller,
   setFeedTestHost,
 } from '#mocks/feed-suite';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -34,12 +35,12 @@ it('persists the final buffered ACP Feed row during real Engine shutdown', async
   await entered.promise;
 
   const updates = (
-    await feedTestHost
-      .createCaller({ signal: controller.signal })
-      .feed.subscribe({
+    await plain(
+      feedTestHost.createCaller({ signal: controller.signal }).feed.subscribe({
         sessionId: 'session-1',
         after: { epoch: 3, revision: 5 },
-      })
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   await updates.next();

@@ -9,6 +9,7 @@ import {
   controller,
   setFeedTestHost,
 } from '#mocks/feed-suite';
+import { plain } from '#mocks/plain-feed';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 it('reads a closed Session Feed without opening a Session', async (): Promise<void> => {
@@ -24,12 +25,14 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
 
   const events = await drainClosedFeed(
     (
-      await feedTestHost
-        .createCaller({ signal: controller.signal })
-        .feed.subscribe({
-          sessionId: 'session-1',
-          after: { epoch: 3, revision: 3 },
-        })
+      await plain(
+        feedTestHost
+          .createCaller({ signal: controller.signal })
+          .feed.subscribe({
+            sessionId: 'session-1',
+            after: { epoch: 3, revision: 3 },
+          }),
+      )
     )[Symbol.asyncIterator](),
   );
 

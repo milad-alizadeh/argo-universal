@@ -99,7 +99,6 @@ it.each([
       }),
     ).toEqual({
       ...created,
-      vendorSessionId: 'vendor-1',
       kept: true,
       promptQueue: { items: [], pauseReason: null },
     });

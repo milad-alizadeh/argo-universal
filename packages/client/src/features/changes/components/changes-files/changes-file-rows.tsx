@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { DiffFileHeader, isDeletedFile } from '#features/feed';
-import { type ChangesItem, isDiffItem } from '../../view/changes-items';
+import type { ChangesItem } from '../../view/changes-items';
 import type {
   ChangedFile,
   ChangesViewProps,
@@ -32,76 +32,75 @@ const assertNever = (value: never): never => {
   throw new Error(`Unhandled Changes row: ${JSON.stringify(value)}`);
 };
 
-export function ChangesRow(
-  props: RowProps<ChangesItem['kind']>,
-): React.JSX.Element {
-  const { item, context } = props;
-
-  return isDiffItem(item) ? (
-    <DiffRow item={item} context={context} />
-  ) : (
-    <FileRow item={item} context={context} />
-  );
-}
-
-function FileRow({
+/*
+ * The React Compiler skips a row whose props are unchanged. A press on one file hands every drawn row a new context,
+ * but a header is given only its own file's open and Viewed marks, so only that file's header takes in the change.
+ */
+export function ChangesRow({
   item,
   context,
-}: RowProps<'separator' | 'header'>): React.JSX.Element {
+}: RowProps<ChangesItem['kind']>): React.JSX.Element {
   switch (item.kind) {
     case 'separator':
       return <SeparatorRow />;
     case 'header':
-      return <HeaderRow item={item} context={context} />;
+      return (
+        <HeaderRow
+          item={item}
+          open={!context.folded.has(item.file.path)}
+          viewed={context.viewed.includes(item.file.path)}
+          setOpen={context.setOpen}
+          onViewedChange={context.onViewedChange}
+        />
+      );
+    case 'page':
+      return <PageRow item={item} />;
+    case 'more':
+      return (
+        <MoreRow
+          path={item.file.path}
+          nextPages={item.nextPages}
+          onLoadDiff={context.onLoadDiff}
+        />
+      );
+    case 'status':
+      return <StatusRow item={item} />;
     default:
       return assertNever(item);
   }
-}
-
-function DiffRow({
-  item,
-  context,
-}: RowProps<'page' | 'more' | 'status'>): React.JSX.Element {
-  return item.kind === 'status' ? (
-    <StatusRow item={item} />
-  ) : (
-    <LinesRow item={item} context={context} />
-  );
-}
-
-function LinesRow({
-  item,
-  context,
-}: RowProps<'page' | 'more'>): React.JSX.Element {
-  return item.kind === 'page' ? (
-    <PageRow item={item} />
-  ) : (
-    <MoreRow item={item} context={context} />
-  );
 }
 
 function SeparatorRow(): React.JSX.Element {
   return <View className="h-px bg-border" />;
 }
 
-// Marking a file Viewed folds it; clearing the mark opens it again, as on GitHub.
-const viewedChange =
-  (path: string, context: Pick<RowContext, 'setOpen' | 'onViewedChange'>) =>
-  (viewed: boolean): void => {
-    context.setOpen(path, !viewed);
-    context.onViewedChange(path, viewed);
-  };
+interface HeaderState {
+  open: boolean;
+  viewed: boolean;
+  setOpen: RowContext['setOpen'];
+  onViewedChange: RowContext['onViewedChange'];
+}
 
-function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
+// Marking a file Viewed folds it; clearing the mark opens it again, as on GitHub.
+function HeaderRow({
+  item,
+  open,
+  viewed,
+  setOpen,
+  onViewedChange,
+}: HeaderState & { item: ItemOf<'header'> }): React.JSX.Element {
   const { path } = item.file;
 
   return (
     <DiffFileHeader
       file={item.file}
-      open={!context.folded.has(path)}
-      onOpenChange={(open) => context.setOpen(path, open)}
-      viewed={context.viewed.includes(path)}
-      onViewedChange={viewedChange(path, context)}
+      open={open}
+      onOpenChange={(next) => setOpen(path, next)}
+      viewed={viewed}
+      onViewedChange={(next) => {
+        setOpen(path, !next);
+        onViewedChange(path, next);
+      }}
     />
   );
 }
@@ -114,14 +113,21 @@ function PageRow({ item }: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
   );
 }
 
-// Holds a place at the end of the pages so far, so the next is asked for only once the list draws it near the reader.
-function MoreRow({ item, context }: RowProps<'more'>): React.JSX.Element {
-  const { file, nextPages } = item;
-  const { onLoadDiff } = context;
+interface MoreRowProps {
+  path: string;
+  nextPages: number;
+  onLoadDiff: RowContext['onLoadDiff'];
+}
 
+// Holds a place at the end of the pages so far, so the next is asked for only once the list draws it near the reader.
+function MoreRow({
+  path,
+  nextPages,
+  onLoadDiff,
+}: MoreRowProps): React.JSX.Element {
   useEffect(() => {
-    onLoadDiff(file.path, nextPages);
-  }, [file.path, onLoadDiff, nextPages]);
+    onLoadDiff(path, nextPages);
+  }, [path, onLoadDiff, nextPages]);
 
   return <View className="h-px bg-card medium:bg-content" />;
 }

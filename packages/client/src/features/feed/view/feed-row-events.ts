@@ -17,10 +17,18 @@ type HeldEvent = Extract<
 
 type Append = Extract<HeldEvent, { type: 'row.append' }>;
 
-function isBeforeWindow(feed: FeedState, row: SessionUpdate): boolean {
-  if (!feed.hasOlder) return false;
+function isBeforeCursor(
+  hasOlder: boolean,
+  startCursor: number | null,
+  row: SessionUpdate,
+): boolean {
+  if (!hasOlder) return false;
 
-  return feed.startCursor !== null && row.position < feed.startCursor;
+  return startCursor !== null && row.position < startCursor;
+}
+
+function isBeforeWindow(feed: FeedState, row: SessionUpdate): boolean {
+  return isBeforeCursor(feed.hasOlder, feed.startCursor, row);
 }
 
 function earliestCursor(feed: FeedState, row: SessionUpdate): number {
@@ -48,6 +56,37 @@ export function upsertRow(
     rows: upsertRows(feed, row, beforeWindow),
     startCursor: upsertCursor(feed, row, beforeWindow),
     plan: beforeWindow ? laterPlan(feed.plan, row) : feed.plan,
+  };
+}
+
+// Whole rows, as `upsertRow` would apply them one after another, with the held rows merged once.
+export function upsertRowsOnce(
+  feed: FeedState,
+  incoming: readonly SessionUpdate[],
+): FeedState {
+  let startCursor = feed.startCursor;
+  let plan = feed.plan;
+  const inWindow: SessionUpdate[] = [];
+
+  for (const row of incoming) {
+    if (isBeforeCursor(feed.hasOlder, startCursor, row)) {
+      plan = laterPlan(plan, row);
+      continue;
+    }
+
+    inWindow.push(row);
+    startCursor = Math.min(row.position, startCursor ?? Infinity);
+  }
+
+  return {
+    ...feed,
+    revision: incoming.reduce(
+      (newest, row) => Math.max(newest, row.revision),
+      feed.revision,
+    ),
+    rows: keepNewerRevisions(feed.rows, inWindow),
+    startCursor,
+    plan,
   };
 }
 

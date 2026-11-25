@@ -51,7 +51,7 @@ function makeWindow(
   });
 }
 
-const trafficLightPosition = { x: 20, y: 15 };
+const trafficLightPosition = { x: 20, y: 19 };
 
 // Electron positions the top of the 14-point traffic lights.
 const trafficLightRadius = 7;

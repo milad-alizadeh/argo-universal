@@ -25,6 +25,7 @@ import {
   type ScaffoldPartProps,
   useScaffoldLayout,
 } from './use-scaffold-layout';
+import { WorkbenchClip } from './workbench-clip';
 
 export interface ScaffoldParts extends ScaffoldPartProps {
   // A wide window: the sidebar and the list sit beside the page.
@@ -187,7 +188,13 @@ function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
       <WorkbenchDismiss layout={parts.layout} testID="workbench-dismiss" />
-      <ScaffoldWorkbench {...parts} />
+      <WorkbenchClip
+        edge={inspectorBox(parts).x}
+        inspectorOpen={parts.layout.inspector.open}
+        {...parts.layout.motion}
+      >
+        <ScaffoldWorkbench {...parts} />
+      </WorkbenchClip>
       <FramedInspector {...parts} />
       <InspectorDismiss {...parts} />
       <ScaffoldResizeHandles {...parts} />
@@ -198,7 +205,7 @@ function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   );
 }
 
-// The Inspector, Workbench and handles share the panes' origin below the band. The Inspector floats over the Workbench, which slides out from under its edge.
+// The Inspector, Workbench and handles share the panes' origin below the band. The Inspector floats over the Workbench, which slides out from under its edge and is clipped there.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
     <View

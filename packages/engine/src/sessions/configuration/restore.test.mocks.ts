@@ -4,6 +4,7 @@ import type { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import type { startAcpEngine } from '#mocks/acp-engine';
 import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 export const configuration: SessionConfigOption[] = acpConfiguration.map(
@@ -39,7 +40,10 @@ async function restart(host: Host, identity: Identity): Promise<Host> {
 }
 
 async function exit(host: Host, sessionId: string): Promise<void> {
-  const events = await host.caller.feed.subscribe({ sessionId, after: null });
+  const events = await plain(
+    host.caller.feed.subscribe({ sessionId, after: null }),
+  );
+
   const process = requireScriptedProcessAt(host.agent.processes);
 
   process.exited.resolve();

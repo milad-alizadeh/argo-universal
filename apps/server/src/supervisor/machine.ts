@@ -12,11 +12,13 @@ import {
 } from 'xstate';
 import type { EngineEvent } from './engine-message';
 import { engineProcess } from './engine-process';
+import type { startLoadRecorder } from './load-recorder';
 
 type PortParameters = { port: number };
 
 export interface SupervisorInput {
   home: string;
+  loadRecorder?: ReturnType<typeof startLoadRecorder>;
   now: () => number;
   version: string;
   startedAt: string;
@@ -127,6 +129,8 @@ export const supervisorMachine = setup({
         input: ({ context }): InputFrom<typeof engineProcess> => ({
           watch: context.watch,
           entry: context.engineEntry,
+          missedPong: (): void =>
+            context.loadRecorder?.record('missed-voice-pong'),
         }),
       }),
       after: { readyTimeout: { target: 'backingOff' } },
@@ -139,9 +143,21 @@ export const supervisorMachine = setup({
       },
     },
     running: {
-      after: { heartbeatTimeout: { target: 'backingOff' } },
+      after: {
+        heartbeatTimeout: {
+          target: 'backingOff',
+          actions: ({ context }): void =>
+            context.loadRecorder?.record('missed-heartbeat'),
+        },
+      },
       on: {
-        'engine.heartbeat': { target: 'running', reenter: true },
+        'engine.heartbeat': {
+          target: 'running',
+          reenter: true,
+          actions: ({ context, event }): void => {
+            if (event.load) context.loadRecorder?.engine(event.load);
+          },
+        },
         // In watch mode the Engine restarts itself after a file change and is ready again.
         'engine.ready': {
           target: 'running',

@@ -10,6 +10,8 @@ Run the relevant test files, then `pnpm verify`. For a stacked branch without a 
 
 Rerun a test alone if the shared Mac times out a worker or kills a Plugin host. Record the rerun result in the PR. Run `pnpm quality` locally only when the owner asks because it holds the browser suite lock.
 
+On Macs with at least 18 logical cores, local Verify runs share two slots across Checkouts and run at background priority. A waiting run reports its wait before it starts the static checks. CI and smaller Macs run without the local admission policy. Cancel the whole command or process group when stopping a run. Killing its Node process alone releases the slot while its child checks can continue.
+
 Read `tools/verify.mts` and its tests for verification behavior. The CI workflows declare the checks that run on GitHub.
 
 ## Measuring verification and PR time

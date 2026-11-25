@@ -26,6 +26,7 @@ const engineStopGraceMs = 25_000;
 
 export interface EngineProcessInput {
   watch: boolean;
+  missedPong?: () => void;
   // Tests start a stand-in Engine and shorten the kill timeout.
   entry?: string;
   killTimeoutMs?: number;
@@ -45,7 +46,7 @@ export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
       releaseEngine(engine, releaseLimits(input)),
     );
 
-    const detach = watchEngine(engine, sendBack);
+    const detach = watchEngine(engine, sendBack, input.missedPong);
 
     receive(
       (): void =>
@@ -99,9 +100,13 @@ const reportExit = (send: Send, outcome: GroupRelease): void =>
     type: outcome === 'released' ? 'engine.exited' : 'engine.unresolved',
   });
 
-const watchEngine = (engine: ChildHandle, send: Send): (() => void) => {
+const watchEngine = (
+  engine: ChildHandle,
+  send: Send,
+  missedPong?: () => void,
+): (() => void) => {
   let watching = true;
-  const stopListening = engine.onMessage(messageReceiver(send));
+  const stopListening = engine.onMessage(messageReceiver(send, missedPong));
 
   void engine.exited.then((exit): void => {
     if (watching) send({ type: 'engine.exit', code: exit.code });
@@ -113,13 +118,16 @@ const watchEngine = (engine: ChildHandle, send: Send): (() => void) => {
   };
 };
 
-const messageReceiver = (send: Send): ((raw: ChildMessage) => void) => {
+const messageReceiver = (
+  send: Send,
+  missedPong?: () => void,
+): ((raw: ChildMessage) => void) => {
   const rejections = createRejectionCounter('supervisor');
 
   return (raw: ChildMessage): void => {
     const message = EngineMessage.safeParse(raw);
 
-    if (message.success) return relayMessage(send, message.data);
+    if (message.success) return relayMessage(send, message.data, missedPong);
 
     if (WatchModeMessage.safeParse(raw).success) return;
 
@@ -130,8 +138,14 @@ const messageReceiver = (send: Send): ((raw: ChildMessage) => void) => {
 const relayMessage = (
   send: Send,
   message: typeof EngineMessage._output,
+  missedPong?: () => void,
 ): void => {
-  if (message.type === 'ready')
-    send({ type: 'engine.ready', port: message.port });
-  else send({ type: 'engine.heartbeat' });
+  switch (message.type) {
+    case 'ready':
+      return send({ type: 'engine.ready', port: message.port });
+    case 'heartbeat':
+      return send({ type: 'engine.heartbeat', load: message.load });
+    case 'missed-voice-pong':
+      return missedPong?.();
+  }
 };

@@ -7,7 +7,7 @@ export const input: FrameLayoutInput = {
     railWidth: 56,
     inset: 8,
     titleBarTop: 6,
-    titleBarHeight: 38,
+    titleBarHeight: 46,
     workbenchWidth: 312,
     paneGap: 16,
     composerWidth: 640,

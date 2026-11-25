@@ -1,8 +1,13 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
+import {
+  boardListRoot,
+  queueListRoot,
+} from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { action } from 'storybook/actions';
+import { userEvent } from 'storybook/test';
 import { PluginTree, type PluginTreeProps } from './plugin-registry';
 import {
   canvasTree,
@@ -79,3 +84,43 @@ export const FieldGroup: Story = { args: fieldGroupTree };
 export const IconButton: Story = { args: iconButtonTree };
 
 export const SplitButton: Story = { args: splitButtonTree };
+
+const produce = [
+  { key: 'fruit', title: 'Fruit', rows: ['Apple', 'Pear'] },
+  { key: 'veg', title: 'Vegetables', rows: ['Leek', 'Kale'] },
+];
+
+// A List whose Sections hold rows, and which a person can search: the rows a search misses leave, and so do their Sections.
+const sectionedTree: WireNode = WireNode.parse({
+  type: 'List',
+  key: 'produce',
+  props: { accessibilityLabel: 'Produce', searchMode: 'app' },
+  slots: {},
+  children: produce.map(({ key, title, rows }) => ({
+    type: 'List.Section',
+    key,
+    props: { title },
+    slots: {},
+    children: rows.map((row) => ({
+      type: 'ListItem',
+      key: row,
+      props: { id: row, title: row },
+      slots: {},
+      children: [],
+    })),
+  })),
+});
+
+export const SectionedList: Story = { args: { root: sectionedTree } };
+
+export const SearchedSections: Story = {
+  args: { root: sectionedTree },
+  play: async ({ canvas }) => {
+    await userEvent.type(await canvas.findByLabelText('Search'), 'kale');
+  },
+};
+
+// A List with `onMove` and a Section: its rows move by drag or the Move to… action.
+export const MovableList: Story = { args: { root: queueListRoot } };
+
+export const MovableLanes: Story = { args: { root: boardListRoot } };

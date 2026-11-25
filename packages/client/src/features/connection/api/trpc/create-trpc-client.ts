@@ -27,6 +27,8 @@ export function serverHttpUrl(serverUrl: string, path: string): string {
 export interface ChannelTransport {
   WebSocket: typeof WebSocket;
   fetch: typeof fetch;
+  // Reads Blobs and Plugin assets on one channel it keeps, which `fetch` would open for each.
+  media: typeof fetch;
 }
 
 // The address tRPC writes into a request that goes over a channel. The socket is already open to the one Server, so this names nothing.
@@ -39,7 +41,11 @@ const appInstanceBytes = 16;
 interface ClientOptions {
   surface?: () => PluginSurface;
   channel?: ChannelTransport;
+  keepAlive?: { intervalMs: number; pongTimeoutMs: number };
 }
+
+// A Connection that died without closing, after a Wi-Fi change for example, is noticed within about this long. tRPC's own ping interval is kept; its 1 s pong wait is stretched to 3 s because a phone on cellular or a Tailscale relay can answer slower than 1 s and would be cut off while still alive.
+const defaultKeepAlive = { intervalMs: 5000, pongTimeoutMs: 3000 };
 
 // `beforeConnect` waits out the retry delay, so foreground and Try again can cut it short.
 const urlAfter =
@@ -53,7 +59,11 @@ const urlAfter =
 function createWebSocketClient(
   serverUrl: string,
   beforeConnect: () => Promise<void>,
-  { surface = appSurface, channel }: ClientOptions,
+  {
+    surface = appSurface,
+    channel,
+    keepAlive = defaultKeepAlive,
+  }: ClientOptions,
 ): ServerClient['webSocketClient'] {
   const appInstance = bytesHex(
     appChannelPlatform.randomBytes(appInstanceBytes),
@@ -67,6 +77,7 @@ function createWebSocketClient(
       pluginSurface: JSON.stringify(surface()),
     }),
     retryDelayMs: () => 0,
+    keepAlive: { enabled: true, ...keepAlive },
   });
 }
 

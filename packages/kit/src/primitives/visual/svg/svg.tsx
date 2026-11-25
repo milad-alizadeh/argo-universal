@@ -7,6 +7,7 @@ import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/content/text';
 import type { Tone } from '#primitives/content/text';
 import { ListTileContext } from '../../../list-context';
+import { svgHiddenProps } from '../../../svg-hidden-props';
 import type { KitProps } from '../../kit-props';
 import { useSvgDrawing } from './svg-budget';
 
@@ -75,7 +76,7 @@ function svgArtwork(
 function SvgArtwork({ xml, label, color }: ArtworkProps): React.JSX.Element {
   return (
     <SvgXml
-      accessible={false}
+      {...svgHiddenProps}
       xml={xml}
       width="100%"
       height="100%"

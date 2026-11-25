@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Platform } from 'react-native';
 import {
   type FeedEntry,
@@ -6,11 +6,6 @@ import {
   spaceBelowEntry,
 } from './feed-entry';
 import type { FeedRowData } from './feed-row-data';
-
-interface HeldRows {
-  entries: FeedEntry[];
-  rows: FeedRowData[];
-}
 
 const samePlace = (first: FeedRowData, second: FeedRowData): boolean =>
   first.spaceBelow === second.spaceBelow &&
@@ -51,18 +46,31 @@ function placedRow(
   };
 }
 
-function rowData(entries: FeedEntry[], previous?: HeldRows): HeldRows {
-  const held = new Map(previous?.rows.map((row) => [row.entry, row]));
+// The rows the last draw held, found where the entry stood or, after rows paged in above it, by the entry itself.
+function rowData(
+  entries: FeedEntry[],
+  previous: readonly FeedRowData[],
+): FeedRowData[] {
+  let byEntry: Map<FeedEntry, FeedRowData> | undefined;
 
-  return {
-    entries,
-    rows: entries.map((entry, index) =>
-      reuseRow(
-        placedRow(entry, entries[index - 1], entries[index + 1]),
-        held.get(entry),
-      ),
-    ),
+  const heldFor = (
+    entry: FeedEntry,
+    index: number,
+  ): FeedRowData | undefined => {
+    const standing = previous[index];
+
+    if (standing?.entry === entry) return standing;
+    byEntry ??= new Map(previous.map((row) => [row.entry, row]));
+
+    return byEntry.get(entry);
   };
+
+  return entries.map((entry, index) =>
+    reuseRow(
+      placedRow(entry, entries[index - 1], entries[index + 1]),
+      heldFor(entry, index),
+    ),
+  );
 }
 
 /*
@@ -70,14 +78,14 @@ function rowData(entries: FeedEntry[], previous?: HeldRows): HeldRows {
  * change that data. Keep other rows and their expansion state, without redrawing every row per chunk.
  */
 export function useFeedRowData(entries: FeedEntry[]): FeedRowData[] {
-  const [held, setHeld] = useState(() => rowData(entries));
+  const drawn = useRef<FeedRowData[]>([]);
 
-  if (held.entries !== entries) {
-    const next = rowData(entries, held);
-    setHeld(next);
+  // eslint-disable-next-line react/refs -- the last draw is what the rows are kept from
+  const rows = useMemo(() => rowData(entries, drawn.current), [entries]);
 
-    return next.rows;
-  }
+  useEffect(() => {
+    drawn.current = rows;
+  }, [rows]);
 
-  return held.rows;
+  return rows;
 }

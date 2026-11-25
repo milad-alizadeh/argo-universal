@@ -6,7 +6,7 @@ import {
   type SessionUpdate,
 } from '@repo/contracts';
 import { keepNewerRevisions, startCursor } from './feed-revisions';
-import { applyHeldEvent, applyUpsert } from './feed-row-events';
+import { applyHeldEvent, applyUpsert, upsertRowsOnce } from './feed-row-events';
 import { laterPlan } from './held-plan';
 
 // The rows an App holds for one Session: a window of the newest rows, kept in sync by revision (ADR 0007).
@@ -107,10 +107,17 @@ export function applySubscriptionEvent(
   feed: FeedState,
   event: Exclude<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>,
 ): SubscriptionEventResult {
+  if (event.type === 'tail') return { feed: mergeNewestPage(feed, event.page) };
+
   if (event.type === 'reset')
     return { feed: { ...emptyFeed, epoch: event.epoch }, reset: true };
 
   if (event.type === 'row.upsert') return applyUpsert(feed, event);
+
+  if (event.type === 'rows.upsert')
+    return {
+      feed: upsertRowsOnce(feed, event.rows),
+    };
 
   return applyHeldEvent(feed, event);
 }
@@ -120,4 +127,13 @@ function heldPageRows(
   page: FeedPageOutput,
 ): FeedState['rows'] {
   return page.epoch === feed.epoch ? feed.rows : [];
+}
+
+// The newest `limit` rows of the window, with the older history left to page in again; the window as is when it is no longer.
+export function keepNewestRows(feed: FeedState, limit: number): FeedState {
+  if (feed.rows.length <= limit) return feed;
+
+  const rows = feed.rows.slice(-limit);
+
+  return { ...feed, rows, hasOlder: true, startCursor: startCursor(rows) };
 }

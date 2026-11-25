@@ -1,5 +1,7 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
+import { Platform } from 'react-native';
+import { useShowsServer } from '#features/servers';
 import { LatencyPanel } from '../components/latency-panel/latency-panel';
 import { useConversationStatus } from '../hooks/use-conversation-status';
 import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
@@ -74,7 +76,7 @@ function FollowsDeviceChoice({
 
 type Props = { desktop: boolean; children: ReactNode };
 
-// SPIKE (latency on a phone): a phone chooses no device, and both draw the latency panel over the App.
+// SPIKE (latency on a phone): a phone chooses no device, and both draw the latency panel over the App (not the web app).
 function Hosted(props: {
   connection: ConversationConnection;
   desktop: boolean;
@@ -86,7 +88,7 @@ function Hosted(props: {
         <FollowsDeviceChoice connection={props.connection} />
       ) : null}
       {props.children}
-      {__DEV__ ? <LatencyPanel /> : null}
+      {__DEV__ && Platform.OS !== 'web' ? <LatencyPanel /> : null}
     </ServerConversationHost>
   );
 }
@@ -96,8 +98,10 @@ export function DesktopConversationProvider({
   children,
 }: Props): JSX.Element {
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
+  // The Server's call is read over a Server's Connection; a Device holding none, as a clean install is, has no call to follow.
+  const showsServer = useShowsServer();
 
-  return connection ? (
+  return connection && showsServer ? (
     <Hosted connection={connection} desktop={desktop}>
       {children}
     </Hosted>

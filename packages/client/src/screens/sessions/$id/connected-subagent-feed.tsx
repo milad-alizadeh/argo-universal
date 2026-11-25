@@ -55,7 +55,9 @@ function useChildSource(
     (
       rows: Parameters<typeof toSubagentFeedView>[0],
       snapshot: Parameters<typeof toSubagentFeedView>[1],
-    ) => toSubagentFeedView(rows, snapshot, subagent.parentSessionId),
+    ) => ({
+      view: toSubagentFeedView(rows, snapshot, subagent.parentSessionId),
+    }),
     [subagent.parentSessionId],
   );
 
