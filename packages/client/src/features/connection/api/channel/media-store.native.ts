@@ -12,7 +12,7 @@ import {
   memoryMedia,
   type MediaStore,
   withFallback,
-} from './media-store';
+} from './media-store-core';
 
 const cacheFolderName = 'argo-media';
 

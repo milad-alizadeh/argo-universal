@@ -1,4 +1,4 @@
-import { memoryMedia, objectUrls, type MediaStore } from './media-store';
+import { memoryMedia, objectUrls, type MediaStore } from './media-store-core';
 
 const fallbackMime = 'application/octet-stream';
 

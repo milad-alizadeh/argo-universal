@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppProviders } from './app-providers';
+import { DesktopConversationProvider } from './features/conversation';
 import {
   isPaired,
   openConnection,
@@ -156,4 +157,15 @@ function ScreenMock(): null {
   }, [client]);
 
   return null;
+}
+
+// A Device that holds no Server, as a clean install of the phone App is: the call's host is drawn over screens that have no Connection.
+export function NoServerMock(): React.JSX.Element {
+  return (
+    <AppProviders>
+      <DesktopConversationProvider desktop>
+        <Text>Pairing</Text>
+      </DesktopConversationProvider>
+    </AppProviders>
+  );
 }

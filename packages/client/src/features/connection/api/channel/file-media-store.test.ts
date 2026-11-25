@@ -8,7 +8,7 @@ import {
   type MediaDisk,
   type MediaFile,
 } from './file-media-store';
-import { ForgottenError } from './media-store';
+import { ForgottenError } from './media-store-core';
 
 interface Stored {
   size: number;

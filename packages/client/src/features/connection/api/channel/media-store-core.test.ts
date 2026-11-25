@@ -5,7 +5,7 @@ import {
   withFallback,
   type MediaStore,
   type MemoryUrls,
-} from './media-store';
+} from './media-store-core';
 
 const bytes = new Uint8Array(3);
 

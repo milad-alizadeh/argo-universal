@@ -1,5 +1,6 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
+import { useShowsServer } from '#features/servers';
 import { LatencyPanel } from '../components/latency-panel/latency-panel';
 import { useConversationStatus } from '../hooks/use-conversation-status';
 import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
@@ -96,8 +97,10 @@ export function DesktopConversationProvider({
   children,
 }: Props): JSX.Element {
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
+  // The Server's call is read over a Server's Connection; a Device holding none, as a clean install is, has no call to follow.
+  const showsServer = useShowsServer();
 
-  return connection ? (
+  return connection && showsServer ? (
     <Hosted connection={connection} desktop={desktop}>
       {children}
     </Hosted>
