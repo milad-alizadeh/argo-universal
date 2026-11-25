@@ -1,5 +1,6 @@
 import { bytesText, concatBytes, bytesBase64, textBytes } from './bytes';
 import { ServerUnreachable } from './channel-route';
+import { abnormalClosure, normalClosure } from './close-codes';
 import { readHead, type HeadAndRest } from './http-exchange';
 import { PairingRefused, type OpenedChannel } from './open-channel';
 import { EventedSocket } from './socket-events';
@@ -18,10 +19,6 @@ const byteMask = 0xff;
 const maskBytes = 4;
 
 const keyBytes = 16;
-
-const normalClosure = 1000;
-
-const abnormalClosure = 1006;
 
 export interface ChannelSocketDeps {
   readonly openChannel: () => Promise<OpenedChannel>;

@@ -149,22 +149,32 @@ export async function* streamFeed(
   }
 }
 
-// The sync point an event moves an App to: the revision it carries, or the new epoch's start.
+// The default of an exhaustive switch: the compiler rejects it while an event type is missing.
+function assertNever(event: never): never {
+  throw new Error(`Unhandled feed event: ${JSON.stringify(event)}`);
+}
+
 function pointOfEvent(
   epoch: number,
   event: FeedSubscribeOutput,
 ): FeedSyncPoint | null {
-  if (event.type === 'closed') return null;
-
-  if (event.type === 'reset') return { epoch: event.epoch, revision: 0 };
-
-  if (event.type === 'tail')
-    return { epoch: event.page.epoch, revision: event.page.maxRevision };
-
-  if (event.type === 'snapshot')
-    return { epoch, revision: event.snapshot.maxRevision };
-
-  return { epoch, revision: event.rev };
+  switch (event.type) {
+    case 'closed':
+      return null;
+    case 'reset':
+      return { epoch: event.epoch, revision: 0 };
+    case 'tail':
+      return { epoch: event.page.epoch, revision: event.page.maxRevision };
+    case 'snapshot':
+      return { epoch, revision: event.snapshot.maxRevision };
+    case 'row.upsert':
+    case 'rows.upsert':
+    case 'row.append':
+    case 'row.patch':
+      return { epoch, revision: event.rev };
+    default:
+      return assertNever(event);
+  }
 }
 
 // An App that sends a `lastEventId`, or asks for the tail or for batches, keeps event ids.

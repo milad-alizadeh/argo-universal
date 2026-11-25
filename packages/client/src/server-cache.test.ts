@@ -23,8 +23,11 @@ import {
   forgetServerCache,
   rememberServerCache,
 } from './features/servers/server-cache-store';
-import { createQueryClient, keepServerLists } from './query-cache';
-import { restoreFromDevice, writeToDevice } from './server-cache';
+import {
+  createServerQueryClient,
+  trimDevice,
+  writeToDevice,
+} from './server-cache';
 
 const { rows, snapshot } = streamed;
 
@@ -55,6 +58,8 @@ interface StartedApp {
   trpc: TRPC;
   // The App closes: what was still waiting to be written is written.
   quit: () => Promise<void>;
+  // The App goes to the background: what was still waiting is written now, and the cache keeps writing.
+  background: () => void;
   // Reads a query as a screen does, giving the Server's answer only if the Device holds none.
   read: <T>(key: readonly unknown[]) => Promise<T>;
   serverReads: () => number;
@@ -62,25 +67,25 @@ interface StartedApp {
 
 // The App as it starts: a client with its defaults, the kept lists named, and the cache of one Server.
 function startApp(serverId: string): StartedApp {
-  const queryClient = createQueryClient();
+  const queryClient = createServerQueryClient(serverId);
 
   const trpc = createTRPCOptionsProxy<AppRouter>({
     client: createTRPCClient<AppRouter>({ links: [] }),
     queryClient,
   });
 
-  keepServerLists(queryClient, trpc);
-  restoreFromDevice(queryClient, trpc, { serverId });
-  const stop = writeToDevice(queryClient, trpc, { serverId });
+  void trimDevice({ serverId });
+  const device = writeToDevice(queryClient, trpc, { serverId });
   let reads = 0;
 
   return {
     queryClient,
     trpc,
     quit: async () => {
-      stop();
+      device.stop();
       await vi.advanceTimersByTimeAsync(writeWindowMs);
     },
+    background: device.flush,
     read: <T>(key: readonly unknown[]): Promise<T> =>
       queryClient.fetchQuery<T>({
         queryKey: key,
@@ -246,6 +251,30 @@ it('writes only the query that changed', async () => {
 
   expect(written).toHaveBeenCalledOnce();
   expect(written.mock.calls[0]?.[0]).toContain('session-1');
+});
+
+it('writes what is waiting when the App goes to the background, which may be the last it runs', async () => {
+  const app = startApp('studio');
+  const written = vi.spyOn(AsyncStorage, 'setItem');
+
+  app.queryClient.setQueryData(feedKey('session-1'), heldFeed);
+  app.background();
+  await vi.advanceTimersByTimeAsync(0);
+
+  expect(written).toHaveBeenCalledOnce();
+});
+
+it('carries on when the Device refuses a write, rather than leaving a rejection nobody handles', async () => {
+  const app = startApp('studio');
+
+  const refused = vi
+    .spyOn(AsyncStorage, 'setItem')
+    .mockRejectedValue(new Error('disk full'));
+
+  app.queryClient.setQueryData(feedKey('session-1'), heldFeed);
+  await vi.advanceTimersByTimeAsync(writeWindowMs);
+
+  expect(refused).toHaveBeenCalled();
 });
 
 it('writes a Feed streaming rows once per window, not once per row', async () => {

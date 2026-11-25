@@ -1,6 +1,7 @@
 import { bytesBase64 } from './bytes';
 import { isUnknownDevice, reportFault } from './channel-web-socket';
 import type { ChannelSocketDeps } from './channel-web-socket';
+import { abnormalClosure, normalClosure } from './close-codes';
 import {
   NativeByteSocket,
   type NativeChannel,
@@ -9,10 +10,6 @@ import {
 import type { HandOver } from './secure-stream';
 import { EventedSocket } from './socket-events';
 import { acceptFor, upgradeRequest } from './ws-upgrade';
-
-const normalClosure = 1000;
-
-const abnormalClosure = 1006;
 
 const keyBytes = 16;
 
@@ -40,7 +37,7 @@ class NativeChannelWebSocket extends EventedSocket {
   public send(text: string): void {
     if (this.readyState !== WebSocket.OPEN || this.id === undefined)
       throw new Error('The channel is not open');
-    this.deps.native.native.send(this.id, text);
+    this.deps.native.send(this.id, text);
   }
 
   public close(code = normalClosure, reason = ''): void {
@@ -63,13 +60,13 @@ class NativeChannelWebSocket extends EventedSocket {
     const { id } = socket;
 
     if (this.readyState !== WebSocket.CONNECTING)
-      return this.deps.native.native.close(id, normalClosure, '');
+      return this.deps.native.close(id, normalClosure, '');
     const key = bytesBase64(this.deps.randomBytes(keyBytes));
 
     this.id = id;
     this.deps.native.watch(id, (event) => this.heard(event));
 
-    this.deps.native.native.handOver(id, {
+    this.deps.native.handOver(id, {
       sendKey: bytesBase64(sending.key),
       sendRecords: sending.records,
       receiveKey: bytesBase64(receiving.key),
@@ -88,7 +85,9 @@ class NativeChannelWebSocket extends EventedSocket {
         return this.emit('message', { data: event.data });
       case 'close':
         return this.closed(event);
-      default:
+      case 'bytes':
+        // Handshake bytes come before the hand-over; the module sends none after it.
+        return;
     }
   }
 
@@ -111,7 +110,7 @@ class NativeChannelWebSocket extends EventedSocket {
   private release(code: number, reason: string): void {
     if (this.id === undefined) return;
     this.deps.native.forget(this.id);
-    this.deps.native.native.close(this.id, code, reason);
+    this.deps.native.close(this.id, code, reason);
   }
 
   private fail(cause: unknown): void {

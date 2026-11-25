@@ -6,16 +6,15 @@ import {
   snapshotKeyPrefix,
   snapshotQueryDefaults,
 } from './features/feed/api/feed-query';
+import { keptForMs } from './kept-for';
 
 const minuteMs = 60_000,
   minutesKept = 30;
 
 const keptFor = minutesKept * minuteMs;
 
-const hoursKept = 24;
-
 // A Plugin page's tree is asked for again behind the kept one on every visit, so keeping it costs one stale draw and saves the first draw from waiting on a Plugin start and its Loader's reads.
-const pageTreesKeptFor = hoursKept * 60 * minuteMs;
+const pageTreesKeptFor = keptForMs;
 
 /*
  * The Server's own lists: each is what a list screen waits on before it can draw a row, and each changes

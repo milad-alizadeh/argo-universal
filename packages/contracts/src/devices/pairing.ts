@@ -83,7 +83,7 @@ export type ChannelCompression = z.infer<typeof ChannelCompression>;
  * What a connecting Device says inside the completed handshake. Pre-authentication and untrusted: the name is shown for recognition and decides nothing.
  * The Device Key's public half is not here. It is the static key the handshake itself carries, so no Device can claim one it has no private half for.
  */
-// Not strict: a Server ignores a key it does not know, so a later App can say more in its claim without Servers built before it refusing to pair (ADR-0045).
+// Not strict: a Server ignores a key it does not know, so a later App can say more in its claim and a Server with this schema still pairs it (ADR-0045).
 export const PairingClaim = z.object({
   ticket: z.string().optional(),
   name: z.string(),
