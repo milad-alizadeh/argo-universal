@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { type ReactElement, useEffect, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 import { Markdown } from './index';
 
 const meta = {
@@ -95,6 +96,55 @@ export const WebLinkKeepsItsHref: Story = {
     await expect(canvas.getByRole('link', { name: 'a page' })).toHaveAttribute(
       'href',
       'https://example.com/a%20b',
+    );
+  },
+};
+
+const longProse = Array.from(
+  { length: 12 },
+  (_, line) => `Sentence number ${line + 1} fills out the prompt.`,
+).join(' ');
+
+function GrowingClampedMarkdown(): ReactElement {
+  const [text, setText] = useState('One line');
+  useEffect(() => {
+    const timer = setTimeout(() => setText(longProse), 120);
+
+    return (): void => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div data-testid="frame" style={{ width: 240 }}>
+      <Markdown text={text} numberOfLines={4} />
+    </div>
+  );
+}
+
+// The content's first layout reports one line, then the real, taller height arrives. The clamp holds throughout, never drawing the long content at its natural height over the rows beside it.
+export const ClampHoldsWhenContentGrowsAfterFirstLayout: Story = {
+  render: () => <GrowingClampedMarkdown />,
+  play: async ({ canvas }) => {
+    const frame = await canvas.findByTestId('frame');
+    let tallest = 0;
+
+    const observer = new ResizeObserver(() => {
+      tallest = Math.max(tallest, frame.getBoundingClientRect().height);
+    });
+
+    observer.observe(frame);
+
+    await canvas.findByText(/Sentence number 1 /);
+
+    await waitFor(() =>
+      expect(frame.getBoundingClientRect().height).toBeGreaterThan(40),
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    observer.disconnect();
+
+    await expect(tallest).toBeLessThanOrEqual(
+      frame.getBoundingClientRect().height + 1,
     );
   },
 };

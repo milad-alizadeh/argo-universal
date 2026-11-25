@@ -129,11 +129,10 @@ function useClipOnLayout(
   const passed = passedLimit(height, limit);
   const cut = useMeasuredCut(passed, { leaves, content, height });
 
-  const initialBound = height === 0 ? limit : passed;
-
   return {
+    // The limit bounds the content until a cut is measured: a first layout can report one line before the real height arrives, and an unbounded frame would draw the content at full height meanwhile.
     onContentLayout,
-    clipHeight: cut ?? initialBound,
+    clipHeight: cut ?? limit,
     overflowing: cut !== undefined,
   };
 }
