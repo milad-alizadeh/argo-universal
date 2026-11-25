@@ -17,6 +17,7 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { FeedRowsJob } from '../src/feed';
 import type { FeedActorRef } from '../src/feed/index';
 import { writeJobs } from '../src/storage';
+import { plain } from './plain-feed';
 
 export let database: Database;
 
@@ -65,7 +66,7 @@ export const subscribe = async (
   after: FeedSyncPoint | null,
   sessionId = 'session-1',
 ): Promise<AsyncIterator<FeedSubscribeOutput, void>> =>
-  (await createFeedRouterCaller().feed.subscribe({ sessionId, after }))[
+  (await plain(createFeedRouterCaller().feed.subscribe({ sessionId, after })))[
     Symbol.asyncIterator
   ]();
 

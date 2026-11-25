@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '../../../mocks/memory-storage';
+import { forgetServerCache, rememberServerCache } from './server-cache-store';
 import {
   createServersStore,
   showsServer,
@@ -30,7 +31,12 @@ async function phoneKeeping(kept: readonly unknown[]): Promise<ServersStore> {
   vi.stubGlobal('window', { localStorage: memoryStorage() });
   await AsyncStorage.setItem('known-servers', JSON.stringify(kept));
 
-  const store = createServersStore();
+  // As the App wires it: removing a Server wipes its kept query cache.
+  const store = createServersStore(undefined, {
+    onForgotten: [forgetServerCache],
+    onAdded: [rememberServerCache],
+  });
+
   await listed(store);
 
   return store;
@@ -55,6 +61,18 @@ describe("a phone's list of Servers", () => {
     store.remove(studioKey);
 
     expect(store.getSnapshot().servers).toEqual([]);
+  });
+
+  it('wipes what it kept of a Server when it is removed', async () => {
+    const store = await phoneKeeping([studio]);
+    const kept = `query-cache:${studioKey}:-feed`;
+    await AsyncStorage.setItem(kept, '{}');
+
+    store.remove(studioKey);
+
+    await vi.waitFor(async () =>
+      expect(await AsyncStorage.getItem(kept)).toBeNull(),
+    );
   });
 });
 

@@ -10,6 +10,7 @@ import {
   type TestSession,
 } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
+import { cliPath } from './github-cli-fixture';
 import { githubFixture, pullOf, type GitHubFixture } from './github-fixture';
 import { archiveRecorder } from './journey-archive-fixture';
 import { promptRecorder, withdrawRecorder } from './journey-prompts-fixture';
@@ -43,6 +44,8 @@ export const secondSessionId = 'session-2';
 export const foreignSessionId = 'foreign-session';
 
 export const changesSlot = 'argo/session/changes/v1';
+
+export const rowSlot = 'argo/session/row/v1';
 
 export type Journey = {
   test: PluginTest;
@@ -145,6 +148,8 @@ async function startOver(
   const test = await startPluginTest({
     ...baseOptions(github, sessions),
     directory: await pluginsFolder(),
+    // No `gh` of the machine is ever read: a journey's CLI is logged out unless it brings its own.
+    path: await cliPath('denied'),
     ...options,
   });
 

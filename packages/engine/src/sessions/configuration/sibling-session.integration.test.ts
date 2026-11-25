@@ -2,6 +2,7 @@ import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { plain } from '#mocks/plain-feed';
 
 it.each(
   fixtureAgents.flatMap(({ agent }) => [
@@ -57,7 +58,7 @@ it.each(
     ).toBe(value);
 
     const feed = (
-      await host.caller.feed.subscribe({ ...sibling, after: null })
+      await plain(host.caller.feed.subscribe({ ...sibling, after: null }))
     )[Symbol.asyncIterator]();
 
     expect((await feed.next()).value).toMatchObject({

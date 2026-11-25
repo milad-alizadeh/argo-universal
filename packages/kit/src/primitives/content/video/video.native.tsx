@@ -7,7 +7,7 @@ import {
 } from 'expo-video';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
-import { useMediaUrl } from '#primitives/content/media-url';
+import { useMediaUri } from '#primitives/content/media-url';
 import {
   useMutedAutoPlay,
   useVideoControls,
@@ -18,7 +18,7 @@ import type { VideoProps } from './video-props';
 
 // expo-video draws the stock player inline: AVPlayerViewController on iOS, Media3 on Android.
 export function Video(props: VideoProps): React.JSX.Element {
-  const url = useMediaUrl()(props.source);
+  const url = useMediaUri(props.source);
   const player = useVideoPlayer(url, (created) => muteAndLoop(created, props));
 
   const { status } = useEvent(player, 'statusChange', {

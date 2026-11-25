@@ -1,5 +1,5 @@
 import type { ByteSocket } from './byte-socket';
-import type { ChannelCipher } from './channel-cipher';
+import type { ChannelCipher, ChannelPosition } from './channel-cipher';
 import { tagBytes } from './cipher-state';
 import { FrameReader, frameRecord, maxRecordBytes } from './frames';
 
@@ -8,6 +8,10 @@ const maxPlaintextBytes = maxRecordBytes - tagBytes;
 export interface StreamListener {
   onData: (chunk: Uint8Array) => void;
   onClose: (error?: Error) => void;
+}
+
+export interface HandOver extends ChannelPosition {
+  readonly socket: ByteSocket;
 }
 
 function* pieces(data: Uint8Array): Generator<Uint8Array> {
@@ -42,6 +46,23 @@ export class SecureStream {
     for (const chunk of this.early.splice(0)) listener.onData(chunk);
 
     if (this.ended) listener.onClose(this.ended.error);
+  }
+
+  /*
+   * Gives the channel to a module that carries it on natively: the socket, and where each direction's cipher has reached. This stream stops reading and writing; the socket stays open.
+   * Only a stream nobody has read from can be handed over, since bytes already delivered would be lost to the module.
+   */
+  public handOver(): HandOver {
+    if (this.listener || this.early.length > 0 || this.ended)
+      throw new Error('A channel that has been read cannot be handed over');
+    const { socket } = this;
+
+    this.ended = {};
+    socket.onData = (): void => {};
+
+    socket.onClose = (): void => {};
+
+    return { socket, ...this.cipher.position() };
   }
 
   public write(data: Uint8Array): void {

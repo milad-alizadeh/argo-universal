@@ -7,6 +7,7 @@ export {
   serverDeviceProcedure,
   serverDeviceAppProcedure,
   zAsyncIterable,
+  zTrackedAsyncIterable,
 } from './trpc';
 
 export {

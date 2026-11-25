@@ -1,6 +1,38 @@
-import { isValidElement, type ReactNode } from 'react';
+import {
+  isValidElement,
+  type JSXElementConstructor,
+  type ReactNode,
+} from 'react';
 import type { ListChild } from './list-children';
 import type { TileListProps } from './list-tile-props';
+
+// A component's name is not its identity: a minifier blanks or repeats it, which would give two kinds of row one type. Each component is numbered the first time a row of it is drawn.
+const typeIds = new WeakMap<JSXElementConstructor<never>, string>();
+
+let typesNamed = 0;
+
+function typeIdOf(component: JSXElementConstructor<never>): string {
+  const known = typeIds.get(component);
+
+  if (known) return known;
+
+  typesNamed += 1;
+
+  const id = `item-${typesNamed}`;
+
+  typeIds.set(component, id);
+
+  return id;
+}
+
+// A row's type is the component that draws it, so a recycled cell is only ever reused for a row of the same kind.
+export function contentType(content: ReactNode): string {
+  if (!isValidElement(content)) return 'item';
+
+  const { type } = content;
+
+  return typeof type === 'string' ? type : typeIdOf(type);
+}
 
 export const childIdentity: Pick<
   TileListProps<ListChild>,
@@ -8,7 +40,8 @@ export const childIdentity: Pick<
 > = {
   keyExtractor: (item) => item.key,
   fullSpan: (item) => item.fullSpan === true,
-  getItemType: (item) => (item.fullSpan ? 'section' : 'item'),
+  getItemType: (item) =>
+    item.fullSpan ? 'section' : contentType(item.content),
 };
 
 // What an element is drawn from; any other node is itself.

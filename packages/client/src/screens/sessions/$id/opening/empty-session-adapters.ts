@@ -1,6 +1,7 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { useConnection, useTRPCClient } from '#features/connection';
+import { useConnection, useTRPC, useTRPCClient } from '#features/connection';
 import type { EmptySessionPorts } from '#features/sessions';
 
 export type EmptySessionDraftPorts = Pick<
@@ -24,9 +25,17 @@ export function useEmptySessionPorts({
   forgetSentDraft,
 }: EmptySessionDraftPorts): EmptySessionPorts {
   const client = useTRPCClient();
+  const queryClient = useQueryClient();
+  const projects = useTRPC().project.list.queryFilter();
 
   return {
-    open: (input) => client.session.new.mutate(input),
+    // A sent New Session remembers its Checkout choice on the Project, so the kept Project list is refetched.
+    open: async (input) => {
+      const opened = await client.session.new.mutate(input);
+      void queryClient.invalidateQueries(projects);
+
+      return opened;
+    },
     // The shown New Session becomes the Session by its params alone: the same screen, no new page, and its Project and draft left behind.
     handOff: (id) =>
       router.setParams({ id, projectId: undefined, draft: undefined }),

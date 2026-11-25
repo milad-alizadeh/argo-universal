@@ -1,5 +1,6 @@
 import { isValidElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
+import { sectionNodeOf } from './list-entries';
 import type { ListProps } from './list-props';
 import { ListSection } from './list-section';
 
@@ -46,6 +47,9 @@ function lastChildKey(
 
 function childNewestKey(content: ReactNode): string {
   const last = flattenedChildren(content).at(-1);
+  const section = sectionNodeOf(last);
+
+  if (section) return childNewestKey(section.props.children);
 
   if (!isValidElement<{ children?: ReactNode; id?: string }>(last))
     return textKey(last);

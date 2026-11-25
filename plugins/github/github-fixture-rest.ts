@@ -21,13 +21,18 @@ export type Held = Pick<
 
 const notFound = 404;
 
-export const refusal = (message: string, status: number): FixtureAnswer => ({
-  status,
-  json: { message },
-});
+export const refusal = (
+  message: string,
+  status: number,
+  headers: Record<string, string> = {},
+): FixtureAnswer => ({ status, json: { message }, headers });
 
 const serverError = (status: number): FixtureAnswer =>
   refusal('Server Error', status);
+
+// The refusal `failWith` sets: GitHub's own words and headers when the test gives them, a plain server error when not.
+const failure = ({ failWith }: Held, status: number): FixtureAnswer =>
+  refusal(failWith.message ?? 'Server Error', status, failWith.headers);
 
 export const pullPath = /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)$/;
 
@@ -191,7 +196,7 @@ function route(held: Held, path: string): FixtureAnswer {
 
 // The repository endpoints of `api.github.com`; while `failWith` is set, each one fails with that status.
 export function rest(held: Held, path: string): FixtureAnswer {
-  if (held.failWith.status) return serverError(held.failWith.status);
+  if (held.failWith.status) return failure(held, held.failWith.status);
 
   return route(held, path);
 }

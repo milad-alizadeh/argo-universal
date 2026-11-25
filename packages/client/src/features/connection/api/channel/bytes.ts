@@ -29,6 +29,9 @@ export function bytesBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+export const base64Bytes = (text: string): Uint8Array =>
+  Uint8Array.from(atob(text), (character) => character.charCodeAt(0));
+
 const hexRadix = 16;
 
 const hexDigits = 2;

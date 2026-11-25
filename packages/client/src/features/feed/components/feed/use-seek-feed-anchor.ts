@@ -16,6 +16,8 @@ interface SeekInput {
   loadingOlder: boolean;
   requestOlder: () => void;
   open: (found: boolean) => void;
+  // The reader took over, so the seek stops.
+  onCancel?: () => void;
 }
 
 interface Asked {
@@ -115,10 +117,13 @@ export function useSeekFeedAnchor(input: SeekInput): () => void {
     cancelled: false,
   });
 
+  const { onCancel } = input;
+
   const cancel = useCallback(() => {
     asked.current.cancelled = true;
     cancelPending(asked.current);
-  }, []);
+    onCancel?.();
+  }, [onCancel]);
 
   useInputGuard(input.shown, cancel);
 

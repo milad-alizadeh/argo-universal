@@ -62,3 +62,24 @@ it('retries an active deadline and stops in-flight delivery when the Server stop
   expect(vi.getTimerCount()).toBe(0);
   held.resolve();
 });
+
+it('reports when the deadline lapses without a delivery', async () => {
+  vi.useFakeTimers({ now: 0 });
+
+  let deadline: number | undefined = 100;
+  const deliver = vi.fn<Delivery>(() => Promise.resolve());
+  const ended = vi.fn<(id: string) => void>();
+
+  const timers = new ScheduleTimers({
+    nextAt: (): number | undefined => deadline,
+    deliver,
+    ended,
+  });
+
+  timers.refresh('run');
+  deadline = undefined;
+  await vi.advanceTimersByTimeAsync(100);
+
+  expect(deliver).not.toHaveBeenCalled();
+  expect(ended).toHaveBeenCalledExactlyOnceWith('run');
+});

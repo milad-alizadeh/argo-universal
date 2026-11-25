@@ -66,11 +66,14 @@ export interface HttpRequest {
 const contentLength = (body: Uint8Array | undefined): string =>
   String(body?.length ?? 0);
 
-function requestHead({ method, path, headers, body }: HttpRequest): string {
+function requestHead(
+  { method, path, headers, body }: HttpRequest,
+  version: string,
+): string {
   const sent = { ...headers, 'content-length': contentLength(body) };
 
   const lines = [
-    `${method} ${path} HTTP/1.0`,
+    `${method} ${path} ${version}`,
     'Host: argo',
     ...Object.entries(sent).map(([name, value]) => `${name}: ${value}`),
   ];
@@ -78,9 +81,13 @@ function requestHead({ method, path, headers, body }: HttpRequest): string {
   return `${lines.join('\r\n')}\r\n\r\n`;
 }
 
-const requestBytes = (request: HttpRequest): Uint8Array =>
+// HTTP/1.0 unless a caller keeps the channel for more requests and says HTTP/1.1.
+export const requestBytes = (
+  request: HttpRequest,
+  version = 'HTTP/1.0',
+): Uint8Array =>
   concatBytes(
-    textBytes(requestHead(request)),
+    textBytes(requestHead(request, version)),
     request.body ?? new Uint8Array(0),
   );
 

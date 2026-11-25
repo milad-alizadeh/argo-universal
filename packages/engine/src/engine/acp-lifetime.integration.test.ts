@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { withoutSessionAccess } from '#mocks/session-access';
 
@@ -16,10 +17,12 @@ it('without Agent access, Engine owns shared empty Sessions across App disconnec
   const second = await host.caller.session.new(emptySessionInput);
 
   const feed = (
-    await host.caller.feed.subscribe({
-      sessionId: first.sessionId,
-      after: null,
-    })
+    await plain(
+      host.caller.feed.subscribe({
+        sessionId: first.sessionId,
+        after: null,
+      }),
+    )
   )[Symbol.asyncIterator]();
 
   expect((await feed.next()).value).toMatchObject({

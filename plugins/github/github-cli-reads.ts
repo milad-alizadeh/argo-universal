@@ -1,6 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Json } from './json';
-import { githubHost, limitSpent } from './pull-reads';
+import { githubHost, isRateLimit, limitSpent } from './pull-reads';
 
 type Fetch = Argo['fetch'];
 
@@ -98,12 +98,10 @@ function replyOf(stdout: string): Reply | undefined {
 type Rest = { until: number };
 
 async function read(
-  { process, settings }: Source,
+  { process }: Pick<Source, 'process'>,
   rest: Rest,
   endpoint: string,
 ): Promise<Reply | undefined> {
-  if ((await settings.get('prefer-github-cli')) !== true) return undefined;
-
   if (Date.now() < rest.until) return undefined;
 
   const result = await process
@@ -134,10 +132,24 @@ async function read(
   return replyOf(result.stdout);
 }
 
+const forbiddenStatus = 403;
+
+const notFoundStatus = 404;
+
 /*
- * This transport is used only by the GitHub Plugin's Project-scoped PR reads. While GitHub says the CLI's limit is
- * spent, reads go straight to the Project Account, whose fetch keeps its own rest, instead of running `gh` to be
- * refused again.
+ * A refusal the Account's login can give for a repository the CLI's login may still see: an organization that has not
+ * approved Argo's app answers 403, or 404 to hide the repository. A spent rate limit is no such refusal, and is left to
+ * the fetch gate that honours `retry-after` and `x-ratelimit-reset`.
+ */
+const refusedToAccount = (reply: Reply): boolean =>
+  (reply.status === forbiddenStatus || reply.status === notFoundStatus) &&
+  !isRateLimit(reply);
+
+/*
+ * This transport is used only by the GitHub Plugin's Project-scoped PR reads. "Prefer GitHub CLI for reads" makes the
+ * CLI's login the first to try; the CLI is also tried, whatever the setting, once the Account's login was refused. While
+ * GitHub says the CLI's limit is spent, reads skip `gh` and go straight to the Project Account, whose fetch keeps its own
+ * rest.
  */
 export function githubReadFetch(argo: Source): Fetch {
   const rest: Rest = { until: 0 };
@@ -149,7 +161,15 @@ export function githubReadFetch(argo: Source): Fetch {
       return argo.fetch(url, init);
 
     const endpoint = url.slice(root.length);
+    const preferred = (await argo.settings.get('prefer-github-cli')) === true;
+    const first = preferred ? await read(argo, rest, endpoint) : undefined;
 
-    return (await read(argo, rest, endpoint)) ?? argo.fetch(url, init);
+    if (first) return first;
+
+    const reply = await argo.fetch(url, init);
+
+    if (preferred || !reply || !refusedToAccount(reply)) return reply;
+
+    return (await read(argo, rest, endpoint)) ?? reply;
   };
 }

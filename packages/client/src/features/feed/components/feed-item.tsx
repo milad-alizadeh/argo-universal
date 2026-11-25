@@ -1,4 +1,3 @@
-import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { memo, Fragment } from 'react';
 import { View } from 'react-native';
@@ -13,6 +12,7 @@ import { ChildReply, ParentResult } from './child-reply';
 import { CommandRow } from './command-row/command-row';
 import { DelegatedFeedRow } from './delegated-feed-row';
 import { EditRow } from './edit-row/edit-row';
+import type { ImageUrl } from './feed-image';
 import { FeedImageUrlContext } from './feed-image';
 import { renderRow } from './feed-message-row';
 import { FeedNotice } from './feed-notice/feed-notice';
@@ -24,7 +24,7 @@ import { TurnEndRow } from './turn-end/turn-end';
 
 export interface FeedItemProps {
   item: FeedViewItem;
-  imageUrl: (blob: BlobRef) => string;
+  imageUrl: ImageUrl;
   // Opens a Subagent row's Feed, where the Session offers one.
   onOpenSubagent?: (subagentSessionId: string) => void;
   // Fixes the clock a merged live header counts from, for stories and tests.

@@ -36,9 +36,13 @@ export {
 } from './discovery/resolve-server';
 
 export {
+  type BlobRead,
+  BlobReadContext,
   BlobUrlContext,
+  createServerBlobRead,
   createServerBlobUrl,
   createServerMediaUrl,
+  useBlobRead,
   useBlobUrl,
   useChannelUrls,
 } from './api/trpc/blob-url';

@@ -1,5 +1,4 @@
 import type {
-  BlobRef,
   UserMessage as UserMessageRow,
   PersonTranscript,
   PromptMessage,
@@ -9,14 +8,14 @@ import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { contentImages, type KeyedImage } from '../../view/keyed-image';
-import { FeedImage } from '../feed-image';
+import { FeedImage, type ImageUrl } from '../feed-image';
 import { type Reference, ReferenceChips } from './reference-chips';
 import { UserMessageBubble } from './user-message-bubble';
 
 export interface UserMessageProps {
   row: UserMessageRow | PromptMessage | PersonTranscript;
   // Where the App loads a stored image from.
-  imageUrl: (blob: BlobRef) => string;
+  imageUrl: ImageUrl;
   // The words are still being said, so they are drawn as a partial.
   partial?: boolean;
 }

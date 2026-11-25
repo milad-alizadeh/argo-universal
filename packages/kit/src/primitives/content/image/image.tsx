@@ -1,5 +1,5 @@
 import { useUniwind } from 'uniwind';
-import { useMediaUrl } from '#primitives/content/media-url';
+import { useMediaUri } from '#primitives/content/media-url';
 import type { KitProps } from '../../kit-props';
 import { ImageFrame } from './image-frame';
 
@@ -25,8 +25,7 @@ function fallbackSource(props: ImageProps): ImageProps['source'] {
 export function Image(props: ImageProps): React.JSX.Element {
   const { theme } = useUniwind();
   const asset = appearanceSource(props, theme === 'dark');
-  const url = useMediaUrl();
-  const uri = asset ? url(asset) : undefined;
+  const uri = useMediaUri(asset);
 
   return <ImageFrame key={String(uri)} {...props} uri={uri} />;
 }

@@ -107,7 +107,7 @@ it('clamps a Watch interval and logs it', async () => {
   expect(await watches(kit, 'watch interval 1000 ms clamped')).toBe(1);
 });
 
-it('stops a Watch that overruns its budget, logs it, and still runs the next', async () => {
+it('logs a Watch that overruns its budget and starts no second run while it still runs', async () => {
   const fixture = await dataFixture(
     watchPlugin(
       'if (!globalThis.ranOnce) { globalThis.ranOnce = true; await new Promise(() => {}); }',
@@ -125,7 +125,10 @@ it('stops a Watch that overruns its budget, logs it, and still runs the next', a
     .poll(() => watches(kit, 'watch reached 60000 ms'), processWait)
     .toBe(1);
   await kit.clock.advance(60000);
-  await expect.poll(() => watches(kit), processWait).toBe(1);
+  await expect
+    .poll(() => watches(kit, 'watch still running'), processWait)
+    .toBe(1);
+  expect(await watches(kit)).toBe(0);
 });
 
 it('stops a Watch when its Plugin is turned off and resumes it when turned on', async () => {

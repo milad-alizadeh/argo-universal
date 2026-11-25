@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { ConnectionMock } from './app-providers.mocks';
+import { ConnectionMock, NoServerMock } from './app-providers.mocks';
 import { mockWebSocket } from './websocket-report.mocks';
 
 const oneOpenConnection = 'Open Connections: 1';
@@ -120,5 +120,12 @@ export const ReconnectsAfterServerChanges: Story = {
         'Connection states the screens saw: connecting, pending',
       ),
     ).toBeVisible();
+  },
+};
+
+export const DrawsItsScreensWhenNoServerIsPaired: Story = {
+  render: () => <NoServerMock />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Pairing')).toBeVisible();
   },
 };

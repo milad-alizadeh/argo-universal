@@ -24,7 +24,11 @@ export function TableList(props: ListProps): ReactElement {
   return (
     <>
       <TableSortMenu {...props} />
-      <List appearance="plain" accessibilityLabel={props.accessibilityLabel}>
+      <List
+        appearance="plain"
+        accessibilityLabel={props.accessibilityLabel}
+        recycleItems
+      >
         <CompactRows {...props} roles={compactColumns(props.columns)} />
       </List>
     </>

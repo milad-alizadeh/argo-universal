@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { failChecks, lintPrompt, watch } from './auto-fix-fixture';
 import { attached, tap } from './auto-merge-fixture';
 import { sha } from './github-fixture';
-import type { Journey } from './journey-fixture';
+import { otherProject, sessionId, type Journey } from './journey-fixture';
 import {
   allowWithdraw,
   promptsWithdrawn,
@@ -44,6 +44,33 @@ it(
 
     expect(withdrawnTexts(run)).toEqual([lintPrompt]);
     expect(pullReads(run)).toBe(reads);
+  },
+  slow,
+);
+
+// The Server refuses a Prompt taken back from a Session of another Project, so a Closed pull request's waiting Prompt is taken back only once the Session is home.
+it(
+  'leaves the Closed pull request of a Session in another Project alone, and takes its Prompt back once it is back',
+  async () => {
+    const run = await attached();
+    const home = { ...run.sessions[sessionId] };
+
+    await tap(run, { kind: 'fix', on: true });
+    failChecks(run, sha, 'lint');
+    await watch(run);
+
+    changePull(run, 12, { state: 'closed' });
+    run.sessions[sessionId] = {
+      projectId: otherProject.id,
+      title: 'Moved',
+      branch: null,
+    };
+    await watch(run);
+    expect(withdrawnTexts(run)).toEqual([]);
+
+    run.sessions[sessionId] = home;
+    await watch(run);
+    expect(withdrawnTexts(run)).toEqual([lintPrompt]);
   },
   slow,
 );

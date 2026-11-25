@@ -13,6 +13,7 @@ import {
   waitForAcpSessionIdle,
 } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { onTranscript } from '#mocks/subagent-steps';
 
@@ -129,7 +130,11 @@ it.each(appFixtureAgentIds)(
     const [child] = await host.caller.session.listAgents({ sessionId });
 
     if (!child) throw new Error(missingChild);
-    const stream = await host.caller.feed.subscribe({ sessionId, after: null });
+
+    const stream = await plain(
+      host.caller.feed.subscribe({ sessionId, after: null }),
+    );
+
     const iterator = stream[Symbol.asyncIterator]();
     await iterator.next();
     await requireScriptedProcessAt(host.agent.processes).play(

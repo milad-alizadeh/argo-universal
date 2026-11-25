@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { closeTestSession } from '#mocks/close-session';
+import { plain } from '#mocks/plain-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const isIdleRow = (
@@ -75,7 +76,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     const process = requireScriptedProcessAt(host.agent.processes);
 
     const events = (
-      await host.caller.feed.subscribe({ ...created, after: null })
+      await plain(host.caller.feed.subscribe({ ...created, after: null }))
     )[Symbol.asyncIterator]();
 
     await events.next();

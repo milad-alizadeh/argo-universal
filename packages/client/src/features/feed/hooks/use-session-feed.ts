@@ -1,100 +1,71 @@
-import type { SessionFeedState, SessionFeedStore } from '../stores';
+import { useState } from 'react';
+import { useRestoreFeed } from '../api/restore-feed';
 import {
   findLiveToolCall,
   findPermissionToolCall,
 } from '../view/live-tool-call';
-import { toFeedView } from '../view/to-feed-view';
+import { translateFeed } from '../view/to-feed-view';
 import { newestWorkRevision } from '../view/work-revision';
 import type { SessionFeed } from './session-feed';
+import { useFeedLive } from './use-feed-live';
 import {
-  type FeedHistory,
-  type FeedSources,
-  type LiveChanges,
-  useFeedSources,
-} from './use-feed-sources';
+  type FeedViewTranslator,
+  useFeedWindow,
+  useOlderHistory,
+  useSessionPages,
+} from './use-feed-window';
 
-// A Session's held Feed view, paging and live changes (ADR 0007). While not `shown` the live subscription is closed and nothing commits; showing it again opens the subscription after the rows held.
+// A Session's Feed view, kept in the query cache with its paging and live changes (ADR 0007). While not `shown` the live subscription is closed and nothing is written; showing it again opens the subscription after the newest revision the cache holds.
 export function useSessionFeed(
   sessionId: string | undefined,
-  translate = toFeedView,
+  translate: FeedViewTranslator = translateFeed,
   shown = true,
 ): SessionFeed {
-  const sources = useFeedSources(sessionId, translate, shown);
+  const readPage = useSessionPages(sessionId);
 
-  return feedOf(sessionId, sources);
-}
+  // A Server built before the tail and event ids refuses their keys, so the Feed is read by page, and its subscription opens with `after` alone (`useFeedLive`).
+  const [refused, setRefused] = useState(false);
 
-function feedOf(
-  sessionId: string | undefined,
-  { store, state, history, changes }: FeedSources,
-): SessionFeed {
-  return {
-    ...feedDisplay(state, sessionId),
-    ...feedPaging(history),
-    ...feedConnection(store, { state, changes }),
-  };
-}
+  // A shown Session's tail comes with its subscription; a hidden one, or one on a Server that refused, reads its page.
+  const { cacheId, feed, snapshot, view, query } = useFeedWindow(
+    sessionId,
+    translate,
+    { cacheId: sessionId, readPage, readsPage: !shown || refused },
+  );
 
-type FeedDisplay = Pick<
-  SessionFeed,
-  | 'view'
-  | 'revision'
-  | 'workRevision'
-  | 'liveToolCall'
-  | 'permissionToolCall'
-  | 'snapshot'
-  | 'ready'
-  | 'hasOlder'
-  | 'historyCursor'
->;
+  // The subscription opens once what the Device kept of this Feed is in the cache, so it resumes after the stored revision, not cold.
+  const restoring = useRestoreFeed(cacheId, feed.epoch !== null);
 
-const feedRevisions = (
-  feed: SessionFeedState['feed'],
-): Pick<SessionFeed, 'revision' | 'workRevision'> => ({
-  revision: feed.revision,
-  workRevision: newestWorkRevision(feed.rows),
-});
+  const live = useFeedLive(sessionId, {
+    cacheId,
+    shown: shown && !restoring,
+    held: feed.epoch !== null,
+    refused,
+    onRefused: () => setRefused(true),
+  });
 
-function feedDisplay(
-  { feed, view, snapshot }: SessionFeedState,
-  sessionId: string | undefined,
-): FeedDisplay {
+  const older = useOlderHistory(cacheId, readPage);
+
   return {
     view,
+    snapshot,
     hasOlder: feed.epoch === null || feed.hasOlder,
     historyCursor: feed.startCursor,
-    ...feedRevisions(feed),
+    revision: feed.revision,
+    workRevision: newestWorkRevision(feed.rows),
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
     permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),
-    snapshot,
     ready: feed.epoch !== null && snapshot !== null,
-  };
-}
-
-function feedPaging(
-  history: FeedHistory,
-): Pick<SessionFeed, 'error' | 'retry' | 'loadingOlder' | 'loadOlder'> {
-  return {
-    error: history.isFetchNextPageError ? null : history.error,
-    retry: () => void history.refetch(),
-    loadingOlder: history.isFetchingNextPage,
-    loadOlder: history.loadOlder,
-  };
-}
-
-function feedConnection(
-  store: SessionFeedStore,
-  { state, changes }: { state: SessionFeedState; changes: LiveChanges },
-): Pick<SessionFeed, 'openError' | 'retryOpen' | 'resumeAfterCommand'> {
-  const retryOpen = (): void => {
-    if (store.retryOpen()) changes.reset();
-  };
-
-  return {
-    openError: state.closure?.error ?? changes.error,
-    retryOpen,
+    error: query.error,
+    retry: () => void query.refetch(),
+    loadingOlder: older.isPending,
+    loadOlder: async () => {
+      if (!older.isPending) await older.mutateAsync().catch(() => {});
+    },
+    openError: live.openError,
+    retryOpen: live.retryOpen,
     resumeAfterCommand: () => {
-      if (store.getState().closure) retryOpen();
+      if (live.closure) live.retryOpen();
     },
   };
 }

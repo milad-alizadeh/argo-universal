@@ -1,6 +1,5 @@
 import type {
   AgentMessage as AgentMessageRow,
-  BlobRef,
   ToolCallUpdate,
   UserMessage as UserMessageRow,
 } from '@repo/contracts';
@@ -10,6 +9,7 @@ import {
 } from '@repo/contracts/plugins/replaceable';
 import { ReplaceableSlot } from '#lib/product/plugin-registry/replaceable-slot';
 import { AgentMessage } from './agent-message/agent-message';
+import type { ImageUrl } from './feed-image';
 import { UserMessage } from './user-message/user-message';
 
 export function renderToolCallSlot(
@@ -27,7 +27,7 @@ export function renderToolCallSlot(
 }
 
 interface MessageDrawing {
-  imageUrl: (blob: BlobRef) => string;
+  imageUrl: ImageUrl;
   streaming?: boolean;
 }
 
