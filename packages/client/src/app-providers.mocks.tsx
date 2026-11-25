@@ -10,6 +10,7 @@ import {
   type ServerEndpoint,
 } from './features/connection';
 import { useTRPCClient } from './features/connection/api/trpc/context';
+import { DesktopConversationProvider } from './features/conversation';
 import { useAppServers } from './features/servers';
 import {
   currentReport,
@@ -156,4 +157,15 @@ function ScreenMock(): null {
   }, [client]);
 
   return null;
+}
+
+// A Device that holds no Server, as a clean install of the phone App is: the call's host is drawn over screens that have no Connection.
+export function NoServerMock(): React.JSX.Element {
+  return (
+    <AppProviders>
+      <DesktopConversationProvider desktop>
+        <Text>Pairing</Text>
+      </DesktopConversationProvider>
+    </AppProviders>
+  );
 }

@@ -1,4 +1,4 @@
-import { ForgottenError, type MediaStore } from './media-store';
+import { ForgottenError, type MediaStore } from './media-store-core';
 
 export interface MediaFile {
   uri: string;

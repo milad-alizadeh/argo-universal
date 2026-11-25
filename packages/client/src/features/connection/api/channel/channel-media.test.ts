@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { ChannelMedia } from './channel-media';
-import type { MediaStore } from './media-store';
+import type { MediaStore } from './media-store-core';
 
 // The Device's storage, standing in for the App's cache directory: it outlives each ChannelMedia, as files outlive a restart.
 function deviceStore(): MediaStore {
