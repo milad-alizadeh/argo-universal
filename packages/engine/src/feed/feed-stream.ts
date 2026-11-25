@@ -154,10 +154,13 @@ function assertNever(event: never): never {
   throw new Error(`Unhandled feed event: ${JSON.stringify(event)}`);
 }
 
+// A snapshot moves nothing: the Server's revision it carries may be ahead of rows still waiting for their batch, so it keeps the point the App has reached.
 function pointOfEvent(
-  epoch: number,
+  reached: FeedSyncPoint,
   event: FeedSubscribeOutput,
 ): FeedSyncPoint | null {
+  const { epoch } = reached;
+
   switch (event.type) {
     case 'closed':
       return null;
@@ -166,7 +169,7 @@ function pointOfEvent(
     case 'tail':
       return { epoch: event.page.epoch, revision: event.page.maxRevision };
     case 'snapshot':
-      return { epoch, revision: event.snapshot.maxRevision };
+      return reached;
     case 'row.upsert':
     case 'rows.upsert':
     case 'row.append':
@@ -193,12 +196,15 @@ export async function* trackedFeed(
   input: FeedSubscribeInput,
   signal: AbortSignal | undefined,
 ): AsyncGenerator<FeedSubscribeOutput | TrackedEnvelope<FeedSubscribeOutput>> {
-  let { epoch } = resources.readSession(input.sessionId);
+  let reached = resumePoint(input) ?? {
+    epoch: resources.readSession(input.sessionId).epoch,
+    revision: 0,
+  };
 
   for await (const event of streamFeed(resources, input, signal)) {
-    const point = pointOfEvent(epoch, event);
+    const point = pointOfEvent(reached, event);
 
-    epoch = point?.epoch ?? epoch;
+    reached = point ?? reached;
     yield point && hasEventIds(input)
       ? tracked(feedEventId(point), event)
       : event;
