@@ -105,13 +105,18 @@ const longProse = Array.from(
   (_, line) => `Sentence number ${line + 1} fills out the prompt.`,
 ).join(' ');
 
-function GrowingClampedMarkdown(): ReactElement {
+// Swaps in the long text after `growAfterMs`, so the first layout has already reported one line.
+function GrowingClampedMarkdown({
+  growAfterMs,
+}: {
+  growAfterMs: number;
+}): ReactElement {
   const [text, setText] = useState('One line');
   useEffect(() => {
-    const timer = setTimeout(() => setText(longProse), 120);
+    const timer = setTimeout(() => setText(longProse), growAfterMs);
 
     return (): void => clearTimeout(timer);
-  }, []);
+  }, [growAfterMs]);
 
   return (
     <div data-testid="frame" style={{ width: 240 }}>
@@ -122,9 +127,11 @@ function GrowingClampedMarkdown(): ReactElement {
 
 // The content's first layout reports one line, then the real, taller height arrives. The clamp holds throughout, never drawing the long content at its natural height over the rows beside it.
 export const ClampHoldsWhenContentGrowsAfterFirstLayout: Story = {
-  render: () => <GrowingClampedMarkdown />,
+  render: () => <GrowingClampedMarkdown growAfterMs={120} />,
   play: async ({ canvas }) => {
     const frame = await canvas.findByTestId('frame');
+    await canvas.findByText('One line');
+    const oneLine = frame.getBoundingClientRect().height;
     let tallest = 0;
 
     const observer = new ResizeObserver(() => {
@@ -133,19 +140,11 @@ export const ClampHoldsWhenContentGrowsAfterFirstLayout: Story = {
 
     observer.observe(frame);
 
-    await canvas.findByText(/Sentence number 1 /);
-
-    await waitFor(() =>
-      expect(frame.getBoundingClientRect().height).toBeGreaterThan(40),
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await waitFor(() => expect(tallest).toBeGreaterThan(oneLine));
 
     observer.disconnect();
 
-    await expect(tallest).toBeLessThanOrEqual(
-      frame.getBoundingClientRect().height + 1,
-    );
+    await expect(tallest).toBeLessThanOrEqual(oneLine * 4 + 1);
   },
 };
 
