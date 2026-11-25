@@ -58,6 +58,7 @@ interface SectionPickerProps {
   plugins: readonly PluginSection[];
   lastPages: React.RefObject<Map<string, Href>>;
   chrome?: SidebarHeaderProps;
+  onHideSidebar: () => void;
 }
 
 function SectionPicker({
@@ -65,6 +66,7 @@ function SectionPicker({
   plugins,
   lastPages,
   chrome,
+  onHideSidebar,
 }: SectionPickerProps): JSX.Element {
   const router = useRouter();
 
@@ -94,6 +96,7 @@ function SectionPicker({
       choices={items}
       coreCount={coreChoices.length}
       onPick={pick}
+      onHideSidebar={onHideSidebar}
     />
   );
 }
@@ -172,6 +175,11 @@ function SidebarColumn({
   );
 }
 
+const columnMetrics = {
+  preferredPrimaryColumnWidthOrFraction: 356,
+  preferredInspectorColumnWidthOrFraction: 360,
+};
+
 function SplitViewWithInspector({
   place,
   listPlace,
@@ -184,24 +192,24 @@ function SplitViewWithInspector({
   const { frame, plugins } = presentation;
   const segments: readonly string[] = useSegments();
   const inFrame = segments.includes('(frame)');
-  const detail = useSplitDetail(presentation.path, inFrame, frame.section);
+
+  const { split, hideSidebar } = useIPadSplit(
+    presentation.path,
+    inFrame,
+    frame.section,
+  );
+
   const lastPages = useSectionPages(frame.section, inFrame);
 
   return (
     <FramePresentationContext value={presentation}>
       <SplitView
-        {...detail}
-        presentsWithGesture={inFrame}
-        displayModeButtonVisibility={inFrame ? 'automatic' : 'never'}
+        {...split}
         topColumnForCollapsing={inFrame ? undefined : 'secondary'}
         showInspector={inFrame && inspector?.open === true}
         onInspectorHide={() => inspector?.onOpenChange(false)}
         preferredSplitBehavior="tile"
-        columnMetrics={{
-          preferredPrimaryColumnWidthOrFraction: 356,
-          preferredInspectorColumnWidthOrFraction: 360,
-        }}
-        preferredDisplayMode={inFrame ? 'automatic' : 'secondaryOnly'}
+        columnMetrics={columnMetrics}
       >
         <SplitView.Column>
           {inFrame && (
@@ -211,6 +219,7 @@ function SplitViewWithInspector({
               section={frame.section}
               plugins={plugins}
               lastPages={lastPages}
+              onHideSidebar={hideSidebar}
             />
           )}
         </SplitView.Column>
@@ -224,18 +233,43 @@ function SplitViewWithInspector({
   );
 }
 
-// A collapsed split keeps its sidebar for core lists. Page links bring its detail forward.
-function useSplitDetail(
+type SplitControls = Pick<
+  React.ComponentProps<typeof SplitView>,
+  | 'ref'
+  | 'onCollapse'
+  | 'onExpand'
+  | 'onDisplayModeWillChange'
+  | 'displayModeButtonVisibility'
+  | 'preferredDisplayMode'
+  | 'presentsWithGesture'
+>;
+
+interface IPadSplitControls {
+  split: SplitControls;
+  hideSidebar: () => void;
+}
+
+// UIKit can restore a hidden sidebar before its first display-mode event.
+function sidebarButtonVisibility(
+  inFrame: boolean,
+  hidden: boolean | undefined,
+): SplitControls['displayModeButtonVisibility'] {
+  if (!inFrame || hidden === false) return 'never';
+
+  return hidden === true ? 'always' : 'automatic';
+}
+
+function useIPadSplit(
   path: string,
   inFrame: boolean,
   section: Section,
-): Pick<
-  React.ComponentProps<typeof SplitView>,
-  'ref' | 'onCollapse' | 'onExpand'
-> {
+): IPadSplitControls {
   const ref = useRef<SplitCommands>(null);
   const collapsed = useRef(false);
+  const [sidebarHidden, setSidebarHidden] = useState<boolean>();
+  const [hideRequested, requestHide] = useState(false);
 
+  // A collapsed split keeps its sidebar for core lists. Page links bring detail forward.
   useEffect(() => {
     if (
       collapsed.current &&
@@ -245,12 +279,31 @@ function useSplitDetail(
   }, [path, inFrame, section]);
 
   return {
-    ref,
-    onCollapse: () => {
-      collapsed.current = true;
+    hideSidebar: () => {
+      if (collapsed.current) ref.current?.show('secondary');
+
+      requestHide(true);
     },
-    onExpand: () => {
-      collapsed.current = false;
+    split: {
+      ref,
+      presentsWithGesture: inFrame,
+      displayModeButtonVisibility: sidebarButtonVisibility(
+        inFrame,
+        sidebarHidden,
+      ),
+      preferredDisplayMode:
+        !inFrame || hideRequested ? 'secondaryOnly' : 'automatic',
+      onDisplayModeWillChange: ({ nativeEvent: { nextDisplayMode } }) => {
+        setSidebarHidden(nextDisplayMode === 'secondaryOnly');
+
+        if (nextDisplayMode !== 'secondaryOnly') requestHide(false);
+      },
+      onCollapse: () => {
+        collapsed.current = true;
+      },
+      onExpand: () => {
+        collapsed.current = false;
+      },
     },
   };
 }

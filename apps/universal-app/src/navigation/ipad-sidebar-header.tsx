@@ -12,6 +12,7 @@ import {
   useNativeState,
 } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel,
   background,
   buttonStyle,
   font,
@@ -47,6 +48,7 @@ interface HeaderProps extends SidebarHeaderProps {
   choices: readonly SectionChoice[];
   coreCount: number;
   onPick: (section: string) => void;
+  onHideSidebar: () => void;
 }
 
 function TitleMenu({
@@ -172,6 +174,16 @@ export function IPadSidebarHeader(props: HeaderProps): JSX.Element {
         modifiers={[padding({ horizontal: 16, bottom: 8 })]}
       >
         <HStack modifiers={[frame({ height: 44 })]}>
+          <Button
+            label="Hide Sidebar"
+            systemImage="sidebar.left"
+            modifiers={[
+              ...toolbarButton,
+              accessibilityLabel('Hide Sidebar'),
+              glassEffect({ glass: { variant: 'regular', interactive: true } }),
+            ]}
+            onPress={props.onHideSidebar}
+          />
           <Spacer />
           {Boolean(props.actions?.length) && (
             <HStack
