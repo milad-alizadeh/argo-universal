@@ -22,7 +22,7 @@ function useBlobText(blobId: string | undefined): string | undefined {
  * A row's previews stand in until the Blobs with its whole output have come; then the whole output takes their place.
  * Only an opened row calls this, so a closed row costs the Feed no read.
  */
-export function useFullToolOutput(row: ToolCallUpdate): ToolCallUpdate {
+function useFullToolOutput(row: ToolCallUpdate): ToolCallUpdate {
   const blobs = fullOutputBlobIds(row);
   const content = useBlobText(blobs.content);
 

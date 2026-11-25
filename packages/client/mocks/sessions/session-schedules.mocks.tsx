@@ -54,7 +54,7 @@ export interface SessionSchedulesFixture {
   push: (list: ScheduleList) => void;
 }
 
-export const sessionId = 'session-1';
+const sessionId = 'session-1';
 
 // A repeating follow-up with the given Prompt text.
 export const scheduleOf = (id: string, text: string): ScheduleList[number] => ({

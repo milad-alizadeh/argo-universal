@@ -120,7 +120,11 @@ function useOpensAtEnd(
 
   // Once the reader takes over, the seek has let go and the remembered row is no longer sought.
   const [tookOver, setTookOver] = useState(false);
-  const onCancel = useCallback(() => setTookOver(true), []);
+
+  // Any input cancels the seek, but with no remembered row there is nothing to stop, so the Feed does not render for it.
+  const onCancel = useCallback(() => {
+    if (anchor) setTookOver(true);
+  }, [anchor]);
 
   const cancelRestore = useScrollsToEndWhenShown(list, anchor, {
     ...input,

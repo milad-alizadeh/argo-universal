@@ -10,7 +10,7 @@ export interface MediaFile {
   delete: () => void;
 }
 
-export interface MediaFolder {
+interface MediaFolder {
   exists: boolean;
   create: () => void;
   list: () => MediaFile[];

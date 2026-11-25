@@ -10,7 +10,7 @@ import type { FeedState } from '../view/feed-state';
 import { feedKey, snapshotKey } from './feed-query';
 
 // Reads one query's copy off the Device by its hash, calling back with what it kept; the persister's own `retrieveQuery`.
-export type RetrieveKept = (
+type RetrieveKept = (
   queryHash: string,
   restored: (kept: PersistedQuery) => void,
 ) => Promise<FeedState | SessionSnapshot | undefined>;
