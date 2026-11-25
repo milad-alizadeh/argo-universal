@@ -282,6 +282,7 @@ function useIPadSplit(
     hideSidebar: () => {
       if (collapsed.current) ref.current?.show('secondary');
 
+      setSidebarHidden(true);
       requestHide(true);
     },
     split: {
