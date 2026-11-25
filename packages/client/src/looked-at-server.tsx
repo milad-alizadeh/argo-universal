@@ -13,8 +13,11 @@ import { TRPCProvider, useTRPC } from '#features/connection';
 import { FullToolOutputProvider } from '#features/feed';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
-import { createQueryClient, keepServerLists } from './query-cache';
-import { restoreFromDevice, writeToDevice } from './server-cache';
+import {
+  createServerQueryClient,
+  trimDevice,
+  writeToDevice,
+} from './server-cache';
 import { ServerUrls } from './server-urls';
 
 export interface LookedAtServerProps {
@@ -31,7 +34,10 @@ export interface LookedAtServerProps {
 export function LookedAtServer(
   props: LookedAtServerProps,
 ): React.JSX.Element | null {
-  const [queryClient] = useState(createQueryClient);
+  const [queryClient] = useState(() =>
+    createServerQueryClient(props.lookingAt),
+  );
+
   useEffect(followsAppForeground, []);
   const looked = lookedAt(props);
 
@@ -101,23 +107,39 @@ function ConnectionProviders({
 }
 
 function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
-  // Once, and before any cache restore: restored queries take the defaults in force when they are hydrated (#2703).
   const queryClient = useQueryClient();
   const trpc = useTRPC();
-  useState(() => keepServerLists(queryClient, trpc));
 
   // This Server's own cache on the Device: each kept query draws from it first, then is caught up by the Connection.
-  useState(() =>
-    restoreFromDevice(queryClient, trpc, { serverId: props.server.id }),
-  );
+  useEffect(() => {
+    void trimDevice({ serverId: props.server.id });
+  }, [props.server.id]);
 
   useEffect(
-    () => writeToDevice(queryClient, trpc, { serverId: props.server.id }),
+    () => writesToDevice(queryClient, trpc, props.server.id),
     [queryClient, trpc, props.server.id],
   );
   useCacheOnline(props.connection.connection);
 
   return <ServerContexts {...props} />;
+}
+
+// A phone that goes to the background may be stopped before the cache's next write, so what is waiting is written then.
+function writesToDevice(
+  queryClient: QueryClient,
+  trpc: ReturnType<typeof useTRPC>,
+  serverId: string,
+): () => void {
+  const device = writeToDevice(queryClient, trpc, { serverId });
+
+  const subscription = AppState.addEventListener('change', (state) => {
+    if (state !== 'active') device.flush();
+  });
+
+  return (): void => {
+    subscription.remove();
+    device.stop();
+  };
 }
 
 function ServerContexts({

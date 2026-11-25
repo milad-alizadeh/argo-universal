@@ -6,6 +6,7 @@ import { freshReads } from './pull-fresh';
 import type { PullInfo } from './pull-info';
 import { sameLink } from './pull-kept';
 import type { Known } from './pull-known';
+import { sessionStays } from './pull-stays';
 import type { PullLink } from './pull-store';
 import { takeTurns } from './pull-turns';
 
@@ -49,17 +50,11 @@ async function archived(
   return true;
 }
 
-// A Session that is gone has its choice forgotten; one in another Project keeps it, as it can move back, and waits.
-async function sessionStays(
+const stays = (
   { sessions, archive }: Archiving,
   link: PullLink,
-): Promise<boolean> {
-  const session = await sessions.get(link.sessionId);
-
-  if (!session) await archive.disable(link);
-
-  return session?.projectId === link.projectId;
-}
+): Promise<boolean> =>
+  sessionStays(sessions, link, () => archive.disable(link));
 
 // Once the Session is archived Auto-archive is spent, so unarchiving it is not undone by the next Watch.
 async function archiveOne(
@@ -67,7 +62,7 @@ async function archiveOne(
   fresh: Fresh,
   link: PullLink,
 ): Promise<boolean> {
-  if (!(await sessionStays(archiving, link))) return false;
+  if (!(await stays(archiving, link))) return false;
 
   if (!(await settled(fresh, link)) || !(await archived(archiving, link)))
     return false;

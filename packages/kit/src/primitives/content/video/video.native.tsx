@@ -18,7 +18,7 @@ import type { VideoProps } from './video-props';
 
 // expo-video draws the stock player inline: AVPlayerViewController on iOS, Media3 on Android.
 export function Video(props: VideoProps): React.JSX.Element {
-  const url = useMediaUri(props.source) ?? '';
+  const url = useMediaUri(props.source);
   const player = useVideoPlayer(url, (created) => muteAndLoop(created, props));
 
   const { status } = useEvent(player, 'statusChange', {

@@ -1,3 +1,4 @@
+import type { AppRouter } from '@repo/engine/router';
 import { LiteThrottler } from '@tanstack/pacer-lite';
 import type {
   AsyncStorage as PersisterStorage,
@@ -8,6 +9,8 @@ import {
   type QueryClient,
   partialMatchKey,
 } from '@tanstack/react-query';
+import { createTRPCClient } from '@trpc/client';
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import type { TRPC } from '#features/connection';
 import type { FeedState } from './features/feed';
 // Leaf imports below: a node test cannot import a feature's index (React Native, "Flow is not supported").
@@ -23,6 +26,7 @@ import {
   serverCacheStorage,
   serverQueryPersister,
 } from './features/servers/server-cache-store';
+import { createQueryClient, keepServerLists } from './query-cache';
 
 /*
  * What the App has been sent, kept on the Device so it draws at once after a restart and on a bad Connection
@@ -132,7 +136,7 @@ async function keepNewestFeeds({
  * Makes the kept queries restore from this Server's cache on the Device the first time each is read. Run once, after
  * `keepServerLists` and before any query is read: a query takes the defaults in force when it first runs. A Feed is
  * also read off the Device ahead of its subscription (`useRestoreFeed`), through the persister left in the defaults'
- * meta.
+ * meta. It only sets defaults; `trimDevice` is the part that touches the Device.
  */
 export function restoreFromDevice(
   queryClient: QueryClient,
@@ -152,16 +156,47 @@ export function restoreFromDevice(
       networkMode: 'offlineFirst',
     });
   }
-
-  void persister.persisterGc().then(() => keepNewestFeeds(cache));
 }
 
-// Writes each kept query to the Device as it changes; the returned function stops, saving what was still waiting.
+// Drops the copies on the Device that are past their age, then the Feeds beyond the newest ones.
+export async function trimDevice(cache: DeviceCache): Promise<void> {
+  await persisterOf(cache).persisterGc();
+  await keepNewestFeeds(cache);
+}
+
+/*
+ * The query client of one Server, with its kept lists named and its Device restore set before anything reads a query,
+ * so a Feed's restore is in force ahead of its subscription (#2703). It reads no query and writes nothing, so it is
+ * safe to build where React builds a client. The names come from a proxy over no links: only its keys are read, and the
+ * Connection's own client is not open yet.
+ */
+export function createServerQueryClient(serverId: string): QueryClient {
+  const queryClient = createQueryClient();
+
+  const trpc = createTRPCOptionsProxy<AppRouter>({
+    client: createTRPCClient<AppRouter>({ links: [] }),
+    queryClient,
+  });
+
+  keepServerLists(queryClient, trpc);
+  restoreFromDevice(queryClient, trpc, { serverId });
+
+  return queryClient;
+}
+
+interface DeviceWriter {
+  // Writes what is still waiting, such as when the App goes to the background and may not run again.
+  flush: () => void;
+  // Stops writing, saving what was still waiting.
+  stop: () => void;
+}
+
+// Writes each kept query to the Device as it changes.
 export function writeToDevice(
   queryClient: QueryClient,
   trpc: TRPC,
   cache: DeviceCache,
-): () => void {
+): DeviceWriter {
   const persister = persisterOf(cache);
   const kept = keptKeys(trpc);
   const writers = new Map<string, LiteThrottler<() => void>>();
@@ -184,12 +219,18 @@ export function writeToDevice(
   const writerFor = (query: Query): LiteThrottler<() => void> => {
     const writer =
       writers.get(query.queryHash) ??
-      new LiteThrottler<() => void>(() => void write(query), {
-        wait: writeEveryMs,
-        // Not at once: a restored query is written with the age the Device kept it at, which the persister sets just after the restore.
-        leading: false,
-        trailing: true,
-      });
+      new LiteThrottler<() => void>(
+        () => {
+          // A write the Device refuses is lost; the query is written again when it next changes.
+          write(query).catch(() => {});
+        },
+        {
+          wait: writeEveryMs,
+          // Not at once: a restored query is written with the age the Device kept it at, which the persister sets just after the restore.
+          leading: false,
+          trailing: true,
+        },
+      );
 
     writers.set(query.queryHash, writer);
 
@@ -202,9 +243,15 @@ export function writeToDevice(
     if (shouldKeep(event.query)) writerFor(event.query).maybeExecute();
   });
 
-  return (): void => {
-    unsubscribe();
-
+  const flush = (): void => {
     for (const writer of writers.values()) writer.flush();
+  };
+
+  return {
+    flush,
+    stop: (): void => {
+      unsubscribe();
+      flush();
+    },
   };
 }

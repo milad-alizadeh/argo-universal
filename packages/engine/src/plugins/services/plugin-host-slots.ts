@@ -12,11 +12,11 @@ type Host = { open: number; waiting: (() => void)[] };
  * any throttling of its own.
  */
 export class HostSlots {
-  constructor(private readonly limit = concurrentPerHostLimit) {}
-
   private readonly hosts = new Map<string, Host>();
 
-  async run<T>(host: string, work: () => Promise<T>): Promise<T> {
+  public constructor(private readonly limit = concurrentPerHostLimit) {}
+
+  public async run<T>(host: string, work: () => Promise<T>): Promise<T> {
     await this.take(host);
 
     try {

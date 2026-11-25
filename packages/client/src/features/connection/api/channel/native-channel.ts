@@ -6,12 +6,11 @@ import type {
   UpgradeHeaders,
 } from './byte-socket';
 import { base64Bytes } from './bytes';
+import { normalClosure } from './close-codes';
 import { channelUrl } from './web-socket-carrier';
 
 // How long the module waits for the socket to open, as the JavaScript carrier does.
 const connectTimeoutMs = 4000;
-
-const normalClosure = 1000;
 
 // The module inflates raw deflate, so every socket it opens offers compression on its upgrade. A Server built before this never reads the header, and says in its welcome whether it agreed (ADR-0045).
 const upgradeHeaders: UpgradeHeaders = {
@@ -93,11 +92,11 @@ export class NativeByteSocket implements ByteSocket {
   }
 
   public write(data: Uint8Array): void {
-    this.channel.native.write(this.id, data);
+    this.channel.write(this.id, data);
   }
 
   public close(): void {
-    this.channel.native.close(this.id, normalClosure, '');
+    this.channel.close(this.id, normalClosure, '');
   }
 }
 
@@ -105,7 +104,7 @@ export class NativeChannel {
   private readonly handlers = new Map<string, Handler>();
   private opened = 0;
 
-  public constructor(public readonly native: ChannelNative) {
+  public constructor(private readonly native: ChannelNative) {
     native.addListener('channel', (event) =>
       this.handlers.get(event.id)?.(event),
     );
@@ -121,6 +120,22 @@ export class NativeChannel {
 
   public forget(id: string): void {
     this.handlers.delete(id);
+  }
+
+  public write(id: string, bytes: Uint8Array): void {
+    this.native.write(id, bytes);
+  }
+
+  public handOver(id: string, handOver: ChannelHandOver): void {
+    this.native.handOver(id, handOver);
+  }
+
+  public send(id: string, message: string): void {
+    this.native.send(id, message);
+  }
+
+  public close(id: string, code: number, reason: string): void {
+    this.native.close(id, code, reason);
   }
 
   private async socketAt(address: ChannelAddress): Promise<NativeByteSocket> {

@@ -149,22 +149,35 @@ export async function* streamFeed(
   }
 }
 
-// The sync point an event moves an App to: the revision it carries, or the new epoch's start.
+// The default of an exhaustive switch: the compiler rejects it while an event type is missing.
+function assertNever(event: never): never {
+  throw new Error(`Unhandled feed event: ${JSON.stringify(event)}`);
+}
+
+// A snapshot moves nothing: the Server's revision it carries may be ahead of rows still waiting for their batch, so it keeps the point the App has reached.
 function pointOfEvent(
-  epoch: number,
+  reached: FeedSyncPoint,
   event: FeedSubscribeOutput,
 ): FeedSyncPoint | null {
-  if (event.type === 'closed') return null;
+  const { epoch } = reached;
 
-  if (event.type === 'reset') return { epoch: event.epoch, revision: 0 };
-
-  if (event.type === 'tail')
-    return { epoch: event.page.epoch, revision: event.page.maxRevision };
-
-  if (event.type === 'snapshot')
-    return { epoch, revision: event.snapshot.maxRevision };
-
-  return { epoch, revision: event.rev };
+  switch (event.type) {
+    case 'closed':
+      return null;
+    case 'reset':
+      return { epoch: event.epoch, revision: 0 };
+    case 'tail':
+      return { epoch: event.page.epoch, revision: event.page.maxRevision };
+    case 'snapshot':
+      return reached;
+    case 'row.upsert':
+    case 'rows.upsert':
+    case 'row.append':
+    case 'row.patch':
+      return { epoch, revision: event.rev };
+    default:
+      return assertNever(event);
+  }
 }
 
 // An App that sends a `lastEventId`, or asks for the tail or for batches, keeps event ids.
@@ -183,12 +196,15 @@ export async function* trackedFeed(
   input: FeedSubscribeInput,
   signal: AbortSignal | undefined,
 ): AsyncGenerator<FeedSubscribeOutput | TrackedEnvelope<FeedSubscribeOutput>> {
-  let { epoch } = resources.readSession(input.sessionId);
+  let reached = resumePoint(input) ?? {
+    epoch: resources.readSession(input.sessionId).epoch,
+    revision: 0,
+  };
 
   for await (const event of streamFeed(resources, input, signal)) {
-    const point = pointOfEvent(epoch, event);
+    const point = pointOfEvent(reached, event);
 
-    epoch = point?.epoch ?? epoch;
+    reached = point ?? reached;
     yield point && hasEventIds(input)
       ? tracked(feedEventId(point), event)
       : event;

@@ -70,7 +70,10 @@ const sharedOpening = (
   target: ChannelTarget,
   platform: ChannelPlatform,
 ): SharedOpening => ({
-  route: new ChannelRoute(target.address, target.locate, target.others),
+  route: new ChannelRoute(target.address, target.locate, {
+    others: target.others,
+    oneAtATime: target.ticket !== undefined,
+  }),
   deviceKey: once(platform.deviceKey),
 });
 

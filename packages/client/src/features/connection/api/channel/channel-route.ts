@@ -41,6 +41,13 @@ const differentFrom =
   (address: ChannelAddress): boolean =>
     skip === undefined || keyOf(address) !== keyOf(skip);
 
+interface RouteOptions {
+  // The other addresses Pairing kept.
+  readonly others?: readonly ChannelAddress[];
+  // A one-shot Pairing Ticket is spent by the first address that sees it, so a ticketed route asks one address at a time.
+  readonly oneAtATime?: boolean;
+}
+
 /*
  * Where a paired Server's channels open (ADR-0045). The address that last proved the Server's key is tried first, so a channel per Blob does not ask the network each time.
  * When it does not answer, the network is asked while the addresses Pairing kept are tried, so a phone off the local network, where Bonjour only ever times out, is not held up by it. Then what the Server announces now is tried, and the first address that proves the key is kept for the next channel.
@@ -52,7 +59,7 @@ export class ChannelRoute {
   public constructor(
     private readonly keptAddress: ChannelAddress,
     private readonly locate: LocateServer = nothingAnnounced,
-    private readonly otherKeptAddresses: readonly ChannelAddress[] = [],
+    private readonly options: RouteOptions = {},
   ) {}
 
   public async open<T>(
@@ -65,7 +72,9 @@ export class ChannelRoute {
       this.tryAt(address, attempt, causes);
 
     for await (const stage of this.stages()) {
-      const result = await firstOf(stage.map(tryAt), discard);
+      const result = this.options.oneAtATime
+        ? await firstInTurn(stage, tryAt)
+        : await firstOf(stage.map(tryAt), discard);
 
       if (result) return result.channel;
     }
@@ -80,7 +89,7 @@ export class ChannelRoute {
     if (last) yield [last];
     const announcing = this.lookAgain();
 
-    const kept = inOrder([this.keptAddress, ...this.otherKeptAddresses]);
+    const kept = inOrder([this.keptAddress, ...(this.options.others ?? [])]);
 
     const direct = kept
       .filter(differentFrom(last))
@@ -163,4 +172,18 @@ async function firstOf<T>(
     if (cause instanceof AggregateError) return;
     throw cause;
   }
+}
+
+// The addresses are asked in turn; the first that opens wins, and none is asked while another is still answering.
+async function firstInTurn<T>(
+  addresses: readonly ChannelAddress[],
+  tryAt: (address: ChannelAddress) => Promise<Opened<T> | undefined>,
+): Promise<Opened<T> | undefined> {
+  for (const address of addresses) {
+    const opened = await tryAt(address);
+
+    if (opened) return opened;
+  }
+
+  return undefined;
 }
