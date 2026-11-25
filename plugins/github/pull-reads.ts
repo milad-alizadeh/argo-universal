@@ -48,17 +48,23 @@ export const rateLimited = (message: string): boolean =>
 
 type Reply = NonNullable<Awaited<ReturnType<Fetch>>>;
 
-const headerOf = ({ headers }: Reply, name: string): string | undefined =>
-  Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
+// One header of an answer, its name in lower case.
+export type HeaderOf = (name: string) => string | undefined;
+
+const headerOf =
+  ({ headers }: Reply): HeaderOf =>
+  (name) =>
+    Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
 
 // GitHub refuses a spent limit with 429, or with 403 and the headers that say so; any other 403 is a refusal.
-const saysSpent = (reply: Reply): boolean =>
-  headerOf(reply, 'retry-after') !== undefined ||
-  headerOf(reply, 'x-ratelimit-remaining') === '0';
+export const limitSpent = (status: number, header: HeaderOf): boolean =>
+  status === tooManyStatus ||
+  (status === forbiddenStatus &&
+    (header('retry-after') !== undefined ||
+      header('x-ratelimit-remaining') === '0'));
 
 export const isRateLimit = (reply: Reply): boolean =>
-  reply.status === tooManyStatus ||
-  (reply.status === forbiddenStatus && saysSpent(reply));
+  limitSpent(reply.status, headerOf(reply));
 
 const refusals = new Map<number, (subject: string) => string>([
   [unauthorizedStatus, (): string => signInMessage],
@@ -88,12 +94,13 @@ function bodyMessage(body: string): string | undefined {
 
 // Why GitHub refused, in its own words: the body's message, the SSO step its header asks for, and the scopes it wanted.
 function reasonOf(reply: Reply): string {
+  const header = headerOf(reply);
+
   const parts = [
     bodyMessage(reply.body),
-    headerOf(reply, 'x-github-sso') &&
-      `SSO: ${headerOf(reply, 'x-github-sso')}`,
-    headerOf(reply, 'x-accepted-oauth-scopes') &&
-      `Accepted scopes: ${headerOf(reply, 'x-accepted-oauth-scopes')}`,
+    header('x-github-sso') && `SSO: ${header('x-github-sso')}`,
+    header('x-accepted-oauth-scopes') &&
+      `Accepted scopes: ${header('x-accepted-oauth-scopes')}`,
   ].filter(Boolean);
 
   return parts.length > 0 ? ` ${parts.join('. ')}` : '';

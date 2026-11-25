@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished } from 'vitest';
@@ -13,11 +13,21 @@ export const cliCheck = 'Build from CLI';
 
 export const cliTitle = 'Read by the CLI';
 
-// A `gh` on the PATH that answers pull request 12 of the repository as the logged-in CLI would, or refuses as it says.
-export async function cliPath(
-  answer: 'success' | 'denied' | 'checks-denied' | 'malformed',
+export type Answer =
+  | 'success'
+  | 'denied'
+  | 'checks-denied'
+  | 'malformed'
+  | 'limited';
+
+// The epoch second the fixture's spent limit resets at; the test clock starts at 0.
+export const resetSeconds = 120;
+
+// A directory with a `gh` that answers pull request 12 of the repository as the logged-in CLI would, or refuses as it says, and logs each call.
+export async function cliDirectory(
+  answer: Answer,
   changes: Partial<FixturePull> = {},
-): Promise<string[]> {
+): Promise<string> {
   const pull = pullOf(repository, number, { title: cliTitle, ...changes })[1];
 
   const directory = await mkdtemp(join(tmpdir(), 'argo-fixture-gh-'));
@@ -41,7 +51,11 @@ export async function cliPath(
 const endpoint = process.argv.at(-1);
 const data = ${JSON.stringify(responses)}[endpoint];
 const policy = ${JSON.stringify(answer)};
-if (policy === 'denied' || (policy === 'checks-denied' && endpoint.includes('/check-runs')) || data === undefined) {
+require('node:fs').appendFileSync(${JSON.stringify(join(directory, 'calls'))}, endpoint + '\\n');
+if (policy === 'limited') {
+  process.stdout.write('HTTP/2 403 Forbidden\\r\\nX-RateLimit-Remaining: 0\\r\\nX-RateLimit-Reset: ${resetSeconds}\\r\\n\\r\\n{}');
+  process.exitCode = 1;
+} else if (policy === 'denied' || (policy === 'checks-denied' && endpoint.includes('/check-runs')) || data === undefined) {
   process.stdout.write('HTTP/2 403 Forbidden\\r\\nContent-Type: application/json\\r\\n\\r\\n{}');
   process.exitCode = 1;
 } else {
@@ -51,5 +65,18 @@ if (policy === 'denied' || (policy === 'checks-denied' && endpoint.includes('/ch
 
   await writeFile(join(directory, 'gh'), script, { mode: 0o755 });
 
-  return [directory];
+  return directory;
 }
+
+export async function cliPath(
+  answer: Answer,
+  changes: Partial<FixturePull> = {},
+): Promise<string[]> {
+  return [await cliDirectory(answer, changes)];
+}
+
+// How many times the Plugin ran the fixture's `gh`.
+export const cliCalls = async (directory: string): Promise<number> =>
+  (await readFile(join(directory, 'calls'), 'utf8').catch(() => ''))
+    .split('\n')
+    .filter(Boolean).length;

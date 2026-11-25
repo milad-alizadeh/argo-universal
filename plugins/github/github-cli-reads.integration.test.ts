@@ -1,7 +1,16 @@
 import { expect, it } from 'vitest';
-import { cliCheck, cliPath, cliTitle, repository } from './github-cli-fixture';
+import {
+  cliCalls,
+  cliCheck,
+  cliDirectory,
+  cliPath,
+  cliTitle,
+  repository,
+  resetSeconds,
+} from './github-cli-fixture';
 import { attach, changesOf, discover } from './journey-calls-fixture';
 import { journey, signedOutJourney } from './journey-fixture';
+import { refreshed } from './journey-watch-fixture';
 
 const slow = 30_000;
 
@@ -75,6 +84,35 @@ it(
     expect(await changesOf(run)).toMatchObject([{ title: cliTitle }]);
     expect(run.github.pullReads()).toEqual([]);
     expect(run.github.checkReads().length).toBeGreaterThan(0);
+  },
+  slow,
+);
+
+// GitHub refuses a spent limit the same through the CLI: each read running `gh` again would only be refused again.
+it(
+  'runs the CLI no more while GitHub says its rate limit is spent, reads through the Project Account, and runs it again after the reset',
+  async () => {
+    const directory = await cliDirectory('limited');
+    const run = await journey({ path: [directory], settings });
+
+    await attach(run, reference);
+    expect(await changesOf(run)).toMatchObject([{ title: 'Add the thing' }]);
+
+    const refused = await cliCalls(directory);
+    const accountReads = run.github.pullReads().length;
+
+    expect(refused).toBeGreaterThan(0);
+
+    await refreshed(run);
+    await refreshed(run);
+
+    expect(await cliCalls(directory)).toBe(refused);
+    expect(run.github.pullReads().length).toBeGreaterThan(accountReads);
+
+    await run.test.clock.advance(resetSeconds * 1000);
+    await refreshed(run);
+
+    expect(await cliCalls(directory)).toBeGreaterThan(refused);
   },
   slow,
 );
