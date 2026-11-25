@@ -332,3 +332,5 @@ export {
   sessionTree,
   useSessionNesting,
 } from './components/sessions-list/sessions-list-tree';
+
+export { nativeSessionRow } from './components/sessions-list/native-session-row';

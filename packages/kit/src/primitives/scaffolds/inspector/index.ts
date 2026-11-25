@@ -10,7 +10,7 @@ export { InspectorBody } from './inspector-pane';
 
 export { InspectorPane, type InspectorPaneProps } from './inspector-pane';
 
-export { InspectorPlaceOffer } from './inspector-place';
+export { InspectorPlaceOffer, NativeInspectorPlace } from './inspector-place';
 
 export { InspectorControlsContext } from './inspector-controls-context';
 

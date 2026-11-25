@@ -2,8 +2,10 @@ import {
   IconButton,
   type IconButtonProps,
 } from '@repo/kit/primitives/actions/icon-button';
-import type { ReactElement, ReactNode } from 'react';
-import { type LayoutChangeEvent, View } from 'react-native';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { NativeInspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
+import { use, type ReactElement, type ReactNode } from 'react';
+import { type LayoutChangeEvent, Pressable, View } from 'react-native';
 import type { WindowBandSession } from '#lib/product/window-band';
 import type { BandRef } from '../hooks/band-motion-types';
 import { BandCapsule } from './band-capsule';
@@ -157,12 +159,63 @@ function TrailingCapsule(parts: ScaffoldPartProps): ReactElement | null {
   );
 }
 
+type SplitWorkbenchProps = Pick<
+  IconButtonProps,
+  'accessibilityLabel' | 'disabled' | 'onPress' | 'selected'
+>;
+
+// A SwiftUI Host in the split detail band draws its button outside the band's touch region.
+function SplitWorkbenchToggle({
+  accessibilityLabel,
+  disabled,
+  onPress,
+  selected,
+}: SplitWorkbenchProps): ReactElement {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{
+        disabled: disabled ?? false,
+        selected: selected ?? false,
+      }}
+      disabled={disabled ?? false}
+      onPress={onPress}
+      className="size-frame-control items-center justify-center rounded-full active:bg-pressed"
+    >
+      <Icon
+        name="workbench"
+        size="md"
+        filled={selected ?? false}
+        tone={disabled ? 'muted' : undefined}
+      />
+    </Pressable>
+  );
+}
+
+function SplitBandTrailing(parts: ScaffoldPartProps): ReactElement | null {
+  const session = parts.scaffold.band?.session;
+
+  if (!session) return null;
+
+  return (
+    <View
+      className="absolute right-frame-inset bottom-0 top-0 justify-center"
+      pointerEvents="box-none"
+    >
+      <SplitWorkbenchToggle {...workbenchProps({ ...parts, session })} />
+    </View>
+  );
+}
+
 /*
  * The page's buttons and the Session's panel controls float on a capsule at the title bar's end while the Inspector
  * is closed, mirroring the sidebar's, and sit in the open Inspector's top row, which the title bar above it lets
  * presses through to.
  */
 export function BandTrailing(props: MovingProps): ReactElement | null {
+  if (use(NativeInspectorPlace)) return <SplitBandTrailing {...props} />;
+
   if (!hasControls(props)) return null;
 
   return (

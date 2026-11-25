@@ -483,7 +483,7 @@ catalogs:
       specifier: ~58.0.14
       version: 58.0.14
     expo-router:
-      specifier: ~58.0.25
+      specifier: 58.0.25
       version: 58.0.25
     expo-screen-orientation:
       specifier: ~58.0.3
@@ -597,7 +597,7 @@ catalogs:
       specifier: ~5.10.1
       version: 5.10.1
     react-native-screens:
-      specifier: ~4.30.0
+      specifier: 4.30.0
       version: 4.30.0
     react-native-svg:
       specifier: 15.16.0

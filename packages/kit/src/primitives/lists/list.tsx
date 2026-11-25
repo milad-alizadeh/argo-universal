@@ -1,5 +1,5 @@
 import { listDefaults } from '@repo/contracts/kit-tokens';
-import { useMemo, type ReactElement } from 'react';
+import { use, useMemo, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { InRowFrameContext } from '#primitives/fields/field-row';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
@@ -10,6 +10,7 @@ import {
   useDeclaredListLook,
   useListLook,
 } from '../../list-look-context';
+import { NativePluginSidebar } from '../../native-sidebar';
 import { ListBehaviours } from './list/list-behaviours';
 import { ChildRows } from './list/list-child-rows';
 import { DataList } from './list/list-data-list';
@@ -17,6 +18,10 @@ import { entryNodes } from './list/list-entries';
 import { ListMenuRows } from './list/list-menu-rows';
 import { NativeGroupedList } from './list/list-native-grouped';
 import { drawsNativeGroupedList } from './list/list-native-rows';
+import {
+  PluginSidebar,
+  supportsNativeSidebar,
+} from './list/list-native-sidebar';
 import { hasNoRows, placeholderChildren } from './list/list-placeholder';
 import type { ListProps, MovesOrItems } from './list/list-props';
 import { ListSection } from './list/list-section';
@@ -119,6 +124,9 @@ function useEntryChildren<Item>(props: ListProps<Item>): ListProps<Item> {
 export function PluginList<Item>(props: ListProps<Item>): ReactElement {
   const list = useListContent(useEntryChildren(props));
   const look = useLook(list);
+
+  if (use(NativePluginSidebar) && supportsNativeSidebar(list))
+    return <PluginSidebar list={list} />;
 
   return (
     <InRowFrameContext value={false}>

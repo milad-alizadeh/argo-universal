@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./native-sidebar": "./src/native-sidebar/index.ts",
     "./custom-symbol-paths.json": "./src/symbols/custom-symbol-paths.json",
     "./mocks/*": "./mocks/*.ts",
     "./native-theme": "./src/native-theme.ts",

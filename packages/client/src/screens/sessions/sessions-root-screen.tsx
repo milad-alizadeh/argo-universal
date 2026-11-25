@@ -1,8 +1,10 @@
+import { NativeSidebarHeader } from '@repo/kit/native-sidebar';
 import { Action } from '@repo/kit/primitives/actions/action';
 import {
   Screen,
   type ScreenProps,
 } from '@repo/kit/primitives/scaffolds/screen';
+import { use } from 'react';
 import type * as React from 'react';
 import {
   isDefaultSessionsView,
@@ -33,6 +35,46 @@ export function SessionsRootScreen({
   children,
   ...viewState
 }: SessionsRootScreenProps): React.JSX.Element {
+  const header = use(NativeSidebarHeader);
+
+  if (header) {
+    return (
+      <>
+        {header({
+          search: {
+            query: viewState.query,
+            label: searchSessionsLabel,
+            onChange: viewState.onQueryChange,
+          },
+          actions: [
+            {
+              title: filterLabel,
+              icon: headerFilterIcon,
+              children: sessionsViewGroups(
+                viewState.view,
+                viewState.onViewChange,
+              ).map((group) => ({
+                title: group.label ?? 'Layout',
+                children: group.options.map((option) => ({
+                  title: option.label,
+                  icon: option.icon,
+                  selected: option.value === group.value,
+                  onPress: () => group.onValueChange(option.value),
+                })),
+              })),
+            },
+            {
+              title: 'New Session',
+              icon: 'new-session',
+              onPress: onNewSession,
+            },
+          ],
+        })}
+        {children}
+      </>
+    );
+  }
+
   return <Screen {...screenProps(viewState, onNewSession)}>{children}</Screen>;
 }
 

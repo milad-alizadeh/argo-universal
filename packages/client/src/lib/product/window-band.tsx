@@ -6,11 +6,12 @@ import {
   useOfferedPlace,
   type Place,
 } from '@repo/kit/place';
+import { NativeInspectorPlace } from '@repo/kit/primitives/scaffolds/inspector';
 import {
   TitleBarOffer,
   type TitleBarPlaces,
 } from '@repo/kit/primitives/scaffolds/screen';
-import type { ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 
 /*
  * What the page that owns a Session hands the band: its overview, and how its Inspector opens. The band's controls over
@@ -50,9 +51,11 @@ export function WindowBandProvider({
   places: WindowBandPlaces;
   children: ReactNode;
 }): ReactNode {
+  const titleBar = use(NativeInspectorPlace) ? undefined : places.titleBar;
+
   return (
     <WindowBandPlaceOffer value={places.session}>
-      <TitleBarOffer value={places.titleBar}>{children}</TitleBarOffer>
+      <TitleBarOffer value={titleBar}>{children}</TitleBarOffer>
     </WindowBandPlaceOffer>
   );
 }

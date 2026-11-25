@@ -6,6 +6,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import { useSidebarRows } from '../session-row/session-row-sidebar';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
 import { DrawnRows } from './sessions-list-drawn-rows';
@@ -120,9 +121,11 @@ type SessionListOptions = Pick<
 function sessionListOptions(
   props: SessionsListProps,
   held: boolean,
+  sidebar: boolean,
 ): SessionListOptions {
   return {
     ...sessionsListLook(props.view.layout, held ? 'inset' : 'padded'),
+    ...(sidebar && { onPhones: undefined }),
     getSectionKey: sessionListSection(props),
     paddingTop: searchesAsOneList(props)
       ? searchTopPadding
@@ -135,7 +138,7 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
     <List
       {...listBehaviour}
       {...sessionsFade}
-      {...sessionListOptions(props, useSidebarGutterHeld())}
+      {...sessionListOptions(props, useSidebarGutterHeld(), useSidebarRows())}
       {...sessionsListBehaviours(props)}
       onScroll={props.onScroll}
       {...listRows(props.rows)}

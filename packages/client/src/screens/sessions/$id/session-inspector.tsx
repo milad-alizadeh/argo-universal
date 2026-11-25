@@ -1,11 +1,12 @@
 import { Action } from '@repo/kit/primitives/actions/action';
 import {
   Inspector,
+  NativeInspectorPlace,
   type InspectorProps,
   type InspectorTab,
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import { createElement, type JSX } from 'react';
+import { createElement, use, type JSX } from 'react';
 import type { SessionPanels } from '#features/sessions';
 import { openNewShell } from './sections/runs-section';
 import {
@@ -97,6 +98,8 @@ const inspectorProps = (props: SessionInspectorProps): InspectorProps => ({
 
 // The Session's Inspector: a tab for each Section opened, showing one at a time.
 export function SessionInspector(props: SessionInspectorProps): JSX.Element {
+  if (use(NativeInspectorPlace)) return wideInspector(props);
+
   return (
     <SizeClass compact={phoneInspector(props)} wide={wideInspector(props)} />
   );

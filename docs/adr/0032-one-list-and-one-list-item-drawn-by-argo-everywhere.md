@@ -89,3 +89,9 @@ A Composer queue tray is a compact web List at every window width (owner, 2026-1
 - **Settings rows as a `variant` prop on `ListItem`** (`disclosure`, `value`, `choice`, `toggle`, `destructive`), as first accepted. Rejected on review: each variant became its own drawing in Paper (gap 12, centred, no lanes), the props type needs a union whose valid props change per variant, and screens and Plugins had to know where Android moves values, descriptions and destructive actions.
 - **Controls that become rows inside a List,** as a bare SwiftUI `Toggle` in a `Form`. Rejected: one kit component would render two ways depending on its parent, so the Server couldn't check a tree against its schema and Paper couldn't name it 1-to-1. The wrappers keep SwiftUI's names without the context switch.
 - **Drop the grouped look and keep native lists for settings only.** Rejected: settings would still be a second family, and the owner wants one list item that covers settings and content.
+
+## iPad navigation amendment
+
+Owner amendments, 2026-11-23 and 2026-11-24 (#2681). On iPadOS 26 and later, iPadOS draws the split view and Inspector. The sidebar uses a SwiftUI sidebar List with system selection and collapsible sections. The large section title opens the section menu. The App supplies the rows and actions from its existing data. See [ADR-0026](0026-the-ui-kit-names-its-tokens-by-role.md) for the width and platform rules.
+
+Owner amendment, 2026-11-25 (#2681). The iPad Sessions sidebar uses the shared desktop Sessions list and its Session rows. This exception covers Sessions. The native split view, Inspector, Title menu and SwiftUI lists for the other sections retain their existing presentation.

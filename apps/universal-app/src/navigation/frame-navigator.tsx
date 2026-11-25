@@ -2,29 +2,22 @@ import {
   Frame,
   FramePage,
   type FrameSections,
-  type CoreSection,
   FrameSidebar,
   SectionDrawer,
   sectionOf,
-  isCoreSection,
   sectionOrder,
-  sections,
   pluginPath,
-  usePluginSections,
   PluginErrorToasts,
-  coreNavigationSections,
   type PluginSection,
-  useSectionLists,
 } from '@repo/client';
 import { useSizeClass } from '@repo/client/size-class';
 import { SectionModalPage } from '@repo/kit/primitives/scaffolds/section-modal';
 import { SectionBackdropVisibility } from '@repo/kit/use-shown-page';
-import { usePathname, useSegments } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
 import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { CommonActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useLayoutEffect, useRef, useState, type ComponentProps } from 'react';
+import { use, useLayoutEffect, useRef, type ComponentProps } from 'react';
 import { drawerScrimLabel } from './compose-drawer-options';
 import { useDrawerOptions } from './frame-drawer-options';
 import {
@@ -32,6 +25,14 @@ import {
   type DrawerContent,
   type PickSection,
 } from './frame-navigation';
+import {
+  FramePresentationContext,
+  modalSectionOf,
+  useFramePresentation,
+  type FramePresentation,
+  type ModalSection,
+} from './frame-presentation';
+import { nativeFrame } from './native-frame';
 import { frameDrawerOptions } from './plugin-drawer';
 import { useShellListeners } from './use-shell-listeners';
 
@@ -83,12 +84,6 @@ interface SectionsProps {
   restoreFocus: (event: Event) => void;
 }
 
-interface ModalSection {
-  title: string;
-  list: React.ReactNode;
-  backdropRoute: string;
-}
-
 function SectionsDrawer({
   framed,
   frame,
@@ -110,6 +105,7 @@ function SectionsDrawer({
     >
       {sectionScreens(({ route }) => ({
         ...options({ route }),
+        ...(nativeFrame && { swipeEnabled: false }),
         ...wideScene({
           framed,
           route: route.name,
@@ -166,12 +162,6 @@ function sectionLayout(
   };
 }
 
-function modalSectionOf(name: string | undefined): CoreSection | undefined {
-  return isCoreSection(name) && sections[name].widePresentation === 'modal'
-    ? name
-    : undefined;
-}
-
 interface SceneVisibility {
   framed: boolean;
   route: string;
@@ -217,7 +207,7 @@ function useSectionsDrawerProps(
 ): Pick<ComponentProps<typeof Drawer>, 'screenOptions' | 'drawerContent'> {
   return {
     screenOptions: useDrawerOptions(useSizeClass()),
-    drawerContent: contentAt(framed, frame, pick),
+    drawerContent: nativeFrame ? () => null : contentAt(framed, frame, pick),
   };
 }
 
@@ -240,77 +230,29 @@ const pluginRouteId = (
  */
 export function FrameNavigator(): React.JSX.Element {
   useShellListeners();
-  const sizeClass = useSizeClass();
-  const plugins = usePluginSections();
-  const framed = sizeClass === 'wide';
-  const presentation = useFramePresentation(framed, plugins);
+  const shared = use(FramePresentationContext);
+
+  return shared ? <PresentedFrame {...shared} /> : <DrawerFrame />;
+}
+
+function DrawerFrame(): React.JSX.Element {
+  return <PresentedFrame {...useFramePresentation()} />;
+}
+
+function PresentedFrame(presentation: FramePresentation): React.JSX.Element {
+  const { sizeClass } = presentation;
   const restoreFocus = useModalOpener(Boolean(presentation.modal));
 
   return (
     <Frame sizeClass={sizeClass} {...presentation.frame}>
       <PluginErrorToasts />
       <SectionsDrawer
-        framed={framed}
-        plugins={plugins}
+        framed={sizeClass === 'wide'}
         restoreFocus={restoreFocus}
         {...presentation}
       />
     </Frame>
   );
-}
-
-interface Location {
-  path: string;
-  route: string;
-}
-
-const firstLocation: Location = { path: '/sessions', route: 'sessions' };
-
-function useBackdrop(location: Location, showingModal: boolean): Location {
-  const [lastPage, remember] = useState(firstLocation);
-
-  if (!showingModal && lastPage.path !== location.path) remember(location);
-
-  return lastPage;
-}
-
-type FramePresentation = Pick<
-  SectionsProps,
-  'frame' | 'focused' | 'path' | 'modal'
->;
-
-function useFramePresentation(
-  framed: boolean,
-  plugins: readonly PluginSection[],
-): FramePresentation {
-  const path = usePathname();
-  const segments: readonly string[] = useSegments();
-  const focused = segments[1];
-  const section = sectionOf(path);
-  const modalSection = modalSectionOf(section);
-
-  const backdrop = useBackdrop(
-    { path, route: focused ?? firstLocation.route },
-    Boolean(modalSection),
-  );
-
-  const shown = framed ? modalSection : undefined;
-  const lists = useSectionLists(shown ? backdrop.path : undefined);
-
-  return {
-    frame: {
-      section: shown ? sectionOf(backdrop.path) : section,
-      lists,
-      items: [...coreNavigationSections, ...plugins],
-    },
-    focused,
-    path,
-    modal: shown && {
-      title: sections[shown].title,
-      list: lists[shown].list,
-      backdropRoute: backdrop.route,
-    },
-  };
 }
 
 // Track the element that opens the modal, whether it is a rail tile or a page Action.

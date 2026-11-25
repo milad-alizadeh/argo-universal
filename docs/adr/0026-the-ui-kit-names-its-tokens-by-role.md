@@ -77,3 +77,7 @@ Owner amendment, 2026-11-02: each platform takes its own scale through the same 
 
 - Keep the shadcn names: `accent` would keep meaning a grey hover fill, and plugins would inherit the clash.
 - Name tokens per component: the kit could not share states and surfaces, and plugins would depend on Argo's internals.
+
+## iPad navigation amendment
+
+Owner amendment, 2026-11-23 (#2681). On iPadOS 26 and later, the App uses the system split view for its sidebar and Inspector at every window width. iPadOS decides when the sidebar collapses. Phone, web, Android and older versions of iPadOS use the existing Frame and drawer rules.

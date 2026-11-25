@@ -16,6 +16,11 @@ import {
 } from 'react';
 import type { Section } from '../../../lib/product/navigation/sections';
 
+// The native frame can supply the sidebar's Place from outside the routed Frame.
+export const NativeSidebarListPlace = createContext<
+  Place<ReactNode> | undefined
+>(undefined);
+
 // The Frame's sidebar, which a Plugin page's ListDetail may hold on a wide window.
 const FrameListDetailSidebar = createContext<Place<ReactNode> | undefined>(
   undefined,
@@ -145,7 +150,8 @@ const keepsPane = (
  * drawing lands is what the Frame plays as a pane the person closed, sliding the glass, the list and the page twice.
  */
 export function useFrameListDetail(section: Section): FrameListDetail {
-  const [sidebar] = useState(() => createPlace<ReactNode>());
+  const [localSidebar] = useState(() => createPlace<ReactNode>());
+  const sidebar = use(NativeSidebarListPlace) ?? localSidebar;
   const [pending] = useState(() => createPlace<true>());
   const [page] = useState(() => createPlace<true>());
   const held = usePlaceHeld(sidebar);

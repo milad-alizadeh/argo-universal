@@ -128,7 +128,7 @@ catalog:
   expo-font: ~58.0.9
   expo-glass-effect: ~58.0.4
   expo-linking: ~58.0.14
-  expo-router: ~58.0.25
+  expo-router: 58.0.25
   expo-screen-orientation: ~58.0.3
   expo-splash-screen: ~58.0.11
   expo-status-bar: ~58.0.4
@@ -150,7 +150,7 @@ catalog:
   react-native-keyboard-controller: 1.22.7
   react-native-reanimated: 4.7.1
   react-native-safe-area-context: ~5.10.1
-  react-native-screens: ~4.30.0
+  react-native-screens: 4.30.0
   react-native-svg: 15.16.0
   # Encodes a Pairing Ticket's invite as QR modules, which the pair sheet draws with react-native-svg. Pure JavaScript, so one encoder serves web, iOS and Android.
   qrcode-generator: 2.0.4

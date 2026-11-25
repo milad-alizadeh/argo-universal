@@ -38,6 +38,7 @@ export interface ScreenListColumnProps {
    * for a list that has no Screen, and a tablet's drops by the status bar's inset.
    */
   underBand?: boolean;
+  hideHeading?: boolean;
   children: ReactNode;
 }
 
@@ -53,7 +54,9 @@ export function ScreenListColumn(props: ScreenListColumnProps): ReactElement {
     <ListColumnHeadingContext value={heading}>
       <ScreenNavigationEnabled value={false}>
         <View className="min-h-0 flex-1">
-          <ColumnHeadingRow heading={heading} underBand={props.underBand} />
+          {!props.hideHeading && (
+            <ColumnHeadingRow heading={heading} underBand={props.underBand} />
+          )}
           {props.children}
         </View>
       </ScreenNavigationEnabled>

@@ -7,6 +7,7 @@ import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { composeDrawerOptions } from './compose-drawer-options';
+import { nativeFrame } from './native-frame';
 
 // The web's themed page shows through the drawer; a resolved colour there misses the theme.
 const drawerSurface = Platform.OS !== 'web';
@@ -38,8 +39,16 @@ function framedOptions(width: number): DrawerNavigationOptions {
 export function useDrawerOptions(
   sizeClass: SizeClass,
 ): DrawerNavigationOptions {
+  const narrow = useNarrowOptions();
+  const width = useFrameSidebarWidth();
+
+  if (nativeFrame)
+    return {
+      ...composeDrawerOptions('wide', { narrow, framed: framedOptions(0) }),
+    };
+
   return composeDrawerOptions(sizeClass, {
-    narrow: useNarrowOptions(),
-    framed: framedOptions(useFrameSidebarWidth()),
+    narrow,
+    framed: framedOptions(width),
   });
 }
