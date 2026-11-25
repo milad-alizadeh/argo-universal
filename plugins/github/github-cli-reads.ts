@@ -1,6 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Json } from './json';
-import { githubHost } from './pull-reads';
+import { githubHost, limitSpent } from './pull-reads';
 
 type Fetch = Argo['fetch'];
 
@@ -11,6 +11,62 @@ type Source = Pick<Argo, 'fetch' | 'process' | 'settings'>;
 const timeoutMs = 8_000;
 
 const httpHeaders = /^HTTP\/\S+ (200)[^\r\n]*\r?\n[\s\S]*?\r?\n\r?\n/;
+
+// The status line and headers of any answer `gh api --include` printed, successful or not.
+const anyHeaders = /^HTTP\/\S+ (\d{3})[^\r\n]*\r?\n([\s\S]*?)\r?\n\r?\n/;
+
+const secondMs = 1_000;
+
+// How long the CLI rests when GitHub says its limit is spent but not until when; core's fetch waits as long.
+const defaultBackoffMs = 60_000;
+
+// The status and headers of one answer the CLI printed.
+type ResponseHead = { status: number; headers: Map<string, string> };
+
+function responseHeadOf(stdout: string): ResponseHead | undefined {
+  const match = anyHeaders.exec(stdout);
+
+  if (!match) return undefined;
+
+  const headers = new Map(
+    (match[2] ?? '').split(/\r?\n/).flatMap((line): [string, string][] => {
+      const colon = line.indexOf(':');
+
+      return colon > 0
+        ? [
+            [
+              line.slice(0, colon).trim().toLowerCase(),
+              line.slice(colon + 1).trim(),
+            ],
+          ]
+        : [];
+    }),
+  );
+
+  return { status: Number(match[1]), headers };
+}
+
+const spentIn = ({ status, headers }: ResponseHead): boolean =>
+  limitSpent(status, (name) => headers.get(name));
+
+const secondsOf = (value: string | undefined): number | undefined => {
+  const seconds = value?.trim() ? Number(value) : Number.NaN;
+
+  return Number.isFinite(seconds) ? Math.max(seconds, 0) : undefined;
+};
+
+// When the CLI may ask again: `retry-after` first, then the reset while it is ahead, then a minute.
+function reopensAt({ headers }: ResponseHead, now: number): number {
+  const after = secondsOf(headers.get('retry-after'));
+
+  if (after !== undefined) return now + after * secondMs;
+
+  const reset = secondsOf(headers.get('x-ratelimit-reset'));
+
+  return reset !== undefined && reset * secondMs > now
+    ? reset * secondMs
+    : now + defaultBackoffMs;
+}
 
 // Return a reply only after gh has a complete, successful HTTP response.
 function replyOf(stdout: string): Reply | undefined {
@@ -38,11 +94,17 @@ function replyOf(stdout: string): Reply | undefined {
   }
 }
 
+// Until when the CLI rests because GitHub said the rate limit is spent; every read before then skips it.
+type Rest = { until: number };
+
 async function read(
   { process, settings }: Source,
+  rest: Rest,
   endpoint: string,
 ): Promise<Reply | undefined> {
   if ((await settings.get('prefer-github-cli')) !== true) return undefined;
+
+  if (Date.now() < rest.until) return undefined;
 
   const result = await process
     .run(
@@ -61,14 +123,25 @@ async function read(
     )
     .catch(() => null);
 
-  if (!result || result.exitCode !== 0 || result.truncated || result.timedOut)
-    return undefined;
+  if (!result || result.truncated || result.timedOut) return undefined;
+
+  const head = responseHeadOf(result.stdout);
+
+  if (head && spentIn(head)) rest.until = reopensAt(head, Date.now());
+
+  if (result.exitCode !== 0) return undefined;
 
   return replyOf(result.stdout);
 }
 
-// This transport is used only by the GitHub Plugin's Project-scoped PR reads.
+/*
+ * This transport is used only by the GitHub Plugin's Project-scoped PR reads. While GitHub says the CLI's limit is
+ * spent, reads go straight to the Project Account, whose fetch keeps its own rest, instead of running `gh` to be
+ * refused again.
+ */
 export function githubReadFetch(argo: Source): Fetch {
+  const rest: Rest = { until: 0 };
+
   return async (url, init) => {
     const root = `https://${githubHost}/`;
 
@@ -77,6 +150,6 @@ export function githubReadFetch(argo: Source): Fetch {
 
     const endpoint = url.slice(root.length);
 
-    return (await read(argo, endpoint)) ?? argo.fetch(url, init);
+    return (await read(argo, rest, endpoint)) ?? argo.fetch(url, init);
   };
 }
