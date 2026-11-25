@@ -39,12 +39,12 @@ describe('Workbench states from one toggle', () => {
     expect(layout.list.width).toBe(312);
   });
 
-  it('waits at the trailing inset while it is not drawn', () => {
+  it('waits past the window edge while it is not drawn', () => {
     const { workbench } = frameLayout({ ...input, workbenchIntent: 'hidden' });
 
     expect(workbench).toEqual({
       state: 'hidden',
-      offset: 1432,
+      offset: 1440,
       width: 0,
       fits: false,
     });
@@ -115,7 +115,7 @@ describe('panes placed under the Workbench', () => {
     },
   );
 
-  it('gives up the list before letting a resized Inspector take the content floor', () => {
+  it('clamps a saved oversized Inspector to keep the list and content floor', () => {
     const layout = frameLayout({
       ...input,
       width: 1920,
@@ -123,7 +123,7 @@ describe('panes placed under the Workbench', () => {
       preferredInspectorWidth: 1500,
     });
 
-    expect(layout.page).toEqual({ offset: 72, width: 688, hidden: false });
-    expect(layout.inspector).toMatchObject({ offset: 768, width: 1144 });
+    expect(layout.page).toEqual({ offset: 384, width: 688, hidden: false });
+    expect(layout.inspector).toMatchObject({ offset: 1080, width: 832 });
   });
 });

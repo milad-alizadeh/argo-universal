@@ -26,6 +26,8 @@ export type WaitReport = (
 
 interface LockSettings {
   port: number;
+  additionalPorts: readonly number[];
+  sharedQueue: boolean;
   pollMs: number;
   reportMs: number;
   onWait?: WaitReport;
@@ -53,10 +55,18 @@ function spaced(settings: LockSettings): WaitReport {
 }
 
 async function tryInOrder(
-  port: number,
+  ports: readonly number[],
   ticket: QueueTicket,
 ): Promise<Server | undefined> {
-  return (await ticket.first()) ? tryTake(port) : undefined;
+  if (!(await ticket.first(ports.length))) return undefined;
+
+  for (const port of ports) {
+    const server = await tryTake(port);
+
+    if (server) return server;
+  }
+
+  return undefined;
 }
 
 async function waitForPort(
@@ -65,9 +75,10 @@ async function waitForPort(
 ): Promise<Server> {
   const started = Date.now();
   const report = spaced(settings);
+  const ports = [settings.port, ...settings.additionalPorts];
 
   for (;;) {
-    const server = await tryInOrder(settings.port, ticket);
+    const server = await tryInOrder(ports, ticket);
 
     if (server) return server;
     report(await readHolder(settings.port), Date.now() - started);
@@ -96,7 +107,7 @@ async function claim(
 async function takeTurn(settings: LockSettings): Promise<() => void> {
   const requested = Date.now();
   const local = settings.port === LOCK_PORT;
-  const ticket = await enqueue(settings.port, local);
+  const ticket = await enqueue(settings.port, local || settings.sharedQueue);
   const server = await claim(settings, ticket);
   const started = Date.now();
 
@@ -149,6 +160,8 @@ export async function acquireBrowserSuiteLock(
 ): Promise<() => void> {
   const settings = {
     port: LOCK_PORT,
+    additionalPorts: [],
+    sharedQueue: false,
     pollMs: POLL_MS,
     reportMs: REPORT_MS,
     ...options,

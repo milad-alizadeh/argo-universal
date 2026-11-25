@@ -6,12 +6,16 @@ import { ActionMenu, type ActionGroup } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
 
+// The text role a title draws in: a page's Title, or the Heading a window's title bar draws.
+export type TitleRole = 'title' | 'heading';
+
 interface TitleMenuProps {
   title: string;
   // The heading level the title keeps: 1 for a page, 2 for a list column's.
   level: number;
   groups: ActionGroup[];
   inlineToolbar?: boolean;
+  role?: TitleRole;
 }
 
 /*
@@ -38,10 +42,12 @@ export function TitleMenu(props: TitleMenuProps): ReactElement {
 const titleTriggerOf = ({
   title,
   inlineToolbar,
+  role,
 }: TitleMenuProps): ReactElement => (
   <TitleTrigger
     title={title}
     inlineToolbar={inlineToolbar}
+    role={role}
     focusable={inlineToolbar && Platform.OS === 'android' ? false : undefined}
   />
 );
@@ -50,7 +56,8 @@ const headingOf = (level: number) =>
   ({
     accessibilityRole: 'heading',
     'aria-level': level,
-    className: 'min-w-0 flex-row',
+    // A column, so the menu's trigger is held to the heading's width and a long title ends in an ellipsis.
+    className: 'min-w-0',
   }) as const;
 
 // The menu passes its press handlers and ref through these props.
@@ -58,15 +65,15 @@ type TitleTriggerProps = Omit<
   ComponentProps<typeof Pressable>,
   'children' | 'className' | 'role'
 > &
-  Pick<TitleMenuProps, 'title' | 'inlineToolbar'>;
+  Pick<TitleMenuProps, 'title' | 'inlineToolbar' | 'role'>;
 
 const triggerClassName = cn(
-  'min-w-0 flex-row items-center gap-1 self-start rounded-control -mx-1 px-1 web:hover:bg-hover',
+  'min-w-0 max-w-full flex-row items-center gap-1 self-start rounded-control -mx-1 px-1 web:hover:bg-hover',
   tintTransitionClassName,
 );
 
 function TitleTrigger(options: TitleTriggerProps): ReactElement {
-  const { title, inlineToolbar, ...props } = options;
+  const { title, inlineToolbar, role, ...props } = options;
 
   return (
     <Pressable
@@ -75,7 +82,7 @@ function TitleTrigger(options: TitleTriggerProps): ReactElement {
       {...props}
       className={triggerClassName}
     >
-      <TitleLabel title={title} inlineToolbar={inlineToolbar} />
+      <TitleLabel title={title} inlineToolbar={inlineToolbar} role={role} />
       <Chevron direction="down" />
     </Pressable>
   );
@@ -84,12 +91,16 @@ function TitleTrigger(options: TitleTriggerProps): ReactElement {
 // The inline iOS toolbar has a fixed height even at accessibility text sizes.
 const toolbarTitleMaxScale = 1.5;
 
-type TitleLabelProps = Pick<TitleMenuProps, 'title' | 'inlineToolbar'>;
+type TitleLabelProps = Pick<TitleMenuProps, 'title' | 'inlineToolbar' | 'role'>;
 
-function TitleLabel({ title, inlineToolbar }: TitleLabelProps): ReactElement {
+function TitleLabel({
+  title,
+  inlineToolbar,
+  role,
+}: TitleLabelProps): ReactElement {
   return (
     <Text
-      {...titleAppearance(inlineToolbar)}
+      {...titleAppearance(inlineToolbar, role)}
       className="shrink"
       numberOfLines={1}
       selectable={false}
@@ -106,10 +117,11 @@ type TitleAppearance = Pick<
 
 const titleAppearance = (
   inlineToolbar: boolean | undefined,
+  role: TitleRole = 'title',
 ): TitleAppearance =>
   inlineToolbar && Platform.OS === 'ios'
     ? { role: 'nav-title', maxFontSizeMultiplier: toolbarTitleMaxScale }
-    : { role: 'title' };
+    : { role };
 
 const titleProps = {
   role: 'title',
@@ -121,15 +133,17 @@ type ScreenTitleProps = Omit<TitleMenuProps, 'title'> & { title?: string };
 
 // A title with a menu is a menu button inside the heading; one without is the heading's text.
 export function ScreenTitle(props: ScreenTitleProps): ReactElement | null {
-  const { title, level, groups } = props;
+  const { title, level, groups, role } = props;
 
   if (!title) return null;
 
   if (groups.length)
-    return <TitleMenu title={title} level={level} groups={groups} />;
+    return (
+      <TitleMenu title={title} level={level} groups={groups} role={role} />
+    );
 
   return (
-    <Text {...titleProps} aria-level={level}>
+    <Text {...titleProps} role={role ?? titleProps.role} aria-level={level}>
       {title}
     </Text>
   );

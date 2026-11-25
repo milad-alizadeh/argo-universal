@@ -20,7 +20,13 @@ export const wideScaffold = {
   inspectorState: 'closed',
 } satisfies ScaffoldFixture;
 
-// Paper's "Rail B · collapsed": only the rail stays on the glass, beside the page and its Inspector.
+// The sidebar and the Inspector closed: the rail hides with the list, and the window controls float in the title bar's capsules.
+export const closedPanelsScaffold = {
+  ...wideScaffold,
+  sidebarShown: false,
+} satisfies ScaffoldFixture;
+
+// The sidebar closed beside the page and its open Inspector.
 export const collapsedSidebarScaffold = {
   ...wideScaffold,
   sidebarShown: false,

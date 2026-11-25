@@ -16,6 +16,7 @@ import {
   root,
   run,
 } from './hook-checks.mts';
+import { admitVerify } from './verify-admission.mts';
 import { chooseBase } from './verify-base.mts';
 import {
   chooseTests,
@@ -154,6 +155,8 @@ if (changed.length === 0) {
   say(nothingChecked(paths, ref));
   process.exit(0);
 }
+
+await admitVerify();
 
 // A static failure stops verify before its tests, which would only fail on the same cause.
 const failed = failedChecks(await staticChecks(changed));

@@ -27,7 +27,6 @@ export type * from './frame-layout-types';
 
 // The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page is too narrow for it in the gutter.
 function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
-  const base = railZone(input.measures) + inspectorBudget(input);
   const list = preferredListWidth(input);
 
   return {
@@ -37,7 +36,10 @@ function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
       contentFloor(input) +
       list,
     workbenchGutter:
-      base + (input.sidebarShown ? list : 0) + pageWidthForGutter(input),
+      inspectorBudget(input) +
+      (input.sidebarShown ? list : 0) +
+      (input.sidebarShown || input.listless ? railZone(input.measures) : 0) +
+      pageWidthForGutter(input),
   };
 }
 
@@ -74,18 +76,23 @@ type Placed = Pick<
   'rail' | 'list' | 'inspector' | 'page' | 'workbench'
 >;
 
-// The rail and the list, and where the page starts after them.
+// A closed sidebar hides the rail with the list; a page with no list keeps the rail alone.
+const railShown = (input: FrameLayoutInput, list: ListRegion): boolean =>
+  !list.folded || input.listless === true;
+
+// The rail and the list, and where the page starts after them: at the window's edge once the sidebar closes.
 function leadingRegions(
   input: FrameLayoutInput,
   { listFold }: FrameLayout['thresholds'],
 ): Pick<FrameLayout, 'rail' | 'list'> & { contentStart: number } {
   const { inset, railWidth } = input.measures;
   const list = listRegion(input, listFold);
+  const shown = railShown(input, list);
 
   return {
-    rail: { offset: inset, width: railWidth },
+    rail: { offset: inset, width: shown ? railWidth : 0 },
     list,
-    contentStart: list.offset + list.width + inset,
+    contentStart: shown ? list.offset + list.width + inset : 0,
   };
 }
 
@@ -101,7 +108,7 @@ function placeRegions(
     ...leading,
     inspector,
     page,
-    workbench: workbenchRegion(input, page),
+    workbench: workbenchRegion(input, page, inspector),
   };
 }
 
@@ -128,9 +135,10 @@ export function frameLayout(input: FrameLayoutInput): FrameLayout {
   return {
     ...placed,
     ...column,
-    panesTop: input.measures.bandHeight,
+    panesTop: input.measures.titleBarTop + input.measures.titleBarHeight,
     thresholds,
-    sidebarWidth: railZone(input.measures) + placed.list.width,
+    sidebarWidth:
+      placed.rail.width > 0 ? railZone(input.measures) + placed.list.width : 0,
     handles: resizeHandles(input, placed),
     transitionKey: transitionKeyOf(arrangement(input, placed)),
   };

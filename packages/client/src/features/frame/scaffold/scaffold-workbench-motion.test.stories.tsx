@@ -37,18 +37,18 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 async function assertSliding(
   canvas: Canvas,
   action: string,
-  busy = 0,
+  {
+    busy = 0,
+    visible = action !== showInspector,
+  }: { busy?: number; visible?: boolean } = {},
 ): Promise<void> {
   const workbench = await canvas.findByTestId(workbenchId);
   const button = canvas.getByRole('button', { name: action });
   const left = (): number => Math.round(workbench.getBoundingClientRect().left);
   const start = left();
 
-  const { startTime, currentTime, positions } = await sampleWorkbenchSlide(
-    workbench,
-    () => button.click(),
-    busy,
-  );
+  const { startTime, currentTime, positions, backdropSafe } =
+    await sampleWorkbenchSlide(workbench, () => button.click(), busy);
 
   const end = left();
   const min = Math.min(start, end);
@@ -58,6 +58,7 @@ async function assertSliding(
     (position) => position > min && position < max,
   );
 
+  await expect(backdropSafe).toBe(true);
   await expect(startTime).toBeNull();
   await expect(currentTime).toBe(0);
   await expect(positions[0]).toBe(start);
@@ -66,7 +67,7 @@ async function assertSliding(
   await expect(canvas.getByTestId(workbenchId)).toBe(workbench);
 
   const visibility = expect(workbench);
-  await (action === showInspector ? visibility.not : visibility).toBeVisible();
+  await (visible ? visibility : visibility.not).toBeVisible();
 }
 
 function closesAt(width: number): Story {
@@ -143,7 +144,8 @@ export const WorkbenchTakesItsPlaceAtOnceOnASessionSwitch: Story = {
 // A heavy Inspector commit must not spend the Workbench's motion before it paints: it keeps pace with the panes.
 export const WorkbenchSlidesAfterAHeavyInspectorClose: Story = {
   ...closesAt(2560),
-  play: async ({ canvas }) => assertSliding(canvas, hideInspector, heavyCommit),
+  play: async ({ canvas }) =>
+    assertSliding(canvas, hideInspector, { busy: heavyCommit }),
 };
 
 export const WorkbenchSlidesOutAfterAHeavyInspectorOpen: Story = {
@@ -151,6 +153,15 @@ export const WorkbenchSlidesOutAfterAHeavyInspectorOpen: Story = {
   beforeEach: (): Promise<void> => settleLayout(1856),
   play: async ({ canvas }) => {
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    await assertSliding(canvas, showInspector, heavyCommit);
+    await assertSliding(canvas, showInspector, { busy: heavyCommit });
+  },
+};
+
+export const WorkbenchToggleKeepsItsGlassBackdrop: Story = {
+  args: { inspectorOpen: false, initialWorkbenchIntent: 'shown' },
+  play: async ({ canvas }) => {
+    const toggle = 'Toggle Workbench';
+    await assertSliding(canvas, toggle, { visible: false });
+    await assertSliding(canvas, toggle);
   },
 };

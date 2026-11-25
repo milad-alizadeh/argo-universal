@@ -3,7 +3,7 @@ import { createNodeTestProjects } from '@repo/vitest/node';
 import { defineProject } from 'vitest/config';
 
 const integrationSetup = fileURLToPath(
-  new URL('./mocks/prebuilt-kit.global-setup.ts', import.meta.url),
+  new URL('./mocks/prebuilt-fixtures.global-setup.ts', import.meta.url),
 );
 
 export default defineProject({

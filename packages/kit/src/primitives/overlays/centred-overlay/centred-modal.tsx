@@ -78,10 +78,10 @@ function Scrim(props: {
   const press = useScrimPress(props.dismissible);
 
   return (
-    <RadixDialog.Overlay>
-      <Pressable className={scrimClass} {...press}>
-        {props.children}
-      </Pressable>
+    <RadixDialog.Overlay className={scrimClass}>
+      {/* A click that crosses the card edge targets the endpoints' common ancestor. */}
+      <Pressable className="absolute inset-0" {...press} />
+      {props.children}
     </RadixDialog.Overlay>
   );
 }
@@ -91,7 +91,7 @@ type ScrimPress = Pick<
   'onPointerDown' | 'onPress'
 >;
 
-// The press must begin and end on the bare scrim; every pointer down inside the modal, the card's included, is read.
+// The dismiss target only takes a press that begins and ends on the scrim.
 function useScrimPress(dismissible: boolean | undefined): ScrimPress {
   const { onOpenChange } = useCentredModalState();
   const began = useRef(false);
@@ -123,10 +123,21 @@ function contentHandlers(props: CentredModalFrameProps): ContentHandlers {
   };
 }
 
-// The card alone, for a modal drawn in a region of its own with no scrim.
+// A labelled scrim belongs inside Dialog.Content so it stays in the accessibility tree and focus trap.
 export function CentredModalFrame(props: CentredModalFrameProps): ReactElement {
+  const scrimLabel = mayDismiss(props.dismissible)
+    ? props.scrimDismissLabel
+    : undefined;
+
   return (
-    <RadixDialog.Content {...contentHandlers(props)} className="outline-none">
+    <RadixDialog.Content
+      {...contentHandlers(props)}
+      className={
+        scrimLabel
+          ? 'absolute inset-0 isolate grid place-items-center outline-none'
+          : 'outline-none'
+      }
+    >
       <View
         className={props.className}
         accessibilityLabel={props.accessibilityLabel}
@@ -134,6 +145,12 @@ export function CentredModalFrame(props: CentredModalFrameProps): ReactElement {
         <ModalLabel label={props.label} />
         {props.children}
       </View>
+      {scrimLabel && (
+        <RadixDialog.Close
+          aria-label={scrimLabel}
+          className="absolute inset-0 -z-10 focus-visible:outline-2 focus-visible:-outline-offset-2"
+        />
+      )}
     </RadixDialog.Content>
   );
 }

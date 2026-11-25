@@ -1,5 +1,5 @@
-import { createContext, use, type ReactElement, type ReactNode } from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { type ReactElement, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
 import { useEnlargedText } from '#kit/enlarged-text';
 import type { ScreenHeader } from '#primitives/actions/action';
@@ -15,9 +15,7 @@ import { HeadingActions } from './screen-heading-actions';
 import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
-import { ScreenTitle } from './screen-title-menu';
-
-export const ScreenHeadingEndInset = createContext(0);
+import { ScreenTitle, type TitleRole } from './screen-title-menu';
 
 /*
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
@@ -29,11 +27,10 @@ export function ScreenHeadingBody(
     headingColumn?: (children: ReactNode) => ReactNode;
   },
 ): ReactElement {
+  const inset = useHeadingInset();
+
   const content = (
-    <View
-      className="gap-1"
-      style={headingInset(useHeadingInset(), use(ScreenHeadingEndInset))}
-    >
+    <View className="gap-1" style={{ paddingHorizontal: inset }}>
       <HeadingRow {...props} />
       <HeadingCaption {...props} />
     </View>
@@ -52,12 +49,6 @@ export function ScreenHeadingBody(
   );
 }
 
-// A phone-width page of grouped cards starts its title and caption on its rows' text line.
-const headingInset = (inset: number, end: number): ViewStyle => ({
-  paddingLeft: inset,
-  paddingRight: inset + end,
-});
-
 // A List that is selecting owns the header, so the page's caption stands down with its title.
 function HeadingCaption(props: ScreenHeaderInput): ReactNode {
   const { selecting } = props.headers.heading;
@@ -75,7 +66,7 @@ function HeadingCaption(props: ScreenHeaderInput): ReactNode {
  * sidebar's, its buttons the window band's size, since it sits above a list beside its page. A List that is selecting replaces it with its
  * own header (ADR-0043).
  */
-type HeadingPlacement = 'page' | 'list';
+type HeadingPlacement = 'page' | 'list' | 'bar';
 
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 
@@ -108,7 +99,14 @@ function DeclaredHeading(props: DeclaredHeadingProps): ReactElement {
   );
 }
 
-type Look = { titleLevel: number; buttonSize: IconButtonSize };
+type Look = {
+  titleLevel: number;
+  buttonSize: IconButtonSize;
+  // The title bar draws the header's buttons among the window's own, apart from the title.
+  apartActions?: boolean;
+  // A title in the window's title bar is the Heading role, bold at body size, as a window's title is.
+  titleRole?: TitleRole;
+};
 
 // The title, a menu button when it has a menu, and the header's buttons, in the placement's looks.
 const headingContent = (
@@ -116,7 +114,7 @@ const headingContent = (
   look: Look,
 ): HeadingContent => ({
   title: headingTitle(props, look),
-  actions: headingActions(props, look),
+  actions: look.apartActions ? null : headingActions(props, look),
 });
 
 const headingTitle = (
@@ -127,6 +125,7 @@ const headingTitle = (
     title={props.title}
     level={look.titleLevel}
     groups={props.titleGroups}
+    role={look.titleRole}
   />
 );
 
@@ -148,7 +147,27 @@ const headingActions = (
 const placements: Record<HeadingPlacement, Look & { sidebar: boolean }> = {
   page: { titleLevel: 1, buttonSize: chromeControlSize, sidebar: false },
   list: { titleLevel: 2, buttonSize: chromeControlSize, sidebar: true },
+  bar: {
+    titleLevel: 1,
+    buttonSize: chromeControlSize,
+    sidebar: false,
+    titleRole: 'heading',
+    apartActions: true,
+  },
 };
+
+// The header's buttons in the window's title bar, at the window controls' size.
+export function TitleBarActions(props: ScreenHeaderInput): ReactElement {
+  return (
+    <FixedSizeChrome>
+      <HeadingActions
+        header={props.headers.heading}
+        size={placements.bar.buttonSize}
+        options={props.pageOptions}
+      />
+    </FixedSizeChrome>
+  );
+}
 
 function Heading(props: {
   content: HeadingContent;

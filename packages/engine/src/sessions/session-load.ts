@@ -6,7 +6,7 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, turn } from '@repo/db/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNotNull } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   highestFeedPosition,
@@ -72,14 +72,13 @@ const interruptionFor = (input: SessionInput): string | null =>
 
 type StoredValues = Omit<
   SessionData,
-  'nextPosition' | 'kept' | 'undisclosedInterruptedTurnId'
+  'nextPosition' | 'kept' | 'undisclosedInterruptedTurnId' | 'vendorSessionId'
 >;
 
 const storedValues = (row: SessionRecord): StoredValues => ({
   sessionId: row.id,
   projectId: row.projectId,
   agent: row.agent,
-  vendorSessionId: row.vendorSessionId,
   checkout: { path: row.checkoutPath, branch: row.checkoutBranch },
   configValues: storedConfigValues.parse(row.configValues),
   heldConfig: storedConfigValues.parse(row.heldConfig),
@@ -88,14 +87,19 @@ const storedValues = (row: SessionRecord): StoredValues => ({
   activityAt: row.activityAt,
 });
 
-function nextPosition(
-  input: SessionInput,
-  writer: WriterActorRef | undefined,
-): number {
-  const pendingFeed = readQueuedFeed(writer, input.sessionId);
-  const position = highestFeedPosition(input.database, input.sessionId);
-
-  return Math.max(position, pendingFeed.highestPosition) + 1;
+function hasTurnFeed(
+  { database, sessionId }: Pick<SessionInput, 'database' | 'sessionId'>,
+  queuedRows: ReturnType<typeof readQueuedFeed>['rows'],
+): boolean {
+  return (
+    queuedRows.some((row) => row.turnId !== null) ||
+    database
+      .select({ id: feedRow.id })
+      .from(feedRow)
+      .where(and(eq(feedRow.sessionId, sessionId), isNotNull(feedRow.turnId)))
+      .limit(1)
+      .get() !== undefined
+  );
 }
 
 function requireStoredSession(
@@ -117,11 +121,18 @@ export async function loadSession(
   writer?: WriterActorRef,
 ): Promise<SessionData & Pick<SessionContext, 'promptQueue'>> {
   const row = requireStoredSession(input, writer);
+  const pendingFeed = readQueuedFeed(writer, input.sessionId);
+  const position = highestFeedPosition(input.database, input.sessionId);
 
   return {
     ...storedValues(row),
+    // An Agent can return an ID before it has any Turn history to resume.
+    vendorSessionId:
+      row.vendorSessionId !== null && hasTurnFeed(input, pendingFeed.rows)
+        ? row.vendorSessionId
+        : null,
     promptQueue: PromptQueue.parse(row.promptQueue),
-    nextPosition: nextPosition(input, writer),
+    nextPosition: Math.max(position, pendingFeed.highestPosition) + 1,
     kept: true,
     undisclosedInterruptedTurnId: interruptionFor(input),
   };

@@ -10,10 +10,14 @@ import type { ConversationProvider } from './provider';
 export function defaultConversationProvider(
   environment: NodeJS.ProcessEnv,
   auth?: CodexAuth,
+  missedPong?: () => void,
 ): ConversationProvider | null {
   return environment.ARGO_CONVERSATION_PROVIDER === 'fake'
     ? new FakeConversationProvider()
-    : createGptLiveProvider(auth && { auth });
+    : createGptLiveProvider({
+        ...(auth && { auth }),
+        ...(missedPong && { missedPong }),
+      });
 }
 
 // What the voice is told about a Session before it speaks: its title, working folder and recent Feed.

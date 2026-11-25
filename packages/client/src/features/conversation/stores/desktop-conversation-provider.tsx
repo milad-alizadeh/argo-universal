@@ -1,5 +1,6 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { useShowsServer } from '#features/servers';
 import { LatencyPanel } from '../components/latency-panel/latency-panel';
 import { useConversationStatus } from '../hooks/use-conversation-status';
@@ -75,7 +76,7 @@ function FollowsDeviceChoice({
 
 type Props = { desktop: boolean; children: ReactNode };
 
-// SPIKE (latency on a phone): a phone chooses no device, and both draw the latency panel over the App.
+// SPIKE (latency on a phone): a phone chooses no device, and both draw the latency panel over the App (not the web app).
 function Hosted(props: {
   connection: ConversationConnection;
   desktop: boolean;
@@ -87,7 +88,7 @@ function Hosted(props: {
         <FollowsDeviceChoice connection={props.connection} />
       ) : null}
       {props.children}
-      {__DEV__ ? <LatencyPanel /> : null}
+      {__DEV__ && Platform.OS !== 'web' ? <LatencyPanel /> : null}
     </ServerConversationHost>
   );
 }

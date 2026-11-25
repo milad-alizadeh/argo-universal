@@ -5,6 +5,7 @@ import {
   meta as sessionDetailViewTestMeta,
   openProps,
   type Story,
+  titleTrigger,
 } from '../../../../mocks/session-view/session-view-story.test.mocks';
 import { idleSession } from './session-detail-view.mocks';
 import {
@@ -39,17 +40,31 @@ const pluginActionsOf = ({ args }: PlayContext): SessionPluginActions => {
   return pluginActions;
 };
 
-async function openMore({
-  canvas,
-  userEvent,
-}: PlayContext): Promise<ReturnType<typeof within>> {
-  await userEvent.click(await canvas.findByRole('button', { name: 'More' }));
+async function openMenu(
+  { userEvent }: PlayContext,
+  trigger: HTMLElement,
+): Promise<ReturnType<typeof within>> {
+  await userEvent.click(trigger);
 
   return within(await screen.findByRole('menu'));
 }
 
-// A desktop shows the first Plugin action as a button; "…" holds Argo's Rename and Archive first, then the Plugins' rest.
-export const DesktopOverflowsIntoMore: Story = {
+const openMore = async (
+  context: PlayContext,
+): Promise<ReturnType<typeof within>> =>
+  openMenu(
+    context,
+    await context.canvas.findByRole('button', { name: 'More' }),
+  );
+
+// A wide window's title, in the title bar, opens what a phone's ⋯ holds.
+const openTitleMenu = async (
+  context: PlayContext,
+): Promise<ReturnType<typeof within>> =>
+  openMenu(context, await titleTrigger(context.canvas));
+
+// A desktop shows the first Plugin action as a button; the title's menu holds Argo's Rename and Archive first, then the Plugins' rest.
+export const DesktopOverflowsIntoTitleMenu: Story = {
   args: withPluginActions(desktopPluginActions()),
   beforeEach: () => settleLayout('wide'),
   play: async (context) => {
@@ -64,7 +79,11 @@ export const DesktopOverflowsIntoMore: Story = {
       canvas.queryByRole('button', { name: openPreview }),
     ).toBeNull();
 
-    const more = await openMore(context);
+    await expect(
+      context.canvas.queryByRole('button', { name: 'More' }),
+    ).toBeNull();
+
+    const more = await openTitleMenu(context);
     await expect(menuLabels(more)).toEqual([
       'Rename',
       'Archive',
@@ -97,15 +116,15 @@ export const PhoneKeepsAllInMore: Story = {
   },
 };
 
-// With nothing of Argo's to offer, "…" still opens for the Plugins' menu actions.
-export const MoreOpensForPluginsAlone: Story = {
+// With nothing of Argo's to offer, the title's menu still opens for the Plugins' menu actions.
+export const TitleMenuOpensForPluginsAlone: Story = {
   args: withPluginActions(desktopPluginActions(), {
     ...idleSession.header,
     menu: undefined,
   }),
   beforeEach: () => settleLayout('wide'),
   play: async (context) => {
-    const more = await openMore(context);
+    const more = await openTitleMenu(context);
 
     await expect(menuLabels(more)).toEqual([openPreview, coverageReport]);
   },

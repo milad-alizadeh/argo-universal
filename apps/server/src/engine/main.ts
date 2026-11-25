@@ -5,6 +5,7 @@ import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
 import { firstPartyPluginsDirectory } from './first-party-plugins';
+import { reportEngineLoad } from './load-reporter';
 
 const highestPort = 65_535;
 
@@ -20,6 +21,7 @@ const port = z.coerce
 const home = resolveRuntimeDirectory();
 
 const engine = composeEngine({
+  report: reportEngineLoad(),
   cliEntry: fileURLToPath(
     new URL('../../../cli/bin/argo.mjs', import.meta.url),
   ),

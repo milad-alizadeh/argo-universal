@@ -80,8 +80,8 @@ export function useFrameOffset(props: OffsetMotion): FrameSlide {
 }
 
 /*
- * The same motion with no fade: the container slides and is fully opaque while it shows or slides out, and
- * transparent once it has gone. A translucent container would stop the glass in it blurring the page under it.
+ * The same motion, opaque while the container shows, so the glass in it blurs the page under it, and fading as it
+ * slides out, so nothing of it shows through a translucent pane it slides under.
  */
 export function useFrameSlide(props: OffsetMotion): FrameSlide {
   const { shift, opacity } = useOffsetValues(props);
@@ -90,7 +90,7 @@ export function useFrameSlide(props: OffsetMotion): FrameSlide {
   const style = useAnimatedStyle<ViewStyle>(
     () => ({
       transform: [{ translateX: shift.get() }],
-      opacity: visible || opacity.get() > 0 ? 1 : 0,
+      opacity: visible ? 1 : opacity.get(),
     }),
     [shift, opacity, visible],
   );

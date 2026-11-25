@@ -11,6 +11,9 @@ export const stored = SessionRecord.parse({
   keepCheckout: false,
   seenRevision: 0,
   activityAt: 100,
+  changesFiles: null,
+  changesAdditions: null,
+  changesDeletions: null,
   failure: null,
   vendorSessionId: null,
   parentSessionId: null,
@@ -79,5 +82,6 @@ export const information = {
   subagents: { total: 0, running: 0 },
   shells: { total: 0, running: 0 },
   archivedAt: null,
+  changes: null,
   pullRequest: null,
 };

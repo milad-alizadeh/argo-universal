@@ -14,6 +14,8 @@ export {
   type ScreenStackHeaderProps,
 } from './screen-stack-header';
 
+export { TitleBarOffer, type TitleBarPlaces } from './screen-title-bar';
+
 export { ScreenMenuContext, type ScreenMenu } from './screen-menu-context';
 
 export {
@@ -24,5 +26,3 @@ export {
 } from './screen-navigation-context';
 
 export { ScreenStoryBack } from './screen-story-back';
-
-export { ScreenHeadingEndInset } from './screen-heading-row';

@@ -1,21 +1,19 @@
 import { useSymbolImageRenderer } from '@repo/kit/symbols/symbol-images';
 import { useSyncExternalStore } from 'react';
-import { useWindowHistory } from './window-history';
 
-// The band's leading group: its width, and where the sidebar toggle starts in it.
+// Where the title bar's sidebar toggle sits, in the open sidebar's top row and in the capsule that holds it once the sidebar closes alike.
 export interface BandLeading {
-  width: number;
-  inset: number;
+  toggle: number;
 }
 
-// macOS keeps its traffic lights in the band; elsewhere the toggle starts at the frame's edge.
+/*
+ * macOS keeps its traffic lights in the title bar: the toggle starts 9 points after the green light. Elsewhere it
+ * starts 4 inside the panel's edge, which sits the window's 8 inset in.
+ */
 const bandLeadings = {
-  mac: { width: 125, inset: 89 },
-  other: { width: 44, inset: 8 },
+  mac: { toggle: 89 },
+  other: { toggle: 12 },
 } as const satisfies Record<string, BandLeading>;
-
-// Back and Forward follow the toggle wherever the window has a history, two `md` IconButtons' 32px boxes.
-const historyControlsWidth = 64;
 
 // The desktop app hands over a symbol renderer on macOS only, so having one is how the page knows it runs there.
 const useIsMacOS = (): boolean => useSymbolImageRenderer() !== null;
@@ -37,13 +35,9 @@ function watchWindowZoom(changed: () => void): () => void {
 export function useBandLeading(): BandLeading {
   const mac = useIsMacOS();
   const zoom = useSyncExternalStore(watchWindowZoom, windowZoom, unzoomed);
-  const { width, inset } = mac ? bandLeadings.mac : bandLeadings.other;
-  // Keep the 9-point gap from the green light fixed as page zoom changes.
-  const leadingInset = mac ? inset / zoom : inset;
-  const historyWidth = useWindowHistory() ? historyControlsWidth : 0;
+  const { toggle } = mac ? bandLeadings.mac : bandLeadings.other;
+  // Keep the gap from the green light fixed as page zoom changes.
+  const scale = mac ? zoom : 1;
 
-  return {
-    width: width - inset + leadingInset + historyWidth,
-    inset: leadingInset,
-  };
+  return { toggle: toggle / scale };
 }

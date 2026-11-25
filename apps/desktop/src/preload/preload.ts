@@ -15,11 +15,16 @@ import { contextBridge, ipcRenderer, webFrame } from 'electron';
 
 // Page zoom resizes the CSS viewport, while native traffic lights keep their size.
 function reportBandHeight(): void {
-  const height = getComputedStyle(document.documentElement).getPropertyValue(
-    '--spacing-frame-control',
-  );
+  const style = getComputedStyle(document.documentElement);
 
-  ipcRenderer.send('window:band-height', Number.parseFloat(height));
+  const pixels = (name: string): number =>
+    Number.parseFloat(style.getPropertyValue(name));
+
+  // The title bar's band, where the panes start, so the window buttons centre with its buttons.
+  ipcRenderer.send(
+    'window:band-height',
+    pixels('--spacing-frame-top') + pixels('--spacing-frame-title-bar'),
+  );
 }
 
 if (process.platform === 'darwin') {

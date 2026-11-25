@@ -41,11 +41,9 @@ export const RunningTurn: Story = {
       ).toBeVisible();
 
       if (wide) {
-        // Spec 0020 deletes the repeated header meta; the Live header still states the Turn.
+        // Spec 0020 deletes the repeated header meta; a wide window's title opens the Session's menu, so no ⋯ remains.
         await expect(canvas.queryByText('Running')).toBeNull();
-        await expect(
-          canvas.getByRole('button', { name: 'More' }),
-        ).toBeVisible();
+        await expect(canvas.queryByRole('button', { name: 'More' })).toBeNull();
       } else {
         // A narrow header holds the plain title and the Session's ⋯: no status, and no Changes.
         await expect(canvas.queryByText('Running')).toBeNull();
@@ -95,7 +93,7 @@ export const Idle: Story = {
     }),
 };
 
-// The detail pane owns identity; the Feed and Composer keep the Session layout surface.
+// The window's title bar owns identity, as Claude's and Codex's do; the Feed and Composer keep the Session layout surface.
 export const DetailOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
@@ -105,7 +103,14 @@ export const DetailOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
       name: /^Think briefly first/,
     });
 
-    await expect(canvas.getByTestId('desktop-detail')).toContainElement(title);
+    await expect(canvas.getByTestId('window-band-title')).toContainElement(
+      title,
+    );
+    await expect(
+      within(canvas.getByTestId('desktop-detail')).queryByRole('heading', {
+        name: /^Think briefly first/,
+      }),
+    ).toBeNull();
     await expect(layout.getByTestId(feedScrollTestId)).toBeVisible();
     await expect(
       layout.getByRole('textbox', { name: 'Message' }),

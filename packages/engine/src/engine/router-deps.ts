@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
-import { readChangesSummary } from '@repo/git';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { AppNavigationDeps } from '../app-navigation';
@@ -24,7 +23,7 @@ import {
   createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
-  sessionChangesSelection,
+  readSessionChanges,
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
@@ -100,20 +99,26 @@ export function createAppRouterDeps(
     ...setup,
     chartPreview: new ChartPreview(),
     readSession,
-    readStoredChangesSummary: createStoredChangesReader(input, readSession),
+    readStoredChangesSummary: createStoredChangesReader(
+      input,
+      sources,
+      readSession,
+    ),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
 }
 
 function createStoredChangesReader(
   input: AppRouterInput,
+  sources: Pick<FeedSources, 'findWriter'>,
   readSession: ReturnType<typeof createSessionReader>,
 ): FeedDeps['readStoredChangesSummary'] {
-  return (sessionId) => {
-    const session = readSession(sessionId);
-
-    return readChangesSummary(sessionChangesSelection(input.database, session));
-  };
+  return (sessionId) =>
+    readSessionChanges(
+      { database: input.database, writer: sources.findWriter() },
+      sessionId,
+      readSession(sessionId),
+    );
 }
 
 type AgentSetup = Pick<

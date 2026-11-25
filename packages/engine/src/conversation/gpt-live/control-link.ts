@@ -14,6 +14,7 @@ export type ControlLinkOptions = {
   lostLinkMs: number;
   // How often the link is checked with a ping.
   pingMs: number;
+  missedPong?: () => void;
 };
 
 // What the link tells the call it belongs to: each text frame, what it does to the call, and notes for the log.
@@ -86,6 +87,8 @@ export class ControlLink {
   }
 
   private silent(link: WebSocket): void {
+    this.options.missedPong?.();
+
     this.host.note(
       `link answered no ping in ${this.options.pingMs} ms; dropped it`,
     );

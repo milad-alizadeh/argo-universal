@@ -173,13 +173,12 @@ Then('New Session is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions\/new(\?|$)/);
 });
 
-const settingsModal = (page: Page): Locator =>
+export const settingsModal = (page: Page): Locator =>
   page.getByRole('dialog', { name: 'Settings', exact: true });
 
 export async function closeSettingsModal(page: Page): Promise<void> {
-  await settingsModal(page)
-    .getByRole('button', { name: 'Close Settings' })
-    .click();
+  await expect(settingsModal(page)).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(settingsModal(page)).toHaveCount(0);
 }
 
@@ -202,11 +201,15 @@ When('I open Agents from the Settings list', async ({ page }) => {
 });
 
 When(
-  /I dismiss the Settings modal with (Escape|Close|the dim)/,
+  /I dismiss the Settings modal with (Escape|the dim|the accessible backdrop)/,
   async ({ page }, control: string) => {
-    if (control === 'Escape') await page.keyboard.press('Escape');
-    else if (control === 'Close') await closeSettingsModal(page);
-    else {
+    if (control === 'Escape') return closeSettingsModal(page);
+
+    if (control === 'the accessible backdrop') {
+      await settingsModal(page)
+        .getByRole('button', { name: 'Dismiss Settings', exact: true })
+        .press('Enter');
+    } else {
       const tile = page.getByRole('button', {
         name: 'Scheduled',
         exact: true,
@@ -236,14 +239,5 @@ Then('Agents is open in the Settings modal', async ({ page }) => {
     name: 'Search Agents',
   });
 
-  const close = settingsModal(page).getByRole('button', {
-    name: 'Close Settings',
-  });
-
   await expect(search).toBeVisible();
-  const searchBox = await search.boundingBox();
-  const closeBox = await close.boundingBox();
-  expect(
-    searchBox && closeBox && searchBox.x + searchBox.width <= closeBox.x,
-  ).toBe(true);
 });

@@ -23,7 +23,7 @@ describe('frameLayout thresholds', () => {
   it('needs no room for the list in the gutter threshold while it is hidden', () => {
     expect(
       frameLayout({ ...input, sidebarShown: false }).thresholds.workbenchGutter,
-    ).toBe(1292);
+    ).toBe(1220);
   });
 
   it.each([
@@ -137,7 +137,7 @@ describe('frameLayout gives up width in order', () => {
       inspectorState: 'closed',
       folded: true,
       gutter: false,
-      content: 687,
+      content: 759,
     },
   ] as const)(
     'protects the column at $width with the Inspector $inspectorState',

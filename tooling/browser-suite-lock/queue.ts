@@ -51,15 +51,23 @@ function discard(file: string, token: string): void {
   if (process.platform !== 'win32') rmSync(address(token), { force: true });
 }
 
+type Predecessors = { file: string; earlier: Set<string>; dial: Dial };
+
 async function first(
-  file: string,
-  earlier: string[],
-  dial: Dial,
+  { file, earlier, dial }: Predecessors,
+  slots: number,
 ): Promise<boolean> {
-  for (let token = earlier.at(0); token; token = earlier.at(0)) {
-    if (await blocksTurn(token, dial)) return false;
-    discard(file, token);
-    earlier.shift();
+  let pending = 0;
+
+  for (const token of earlier) {
+    if (await blocksTurn(token, dial)) {
+      pending++;
+
+      if (pending >= slots) return false;
+    } else {
+      discard(file, token);
+      earlier.delete(token);
+    }
   }
 
   return true;
@@ -78,7 +86,7 @@ function journal(port: number, production: boolean): string {
 }
 
 export interface QueueTicket {
-  first: () => Promise<boolean>;
+  first: (slots?: number) => Promise<boolean>;
   acquired: () => void;
   close: () => void;
 }
@@ -103,10 +111,10 @@ export async function enqueue(
     const file = journal(port, production);
 
     record(file, token, 'request');
-    const earlier = predecessors(readFileSync(file, 'utf8'), token);
+    const earlier = new Set(predecessors(readFileSync(file, 'utf8'), token));
 
     return {
-      first: () => first(file, earlier, dial),
+      first: (slots = 1) => first({ file, earlier, dial }, slots),
       acquired: () => record(file, token, 'acquire'),
       close() {
         socket.close();

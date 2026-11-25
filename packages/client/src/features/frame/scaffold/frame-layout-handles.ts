@@ -15,6 +15,7 @@ import type {
 } from './frame-layout-types';
 
 interface PlacedPanes {
+  rail: PaneSpan;
   list: PaneSpan;
   page: PaneSpan;
   inspector: InspectorRegion;
@@ -47,6 +48,10 @@ const trailingEdge = ({
   gap: 0,
 });
 
+// A closed sidebar hides the rail too, so the divider that drags it open again waits at the window's edge.
+const sidebarDividerLeft = ({ rail, list }: PlacedPanes): number =>
+  rail.width === 0 ? 0 : list.offset + list.width;
+
 function listHandle(
   input: FrameLayoutInput,
   panes: PlacedPanes,
@@ -58,6 +63,7 @@ function listHandle(
 
   return {
     ...trailingEdge(panes.list),
+    left: sidebarDividerLeft(panes),
     reach: maximum,
     minimum: listWidth,
     maximum,

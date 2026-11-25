@@ -11,6 +11,7 @@ export type CentredModalFrameProps = {
   label?: string;
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
+  scrimDismissLabel?: string;
   onCloseAutoFocus?: (event: Event) => void;
   children: ReactNode;
 };

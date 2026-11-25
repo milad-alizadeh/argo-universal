@@ -40,6 +40,9 @@ export interface ScaffoldLayout extends FrameLayout, WindowWidth {
   setWorkbenchPopover: WorkbenchPopover['setWorkbenchPopover'];
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
+  // The title bar's buttons that ride the Inspector's edge, as laid out: the trailing capsule closes round them.
+  movingWidth: number;
+  setMovingWidth: (width: number) => void;
 }
 
 export interface ScaffoldPartProps {
@@ -74,7 +77,8 @@ function useFrameMeasures(): FrameMeasures {
     inspectorWidth: useCSSPixels('--spacing-frame-inspector'),
     railWidth: useCSSPixels('--spacing-frame-rail'),
     inset: useCSSPixels('--spacing-frame-inset'),
-    bandHeight: useCSSPixels('--spacing-frame-control'),
+    titleBarTop: useCSSPixels('--spacing-frame-top'),
+    titleBarHeight: useCSSPixels('--spacing-frame-title-bar'),
     workbenchWidth: useCSSPixels('--spacing-frame-list'),
     paneGap: useCSSPixels('--spacing-4'),
     composerWidth: useCSSPixels('--container-composer'),
@@ -121,12 +125,14 @@ const layoutOf = (
     ...sizing,
     width,
     workbenchAvailable: Boolean(bandWorkbench(scaffold.band)),
+    listless: !scaffold.list,
   });
 
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
   const sizing = useScaffoldSizing(scaffold);
   const windowWidth = useWindowWidth();
   const layout = layoutOf(scaffold, sizing, windowWidth.width);
+  const [movingWidth, setMovingWidth] = useState(0);
 
   // A page that holds the Workbench closes the popover, so a narrower one later starts with it closed, as Codex's does.
   if (sizing.workbenchPopover && layout.workbench.fits)
@@ -137,6 +143,8 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
     ...layout,
     ...windowWidth,
     safeTop: useSafeAreaInsets().top,
+    movingWidth,
+    setMovingWidth,
     ...useScaffoldMotion(scaffold, layout),
   };
 }

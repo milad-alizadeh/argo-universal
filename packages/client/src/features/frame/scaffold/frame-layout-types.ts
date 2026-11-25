@@ -20,7 +20,9 @@ export interface FrameMeasures {
   inspectorWidth: number;
   railWidth: number;
   inset: number;
-  bandHeight: number;
+  // The floating panels' top inset, and the title bar's row inside their top, which their content starts below.
+  titleBarTop: number;
+  titleBarHeight: number;
   workbenchWidth: number;
   paneGap: number;
   composerWidth: number;
@@ -39,6 +41,8 @@ interface FrameIntent {
   workbenchIntent: WorkbenchIntent;
   // The toggle opened the Workbench over the content on a page too narrow for it in the gutter, as Codex's popover; it closes again when the page holds it.
   workbenchPopover?: boolean;
+  // The page has no list beside it, as a Plugin page without its own: the rail stays, the way to another section.
+  listless?: boolean;
 }
 
 export interface FrameLayoutInput extends FrameIntent {
@@ -98,13 +102,13 @@ export interface InspectorRegion extends PaneSpan {
 
 // Every region of a wide window, along the window from its left edge.
 export interface FrameLayout {
-  // The panes start under the window band.
+  // The panes start under the title bar.
   panesTop: number;
   // The window widths below which the list folds and the Workbench no longer fits in the content's gutters.
   thresholds: { listFold: number; workbenchGutter: number };
   rail: PaneSpan;
   list: ListRegion;
-  // The rail and the list with their insets: the permanent drawer's width.
+  // The rail and the list with their insets: the permanent drawer's width, 0 once the sidebar closes.
   sidebarWidth: number;
   page: PaneSpan & { hidden: boolean };
   // The page's content column, with its two gutters: centred in the page, or in the room beside a Workbench in the gutter.

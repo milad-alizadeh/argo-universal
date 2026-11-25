@@ -77,7 +77,7 @@ export const FrameRail = memo(function FrameRail(props: FrameRailProps) {
   return (
     <View
       testID="desktop-rail"
-      className="relative w-frame-rail shrink-0 items-center web:pt-2"
+      className="relative w-frame-rail shrink-0 items-center native:h-full web:pt-2"
     >
       <RailSections {...props} />
       <RailEdge sidebarShown={props.sidebarShown} />

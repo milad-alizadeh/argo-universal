@@ -1,7 +1,7 @@
 import { ScreenBackInBand } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import {
   contentFill,
@@ -105,13 +105,18 @@ function PageContent({
   );
 }
 
+// A framed page starts under the title bar, and a tablet's under the status bar too; the window surface still runs behind them. The phone shell's pages keep their own header insets.
+const pageTop = ({ framed, layout }: ScaffoldParts): ViewStyle => ({
+  paddingTop: framed ? layout.safeTop + layout.panesTop : 0,
+});
+
 // A page: beside the list on a wide window, the whole window on a compact or medium one; the tree is the same at each, so the page never remounts. Its content draws wide from the column the Frame placed.
 export function ScaffoldPage({
   parts,
   children,
 }: ScaffoldPageProps): React.JSX.Element {
   return (
-    <View className="flex-1 flex-row">
+    <View className="flex-1 flex-row" style={pageTop(parts)}>
       <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
         <HasWorkbenchProvider value={parts.framed}>
           <PageContent parts={parts}>{children}</PageContent>

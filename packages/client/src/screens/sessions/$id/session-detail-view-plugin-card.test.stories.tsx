@@ -119,7 +119,7 @@ const roundedBackground =
     );
   };
 
-// A surface is anything drawn with rounded corners over a background or inside an edge; the card is the one surface in it. The wrapper around the card draws none, so its background is what none looks like.
+// A surface is anything drawn with rounded corners over a background or inside an edge. The card is a section of the Workbench's one glass panel, so nothing in it draws a surface: its wrapper's background is what none looks like.
 const surfacesIn = (element: HTMLElement): Element[] =>
   [...element.querySelectorAll('*')].filter(
     roundedBackground(getComputedStyle(element).backgroundColor),
@@ -133,7 +133,7 @@ export const AListInACardDrawsNoCardOfItsOwn: Story = {
     );
 
     await canvas.findByText(listCardRow);
-    await expect(surfacesIn(card)).toHaveLength(1);
+    await expect(surfacesIn(card)).toHaveLength(0);
   },
 };
 
