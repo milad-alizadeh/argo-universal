@@ -1,3 +1,4 @@
+import { canPointAt } from '@repo/kit/mocks/point-hit';
 import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
@@ -20,6 +21,7 @@ import {
   scrollUp,
   openedRow,
 } from './feed-reader.mocks';
+import { scrollMemory } from './feed-scroll-memory';
 import { settledTopOf } from './feed-settled-top.mocks';
 import {
   arrivingRow,
@@ -301,6 +303,8 @@ export const FollowsEndOnReturn = returningToRetainedFeed(false);
 
 export const KeepsReadingPlaceOnReturn = returningToRetainedFeed(true);
 
+const restoredOlderSessionId = 'restored-older-feed-test';
+
 function ReopenedPagedFeed(): React.JSX.Element {
   const [open, setOpen] = useState(true);
 
@@ -315,7 +319,7 @@ function ReopenedPagedFeed(): React.JSX.Element {
           {...feedArgs}
           rows={longRows}
           pageLength={60}
-          sessionId="restored-older-feed-test"
+          sessionId={restoredOlderSessionId}
         />
       )}
     </>
@@ -324,6 +328,9 @@ function ReopenedPagedFeed(): React.JSX.Element {
 
 export const RestoresOlderReadingAfterRemount: Story = {
   render: () => <ReopenedPagedFeed />,
+  beforeEach: (): void => {
+    scrollMemory.write(restoredOlderSessionId, null);
+  },
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     const scroll = await canvas.findByTestId(feedScrollId);
@@ -331,41 +338,38 @@ export const RestoresOlderReadingAfterRemount: Story = {
       () => expect(scrolledToEnd(scroll)).toBe(true),
       scrollAwayWait,
     );
-    /*
-     * Jump to the top of each loaded page, as a reader can with the scrollbar.
-     * Each prepend moves the viewport down, so continue until the oldest row arrives.
-     */
+    const oldest = (): HTMLElement => within(scroll).getByText(oldestMessage);
+    // Each prepend moves the viewport down. Jump back to the top until the oldest prompt is readable there.
     await waitFor(async () => {
       scrollUp(scroll, scroll.scrollHeight);
-      await afterTwoFrames();
       await expect(scroll.scrollTop).toBe(0);
-      await expect(
-        within(scroll).getAllByText(oldestMessage).length,
-      ).toBeGreaterThan(0);
+      await expect(canPointAt(oldest())).toBe(true);
     }, scrollAwayWait);
-    scrollUp(scroll, -300);
-    await afterTwoFrames();
-    const before = await markSettledMiddleOfView(scroll);
-    const text = before.element.textContent;
-    await userEvent.click(
-      canvas.getByRole('button', { name: switchSessionLabel }),
+
+    const initialTop = await settledTopOf(oldest);
+    // Read partway into the oldest row so restoring at the page boundary would fail.
+    scrollUp(scroll, -Math.ceil(oldest().getBoundingClientRect().height / 4));
+    await waitFor(() =>
+      expect(initialTop - oldest().getBoundingClientRect().top).toBeGreaterThan(
+        3,
+      ),
     );
-    await userEvent.click(
-      canvas.getByRole('button', { name: switchSessionLabel }),
-    );
+    const before = await settledTopOf(oldest);
+
+    const switchSession = canvas.getByRole('button', {
+      name: switchSessionLabel,
+    });
+    await userEvent.click(switchSession);
+    await waitFor(() => expect(canvas.queryByTestId(feedScrollId)).toBeNull());
+    await userEvent.click(switchSession);
+
     const restored = await canvas.findByTestId(feedScrollId);
-    await waitFor(
-      () =>
-        expect(
-          within(restored).getAllByText(oldestMessage).length,
-        ).toBeGreaterThan(0),
-      scrollAwayWait,
-    );
-    // Earlier rows can remeasure on remount. The reader keeps the same text at the same height in the viewport.
-    await waitFor(async () => {
-      const after = await markSettledMiddleOfView(restored);
-      await expect(after.element.textContent).toBe(text);
-      await expect(Math.abs(after.top - before.top)).toBeLessThan(3);
+    await waitFor(() => {
+      const prompt = within(restored).getByText(oldestMessage);
+      expect(canPointAt(prompt)).toBe(true);
+      expect(
+        Math.abs(prompt.getBoundingClientRect().top - before),
+      ).toBeLessThan(3);
     }, scrollAwayWait);
   },
 };
