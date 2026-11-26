@@ -55,6 +55,11 @@ export class PluginServices {
     return this.held.get(pluginId)?.resources.limitedUntil(since);
   }
 
+  // The smallest share of a rate limit the Plugin's calls last had left, if a service said.
+  budgetLeft(pluginId: string): number | undefined {
+    return this.held.get(pluginId)?.resources.budgetLeft();
+  }
+
   projectInfo(): Promise<PluginProjectInfo[]> {
     return this.options.projectInfo();
   }

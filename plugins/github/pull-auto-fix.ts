@@ -5,6 +5,7 @@ import { fetchComments } from './pull-comments';
 import { autoFix, fixOf, openedByAnother } from './pull-fix';
 import { failedOf, runningOf } from './pull-fix-facts';
 import type { FixFacts } from './pull-fix-prompts';
+import { promptRests } from './pull-fix-rest';
 import { fixCurrent } from './pull-fix-send';
 import { createFixStore, type FixStore } from './pull-fix-store';
 import { withdrawWaiting } from './pull-fix-withdraw';
@@ -137,6 +138,7 @@ export function createAutoFix(
   argo: Pick<Argo, 'storage' | 'fetch' | 'sessions'>,
 ): AutoFix {
   const fix = createFixStore(argo);
+  const rests = promptRests();
 
   return {
     enableFirst: (input) => enableFirst({ ...argo, fix }, input),
@@ -144,7 +146,7 @@ export function createAutoFix(
     set: (link, on) =>
       on ? enable({ ...argo, fix }, link) : disable({ ...argo, fix }, link),
     watch: (projectId, fresh) =>
-      autoFix({ sessions: argo.sessions, fix }, fresh, projectId),
+      autoFix({ sessions: argo.sessions, fix, rests }, fresh, projectId),
     forget: (link) => fix.forget(link),
   };
 }

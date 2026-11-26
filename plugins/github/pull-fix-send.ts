@@ -8,6 +8,7 @@ import {
   type FixEvent,
   type FixFacts,
 } from './pull-fix-prompts';
+import { PromptRefused } from './pull-fix-rest';
 import type { FixRecord, FixStore } from './pull-fix-store';
 import type { PullInfo } from './pull-info';
 
@@ -27,7 +28,11 @@ async function send(
   text: string,
   listed: Listed,
 ): Promise<void> {
-  const answer = await sessions.prompt(record.sessionId, text);
+  const answer = await sessions
+    .prompt(record.sessionId, text)
+    .catch((cause: unknown) => {
+      throw new PromptRefused('The Session refused the Prompt', { cause });
+    });
 
   await fix.sentPrompt(record, {
     ...listed,

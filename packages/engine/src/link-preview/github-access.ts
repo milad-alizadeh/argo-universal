@@ -3,6 +3,13 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 import { shellEnvironment } from '../agents';
 import type { CheckedCommand } from '../plugins/access/plugin-access';
+import { realClock } from '../plugins/clock';
+import {
+  GitHubCliCache,
+  printedBody,
+  readForm,
+} from '../plugins/services/github-cli-cache';
+import { PluginFetchCache } from '../plugins/services/plugin-fetch-cache';
 import { PluginProcesses } from '../plugins/services/plugin-processes';
 import { GitCommit, type GitData, GitItem } from './github';
 import { PreviewUnavailable, unavailable } from './preview-unavailable';
@@ -12,6 +19,8 @@ const timeoutMs = 8000;
 const rejections = createRejectionCounter('Link preview GitHub');
 
 type GitHubCommand = (path: string) => Promise<string>;
+
+type Run = (command: CheckedCommand) => Promise<ProcessResult>;
 
 // Use the Server's gh sign-in through its existing bounded argv runner. No token reaches the App.
 export async function readGitHub(
@@ -34,17 +43,28 @@ function decode(path: string, stdout: string): GitData {
   }
 }
 
-async function ghOutput(path: string): Promise<string> {
+async function runOnce(command: CheckedCommand): Promise<ProcessResult> {
   const runner = new PluginProcesses();
 
   try {
-    const result = await runner.run(await ghCommand(path));
-
-    return successfulOutput(result);
+    return await runner.run(command);
   } finally {
     runner.release();
   }
 }
+
+/*
+ * A preview is read with the answer's headers, through the cache a Plugin's `gh` reads use: the same link asked again
+ * sends its ETag, and GitHub answers a 304 it does not count against the rate limit.
+ */
+export function githubOutput(run: Run): GitHubCommand {
+  const cache = new GitHubCliCache(new PluginFetchCache(realClock));
+
+  return async (path) =>
+    printedBody(successfulOutput(await cache.run(await ghCommand(path), run)));
+}
+
+const ghOutput = githubOutput(runOnce);
 
 async function ghCommand(path: string): Promise<CheckedCommand> {
   const environment = await shellEnvironment(process.cwd());
@@ -54,7 +74,7 @@ async function ghCommand(path: string): Promise<CheckedCommand> {
   );
 
   return {
-    argv: ['gh', 'api', '--hostname', 'github.com', path],
+    argv: [...readForm, path],
     cwd: process.cwd(),
     env: Object.fromEntries(entries),
     timeoutMs,
