@@ -3,6 +3,7 @@ import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import type { PluginClock } from '../clock';
 import type { Hop } from './plugin-fetch-response';
 import { HostSlots } from './plugin-host-slots';
+import { RateBudget } from './plugin-rate-budget';
 import { lower, rateLimited, refusal, reopensAt } from './plugin-rate-limit';
 
 export { concurrentPerHostLimit } from './plugin-host-slots';
@@ -95,9 +96,12 @@ export class PluginFetchCache {
   private readonly replies = new Map<string, Kept>();
   private readonly closed = new Map<string, Closed>();
   private readonly slots = new HostSlots();
+  private readonly budget;
   private keptBytes = 0;
 
-  constructor(private readonly clock: Pick<PluginClock, 'now'>) {}
+  constructor(private readonly clock: Pick<PluginClock, 'now'>) {
+    this.budget = new RateBudget(clock);
+  }
 
   fetch(hop: Hop, send: Send): Promise<FetchReply> {
     const gate = gateKey(hop);
@@ -129,6 +133,11 @@ export class PluginFetchCache {
     return reopenings.length > 0 ? Math.max(...reopenings) : undefined;
   }
 
+  // The smallest share of a rate limit the Plugin's calls have left, as the services last said, if any did.
+  budgetLeft(): number | undefined {
+    return this.budget.left();
+  }
+
   // A request that waited for its turn may find the origin closed by an answer that came in meanwhile.
   private async sendWhileOpen(
     gate: string,
@@ -139,7 +148,7 @@ export class PluginFetchCache {
 
     if (until !== undefined) return this.refuse(gate, until);
 
-    const reply = await this.sendKept(hop, send);
+    const reply = await this.sendKept(hop, this.noted(gate, send));
 
     if (rateLimited(reply))
       this.closed.set(gate, {
@@ -170,6 +179,17 @@ export class PluginFetchCache {
     this.closed.delete(gate);
 
     return undefined;
+  }
+
+  // Every answer that reaches the service, a 304 too, says what its limit has left.
+  private noted(gate: string, send: Send): Send {
+    return async (hop) => {
+      const reply = await send(hop);
+
+      this.budget.note(gate, reply);
+
+      return reply;
+    };
   }
 
   private async sendKept(hop: Hop, send: Send): Promise<FetchReply> {

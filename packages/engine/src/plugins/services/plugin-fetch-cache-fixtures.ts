@@ -41,6 +41,7 @@ type Service = {
   clock: Clock;
   fetch: (hop: Hop) => Promise<FetchReply>;
   limitedUntil: (since: number) => number | undefined;
+  budgetLeft: () => number | undefined;
 };
 
 function clockAt(start: number): Clock {
@@ -79,5 +80,6 @@ export function service(): Service {
     },
     fetch: (hop) => cache.fetch(hop, recordTo(state)),
     limitedUntil: (since) => cache.limitedUntil(since),
+    budgetLeft: () => cache.budgetLeft(),
   };
 }

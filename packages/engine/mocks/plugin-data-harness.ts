@@ -15,7 +15,8 @@ export const pluginId = 'tracker';
 const refused: PluginReply = { ok: false, error: 'No services' };
 
 // What a test makes go wrong: reads that throw before the worker is asked, and the time a rate limit reopens.
-type Faults = { broken: boolean; limitedUntil?: number };
+// What goes wrong for the next reads, and what share of a rate limit the Plugin's calls last had left.
+type Faults = { broken: boolean; limitedUntil?: number; budgetLeft?: number };
 
 type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
 
@@ -66,6 +67,7 @@ const servicesOn = (
     handle: async (): Promise<PluginReply> => refused,
     projectIds: async (): Promise<string[]> => ['p1', 'p2'],
     limitedUntil: (): number | undefined => faults.limitedUntil,
+    budgetLeft: (): number | undefined => faults.budgetLeft,
   },
   clock,
   log: (): null => null,

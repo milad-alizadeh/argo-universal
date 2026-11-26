@@ -2,6 +2,7 @@ import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError } from '../protocol/runtime';
 import { queryState, readQuery, type QueryReaders } from './query-answer';
+import { heldBack } from './query-budget';
 import { changed, shows, unreadable, waitsForDraw } from './query-changes';
 import { QueryHolders, reading } from './query-holders';
 import { QueryRest, restServices } from './query-rest';
@@ -41,6 +42,8 @@ export class QueryEntry {
    * answers differently (ADR-0060); a first draw, a pull and a background pass wait for the read.
    */
   async read(read: QueryRead): Promise<PluginDataState> {
+    if (this.saving(read)) return this.state;
+
     const kept = this.serving(read);
 
     if (read.outside) this.readOutside = true;
@@ -53,6 +56,14 @@ export class QueryEntry {
     this.holders.hold(read.holder, this.state.revision);
 
     return this.state;
+  }
+
+  // Whether a rate limit running low holds the read back, so it is served what was kept and nothing is asked.
+  private saving(read: QueryRead): boolean {
+    return (
+      this.servable(undefined) &&
+      heldBack(read, this.services.services.budgetLeft(this.owner.pluginId))
+    );
   }
 
   // Whether the read is served what was kept: no one pulled it fresh, and its address has a tree or it answers a Slot.

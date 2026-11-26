@@ -59,6 +59,11 @@ export class PluginResources {
     return this.fetchCache.limitedUntil(since);
   }
 
+  // What share of a rate limit the Plugin's fetches and `gh` reads last had left.
+  budgetLeft(): number | undefined {
+    return this.fetchCache.budgetLeft();
+  }
+
   async process(call: CheckedProcessCall): Promise<PluginValue> {
     this.assertOpen();
 
