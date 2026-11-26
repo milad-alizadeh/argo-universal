@@ -1,5 +1,5 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import type { SessionCounts, SessionInfo } from '@repo/contracts';
+import type { SessionInfo } from '@repo/contracts';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -18,7 +18,7 @@ async function recordAttention(host: Host): Promise<number[]> {
   const seen: number[] = [];
 
   void (async (): Promise<void> => {
-    for await (const value of counts as AsyncIterable<SessionCounts>)
+    for await (const value of counts)
       seen.push(value.attention);
   })().catch((): void => undefined);
 
