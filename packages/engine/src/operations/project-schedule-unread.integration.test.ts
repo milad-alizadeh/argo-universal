@@ -18,8 +18,7 @@ async function recordAttention(host: Host): Promise<number[]> {
   const seen: number[] = [];
 
   void (async (): Promise<void> => {
-    for await (const value of counts)
-      seen.push(value.attention);
+    for await (const value of counts) seen.push(value.attention);
   })().catch((): void => undefined);
 
   await expect.poll(() => seen.length).toBeGreaterThan(0);
