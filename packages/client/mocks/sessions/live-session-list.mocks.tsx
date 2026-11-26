@@ -1,3 +1,9 @@
+import type {
+  ProjectInfo,
+  ProjectsListOutput,
+  SessionInfo,
+  SessionListOutput,
+} from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
 import { activeSessions, agentsList, projectsList } from '@repo/mocks/app';
 import { focusManager, QueryClientProvider } from '@tanstack/react-query';
@@ -77,6 +83,10 @@ export interface LiveSessionListFixture {
   returnToForeground: () => void;
   // Moves the Connection to another state, as an outage and its recovery do.
   connect: (state: ConnectionState) => void;
+  // The Server registers a Project the App did not ask for, as `project.add` from an Agent's Operation does.
+  registerProject: (project: ProjectInfo) => void;
+  // The Server lists a new Session and sends it over `session.listUpdates`.
+  sendSession: (session: SessionInfo) => void;
 }
 
 interface ServerState {
@@ -85,9 +95,11 @@ interface ServerState {
   updatesWire: Wire | undefined;
   agentsHeld: boolean;
   waitingForAgents: Wire[];
+  projects: ProjectsListOutput;
+  sessions: SessionListOutput;
 }
 
-type Answer = typeof activeSessions | typeof projectsList | typeof agentsList;
+type Answer = SessionListOutput | ProjectsListOutput | typeof agentsList;
 
 const answer = (wire: Wire, data: Answer): void => {
   wire.next({ result: { type: 'data', data } });
@@ -108,10 +120,10 @@ function serverLink(state: ServerState): TRPCLink<AppRouter> {
           break;
         case 'session.list':
           state.listReads += 1;
-          answer(wire, activeSessions);
+          answer(wire, state.sessions);
           break;
         case 'project.list':
-          answer(wire, projectsList);
+          answer(wire, state.projects);
           break;
         case 'agent.list':
           if (state.agentsHeld) state.waitingForAgents.push(wire);
@@ -130,6 +142,26 @@ function releaseAgents(state: ServerState): void {
   for (const wire of state.waitingForAgents.splice(0)) answer(wire, agentsList);
 }
 
+// What changes on the Server without the App asking: a Project registered elsewhere, and a Session it lists and sends.
+function serverChanges(
+  state: ServerState,
+): Pick<LiveSessionListFixture, 'registerProject' | 'sendSession'> {
+  return {
+    registerProject: (project) => {
+      state.projects = [...state.projects, project];
+    },
+    sendSession: (session) => {
+      state.sessions = {
+        ...state.sessions,
+        sessions: [session, ...state.sessions.sessions],
+      };
+      state.updatesWire?.next({
+        result: { type: 'data', data: { type: 'changed', session } },
+      });
+    },
+  };
+}
+
 // A Server whose answers a fake link gives, counting the reads that reach it.
 export function liveSessionListFixture(): LiveSessionListFixture {
   const link: Link = { state: 'open', listeners: new Set() };
@@ -140,6 +172,8 @@ export function liveSessionListFixture(): LiveSessionListFixture {
     updatesWire: undefined,
     agentsHeld: false,
     waitingForAgents: [],
+    projects: projectsList,
+    sessions: activeSessions,
   };
 
   const queryClient = createQueryClient();
@@ -181,6 +215,7 @@ export function liveSessionListFixture(): LiveSessionListFixture {
 
       for (const listener of link.listeners) listener();
     },
+    ...serverChanges(state),
   };
 }
 

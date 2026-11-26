@@ -1,4 +1,4 @@
-import { activeSessions } from '@repo/mocks/app';
+import { activeSessions, projectsList } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import {
@@ -104,5 +104,40 @@ export const DrawsRowsBeforeTheAgentsArriveAndFillsInTheirLogos: Story = {
     await waitFor(() =>
       expect(canvas.queryAllByTestId('session-logo').length).toBeGreaterThan(0),
     );
+  },
+};
+
+// A Project added outside the App, by an Agent's `project.add` Operation, the CLI or another App, shows with its Session as soon as the Session arrives, with no visit to Settings.
+export const ShowsAProjectAddedElsewhereWithItsSession: Story = {
+  play: async ({ mount, canvasElement }) => {
+    const fixture = liveSessionListFixture();
+    const canvas = await openedList(mount, canvasElement, fixture);
+    const [listed] = projectsList;
+    const [row] = activeSessions.sessions;
+
+    if (!listed || !row)
+      throw new Error('Recorded catalog needs a Project and a Session');
+
+    const project = {
+      ...listed,
+      id: 'project-added',
+      name: 'Added Elsewhere',
+      path: '/projects/added',
+    };
+
+    fixture.registerProject(project);
+    fixture.sendSession({
+      ...row,
+      sessionId: 'session-in-added-project',
+      projectId: project.id,
+      cwd: project.path,
+      title: 'Work in the added Project',
+      createdAt: row.createdAt + 60_000,
+    });
+
+    await expect(await canvas.findByText('Added Elsewhere')).toBeVisible();
+    await expect(
+      await canvas.findByText('Work in the added Project'),
+    ).toBeVisible();
   },
 };
