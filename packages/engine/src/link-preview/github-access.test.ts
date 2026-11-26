@@ -1,5 +1,6 @@
+import type { ProcessResult } from '@repo/contracts/plugins/argo-calls';
 import { afterEach, expect, it, vi } from 'vitest';
-import { readGitHub } from './github-access';
+import { githubOutput, readGitHub } from './github-access';
 import { PreviewUnavailable } from './preview-unavailable';
 import { item } from './preview.mocks';
 
@@ -70,4 +71,43 @@ it('lets any other fault running gh surface unchanged', async () => {
   await expect(readGitHub(issuePath, () => Promise.reject(fault))).rejects.toBe(
     fault,
   );
+});
+
+// What `gh api --include` prints: the status line, the headers, a blank line, then the body.
+const printed = (status: string, etag: string, body = ''): ProcessResult => ({
+  exitCode: 0,
+  stdout: `HTTP/2.0 ${status}\r\nEtag: ${etag}\r\n\r\n${body}`,
+  stderr: '',
+  truncated: false,
+  timedOut: false,
+});
+
+it('asks gh again with the kept ETag, so a preview GitHub has not changed costs no rate limit', async () => {
+  const argvs: string[][] = [];
+  const answers = [
+    printed('200 OK', '"a"', JSON.stringify(item)),
+    printed('304 Not Modified', '"a"'),
+  ];
+
+  const execute = githubOutput(async ({ argv }) => {
+    argvs.push([...argv]);
+
+    return answers.shift() ?? printed('500 Server Error', '"x"');
+  });
+
+  expect(await readGitHub(issuePath, execute)).toEqual(item);
+  expect(await readGitHub(issuePath, execute)).toEqual(item);
+  expect(argvs[1]).toEqual([
+    'gh',
+    'api',
+    '--hostname',
+    'github.com',
+    '--method',
+    'GET',
+    '--include',
+    '-H',
+    'If-None-Match: "a"',
+    '--',
+    issuePath,
+  ]);
 });
