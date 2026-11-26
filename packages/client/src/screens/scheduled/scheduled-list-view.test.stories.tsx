@@ -6,7 +6,11 @@ import { SessionDetailView } from '../sessions/$id/session-detail-view';
 import { idleSession } from '../sessions/$id/session-detail-view.mocks';
 import { SessionPageHeader } from '../sessions/$id/session-page-header';
 import { scheduleHref } from './schedule-href';
-import { scheduledListFixture } from './scheduled-fixtures';
+import {
+  firstSchedule,
+  scheduledListFixture,
+  startedSession,
+} from './scheduled-fixtures';
 import {
   ScheduledListView,
   type ScheduledListViewProps,
@@ -110,5 +114,28 @@ export const OpensTheSessionUnderScheduled: Story = {
     await expect(
       canvas.queryByRole(button, { name: 'Run now' }),
     ).not.toBeInTheDocument();
+  },
+};
+
+const unreadTask = {
+  ...startedSession,
+  sessionId: firstSchedule.sessionId,
+  startedBySessionId: null,
+  title: firstSchedule.name,
+  status: 'unread' as const,
+};
+
+export const MarksATaskUnreadAfterARun: Story = {
+  args: { taskSessions: [unreadTask, startedSession] },
+  play: async ({ canvas }) => {
+    // One row: the task's own Session is drawn as the task, not as a Session row too.
+    await expect(
+      canvas.getAllByRole(button, { name: `${firstSchedule.name}, Unread` }),
+    ).toHaveLength(1);
+    // The started Session is idle, so the one dot is the task's.
+    await expect(canvas.getByTestId('session-status')).toBeVisible();
+    await expect(
+      canvas.getByRole(button, { name: 'Check the build logs, Idle' }),
+    ).toBeVisible();
   },
 };

@@ -13,7 +13,9 @@ import { use, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import {
   nestedSessionEntries,
+  rowStatusDot,
   SessionListRow,
+  sessionStatusLabels,
   sessionTree,
   useSessionNesting,
   visibleSessionEntries,
@@ -37,7 +39,8 @@ export interface ScheduledListViewProps {
   schedules: readonly ProjectSchedule[];
   selectedId?: string;
   selectedChildId?: string;
-  startedSessions?: readonly SessionInfo[];
+  // Each task's own Session, which gives its row a status, and the Sessions the tasks started.
+  taskSessions?: readonly SessionInfo[];
   agents?: AgentServer[];
   onOpenStarted?: (schedule: ProjectSchedule, sessionId: string) => void;
   onEndReached?: () => void;
@@ -104,7 +107,12 @@ type Task = {
   projectId: string;
   startedBySessionId: null;
   schedule: ProjectSchedule;
+  status?: SessionInfo['status'];
 };
+
+// A task's own Session is drawn as the task's row, not as a row of its own.
+const isTaskSession = (session: SessionInfo): boolean =>
+  session.taskSessionId === session.sessionId;
 
 export type NestedEntry = ReturnType<
   typeof nestedSessionEntries<Task | SessionInfo>
@@ -117,16 +125,25 @@ function scheduleEntries(
   pausedExpanded: boolean,
   folded: ReadonlySet<string>,
 ): ScheduleEntry[] {
+  const sessions = props.taskSessions ?? [];
+
+  const statuses = new Map(
+    sessions
+      .filter(isTaskSession)
+      .map(({ sessionId, status }) => [sessionId, status]),
+  );
+
   const roots = props.schedules.map((schedule): Task => ({
     sessionId: schedule.sessionId,
     projectId: schedule.projectId,
     startedBySessionId: null,
     schedule,
+    status: statuses.get(schedule.sessionId),
   }));
 
   const entries = nestedSessionEntries<Task | SessionInfo>([
     ...roots,
-    ...(props.startedSessions ?? []),
+    ...sessions.filter((session) => !isTaskSession(session)),
   ]);
 
   const sections = scheduleSections(visibleSessionEntries(entries, folded));
@@ -225,7 +242,11 @@ function nestedRow(
   if ('schedule' in session) {
     return (
       <ListTreeContext value={tree ?? null}>
-        <ScheduleRow {...props} schedule={session.schedule} />
+        <ScheduleRow
+          {...props}
+          schedule={session.schedule}
+          status={session.status}
+        />
       </ListTreeContext>
     );
   }
@@ -252,10 +273,22 @@ type ScheduleRowProps = Pick<
   'selectedId' | 'onOpen' | 'onAction'
 > & {
   schedule: ProjectSchedule;
+  status?: SessionInfo['status'];
 };
+
+// A task's row names and draws its Session's status like a Session row: a dot while it is not idle, bold while Unread.
+function taskStatusLabel(
+  name: string,
+  status: SessionInfo['status'] | undefined,
+): string {
+  return status && status !== 'idle'
+    ? `${name}, ${sessionStatusLabels[status]}`
+    : name;
+}
 
 function ScheduleRow({
   schedule,
+  status,
   selectedId,
   onOpen,
   onAction,
@@ -264,6 +297,9 @@ function ScheduleRow({
     <View className={useSessionsListRowClassName()}>
       <ListItem
         title={schedule.name}
+        accessibilityLabel={taskStatusLabel(schedule.name, status)}
+        emphasized={status === 'unread'}
+        trailing={status && rowStatusDot(status)}
         subtitle={scheduleSubtitle(schedule)}
         subtitleIcon="clock"
         selected={selectedId === schedule.id}

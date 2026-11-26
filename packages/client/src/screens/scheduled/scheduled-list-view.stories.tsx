@@ -56,7 +56,7 @@ export const PhoneSession: Story = {
 };
 
 export const StartedSessions: Story = {
-  args: { startedSessions: [startedSession] },
+  args: { taskSessions: [startedSession] },
 };
 
 export const JustCreated: Story = {
