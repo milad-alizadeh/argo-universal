@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type * as React from 'react';
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { loadedAgents, useInstalledAgents } from '#features/agents';
 import {
   useConnectionState,
@@ -55,16 +55,53 @@ const queryProgress = (query: {
 }): QueryProgress => ({ failed: query.isError, pending: query.isPending });
 
 // The Projects and Installed Agents each Session row is drawn with. The list waits for the Projects, which group its rows; a row whose Agent has not loaded draws without its logo, which fills in when the Agents arrive.
-function useSessionListLookups(): SessionListLookups {
+function useSessionListLookups(
+  sessions: SessionListViewProps['sessions'],
+): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.project.list.queryOptions());
   const agents = useInstalledAgents();
+
+  useUnlistedProjectsRead(projects.data, sessions);
 
   return {
     projects: projects.data ?? [],
     agents: loadedAgents(agents),
     progress: [queryProgress(projects)],
   };
+}
+
+/*
+ * A Project added outside the App (an Agent's `project.add`, `project.clone` or `project.create` Operation, the CLI, another App) reaches the list first as a Session in it, which the kept Projects do not hold and so cannot draw.
+ * Such a Session asks for the Projects again, once for each set of Projects the kept list lacks, so a Session whose Project is gone does not ask on every change.
+ */
+function useUnlistedProjectsRead(
+  projects: SessionListViewProps['projects'] | undefined,
+  sessions: SessionListViewProps['sessions'],
+): void {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const unlisted = useMemo((): string => {
+    if (!projects) return '';
+
+    const listed = new Set(projects.map(({ id }) => id));
+
+    return [
+      ...new Set(
+        sessions
+          .map(({ projectId }) => projectId)
+          .filter((projectId) => !listed.has(projectId)),
+      ),
+    ]
+      .sort()
+      .join('\n');
+  }, [projects, sessions]);
+
+  useEffect(() => {
+    if (unlisted)
+      void queryClient.invalidateQueries(trpc.project.list.queryFilter());
+  }, [unlisted, queryClient, trpc]);
 }
 
 // Live updates start once the list holds rows, from the Device or the Server, for them to land on.
@@ -144,8 +181,10 @@ function useRowMarks(
 function useSessionsViewProps(
   props: LiveSessionListProps,
 ): SessionListViewProps {
-  const { progress: lookupProgress, ...lookups } = useSessionListLookups();
   const { progress: pageProgress, ...pages } = useSessionPages(props);
+  const { progress: lookupProgress, ...lookups } = useSessionListLookups(
+    pages.sessions,
+  );
 
   return {
     ...props,
