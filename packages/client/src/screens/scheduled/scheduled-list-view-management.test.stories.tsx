@@ -64,7 +64,7 @@ export const OpensPausedRowsAndUsesTheRowMenu: Story = {
 
 export const StartedSessionsUseTheTree: Story = {
   args: {
-    startedSessions: [startedSession],
+    taskSessions: [startedSession],
     onOpenStarted: fn(),
   },
   play: async ({ args, canvas, userEvent }): Promise<void> => {

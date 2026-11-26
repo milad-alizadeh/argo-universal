@@ -68,9 +68,7 @@ export function ScheduledListScreen({
   const schedules = useProjectSchedules(enabled);
   const agents = loadedAgents(useInstalledAgents());
 
-  const started = useStartedSessions(
-    enabled && Boolean(schedules.data?.length),
-  );
+  const tasks = useTaskSessions(enabled && Boolean(schedules.data?.length));
 
   const navigation = useScheduledNavigation();
   const selected = schedules.data?.find(({ id }) => id === selectedId);
@@ -86,14 +84,12 @@ export function ScheduledListScreen({
         schedules={schedules.data ?? []}
         selectedId={childId ? undefined : selectedId}
         selectedChildId={childId}
-        startedSessions={started.data?.pages.flatMap(
-          ({ sessions }) => sessions,
-        )}
+        taskSessions={tasks.data?.pages.flatMap(({ sessions }) => sessions)}
         agents={agents}
         onOpenStarted={navigation.onOpenStarted}
         onEndReached={() => {
-          if (started.hasNextPage && !started.isFetchingNextPage)
-            void started.fetchNextPage();
+          if (tasks.hasNextPage && !tasks.isFetchingNextPage)
+            void tasks.fetchNextPage();
         }}
         status={listStatus(schedules)}
         onCreate={management.onCreate}
@@ -130,17 +126,17 @@ function useScheduledNavigation(): ScheduledNavigation {
   };
 }
 
-type StartedSessions = UseInfiniteQueryResult<
+type TaskSessions = UseInfiniteQueryResult<
   InfiniteData<SessionListOutput, string | null>,
   ClientError
 >;
 
-function useStartedSessions(enabled: boolean): StartedSessions {
+function useTaskSessions(enabled: boolean): TaskSessions {
   const list = useTRPC().session.list;
 
-  const started = useInfiniteQuery(
+  const tasks = useInfiniteQuery(
     list.infiniteQueryOptions(
-      { taskSessions: 'started' },
+      { taskSessions: 'tasks' },
       {
         enabled,
         getNextPageParam: (page) => page.nextCursor ?? undefined,
@@ -149,9 +145,9 @@ function useStartedSessions(enabled: boolean): StartedSessions {
   );
 
   // Live updates start once the list holds rows, from the Device or the Server, for them to land on.
-  useSessionListUpdates(enabled && !started.isPending);
+  useSessionListUpdates(enabled && !tasks.isPending);
 
-  return started;
+  return tasks;
 }
 
 function listStatus(
