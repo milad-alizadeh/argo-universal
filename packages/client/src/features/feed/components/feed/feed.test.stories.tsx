@@ -338,6 +338,7 @@ export const RestoresOlderReadingAfterRemount: Story = {
       () => expect(scrolledToEnd(scroll)).toBe(true),
       scrollAwayWait,
     );
+
     const oldest = (): HTMLElement => within(scroll).getByText(oldestMessage);
     // Each prepend moves the viewport down. Jump back to the top until the oldest prompt is readable there.
     await waitFor(async () => {
@@ -355,6 +356,7 @@ export const RestoresOlderReadingAfterRemount: Story = {
     const switchSession = canvas.getByRole('button', {
       name: switchSessionLabel,
     });
+
     await userEvent.click(switchSession);
     await waitFor(() => expect(canvas.queryByTestId(feedScrollId)).toBeNull());
     await userEvent.click(switchSession);
@@ -364,6 +366,7 @@ export const RestoresOlderReadingAfterRemount: Story = {
       const after = await settledTopOf(() =>
         within(restored).getByText(oldestMessage),
       );
+
       await expect(Math.abs(after - before)).toBeLessThan(3);
     }, scrollAwayWait);
   },
