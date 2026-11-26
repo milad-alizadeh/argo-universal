@@ -65,12 +65,15 @@ async function asking({
   return { cards, outcome };
 }
 
-// A scope whose grants already hold Always allow for Schedules from p1 into p2.
+// A scope where the person already chose Always allow for a Schedule from p1 into p2.
 async function grantedScope(): Promise<ReturnType<typeof newScope>> {
-  const grants = memoryGrants();
-  await grants.grant(granted);
+  const scope = newScope();
 
-  return newScope(undefined, grants);
+  expect(await asking({ scope, consent: 'always' })).toMatchObject({
+    outcome: runs,
+  });
+
+  return scope;
 }
 
 it('offers Always allow on a Schedule, and says what it covers', async () => {
