@@ -16,6 +16,8 @@ const outsideMessage = 'does not belong to this Project';
 
 const reference = 'owner/repository#12';
 
+const attachedChange = { id: 'github:owner/repository#12' };
+
 // The App's own run: a person in the Project, with no Session of their own.
 const asPerson = (
   { test }: Journey,
@@ -41,7 +43,7 @@ it(
       attached: true,
     });
     expect(await asPerson(run, 'list', { sessionId })).toMatchObject({
-      changes: [{ id: 'github:owner/repository#12' }],
+      changes: [attachedChange],
     });
     expect(
       await asPerson(run, 'files', { reference, sessionId }),
@@ -50,7 +52,7 @@ it(
       await asPerson(run, 'diff', { reference, path: 'a.ts', sessionId }),
     ).toMatchObject({ file: { path: 'a.ts' } });
     expect(await asPerson(run, 'refresh', { sessionId })).toMatchObject({
-      changes: [{ id: 'github:owner/repository#12' }],
+      changes: [attachedChange],
     });
     expect(await asPerson(run, 'discover', { sessionId })).toMatchObject({
       result: 'found',
@@ -138,7 +140,11 @@ it(
   'lets an Agent attach a pull request to a Session it started, and list it there',
   async () => {
     const run = await journey();
-    const asStarter = (name: string, params: Record<string, string>) =>
+
+    const asStarter = (
+      name: string,
+      params: Record<string, string>,
+    ): ReturnType<Journey['test']['operations']['run']> =>
       run.test.operations.run({
         name,
         params: { ...params, sessionId: startedSessionId },
@@ -149,7 +155,7 @@ it(
       attached: true,
     });
     expect(await asStarter('list', {})).toMatchObject({
-      changes: [{ id: 'github:owner/repository#12' }],
+      changes: [attachedChange],
     });
     expect(
       await run.test.operations.run({
