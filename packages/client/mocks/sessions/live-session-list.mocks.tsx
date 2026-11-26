@@ -142,6 +142,26 @@ function releaseAgents(state: ServerState): void {
   for (const wire of state.waitingForAgents.splice(0)) answer(wire, agentsList);
 }
 
+// What changes on the Server without the App asking: a Project registered elsewhere, and a Session it lists and sends.
+function serverChanges(
+  state: ServerState,
+): Pick<LiveSessionListFixture, 'registerProject' | 'sendSession'> {
+  return {
+    registerProject: (project) => {
+      state.projects = [...state.projects, project];
+    },
+    sendSession: (session) => {
+      state.sessions = {
+        ...state.sessions,
+        sessions: [session, ...state.sessions.sessions],
+      };
+      state.updatesWire?.next({
+        result: { type: 'data', data: { type: 'changed', session } },
+      });
+    },
+  };
+}
+
 // A Server whose answers a fake link gives, counting the reads that reach it.
 export function liveSessionListFixture(): LiveSessionListFixture {
   const link: Link = { state: 'open', listeners: new Set() };
@@ -195,18 +215,7 @@ export function liveSessionListFixture(): LiveSessionListFixture {
 
       for (const listener of link.listeners) listener();
     },
-    registerProject: (project) => {
-      state.projects = [...state.projects, project];
-    },
-    sendSession: (session) => {
-      state.sessions = {
-        ...state.sessions,
-        sessions: [session, ...state.sessions.sessions],
-      };
-      state.updatesWire?.next({
-        result: { type: 'data', data: { type: 'changed', session } },
-      });
-    },
+    ...serverChanges(state),
   };
 }
 

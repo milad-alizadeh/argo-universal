@@ -115,7 +115,8 @@ export const ShowsAProjectAddedElsewhereWithItsSession: Story = {
     const [listed] = projectsList;
     const [row] = activeSessions.sessions;
 
-    if (!listed || !row) throw new Error('Recorded catalog needs a Project and a Session');
+    if (!listed || !row)
+      throw new Error('Recorded catalog needs a Project and a Session');
 
     const project = {
       ...listed,

@@ -182,6 +182,7 @@ function useSessionsViewProps(
   props: LiveSessionListProps,
 ): SessionListViewProps {
   const { progress: pageProgress, ...pages } = useSessionPages(props);
+
   const { progress: lookupProgress, ...lookups } = useSessionListLookups(
     pages.sessions,
   );
