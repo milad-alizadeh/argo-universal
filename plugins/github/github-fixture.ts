@@ -11,6 +11,7 @@ import {
   type AutoMergeCall,
   type FixtureRepository,
 } from './github-fixture-automation';
+import { budgetOf, metered, type FixtureBudget } from './github-fixture-budget';
 import {
   filesPath,
   listPath,
@@ -64,6 +65,8 @@ export type GitHubFixture = FixtureServices & {
   // Calls listing a pull request's files.
   fileReads: () => FixtureRequest[];
   checkReads: () => FixtureRequest[];
+  // GitHub's rate limit for the signed-in token: every call spends one request, except a GET GitHub answers 304.
+  budget: FixtureBudget;
 };
 
 export const sha = '0123456789abcdef0123456789abcdef01234567';
@@ -130,7 +133,10 @@ const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
 const restAnswer = (held: Held, path: string): FixtureAnswer =>
   path === '/user' ? { json: { login: 'octocat' } } : rest(held, path);
 
-async function api(held: Held, call: FixtureRequest): Promise<FixtureAnswer> {
+async function answerOf(
+  held: Held,
+  call: FixtureRequest,
+): Promise<FixtureAnswer> {
   await held.stall.until;
 
   if (!held.accepted.has(bearerOf(call)))
@@ -141,17 +147,24 @@ async function api(held: Held, call: FixtureRequest): Promise<FixtureAnswer> {
   return restAnswer(held, call.path);
 }
 
+const api = async (
+  held: Held & Pick<GitHubFixture, 'budget'>,
+  call: FixtureRequest,
+): Promise<FixtureAnswer> =>
+  metered(held.budget, call, await answerOf(held, call));
+
 const githubCom = (request: FixtureRequest): FixtureAnswer =>
   request.path === '/login/device/code'
     ? deviceCode()
     : { json: { access_token: 'token-1' } };
 
 const handle =
-  (held: Held) =>
+  (held: Held & Pick<GitHubFixture, 'budget'>) =>
   (request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> =>
     request.host === 'github.com' ? githubCom(request) : api(held, request);
 
-const heldOf = (): Held => ({
+const heldOf = (): Held & Pick<GitHubFixture, 'budget'> => ({
+  budget: budgetOf(),
   pulls: new Map(),
   files: new Map(),
   accepted: new Set(['token-1']),

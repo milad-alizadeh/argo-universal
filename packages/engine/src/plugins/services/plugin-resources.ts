@@ -3,6 +3,7 @@ import type { AssetContent } from '../assets/content';
 import { readAssetResponse } from '../assets/fetch';
 import { realClock, type PluginClock } from '../clock';
 import type { FsCall, PluginValue } from '../protocol/runtime';
+import { GitHubCliCache } from './github-cli-cache';
 import { fetchCall, fetchResponse, type FetchContext } from './plugin-fetch';
 import { PluginFetchCache } from './plugin-fetch-cache';
 import type { Hop } from './plugin-fetch-response';
@@ -18,11 +19,13 @@ export class PluginResources {
   private readonly processes;
   private readonly cleanups = new Set<() => void>();
   private readonly fetchCache;
+  private readonly cliCache;
   private released = false;
 
   constructor(private readonly clock: PluginClock = realClock) {
     this.processes = new PluginProcesses(clock);
     this.fetchCache = new PluginFetchCache(clock);
+    this.cliCache = new GitHubCliCache(this.fetchCache);
   }
 
   release(): void {
@@ -58,6 +61,10 @@ export class PluginResources {
 
   async process(call: CheckedProcessCall): Promise<PluginValue> {
     this.assertOpen();
+
+    // A `gh api` read shares the conditional requests and rate-limit backoff of `argo.fetch`.
+    if (call.action === 'run')
+      return this.cliCache.run(call, (command) => this.processes.run(command));
 
     return this.processes.handle(call);
   }
