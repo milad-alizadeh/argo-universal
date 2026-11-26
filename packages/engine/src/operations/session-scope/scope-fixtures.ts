@@ -5,6 +5,7 @@ import {
   memorySessionDirectory,
   type MemorySession,
 } from '#mocks/memory-session-directory';
+import type { OperationGrants } from '../../agent-access';
 import type { OperationCard } from '../../sessions';
 import type { SessionInvoke } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
@@ -53,18 +54,42 @@ const directory = memorySessionDirectory({
   ...runningAgents('full', atLimit),
 });
 
-export const newScope = (chains = new PromptChains()): SessionScope =>
+type GrantKey = Parameters<OperationGrants['granted']>[0];
+
+const grantKey = ({ projectId, operationId }: GrantKey): string =>
+  `${projectId}/${operationId}`;
+
+// Always allow grants held in memory, keyed by Project and Operation.
+export const memoryGrants = (): OperationGrants => {
+  const granted = new Set<string>();
+
+  return {
+    granted: (grant) => granted.has(grantKey(grant)),
+    grant: async (grant) => {
+      granted.add(grantKey(grant));
+    },
+  };
+};
+
+export const newScope = (
+  chains = new PromptChains(),
+  grants = memoryGrants(),
+): SessionScope =>
   new SessionScope({
     directory,
     createId: () => 'new-session',
     chains,
     canReadShell: (callerId, targetId) => callerId === targetId,
+    grants,
   });
 
-export const sessionCaller = (sessionId: string): SessionCaller => ({
+export const sessionCaller = (
+  sessionId: string,
+  projectId = 'p1',
+): SessionCaller => ({
   kind: 'session',
   sessionId,
-  projectId: 'p1',
+  projectId,
 });
 
 const prompt = [{ type: 'text', text: 'Work' }];

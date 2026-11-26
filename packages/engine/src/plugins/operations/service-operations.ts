@@ -13,7 +13,7 @@ import {
   type OperationPermission,
   requirePermissionTurn,
 } from '../../operations/operation-permission';
-import type { OperationCard } from '../../sessions';
+import type { OperationCard, OperationConsent } from '../../sessions';
 import { checkRun, type CheckedRun } from './checked-run';
 import {
   declaredOperations,
@@ -56,7 +56,7 @@ export type OperationRun = {
   serverDevice?: boolean;
   authenticatedApp?: boolean;
   // Requests approval in the calling Session’s active Turn.
-  confirm?: (card: OperationCard) => Promise<void>;
+  confirm?: (card: OperationCard) => Promise<OperationConsent>;
 };
 
 // Every enabled Plugin's declared Operations, as the registry lists them.

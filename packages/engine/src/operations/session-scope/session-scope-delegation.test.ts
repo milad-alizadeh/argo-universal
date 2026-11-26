@@ -44,7 +44,7 @@ it('counts a start still being admitted against the running Agents until it sett
     .run(
       {
         caller: busy,
-        call: { confirm: async () => {} },
+        call: { confirm: async () => 'once' as const },
         invoke: () => held.promise,
       },
       startIn('p1'),
@@ -75,21 +75,27 @@ it('steers or queues onto a running Session the caller started, even with five o
 
 it('says what the running limit is, what holds it and how to free it', async () => {
   const scope = newScope();
+
   const refusal = await scope
     .run(
       {
         caller: sessionCaller('full'),
-        call: { confirm: async () => {} },
+        call: { confirm: async () => 'once' as const },
         invoke: async () => {
           throw ran;
         },
       },
       promptTo('full-idle'),
     )
-    .catch((cause: unknown) => cause);
+    .then(
+      () => null,
+      (cause: unknown) => cause,
+    );
 
-  expect(refusal).toMatchObject({ code: 'CONFLICT' });
-  expect(String((refusal as Error).message)).toMatch(
-    /at most 5 .*full-agent-0.*full-agent-4.*session\.cancel/s,
-  );
+  expect(refusal).toMatchObject({
+    code: 'CONFLICT',
+    message: expect.stringMatching(
+      /at most 5 .*full-agent-0.*full-agent-4.*session\.cancel/s,
+    ),
+  });
 });

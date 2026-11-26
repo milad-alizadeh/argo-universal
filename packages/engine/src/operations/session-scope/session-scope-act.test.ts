@@ -71,6 +71,7 @@ it('shows the Operation label and description on the card', async () => {
     {
       title: 'Clear context',
       description: expect.stringContaining('empty context'),
+      alwaysAllow: true,
     },
   ]);
 });

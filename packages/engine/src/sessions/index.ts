@@ -77,6 +77,7 @@ export { releaseShellGroups } from './shells/shell-record';
 export {
   type CalledOperation,
   type OperationCard,
+  type OperationConsent,
   type OperationCallRead,
   type SessionOperationCall,
 } from './operation-call';

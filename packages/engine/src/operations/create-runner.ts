@@ -1,3 +1,4 @@
+import { storedOperationGrants } from '../agent-access';
 import { createImplementations } from './implementations';
 import { OperationArchive } from './operation-archive';
 import type { OperationsDeps } from './operations';
@@ -23,6 +24,7 @@ export function createRunner(deps: OperationsDeps): OperationRunner {
       directory,
       createId: deps.createId,
       chains,
+      grants: storedOperationGrants(deps.database, deps.databaseWriter),
       canReadShell: (callerId, targetId) => {
         const caller = deps.runs.sessions.checkout(callerId);
         const target = deps.runs.sessions.checkout(targetId);

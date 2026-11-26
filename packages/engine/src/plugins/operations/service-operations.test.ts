@@ -122,7 +122,7 @@ async function asked(kind: string): Promise<boolean> {
     confirm: (card) => {
       cards.push(card);
 
-      return Promise.resolve();
+      return Promise.resolve('once');
     },
   });
 

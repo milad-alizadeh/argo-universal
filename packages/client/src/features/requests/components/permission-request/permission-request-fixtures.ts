@@ -59,3 +59,24 @@ export const argoPermission = {
   },
   state: { kind: 'open' },
 } satisfies PermissionRequestFixture;
+
+// An Operation that asks by policy also offers Always allow, kept for the caller's Project.
+export const argoAlwaysAllowPermission = {
+  request: {
+    requestId: 'argo-schedule-request',
+    toolCallId: 'argo-schedule-call',
+    title: 'Schedule Prompt',
+    operation: {
+      id: 'session.schedulePrompt',
+      description:
+        'Schedule a follow-up in an existing Session. Use onceAt for Once or intervalSeconds for Interval.',
+      input: '{"sessionId":"review-session","onceAt":1795600060000}',
+    },
+    options: [
+      { optionId: 'allow_once', name: 'Allow once', kind: 'allow_once' },
+      { optionId: 'allow_always', name: 'Always allow', kind: 'allow_always' },
+      { optionId: 'reject_once', name: 'Deny', kind: 'reject_once' },
+    ],
+  },
+  state: { kind: 'open' },
+} satisfies PermissionRequestFixture;

@@ -4,12 +4,12 @@ import type {
 } from '@repo/contracts';
 import { operations } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
-import type { OperationCard, Sessions } from '../sessions';
+import type { OperationCard, OperationConsent, Sessions } from '../sessions';
 import { requirePermissionTurn } from './operation-permission';
 
 type ArchiveCaller = {
   sessionId: string;
-  confirm: (card: OperationCard) => Promise<void>;
+  confirm: (card: OperationCard) => Promise<OperationConsent>;
 };
 
 export class OperationArchive {
