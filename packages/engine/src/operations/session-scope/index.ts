@@ -2,17 +2,11 @@ import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { OperationCard } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
 import { isNativeStartOperation, type NativeStartId } from '../native-start';
 import { operationPermission } from '../operation-permission';
 import { validateParams } from '../params';
-import {
-  cardUnless,
-  confirmed,
-  unreserved,
-  type ScopedRun,
-} from './confirmation';
+import type { ScopedRun } from './confirmation';
 import { Delegation, type ScopePorts } from './delegation';
 import { operationCard } from './rules';
 import { scopedParams } from './targets';
@@ -111,15 +105,29 @@ export class SessionScope {
         message: 'The Session can only read shell Terminals in its Checkout.',
       });
   }
-  private permitted<Result>(
-    context: ScopedRun,
+  /*
+   * An Operation that asks runs once the person allows it. Always allow records a grant for the caller's Project,
+   * where the Session token's scope already ends, so its other Sessions run that Operation without asking again.
+   */
+  private async permitted<Result>(
+    { caller, call }: ScopedRun,
     { id, policy }: Admission,
     invoke: () => Promise<Result>,
   ): Promise<Result> {
-    const card = (): OperationCard | undefined =>
-      cardUnless(policy !== 'ask', operationCard(id));
+    if (policy !== 'ask') return invoke();
 
-    return confirmed(context, { card, release: unreserved }, invoke);
+    const grant = { projectId: caller.projectId, operationId: id };
+
+    if (this.ports.grants.granted(grant)) return invoke();
+
+    const consent = await call.confirm({
+      ...operationCard(id),
+      alwaysAllow: true,
+    });
+
+    if (consent === 'always') await this.ports.grants.grant(grant);
+
+    return invoke();
   }
   private permission(
     context: ScopedRun,

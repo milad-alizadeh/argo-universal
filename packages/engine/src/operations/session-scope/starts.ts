@@ -53,11 +53,14 @@ export class SessionStarts {
     { kind, sessionId }: StartTarget,
   ): StartReservation {
     const pending = this.pending.get(callerId) ?? new Map<string, number>();
+
     const occupied = new Set([
       ...this.directory.running(callerId),
       ...pending.keys(),
     ]);
+
     const steers = kind === 'prompt' && occupied.has(sessionId);
+
     pending.set(sessionId, (pending.get(sessionId) ?? 0) + 1);
     this.pending.set(callerId, pending);
 

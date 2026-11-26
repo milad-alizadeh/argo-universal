@@ -21,6 +21,8 @@ const appOnly = new Set([
   'run.getSettings',
   'run.listSettings',
   'run.updateSettings',
+  'agent.listGrants',
+  'agent.revokeGrant',
 ]);
 
 it('lists every Operation but the App-only ones with its description, enabled', () => {

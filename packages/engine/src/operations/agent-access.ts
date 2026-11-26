@@ -2,6 +2,8 @@ import { project } from '@repo/db/schema';
 import {
   installAgentInstructions,
   readAgentAccess,
+  readOperationGrants,
+  revokeOperationGrant,
   setAgentAccess,
 } from '../agent-access';
 import { readTodoList, setTodoList } from '../todo-list';
@@ -14,6 +16,8 @@ type AgentAccessImplementations = Pick<
   | 'agent.installInstructions'
   | 'agent.getTodoList'
   | 'agent.setTodoList'
+  | 'agent.listGrants'
+  | 'agent.revokeGrant'
 >;
 
 export function createAgentAccessOperations(
@@ -28,6 +32,9 @@ export function createAgentAccessOperations(
     'agent.getTodoList': async () => readTodoList(deps.database),
     'agent.setTodoList': ({ enabled }) =>
       setTodoList(deps.database, deps.databaseWriter, enabled),
+    'agent.listGrants': async () => readOperationGrants(deps.database),
+    'agent.revokeGrant': (key) =>
+      revokeOperationGrant(deps.databaseWriter, key),
   };
 }
 

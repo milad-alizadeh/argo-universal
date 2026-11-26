@@ -1,4 +1,4 @@
-import type { OperationCard, SessionOperationCall } from '../../sessions';
+import type { SessionOperationCall } from '../../sessions';
 import type { SessionInvoke } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
 
@@ -8,33 +8,3 @@ export type ScopedRun = {
   call: Pick<SessionOperationCall, 'confirm'>;
   invoke: SessionInvoke;
 };
-
-// The card is chosen inside the reservation, which is released once the Operation settles.
-export type Confirmation = {
-  card: () => OperationCard | undefined;
-  release: () => void;
-};
-
-export const unreserved = (): void => {};
-
-export const cardUnless = (
-  covered: boolean,
-  card: OperationCard,
-): OperationCard | undefined => (covered ? undefined : card);
-
-// Asks the user first when the caller's scope does not cover the call, then runs it.
-export async function confirmed<Result>(
-  { call }: ScopedRun,
-  confirmation: Confirmation,
-  invoke: () => Promise<Result>,
-): Promise<Result> {
-  try {
-    const card = confirmation.card();
-
-    if (card) await call.confirm(card);
-
-    return await invoke();
-  } finally {
-    confirmation.release();
-  }
-}

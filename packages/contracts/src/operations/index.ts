@@ -21,7 +21,7 @@ import { terminalOperations } from './terminals';
 import { todoListOperations } from './todo-list';
 import { voiceOperations } from './voice';
 
-export { AgentAccess } from './agent-access';
+export { AgentAccess, OperationGrant } from './agent-access';
 
 export { appOperations, AppOpenResult } from './app';
 

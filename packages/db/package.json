@@ -39,6 +39,7 @@
     "#schema-shells": "./src/schema/shells.ts",
     "#schema-timestamp": "./src/schema/timestamp.ts",
     "#schema-agent-access": "./src/schema/agent-access.ts",
-    "#schema-local-network-access": "./src/schema/local-network-access.ts"
+    "#schema-local-network-access": "./src/schema/local-network-access.ts",
+    "#schema-operation-grants": "./src/schema/operation-grants.ts"
   }
 }

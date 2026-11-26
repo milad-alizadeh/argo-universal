@@ -7,6 +7,7 @@ import type {
 } from '@repo/contracts';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
+import type { OperationGrants } from '../../agent-access';
 import type { SessionDirectory } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
 import type { NativeStartId } from '../native-start';
@@ -16,12 +17,13 @@ import type { ScopedRun } from './confirmation';
 import type { PromptChains } from './prompt-chain';
 import { SessionStarts, type StartReservation } from './starts';
 
-// The Session directory the scope reads, the ids a new Session takes before its start, and the live Prompt chains.
+// The Session directory the scope reads, the ids a new Session takes before its start, the live Prompt chains and the Always allow grants.
 export type ScopePorts = {
   directory: SessionDirectory;
   createId: () => string;
   chains: PromptChains;
   canReadShell: (callerId: string, targetId: string) => boolean;
+  grants: OperationGrants;
 };
 
 // Each native start's own delegation rule, keyed by the one list of native starts.

@@ -99,7 +99,7 @@ const turnEnding = (
 const recordedCall: SessionOperationCall = {
   toolCallId,
   canConfirm: true,
-  confirm: async () => {},
+  confirm: async () => 'once',
   started: () => {},
   finish: () => {},
 };

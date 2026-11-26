@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { AgentAccessDetailView } from './agent-access-detail-view';
+import { scheduleGrant } from './agent-access-detail-view-fixtures';
 
 const installLabel = 'Add Argo to your Agents';
 
@@ -24,6 +25,7 @@ const meta = {
     onEnabledChange: fn(),
     onTodoListChange: fn(),
     onScreenSightChange: fn(),
+    onRevokeGrant: fn(),
     onInstall: fn(),
     onRetry: fn(),
   },
@@ -43,6 +45,24 @@ export const ChangesAccessAndInstallsOnlyWhenPressed: Story = {
     await expect(args.onInstall).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole('button', { name: installLabel }));
     await expect(args.onInstall).toHaveBeenCalledOnce();
+  },
+};
+
+export const RevokesAnAlwaysAllowGrant: Story = {
+  args: { grants: [scheduleGrant] },
+  play: async ({ canvas, args, userEvent }) => {
+    await expect(canvas.getByText('argo-universal')).toBeVisible();
+    await userEvent.click(canvas.getByText('Schedule Prompt'));
+    await expect(args.onRevokeGrant).toHaveBeenCalledWith(scheduleGrant);
+  },
+};
+
+export const SaysHowToAlwaysAllowWithNoGrants: Story = {
+  args: { grants: [] },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText(/choose Always allow on a Permission request/),
+    ).toBeVisible();
   },
 };
 

@@ -1,3 +1,4 @@
+import type { OperationGrant } from '@repo/contracts/operations';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   useConnectionState,
@@ -21,8 +22,10 @@ interface AccessQuery {
 interface Sources {
   access: AccessQuery;
   todoList: AccessQuery;
+  grants: { data?: OperationGrant[]; refetch: () => void };
   change: ServerMutation<TRPC['agent']['setAccess']>;
   changeTodoList: ServerMutation<TRPC['agent']['setTodoList']>;
+  revoke: ServerMutation<TRPC['agent']['revokeGrant']>;
   install: ServerMutation<TRPC['agent']['installInstructions']>;
 }
 
@@ -30,11 +33,20 @@ export function useAgentAccess(): Controls {
   const trpc = useTRPC();
   const access = useQuery(trpc.agent.getAccess.queryOptions());
   const todoList = useQuery(trpc.agent.getTodoList.queryOptions());
+  const grants = useOperationGrants();
   const change = useAccessChange();
   const changeTodoList = useTodoListChange();
   const install = useMutation(trpc.agent.installInstructions.mutationOptions());
   const state = loadState(useConnectionState() === 'open', access);
-  const sources = { access, todoList, change, changeTodoList, install };
+
+  const sources = {
+    access,
+    todoList,
+    ...grants,
+    change,
+    changeTodoList,
+    install,
+  };
 
   return { access: state, ...controlState(sources) };
 }
@@ -51,6 +63,23 @@ function useTodoListChange(): Sources['changeTodoList'] {
   );
 }
 
+// The Always allow grants, and revoking one, which reloads the list.
+function useOperationGrants(): Pick<Sources, 'grants' | 'revoke'> {
+  const trpc = useTRPC(),
+    cache = useQueryClient();
+
+  const grants = useQuery(trpc.agent.listGrants.queryOptions());
+
+  const revoke = useMutation(
+    trpc.agent.revokeGrant.mutationOptions({
+      onSuccess: () =>
+        cache.invalidateQueries({ queryKey: trpc.agent.listGrants.queryKey() }),
+    }),
+  );
+
+  return { grants, revoke };
+}
+
 function useAccessChange(): Sources['change'] {
   const trpc = useTRPC(),
     cache = useQueryClient();
@@ -64,17 +93,22 @@ function useAccessChange(): Sources['change'] {
 }
 
 function controlState(sources: Sources): Omit<Controls, 'access'> {
-  const { access, todoList, change, changeTodoList, install } = sources;
+  const { access, todoList, grants, change, changeTodoList, revoke, install } =
+    sources;
 
   return {
     ...progress(sources),
     todoList: todoList.data?.enabled,
+    grants: grants.data,
+    onRevokeGrant: ({ projectId, operationId }) =>
+      revoke.mutate({ projectId, operationId }),
     onTodoListChange: (enabled) => changeTodoList.mutate({ enabled }),
     onEnabledChange: (enabled) => change.mutate({ enabled }),
     onInstall: () => install.mutate(),
     onRetry: () => {
       access.refetch();
       todoList.refetch();
+      grants.refetch();
     },
   };
 }
@@ -112,9 +146,12 @@ function connectedState(query: AccessQuery): AgentAccessLoad {
 }
 
 function mutationError(sources: Sources): string | undefined {
-  const failed = [sources.change, sources.changeTodoList, sources.install].find(
-    ({ error }) => error,
-  );
+  const failed = [
+    sources.change,
+    sources.changeTodoList,
+    sources.revoke,
+    sources.install,
+  ].find(({ error }) => error);
 
   return failed?.error?.message;
 }

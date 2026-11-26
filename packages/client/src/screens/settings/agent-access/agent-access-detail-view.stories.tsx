@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { AgentAccessDetailView } from './agent-access-detail-view';
+import { alwaysAllowed } from './agent-access-detail-view-fixtures';
 
 const meta = {
   title: 'Screens/Settings/AgentAccess',
@@ -22,6 +23,8 @@ const meta = {
     onEnabledChange: action('change Agent access'),
     onTodoListChange: action('change the Todo list setting'),
     onScreenSightChange: action('change Screen sharing'),
+    grants: [],
+    onRevokeGrant: action('revoke an Always allow grant'),
     onInstall: action('add Argo instructions'),
     onRetry: action('retry loading Agent access'),
   },
@@ -36,6 +39,8 @@ export const Enabled: Story = {};
 export const Disabled: Story = {
   args: { access: { status: 'loaded', enabled: false } },
 };
+
+export const AlwaysAllowed: Story = { args: { grants: alwaysAllowed } };
 
 export const TodoListOff: Story = { args: { todoList: false } };
 
