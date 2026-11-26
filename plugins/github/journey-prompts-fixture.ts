@@ -15,6 +15,9 @@ type Queue = {
   waiting: Map<string, SentPrompt>;
   withdrawn: SentPrompt[];
   refused: Set<string>;
+  // While set, the Server refuses every Prompt, as it does a Session it can no longer prompt; each refusal is kept.
+  refusing: boolean;
+  refusals: SentPrompt[];
 };
 
 const queues = new WeakMap<GitHubFixture, Queue>();
@@ -25,6 +28,8 @@ const queueOf = (github: GitHubFixture): Queue => {
     waiting: new Map(),
     withdrawn: [],
     refused: new Set(),
+    refusing: false,
+    refusals: [],
   };
 
   queues.set(github, queue);
@@ -41,6 +46,11 @@ export function promptRecorder(
   return async (sessionId, text, sender) => {
     const prompt = { sessionId, text, sender };
     const queuedId = `queued-${queue.sent.length + 1}`;
+
+    if (queue.refusing) {
+      queue.refusals.push(prompt);
+      throw new Error('This Session cannot take Prompts');
+    }
 
     queue.sent.push(prompt);
     queue.waiting.set(queuedId, prompt);
@@ -95,3 +105,17 @@ export const promptsSent = ({
 export const promptsWithdrawn = ({
   github,
 }: Pick<Journey, 'github'>): SentPrompt[] => queueOf(github).withdrawn;
+
+// The Server refuses every Prompt until `allowPrompts`.
+export const refusePrompts = ({ github }: Pick<Journey, 'github'>): void => {
+  queueOf(github).refusing = true;
+};
+
+export const allowPrompts = ({ github }: Pick<Journey, 'github'>): void => {
+  queueOf(github).refusing = false;
+};
+
+// The Prompts the Server refused so far, in order.
+export const promptsRefused = ({
+  github,
+}: Pick<Journey, 'github'>): SentPrompt[] => queueOf(github).refusals;

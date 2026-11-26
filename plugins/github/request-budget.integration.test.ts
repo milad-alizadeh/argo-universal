@@ -1,16 +1,16 @@
 import { expect, it } from 'vitest';
 import { failChecks, lintPrompt, texts, watch } from './auto-fix-fixture';
+import { attached as attachedTwelve, refresh, set } from './auto-merge-fixture';
 import {
-  attached as attachedTwelve,
-  refresh,
-  set,
-} from './auto-merge-fixture';
-import { cliCallsOf, cliPullsDirectory, spentOf } from './github-cli-budget-fixture';
+  cliCallsOf,
+  cliPullsDirectory,
+  spentOf,
+} from './github-cli-budget-fixture';
 import { sha } from './github-fixture';
-import { changePull, openChanges, tick } from './journey-watch-fixture';
 import { attach } from './journey-calls-fixture';
 import { journey, type Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
+import { changePull, openChanges, tick } from './journey-watch-fixture';
 
 const slow = 120_000;
 
@@ -74,7 +74,6 @@ it(
     }
 
     const spent = minus(await spentIn(run, directory), before);
-
 
     expect(spent.cli + spent.rest).toBe(0);
   },

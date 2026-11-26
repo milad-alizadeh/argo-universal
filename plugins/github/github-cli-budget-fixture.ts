@@ -32,7 +32,10 @@ function responsesOf(numbers: readonly number[]): Record<string, unknown> {
  * `-H 'If-None-Match: <etag>'` for the same body it answers 304, which GitHub does not count. Each call is logged
  * with its status.
  */
-const scriptOf = (responses: Record<string, unknown>, log: string): string => `#!/usr/bin/env node
+const scriptOf = (
+  responses: Record<string, unknown>,
+  log: string,
+): string => `#!/usr/bin/env node
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const argv = process.argv.slice(2);
@@ -78,9 +81,7 @@ export async function cliPullsDirectory(
 
 // Every call the fixture's `gh` answered, in order.
 export async function cliCallsOf(directory: string): Promise<Call[]> {
-  const text = await readFile(join(directory, 'calls'), 'utf8').catch(
-    () => '',
-  );
+  const text = await readFile(join(directory, 'calls'), 'utf8').catch(() => '');
 
   return text
     .split('\n')

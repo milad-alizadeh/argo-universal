@@ -2,6 +2,7 @@ import type { AutomationState } from './pull-automation';
 import type { Fresh } from './pull-automations';
 import type { LinkRead } from './pull-changes';
 import { dataOf, factsOf } from './pull-fix-facts';
+import { PromptRefused, type PromptRests } from './pull-fix-rest';
 import {
   fixCurrent,
   fixTries,
@@ -65,8 +66,8 @@ export function fixOf(
     : yoursOf(record, pull.head);
 }
 
-// What Auto-fix's Watch turn works with: the Sessions it prompts, and the record of what it has seen and sent.
-export type Fixing = { sessions: Sessions; fix: FixStore };
+// What Auto-fix's Watch turn works with: the Sessions it prompts, the record of what it has seen and sent, and its rests.
+export type Fixing = { sessions: Sessions; fix: FixStore; rests: PromptRests };
 
 async function fixOpen(
   step: Step,
@@ -141,7 +142,35 @@ function settledTurn(
     : undefined;
 }
 
+// A refused Prompt rests the pull request, so the next Watches leave it; a turn that goes through ends the rest.
+async function restingAfter(
+  { rests }: Fixing,
+  record: FixRecord,
+  turn: () => Promise<boolean>,
+): Promise<boolean> {
+  try {
+    const acted = await turn();
+
+    rests.took(record);
+
+    return acted;
+  } catch (error) {
+    if (error instanceof PromptRefused) rests.refused(record);
+    throw error;
+  }
+}
+
 async function fixOne(
+  fixing: Fixing,
+  fresh: Fresh,
+  record: FixRecord,
+): Promise<boolean> {
+  if (fixing.rests.resting(record)) return false;
+
+  return restingAfter(fixing, record, () => fixTurn(fixing, fresh, record));
+}
+
+async function fixTurn(
   fixing: Fixing,
   fresh: Fresh,
   record: FixRecord,
