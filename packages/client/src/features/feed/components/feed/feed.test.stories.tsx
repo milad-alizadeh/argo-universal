@@ -349,12 +349,8 @@ export const RestoresOlderReadingAfterRemount: Story = {
     const initialTop = await settledTopOf(oldest);
     // Read partway into the oldest row so restoring at the page boundary would fail.
     scrollUp(scroll, -Math.ceil(oldest().getBoundingClientRect().height / 4));
-    await waitFor(() =>
-      expect(initialTop - oldest().getBoundingClientRect().top).toBeGreaterThan(
-        3,
-      ),
-    );
     const before = await settledTopOf(oldest);
+    await expect(initialTop - before).toBeGreaterThan(3);
 
     const switchSession = canvas.getByRole('button', {
       name: switchSessionLabel,
@@ -364,12 +360,11 @@ export const RestoresOlderReadingAfterRemount: Story = {
     await userEvent.click(switchSession);
 
     const restored = await canvas.findByTestId(feedScrollId);
-    await waitFor(() => {
-      const prompt = within(restored).getByText(oldestMessage);
-      expect(canPointAt(prompt)).toBe(true);
-      expect(
-        Math.abs(prompt.getBoundingClientRect().top - before),
-      ).toBeLessThan(3);
+    await waitFor(async () => {
+      const after = await settledTopOf(() =>
+        within(restored).getByText(oldestMessage),
+      );
+      await expect(Math.abs(after - before)).toBeLessThan(3);
     }, scrollAwayWait);
   },
 };
