@@ -5,7 +5,7 @@ import {
   memorySessionDirectory,
   type MemorySession,
 } from '#mocks/memory-session-directory';
-import type { OperationGrants } from '../../agent-access';
+import type { GrantKey, OperationGrants } from '../../agent-access';
 import type { OperationCard } from '../../sessions';
 import type { SessionInvoke } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
@@ -54,12 +54,9 @@ const directory = memorySessionDirectory({
   ...runningAgents('full', atLimit),
 });
 
-type GrantKey = Parameters<OperationGrants['granted']>[0];
-
 const grantKey = ({ projectId, operationId }: GrantKey): string =>
   `${projectId}/${operationId}`;
 
-// Always allow grants held in memory, keyed by Project and Operation.
 export const memoryGrants = (): OperationGrants => {
   const granted = new Set<string>();
 

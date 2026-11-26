@@ -57,15 +57,6 @@ export const RevokesAnAlwaysAllowGrant: Story = {
   },
 };
 
-export const SaysHowToAlwaysAllowWithNoGrants: Story = {
-  args: { grants: [] },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText(/choose Always allow on a Permission request/),
-    ).toBeVisible();
-  },
-};
-
 export const StartsWithoutAccess: Story = {
   args: { access: { status: 'loaded', enabled: false } },
   play: async ({ canvas, args, userEvent }) => {

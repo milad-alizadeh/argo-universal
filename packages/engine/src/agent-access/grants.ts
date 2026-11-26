@@ -1,5 +1,5 @@
 import type { OperationGrant } from '@repo/contracts/operations';
-import { operations, type OperationId } from '@repo/contracts/operations';
+import { operations } from '@repo/contracts/operations';
 import type { Database } from '@repo/db';
 import { operationGrant, project } from '@repo/db/schema';
 import { and, asc, eq } from 'drizzle-orm';
@@ -11,7 +11,7 @@ import {
 } from '../storage';
 
 // One Always allow choice: Sessions in this Project run this Operation without a Permission request.
-export type GrantKey = { projectId: string; operationId: OperationId };
+export type GrantKey = Pick<OperationGrant, 'projectId' | 'operationId'>;
 
 // Always allow grants, as the Session scope reads and records them (ADR-0044, Always allow).
 export type OperationGrants = {
@@ -42,7 +42,6 @@ function hasOperationGrant(
   );
 }
 
-// Every grant, with its Project's name and its Operation's label, in the order they were given.
 export function readOperationGrants(database: Database): OperationGrant[] {
   return database
     .select({
@@ -60,7 +59,7 @@ export function readOperationGrants(database: Database): OperationGrant[] {
 
 export async function revokeOperationGrant(
   writer: WriterActorRef,
-  key: { projectId: string; operationId: string },
+  key: GrantKey,
 ): Promise<Record<string, never>> {
   await writeDatabaseJobAndWaitForCommit(writer, new RevokeJob(key));
 
@@ -75,10 +74,7 @@ const operationLabel = (id: string): string =>
 const grantRow = ({
   projectId,
   operationId,
-}: {
-  projectId: string;
-  operationId: string;
-}): ReturnType<typeof and> =>
+}: GrantKey): ReturnType<typeof and> =>
   and(
     eq(operationGrant.projectId, projectId),
     eq(operationGrant.operationId, operationId),
@@ -99,9 +95,7 @@ class GrantJob implements WriterJob {
 }
 
 class RevokeJob implements WriterJob {
-  public constructor(
-    private readonly key: { projectId: string; operationId: string },
-  ) {}
+  public constructor(private readonly key: GrantKey) {}
   public describe(): string {
     return 'revoke an Always allow grant';
   }
