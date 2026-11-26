@@ -8,6 +8,7 @@ Feature: Back from a deep-linked page
   @web-only
   Scenario: Back from a Session page opened on its own returns to Sessions with a clean address
     Given a missing Session was opened on its own in a phone Frame
+    Then a toast says "No Session missing" and then dismisses
     When I go Back from the page
     Then the phone Frame shows the Sessions list with a clean address
 
