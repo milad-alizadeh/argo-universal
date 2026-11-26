@@ -4,7 +4,11 @@ import {
   type SidebarSection,
 } from '@repo/kit/native-sidebar';
 import { useState, type ReactElement, type ReactNode } from 'react';
-import { nativeSessionRow } from '#features/sessions';
+import {
+  nativeSessionRow,
+  sessionStatusDot,
+  sessionStatusLabels,
+} from '#features/sessions';
 import { menuEntries, scheduleSubtitle } from './schedule-row-actions';
 import type {
   NestedEntry,
@@ -54,11 +58,16 @@ function nativeScheduleRow(
   const { session } = entry;
 
   if ('schedule' in session) {
-    const { schedule } = session;
+    const { schedule, status } = session;
 
     return {
       id: schedule.id,
       title: schedule.name,
+      status: status && {
+        tone: sessionStatusDot(status).tone,
+        label: sessionStatusLabels[status],
+      },
+      emphasized: status === 'unread',
       subtitle: scheduleSubtitle(schedule),
       selected: !props.selectedChildId && props.selectedId === schedule.id,
       onPress: () => props.onOpen(schedule),

@@ -12,8 +12,8 @@ export const SessionListInput = z.strictObject({
   // Lists only this Session, such as a Plugin's SessionRow reading the one it draws; none when it is not top level.
   sessionId: sessionColumns.shape.id.optional(),
   archived: z.boolean().optional(),
-  // The App keeps tasks and the Sessions they start together in Scheduled.
-  taskSessions: z.enum(['exclude', 'started']).optional(),
+  // The App keeps tasks and the Sessions they start together in Scheduled: `started` lists the Sessions a task started, `tasks` the task Sessions too.
+  taskSessions: z.enum(['exclude', 'started', 'tasks']).optional(),
   query: z.string().optional(),
   cursor: z.string().optional(),
   direction: z.literal('forward').optional(),

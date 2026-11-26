@@ -6,6 +6,8 @@ export function matchesTaskSessions(
 ): boolean {
   if (taskSessions === 'exclude') return !row.taskSessionId;
 
+  if (taskSessions === 'tasks') return !!row.taskSessionId;
+
   return (
     taskSessions !== 'started' ||
     (!!row.taskSessionId && row.taskSessionId !== row.sessionId)

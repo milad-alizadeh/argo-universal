@@ -1,17 +1,19 @@
 import type { WriterJob } from '../storage';
 import { writeScheduleNotice } from './schedule-skip';
+import { markSessionSeen } from './session-seen';
 import type { SessionHandlerSources } from './session-sources';
 
 export const scheduleCreatedNoticeSuffix = ':schedule-created';
 
+// Saving a task Schedule writes this notice; it is seen as written, so only a run that ends marks the Session Unread.
 export function scheduleCreatedNotice(
   sources: SessionHandlerSources,
   created: { sessionId: string; instructions: string },
 ): (advance: WriterJob) => Promise<void> {
   const { sessionId, instructions } = created;
 
-  return (advance) =>
-    writeScheduleNotice(sources, {
+  return async (advance) => {
+    await writeScheduleNotice(sources, {
       sessionId,
       advance,
       notice: {
@@ -23,4 +25,9 @@ export function scheduleCreatedNotice(
         description: instructions,
       },
     });
+    await markSessionSeen(sources, {
+      sessionId,
+      revision: sources.readSession(sessionId).maxRevision,
+    });
+  };
 }
