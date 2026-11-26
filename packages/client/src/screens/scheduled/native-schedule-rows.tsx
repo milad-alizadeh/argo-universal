@@ -4,11 +4,7 @@ import {
   type SidebarSection,
 } from '@repo/kit/native-sidebar';
 import { useState, type ReactElement, type ReactNode } from 'react';
-import {
-  nativeSessionRow,
-  sessionStatusDot,
-  sessionStatusLabels,
-} from '#features/sessions';
+import { nativeRowStatus, nativeSessionRow } from '#features/sessions';
 import { menuEntries, scheduleSubtitle } from './schedule-row-actions';
 import type {
   NestedEntry,
@@ -63,11 +59,7 @@ function nativeScheduleRow(
     return {
       id: schedule.id,
       title: schedule.name,
-      status: status && {
-        tone: sessionStatusDot(status).tone,
-        label: sessionStatusLabels[status],
-      },
-      emphasized: status === 'unread',
+      ...(status && nativeRowStatus(status)),
       subtitle: scheduleSubtitle(schedule),
       selected: !props.selectedChildId && props.selectedId === schedule.id,
       onPress: () => props.onOpen(schedule),

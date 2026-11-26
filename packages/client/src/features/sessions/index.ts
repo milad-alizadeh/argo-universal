@@ -333,8 +333,11 @@ export {
   useSessionNesting,
 } from './components/sessions-list/sessions-list-tree';
 
-export { nativeSessionRow } from './components/sessions-list/native-session-row';
+export {
+  nativeRowStatus,
+  nativeSessionRow,
+} from './components/sessions-list/native-session-row';
 
 export { rowStatusDot } from './components/session-row/session-row-status';
 
-export { sessionStatusDot, sessionStatusLabels } from './session-status-dot';
+export { sessionStatusLabels } from './session-status-dot';

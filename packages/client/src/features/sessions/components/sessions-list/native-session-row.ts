@@ -7,6 +7,17 @@ import {
 import { sessionProgress } from '../session-row/session-row-todos';
 import { sessionAge } from './session-age';
 
+// A row's status as a Session row draws it: its dot's tone and label, bold while Unread.
+export const nativeRowStatus = (
+  status: SessionInfo['status'],
+): Pick<SidebarRow, 'status' | 'emphasized'> => ({
+  status: {
+    tone: sessionStatusDot(status).tone,
+    label: sessionStatusLabels[status],
+  },
+  emphasized: status === 'unread',
+});
+
 export function nativeSessionRow(
   session: SessionInfo,
   depth?: number,
@@ -21,11 +32,7 @@ export function nativeSessionRow(
     subtitle: compact ? undefined : sessionMetadata(session),
     depth,
     value: sessionAge(session, Date.now()),
-    status: {
-      tone: sessionStatusDot(session.status).tone,
-      label: sessionStatusLabels[session.status],
-    },
-    emphasized: session.status === 'unread',
+    ...nativeRowStatus(session.status),
     progress: progress && {
       value: progress.value,
       label: progress.accessibilityLabel,
