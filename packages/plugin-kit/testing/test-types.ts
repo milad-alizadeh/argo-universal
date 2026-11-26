@@ -74,9 +74,11 @@ export interface PluginTestOptions {
   archiveSession?: (sessionId: string) => Promise<void>;
 }
 
-// What a test says `argo.sessions.get` answers for one Session; `idleFor` may be left out.
-export type TestSession = Omit<PluginSessionInfo, 'idleFor' | 'archived'> &
-  Partial<Pick<PluginSessionInfo, 'idleFor' | 'archived'>>;
+// What a test says `argo.sessions.get` answers for one Session; `idleFor`, `archived` and `startedBySessionId` may be left out.
+type Optional = 'idleFor' | 'archived' | 'startedBySessionId';
+
+export type TestSession = Omit<PluginSessionInfo, Optional> &
+  Partial<Pick<PluginSessionInfo, Optional>>;
 
 // The App an items Slot list is asked from; it decides how many items show before "+N".
 type SlotItemsOptions = {

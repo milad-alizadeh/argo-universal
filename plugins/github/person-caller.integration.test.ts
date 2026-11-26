@@ -6,6 +6,7 @@ import {
   project,
   secondSessionId,
   sessionId,
+  startedSessionId,
   type Journey,
 } from './journey-fixture';
 
@@ -129,6 +130,34 @@ it(
           caller: { projectId: project.id, sessionId },
         }),
       ).rejects.toThrow('only act for itself');
+  },
+  slow,
+);
+
+it(
+  'lets an Agent attach a pull request to a Session it started, and list it there',
+  async () => {
+    const run = await journey();
+    const asStarter = (name: string, params: Record<string, string>) =>
+      run.test.operations.run({
+        name,
+        params: { ...params, sessionId: startedSessionId },
+        caller: { projectId: project.id, sessionId },
+      });
+
+    expect(await asStarter('attach', { reference })).toMatchObject({
+      attached: true,
+    });
+    expect(await asStarter('list', {})).toMatchObject({
+      changes: [{ id: 'github:owner/repository#12' }],
+    });
+    expect(
+      await run.test.operations.run({
+        name: 'list',
+        params: {},
+        caller: { projectId: project.id, sessionId },
+      }),
+    ).toEqual({ changes: [] });
   },
   slow,
 );
