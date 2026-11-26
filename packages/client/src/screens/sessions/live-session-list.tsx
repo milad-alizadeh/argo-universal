@@ -62,7 +62,7 @@ function useSessionListLookups(
   const projects = useQuery(trpc.project.list.queryOptions());
   const agents = useInstalledAgents();
 
-  useUnlistedProjectsRead(projects.data, sessions);
+  useProjectsReadForUnlistedSessions(projects.data, sessions);
 
   return {
     projects: projects.data ?? [],
@@ -72,17 +72,17 @@ function useSessionListLookups(
 }
 
 /*
- * A Project added outside the App (an Agent's `project.add`, `project.clone` or `project.create` Operation, the CLI, another App) reaches the list first as a Session in it, which the kept Projects do not hold and so cannot draw.
- * Such a Session asks for the Projects again, once for each set of Projects the kept list lacks, so a Session whose Project is gone does not ask on every change.
+ * Only the App's own adds refresh the kept Projects, so one added elsewhere (an Agent's `project.add`, `project.clone` or `project.create` Operation, the CLI, another App) is missing from them, and the list cannot draw a Session started in it.
+ * Such a Session asks for the Projects again. The Projects the kept list lacks are keyed as one string, so each set of them asks once and a Session whose Project is gone does not ask on every change.
  */
-function useUnlistedProjectsRead(
+function useProjectsReadForUnlistedSessions(
   projects: SessionListViewProps['projects'] | undefined,
   sessions: SessionListViewProps['sessions'],
 ): void {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const unlisted = useMemo((): string => {
+  const unlistedKey = useMemo((): string => {
     if (!projects) return '';
 
     const listed = new Set(projects.map(({ id }) => id));
@@ -99,9 +99,9 @@ function useUnlistedProjectsRead(
   }, [projects, sessions]);
 
   useEffect(() => {
-    if (unlisted)
+    if (unlistedKey)
       void queryClient.invalidateQueries(trpc.project.list.queryFilter());
-  }, [unlisted, queryClient, trpc]);
+  }, [unlistedKey, queryClient, trpc]);
 }
 
 // Live updates start once the list holds rows, from the Device or the Server, for them to land on.

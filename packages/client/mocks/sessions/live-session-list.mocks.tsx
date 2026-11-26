@@ -2,6 +2,7 @@ import type {
   ProjectInfo,
   ProjectsListOutput,
   SessionInfo,
+  SessionListOutput,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
 import { activeSessions, agentsList, projectsList } from '@repo/mocks/app';
@@ -95,10 +96,10 @@ interface ServerState {
   agentsHeld: boolean;
   waitingForAgents: Wire[];
   projects: ProjectsListOutput;
-  sessions: typeof activeSessions;
+  sessions: SessionListOutput;
 }
 
-type Answer = typeof activeSessions | ProjectsListOutput | typeof agentsList;
+type Answer = SessionListOutput | ProjectsListOutput | typeof agentsList;
 
 const answer = (wire: Wire, data: Answer): void => {
   wire.next({ result: { type: 'data', data } });
