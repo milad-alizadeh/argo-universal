@@ -21,7 +21,7 @@ Given(
   expectListedAgent,
 );
 
-const requestSurface = (page: Page): Locator =>
+export const requestSurface = (page: Page): Locator =>
   onPhone(page) ? page.getByRole('dialog') : composer(page);
 
 // The request card takes the Composer's place; the Composer's textbox stays mounted beneath it.

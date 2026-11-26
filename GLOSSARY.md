@@ -557,6 +557,10 @@ _Avoid_: Link, attachment
 A question from the Agent, or from Argo about an Operation the Agent called, to let a Tool call run, with options to allow or reject. The answer is only the chosen option. An Agent's request to leave plan mode is one: its Tool call carries the plan.
 _Avoid_: Approval, prompt, Plan proposal
 
+**Always allow grant**:
+The person's Always allow answer to Argo's Permission request for an Operation that offers it (the Schedule Operations): Sessions whose delegation chain starts in the calling Session's Project then run that Operation in the same target Project without asking, during an active Turn. Settings › Agent access lists the grants, and revoking one makes those Sessions ask again.
+_Avoid_: Allowlist, permission rule, trust
+
 **Elicitation**:
 A question from the Agent that asks the user for information.
 _Avoid_: User question, ask

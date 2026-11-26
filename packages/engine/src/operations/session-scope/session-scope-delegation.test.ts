@@ -44,7 +44,7 @@ it('counts a start still being admitted against the running Agents until it sett
     .run(
       {
         caller: busy,
-        call: { confirm: async () => {} },
+        call: { confirm: async () => 'once' as const, canConfirm: true },
         invoke: () => held.promise,
       },
       startIn('p1'),
@@ -65,4 +65,37 @@ it('starts with the new Session id it reserved', async () => {
       start: { sessionId: 'new-session' },
     },
   ]);
+});
+
+it('steers or queues onto a running Session the caller started, even with ten of its Agents running', async () => {
+  expect(
+    (await scoped(promptTo('full-agent-0'), sessionCaller('full'))).outcome,
+  ).toBe(runs);
+});
+
+it('says what the running limit is, what holds it and how to free it', async () => {
+  const scope = newScope();
+
+  const refusal = await scope
+    .run(
+      {
+        caller: sessionCaller('full'),
+        call: { confirm: async () => 'once' as const, canConfirm: true },
+        invoke: async () => {
+          throw ran;
+        },
+      },
+      promptTo('full-idle'),
+    )
+    .then(
+      () => null,
+      (cause: unknown) => cause,
+    );
+
+  expect(refusal).toMatchObject({
+    code: 'CONFLICT',
+    message: expect.stringMatching(
+      /at most 10 .*full-agent-0.*full-agent-9.*session\.cancel/s,
+    ),
+  });
 });

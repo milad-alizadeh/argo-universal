@@ -72,6 +72,7 @@ export const scheduleOperations = {
     result: schedule,
     tier: 'act',
     policy: askOutsideProject,
+    alwaysAllowable: true,
     keywords: ['schedule', 'recurring'],
   },
   'session.listSchedules': {
@@ -108,6 +109,7 @@ export const scheduleOperations = {
     result: z.strictObject({}),
     tier: 'act',
     policy: askOutsideProject,
+    alwaysAllowable: true,
     keywords: ['schedule'],
   },
 } as const satisfies Record<string, OperationDefinition>;

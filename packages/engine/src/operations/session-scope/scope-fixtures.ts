@@ -5,6 +5,7 @@ import {
   memorySessionDirectory,
   type MemorySession,
 } from '#mocks/memory-session-directory';
+import type { GrantKey, OperationGrants } from '../../agent-access';
 import type { OperationCard } from '../../sessions';
 import type { SessionInvoke } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
@@ -28,10 +29,10 @@ const runningAgents = (
     ]),
   );
 
-// One below, and at, the five running Agents a caller may have.
-const belowLimit = 4;
+// One below, and at, the ten running Agents a caller may have.
+const belowLimit = 9;
 
-const atLimit = 5;
+const atLimit = 10;
 
 // Every Session is in Project p1 unless it says otherwise; foreign is in p2.
 const directory = memorySessionDirectory({
@@ -43,27 +44,57 @@ const directory = memorySessionDirectory({
   started: { projectId: 'p1', startedBySessionId: 'caller' },
   unrelated: { projectId: 'p1', startedBySessionId: null },
   foreign: { projectId: 'p2', startedBySessionId: 'caller' },
+  // A Session in p1 that a Session in p2 started, and a Session in a third Project.
+  outsider: { projectId: 'p2', startedBySessionId: null },
+  imported: { projectId: 'p1', startedBySessionId: 'outsider' },
+  far: { projectId: 'p3', startedBySessionId: null },
   opening: { projectId: 'p1', startedBySessionId: 'caller', opening: true },
   middle: { projectId: 'p1', startedBySessionId: 'started' },
   deep: { projectId: 'p1', startedBySessionId: 'middle' },
   busy: { projectId: 'p1', startedBySessionId: null },
   full: { projectId: 'p1', startedBySessionId: null },
+  'full-idle': { projectId: 'p1', startedBySessionId: 'full' },
   ...runningAgents('busy', belowLimit),
   ...runningAgents('full', atLimit),
 });
 
-export const newScope = (chains = new PromptChains()): SessionScope =>
+const grantKey = ({
+  projectId,
+  operationId,
+  targetProjectId,
+}: GrantKey): string => `${projectId}/${operationId}/${targetProjectId}`;
+
+export const memoryGrants = (): OperationGrants => {
+  const granted = new Set<string>();
+
+  return {
+    granted: (grant) => granted.has(grantKey(grant)),
+    grant: async (grant) => {
+      granted.add(grantKey(grant));
+    },
+    projectName: (projectId) => `Project ${projectId}`,
+  };
+};
+
+export const newScope = (
+  chains = new PromptChains(),
+  grants = memoryGrants(),
+): SessionScope =>
   new SessionScope({
     directory,
     createId: () => 'new-session',
     chains,
     canReadShell: (callerId, targetId) => callerId === targetId,
+    grants,
   });
 
-export const sessionCaller = (sessionId: string): SessionCaller => ({
+export const sessionCaller = (
+  sessionId: string,
+  projectId = 'p1',
+): SessionCaller => ({
   kind: 'session',
   sessionId,
-  projectId: 'p1',
+  projectId,
 });
 
 const prompt = [{ type: 'text', text: 'Work' }];
@@ -132,7 +163,7 @@ export async function scoped(
 ): Promise<Scoped> {
   const cards: OperationCard[] = [];
   const invoked: unknown[] = [];
-  const call = { confirm: refusing(cards) };
+  const call = { confirm: refusing(cards), canConfirm: true };
 
   const outcome = await scope
     .run({ caller, call, invoke: recording(invoked) }, operation)

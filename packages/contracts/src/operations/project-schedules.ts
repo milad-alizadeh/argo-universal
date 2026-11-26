@@ -197,6 +197,7 @@ export const projectScheduleOperations = {
     result: ProjectSchedule,
     tier: 'act',
     policy: scopePolicy,
+    alwaysAllowable: true,
     keywords: ['schedule', 'recurring', 'interval'],
   },
   'project.schedulePreview': {
@@ -248,6 +249,7 @@ export const projectScheduleOperations = {
     result: z.strictObject({}),
     tier: 'act',
     policy: scopePolicy,
+    alwaysAllowable: true,
     keywords: ['schedule', 'pause', 'resume', 'delete'],
   },
   'project.scheduleHistory': {
@@ -272,6 +274,7 @@ export const projectScheduleOperations = {
     result: ProjectScheduleOccurrence,
     tier: 'act',
     policy: scopePolicy,
+    alwaysAllowable: true,
     keywords: ['schedule', 'run now', 'launch'],
   },
 } as const satisfies Record<string, OperationDefinition>;

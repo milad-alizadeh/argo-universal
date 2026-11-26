@@ -126,6 +126,7 @@ const infoOf = (
   title: row.title,
   idleFor: idleFor(sources, row),
   archived: row.archivedAt !== null,
+  startedBySessionId: row.startedBySessionId,
 });
 
 type Checkout = { checkoutPath: string; checkoutBranch: string | null };

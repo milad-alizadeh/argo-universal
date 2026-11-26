@@ -9,7 +9,7 @@ type CallerSources = HandlerSources<'findFeed', 'live'>;
 
 export type { SessionOperationCall } from './call';
 
-export type { OperationCard } from './permission';
+export type { OperationCard, OperationConsent } from './permission';
 
 export { readOperationCall, type OperationCallRead } from './read';
 

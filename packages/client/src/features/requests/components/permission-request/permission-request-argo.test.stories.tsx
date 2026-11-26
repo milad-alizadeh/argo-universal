@@ -2,8 +2,13 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { pickFromMenu } from '../../../../../mocks/requests/permission/option-menus.test.mocks';
 import { PermissionPreview } from '../../../../../mocks/requests/permission/permission-gallery';
-import { argoPermission } from './permission-request-fixtures';
+import { allowOptions } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
+import {
+  argoAlwaysAllowPermission,
+  argoPermission,
+} from './permission-request-fixtures';
 
 const meta = {
   title: 'Tests/Requests/PermissionRequest/Argo',
@@ -28,6 +33,22 @@ export const Operation: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Allow once' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({
       optionId: 'allow_once',
+    });
+  },
+};
+
+const alwaysAllow = 'Always allow';
+
+export const OperationAlwaysAllow: Story = {
+  args: { ...argoAlwaysAllowPermission, onAnswer: fn() },
+  play: async ({ args }) => {
+    await settleLayout(1440);
+    const canvas = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
+    await pickFromMenu(userEvent, alwaysAllow);
+    await userEvent.click(canvas.getByRole('button', { name: alwaysAllow }));
+    await expect(args.onAnswer).toHaveBeenCalledWith({
+      optionId: 'allow_always',
     });
   },
 };

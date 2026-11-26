@@ -80,6 +80,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
 
 const namedScenarioSteps = [
   [agentStep('delegates work through the argo CLI'), 'session-delegation'],
+  [agentStep('schedules follow-ups in another Project'), 'schedule-grant'],
   [agentStep('starts a Shell when released'), 'shell-live'],
   [agentStep('edits a file and keeps its Turn running'), 'changed-files'],
   [agentStep('supplies a long Feed history'), 'feed-history'],

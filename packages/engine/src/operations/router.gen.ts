@@ -39,6 +39,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      listGrants: authenticatedAppProcedure
+        .input(operations['agent.listGrants'].params)
+        .output(operations['agent.listGrants'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.listGrants',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      revokeGrant: authenticatedAppProcedure
+        .input(operations['agent.revokeGrant'].params)
+        .output(operations['agent.revokeGrant'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.revokeGrant',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       getTodoList: publicProcedure
         .input(operations['agent.getTodoList'].params)
         .output(operations['agent.getTodoList'].result)

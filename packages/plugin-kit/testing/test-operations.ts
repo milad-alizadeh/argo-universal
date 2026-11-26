@@ -162,5 +162,12 @@ const givenToRun = ({
 }: RunInput): Pick<Run, 'params' | 'caller' | 'confirm'> => ({
   params: params ?? {},
   caller: caller ?? {},
-  confirm,
+  // A Plugin's own confirmation only ever allows once.
+  confirm:
+    confirm &&
+    (async (card) => {
+      await confirm(card);
+
+      return 'once' as const;
+    }),
 });

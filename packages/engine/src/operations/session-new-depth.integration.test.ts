@@ -24,7 +24,9 @@ it('allows two levels of Sessions and blocks a deeper start', async () => {
   await expect(
     runOperation(grandchild.caller.operations, operation),
   ).rejects.toMatchObject({
-    message: 'The Session delegation limit has been reached',
+    message: expect.stringMatching(
+      /^The Session delegation limit has been reached: /,
+    ),
     data: { code: 'CONFLICT' },
   });
 });

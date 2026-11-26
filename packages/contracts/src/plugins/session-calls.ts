@@ -22,6 +22,8 @@ export const PluginSessionInfo = z.object({
   idleFor: z.number().nonnegative().nullable(),
   // True once the Session is archived: it stays readable, but is no longer listed as work in progress.
   archived: z.boolean(),
+  // The Session that started this one through session.new, or null when a person started it.
+  startedBySessionId: z.string().nullable(),
 });
 
 export type PluginSessionInfo = z.infer<typeof PluginSessionInfo>;

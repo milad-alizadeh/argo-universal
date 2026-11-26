@@ -47,7 +47,7 @@ class Fakes {
       confirm: (card) => {
         this.asked.push(card);
 
-        return Promise.resolve();
+        return Promise.resolve('once');
       },
       started: (): void => {},
       finish: (): void => {},

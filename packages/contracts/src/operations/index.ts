@@ -21,7 +21,7 @@ import { terminalOperations } from './terminals';
 import { todoListOperations } from './todo-list';
 import { voiceOperations } from './voice';
 
-export { AgentAccess } from './agent-access';
+export { AgentAccess, OperationGrant } from './agent-access';
 
 export { appOperations, AppOpenResult } from './app';
 
@@ -81,6 +81,8 @@ export interface OperationDefinition {
   result: z.ZodType;
   tier: OperationTier;
   policy: OperationPolicy;
+  // The Permission request also offers Always allow, which the person can revoke in Settings (ADR-0044).
+  alwaysAllowable?: true;
   keywords: readonly string[];
   imageVisibility?: ImageVisibility;
 }

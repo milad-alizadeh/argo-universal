@@ -19,6 +19,7 @@ import { permissionScenarios } from './permission-command-scenario.ts';
 import { planModeScenarios } from './plan-mode-scenario.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { queueScenarios } from './queue-scenarios.ts';
+import { scheduleGrantSteps } from './schedule-grant-scenario.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
 import { signInScenarios } from './sign-in-scenarios.ts';
@@ -77,6 +78,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 export const scenarios = {
   reply: scenario([reply]),
   'session-delegation': scenario(delegationSteps),
+  'schedule-grant': scenario(scheduleGrantSteps),
   ...cancellableScenarios(scenario, reply),
   ...notificationScenarios,
   ...shellScenarios,

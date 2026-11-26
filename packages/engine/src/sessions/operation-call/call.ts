@@ -1,6 +1,10 @@
 import type { OperationWorkTarget } from '@repo/contracts/operations';
 import { toolCallEvent } from '../../feed';
-import { confirmOperation, type OperationCard } from './permission';
+import {
+  confirmOperation,
+  type OperationCard,
+  type OperationConsent,
+} from './permission';
 import {
   cancelledRow,
   openRow,
@@ -17,7 +21,7 @@ export type SessionOperationCall = {
   readonly toolCallId: string;
   // Whether a Permission request could still ask the user in the calling Turn.
   readonly canConfirm: boolean;
-  confirm: (card: OperationCard) => Promise<void>;
+  confirm: (card: OperationCard) => Promise<OperationConsent>;
   started: (work: OperationWorkTarget) => void;
   finish: (result: CallResult) => void;
 };
@@ -48,7 +52,7 @@ export class OperationCall implements SessionOperationCall {
   public get canConfirm(): boolean {
     return canConfirmCall(this.site);
   }
-  public confirm(card: OperationCard): Promise<void> {
+  public confirm(card: OperationCard): Promise<OperationConsent> {
     return confirmOperation(
       { ...this.site, toolCallId: this.toolCallId },
       {

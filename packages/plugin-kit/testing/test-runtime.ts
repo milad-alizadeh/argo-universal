@@ -103,6 +103,7 @@ const withIdle = (session: TestSession): PluginSessionInfo => ({
   ...session,
   idleFor: session.idleFor ?? null,
   archived: session.archived ?? false,
+  startedBySessionId: session.startedBySessionId ?? null,
 });
 
 function sessionOf(

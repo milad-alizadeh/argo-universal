@@ -1,8 +1,10 @@
+import type { OperationGrant } from '@repo/contracts/operations';
 import { productName } from '@repo/contracts/product-identity';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { GrantsSection } from './agent-access-grants';
 
 export type AgentAccessLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
@@ -21,6 +23,9 @@ export interface AgentAccessDetailViewProps {
   // This Device's Screen sharing preference (Screen sight in code); the switch shows only where this App can capture, which is where the handler is given.
   screenSight?: boolean;
   onScreenSightChange?: (enabled: boolean) => void;
+  // The Operations the person chose Always allow for; unknown until the Server answers.
+  grants?: OperationGrant[];
+  onRevokeGrant: (grant: OperationGrant) => void;
   onInstall: () => void;
   onRetry: () => void;
   onBack?: () => void;
@@ -35,6 +40,10 @@ export function AgentAccessDetailView(
         {accessSection(props)}
         {todoListSection(props)}
         {screenSightSection(props)}
+        <GrantsSection
+          grants={props.grants}
+          onRevokeGrant={props.onRevokeGrant}
+        />
         {instructionsSection(props)}
         {statusSection(props)}
       </FieldGroup>

@@ -63,7 +63,7 @@ it('hangs up the calling Session when conversation.hangUp names no Session', asy
   ).toBe(runs);
 });
 
-it('shows the Operation label and description on the card', async () => {
+it('shows the Operation label and description on the card, with no Always allow for an Operation that does not opt in', async () => {
   expect(
     (await scoped({ id: 'session.clear', params: sessionOnly('unrelated') }))
       .cards,

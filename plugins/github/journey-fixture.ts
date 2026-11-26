@@ -43,6 +43,9 @@ export const secondSessionId = 'session-2';
 
 export const foreignSessionId = 'foreign-session';
 
+// A Session the Agent of `sessionId` started with session.new.
+export const startedSessionId = 'started-session';
+
 export const changesSlot = 'argo/session/changes/v1';
 
 export const rowSlot = 'argo/session/row/v1';
@@ -94,6 +97,12 @@ const sessionsOf = (): Sessions => ({
     title: 'Work',
   },
   [secondSessionId]: { projectId: project.id, branch: null, title: 'Other' },
+  [startedSessionId]: {
+    projectId: project.id,
+    branch: null,
+    title: 'Started',
+    startedBySessionId: sessionId,
+  },
   [foreignSessionId]: {
     projectId: otherProject.id,
     branch: null,
@@ -108,6 +117,7 @@ type Sessions = Record<
   | typeof sessionId
   | typeof secondSessionId
   | typeof foreignSessionId
+  | typeof startedSessionId
   | typeof gitlabSessionId,
   SessionState
 >;
