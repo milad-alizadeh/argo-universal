@@ -6,5 +6,6 @@ export {
   readOperationGrants,
   revokeOperationGrant,
   storedOperationGrants,
+  type GrantKey,
   type OperationGrants,
 } from './grants';

@@ -63,7 +63,6 @@ function useTodoListChange(): Sources['changeTodoList'] {
   );
 }
 
-// The Always allow grants, and revoking one, which reloads the list.
 function useOperationGrants(): Pick<Sources, 'grants' | 'revoke'> {
   const trpc = useTRPC(),
     cache = useQueryClient();

@@ -30,7 +30,6 @@ type Asking = {
   caller?: SessionCaller;
 };
 
-// Schedules into the foreign Session, giving every card the person's consent.
 async function asking({
   scope,
   consent,
