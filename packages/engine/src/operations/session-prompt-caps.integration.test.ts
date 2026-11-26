@@ -10,7 +10,7 @@ import {
 
 it('reserves the last running slot across concurrent child prompts and releases a denied attempt', async () => {
   const journey = await delegationJourney();
-  const running = await holdFourChildren(journey);
+  const running = await holdNineChildren(journey);
 
   const first = await startDelegated(journey);
   const second = await startDelegated(journey);
@@ -58,12 +58,12 @@ it('reserves the last running slot across concurrent child prompts and releases 
   });
 }, 30_000);
 
-async function holdFourChildren(
+async function holdNineChildren(
   journey: Awaited<ReturnType<typeof delegationJourney>>,
 ): Promise<Awaited<ReturnType<typeof startDelegated>>[]> {
   const running = [];
 
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < 9; index += 1) {
     const child = await startDelegated(journey);
     await holdSession(journey, child.sessionId);
     running.push(child);

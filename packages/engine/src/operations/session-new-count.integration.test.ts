@@ -8,11 +8,11 @@ import {
   startDelegated,
 } from '#mocks/session-delegation';
 
-it('blocks starts above five running Agents and releases capacity when one Turn ends', async () => {
+it('blocks starts above ten running Agents and releases capacity when one Turn ends', async () => {
   const journey = await delegationJourney();
   const children: string[] = [];
 
-  for (let index = 0; index < 5; index += 1) {
+  for (let index = 0; index < 10; index += 1) {
     const child = await startDelegated(journey);
     children.push(child.sessionId);
     await holdSession(journey, child.sessionId);
@@ -25,7 +25,7 @@ it('blocks starts above five running Agents and releases capacity when one Turn 
       id: 'session.new',
       params: {
         ...emptySessionInput,
-        prompt: [{ type: 'text', text: 'Sixth Agent' }],
+        prompt: [{ type: 'text', text: 'Eleventh Agent' }],
       },
     }),
   ).rejects.toMatchObject({
@@ -44,13 +44,13 @@ it('blocks starts above five running Agents and releases capacity when one Turn 
   expect(
     await journey.host.caller.session.get({ sessionId: replacement.sessionId }),
   ).toMatchObject({ startedBySessionId: journey.caller.sessionId });
-});
+}, 30_000);
 
-it('takes a Prompt to a running started Session while five run, since it steers or queues there', async () => {
+it('takes a Prompt to a running started Session while ten run, since it steers or queues there', async () => {
   const journey = await delegationJourney();
   const children: string[] = [];
 
-  for (let index = 0; index < 5; index += 1) {
+  for (let index = 0; index < 10; index += 1) {
     const child = await startDelegated(journey);
     children.push(child.sessionId);
     await holdSession(journey, child.sessionId);

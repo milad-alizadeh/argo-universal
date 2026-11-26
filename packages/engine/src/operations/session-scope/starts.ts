@@ -10,7 +10,7 @@ export type StartTarget =
 // A reserved running slot, held until the start or Prompt settles; `exceeded` says which limit refused it, and why.
 export type StartReservation = { exceeded: string | null; release: () => void };
 
-const maxRunningAgents = 5;
+const maxRunningAgents = 10;
 
 const maxDelegationDepth = 2;
 
@@ -19,7 +19,7 @@ const limitReached = 'The Session delegation limit has been reached';
 const noStart: StartReservation = { exceeded: null, release: () => {} };
 
 /*
- * The delegation limits: Agents at most 2 levels deep and 5 running at once, counting starts not yet settled. A
+ * The delegation limits: Agents at most 2 levels deep and 10 running at once, counting starts not yet settled. A
  * Prompt to a Session already running or being started steers or queues there, so it starts no Agent and takes no
  * slot.
  */

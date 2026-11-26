@@ -11,7 +11,7 @@ import {
 it('reserves the last running slot across concurrent Session starts before Agent launch completes', async () => {
   const journey = await delegationJourney();
 
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < 9; index += 1) {
     const child = await startDelegated(journey);
     await holdSession(journey, child.sessionId);
   }
@@ -54,4 +54,4 @@ it('reserves the last running slot across concurrent Session starts before Agent
       }),
     ]),
   );
-});
+}, 30_000);

@@ -67,7 +67,7 @@ it('starts with the new Session id it reserved', async () => {
   ]);
 });
 
-it('steers or queues onto a running Session the caller started, even with five of its Agents running', async () => {
+it('steers or queues onto a running Session the caller started, even with ten of its Agents running', async () => {
   expect(
     (await scoped(promptTo('full-agent-0'), sessionCaller('full'))).outcome,
   ).toBe(runs);
@@ -90,6 +90,6 @@ it('says what the running limit is, what holds it and how to free it', async () 
 
   expect(refusal).toMatchObject({ code: 'CONFLICT' });
   expect(String((refusal as Error).message)).toMatch(
-    /at most 5 .*full-agent-0.*full-agent-4.*session\.cancel/s,
+    /at most 10 .*full-agent-0.*full-agent-9.*session\.cancel/s,
   );
 });

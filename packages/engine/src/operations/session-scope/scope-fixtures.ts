@@ -28,10 +28,10 @@ const runningAgents = (
     ]),
   );
 
-// One below, and at, the five running Agents a caller may have.
-const belowLimit = 4;
+// One below, and at, the ten running Agents a caller may have.
+const belowLimit = 9;
 
-const atLimit = 5;
+const atLimit = 10;
 
 // Every Session is in Project p1 unless it says otherwise; foreign is in p2.
 const directory = memorySessionDirectory({
