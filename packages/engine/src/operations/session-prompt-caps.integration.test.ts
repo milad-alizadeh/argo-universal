@@ -42,7 +42,11 @@ it('reserves the last running slot across concurrent child prompts and releases 
     'rejected',
   ]);
   expect(results.find((result) => result.status === 'rejected')).toMatchObject({
-    reason: { message: 'The Session delegation limit has been reached' },
+    reason: {
+      message: expect.stringMatching(
+        /^The Session delegation limit has been reached: /,
+      ),
+    },
   });
   const stopped = running[0];
   assert(stopped);

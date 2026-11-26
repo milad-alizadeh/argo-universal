@@ -158,11 +158,8 @@ function requireWithinLimits(
   reserved: StartReservation,
   chainExceeded: boolean,
 ): void {
-  if (reserved.exceedsLimits)
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message: 'The Session delegation limit has been reached',
-    });
+  if (reserved.exceeded !== null)
+    throw new TRPCError({ code: 'CONFLICT', message: reserved.exceeded });
 
   if (chainExceeded)
     throw new TRPCError({

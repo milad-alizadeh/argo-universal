@@ -66,3 +66,30 @@ it('starts with the new Session id it reserved', async () => {
     },
   ]);
 });
+
+it('steers or queues onto a running Session the caller started, even with five of its Agents running', async () => {
+  expect(
+    (await scoped(promptTo('full-agent-0'), sessionCaller('full'))).outcome,
+  ).toBe(runs);
+});
+
+it('says what the running limit is, what holds it and how to free it', async () => {
+  const scope = newScope();
+  const refusal = await scope
+    .run(
+      {
+        caller: sessionCaller('full'),
+        call: { confirm: async () => {} },
+        invoke: async () => {
+          throw ran;
+        },
+      },
+      promptTo('full-idle'),
+    )
+    .catch((cause: unknown) => cause);
+
+  expect(refusal).toMatchObject({ code: 'CONFLICT' });
+  expect(String((refusal as Error).message)).toMatch(
+    /at most 5 .*full-agent-0.*full-agent-4.*session\.cancel/s,
+  );
+});

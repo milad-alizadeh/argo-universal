@@ -48,6 +48,7 @@ const directory = memorySessionDirectory({
   deep: { projectId: 'p1', startedBySessionId: 'middle' },
   busy: { projectId: 'p1', startedBySessionId: null },
   full: { projectId: 'p1', startedBySessionId: null },
+  'full-idle': { projectId: 'p1', startedBySessionId: 'full' },
   ...runningAgents('busy', belowLimit),
   ...runningAgents('full', atLimit),
 });

@@ -47,7 +47,9 @@ it('reserves the last running slot across concurrent Session starts before Agent
       expect.objectContaining({
         status: 'rejected',
         reason: expect.objectContaining({
-          message: 'The Session delegation limit has been reached',
+          message: expect.stringMatching(
+            /^The Session delegation limit has been reached: /,
+          ),
         }),
       }),
     ]),

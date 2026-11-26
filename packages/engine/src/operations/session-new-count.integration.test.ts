@@ -29,7 +29,9 @@ it('blocks starts above five running Agents and releases capacity when one Turn 
       },
     }),
   ).rejects.toMatchObject({
-    message: 'The Session delegation limit has been reached',
+    message: expect.stringMatching(
+      /^The Session delegation limit has been reached: /,
+    ),
     data: { code: 'CONFLICT' },
   });
   const first = children[0];
@@ -43,3 +45,30 @@ it('blocks starts above five running Agents and releases capacity when one Turn 
     await journey.host.caller.session.get({ sessionId: replacement.sessionId }),
   ).toMatchObject({ startedBySessionId: journey.caller.sessionId });
 });
+
+it('takes a Prompt to a running started Session while five run, since it steers or queues there', async () => {
+  const journey = await delegationJourney();
+  const children: string[] = [];
+
+  for (let index = 0; index < 5; index += 1) {
+    const child = await startDelegated(journey);
+    children.push(child.sessionId);
+    await holdSession(journey, child.sessionId);
+  }
+
+  await holdSession(journey, journey.caller.sessionId);
+  const [running] = children;
+
+  if (!running) throw new Error('Missing running Agent');
+
+  const landed = await runOperation(journey.caller.caller.operations, {
+    id: 'session.prompt',
+    params: {
+      sessionId: running,
+      prompt: [{ type: 'text', text: 'Steer this' }],
+      followThrough: false,
+    },
+  });
+
+  expect(JSON.stringify(landed)).toMatch(/steered|queued/);
+}, 30_000);
