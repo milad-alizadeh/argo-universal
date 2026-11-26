@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { onTestFinished } from 'vitest';
 import { pullOf, sha } from './github-fixture';
 
-export const repository = 'owner/repository';
+const repository = 'owner/repository';
 
 type Call = { endpoint: string; status: number };
 

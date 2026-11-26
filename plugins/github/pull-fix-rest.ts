@@ -1,7 +1,7 @@
 import type { PullLink } from './pull-store';
 
 // How long Auto-fix waits after a Session refused a Prompt before it tries that pull request again, doubling to an hour.
-export const firstRestMs = 300_000;
+const firstRestMs = 300_000;
 
 const longestRestMs = 3_600_000;
 

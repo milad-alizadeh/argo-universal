@@ -1,10 +1,10 @@
 import type { QueryRead } from './query-types';
 
 // Below this share of a rate limit left, a background pass and a Watch are served what was kept.
-export const backgroundFloor = 0.25;
+const backgroundFloor = 0.25;
 
 // Below this share, only what a page on screen, a Slot and an Operation run ask for is read.
-export const onScreenFloor = 0.1;
+const onScreenFloor = 0.1;
 
 // A draw no page holds is a background pass or a Watch, which nobody waits on.
 const isBackground = ({ draw, holder }: QueryRead): boolean =>
