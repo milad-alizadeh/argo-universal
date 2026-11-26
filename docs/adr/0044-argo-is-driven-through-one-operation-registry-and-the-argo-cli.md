@@ -87,3 +87,11 @@ Owner amendment, 2026-11-18: [ADR-0064](0064-a-conversation-belongs-to-the-serve
 ## Conditional approval for Plugin Operations
 
 Amendment, 2026-11-21 (#2509, awaiting owner confirmation): an `ask` Plugin Operation may declare `askWhen`, naming one choice param and the values that still ask. A run with any other value runs as `allow` does, with no Permission request and no active Turn, so an idle Session can make it. Discovery reports the condition and keeps such an Operation enabled. `github.automationSet` asks only for `kind: merge`, because GitHub may merge the pull request at once; Auto-fix and Auto-archive only prompt or archive the Session and do not ask. Whether the person asked for the automation is not checked: an Agent may turn them on unprompted, as it may attach a pull request. A Session still acts only for itself.
+
+## Orchestration limits and Sessions a caller started
+
+Amendment, 2026-11-26 (owner request, awaiting owner confirmation): an orchestrating Session watching about eight Sessions it started was refused both `session.new` and a steer with "The Session delegation limit has been reached", and fell back to scheduling Prompts, each of which asked the person. The limits stay, and still bound a cascade; three things change.
+
+- **A Prompt to a Session already running or starting does not count.** It steers or queues on that Session's prompt queue and starts no Agent, so it takes no running slot. A Prompt that starts a Turn in an idle Session it started still counts.
+- **The running limit is ten, not five.** The delegation depth stays at two. A refusal names the limit, the Sessions holding it, and how to free one: wait for a Turn to end or run `session.cancel`.
+- **A Plugin Operation may act for a Session its caller started.** Plugins read `startedBySessionId`, and the GitHub Plugin acts for the caller's own Session or one the caller started, so an orchestrator can attach the pull request a started Session opened. Any other Session is still refused.
