@@ -2,7 +2,7 @@ import type {
   PendingPermission,
   SessionAnswerPermissionInput,
 } from '@repo/contracts';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import type { PermissionRequestProps } from '#features/requests';
 import { type SessionRequest, useRequestAnswer } from './use-request-answer';
@@ -17,10 +17,18 @@ type SessionPermission = SessionRequest<PendingPermission> & {
 export function useSessionPermission(
   props: SessionPermission,
 ): PermissionRequestProps | undefined {
-  const trpc = useTRPC();
+  const trpc = useTRPC(),
+    cache = useQueryClient();
 
+  // Always allow may have recorded a grant, which Settings › Agent access lists.
   const mutation = useMutation(
     trpc.session.answerPermission.mutationOptions({
+      onSuccess: (_data, { optionId }) =>
+        optionId === 'allow_always'
+          ? cache.invalidateQueries({
+              queryKey: trpc.agent.listGrants.queryKey(),
+            })
+          : undefined,
       onSettled: props.resumeAfterCommand,
     }),
   );

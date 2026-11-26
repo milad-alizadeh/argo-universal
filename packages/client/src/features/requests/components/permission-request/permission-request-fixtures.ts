@@ -69,7 +69,7 @@ export const argoAlwaysAllowPermission = {
     operation: {
       id: 'session.schedulePrompt',
       description:
-        'Schedule a follow-up in an existing Session. Use onceAt for Once or intervalSeconds for Interval.',
+        'Schedule a follow-up in an existing Session. Use onceAt for Once or intervalSeconds for Interval. Always allow lets Sessions started in argo-universal run Schedule Prompt in support-bot without asking, until you revoke it in Settings › Agent access.',
       input: '{"sessionId":"review-session","onceAt":1795600060000}',
     },
     options: [

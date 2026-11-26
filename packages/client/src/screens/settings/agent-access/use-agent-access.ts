@@ -67,7 +67,11 @@ function useOperationGrants(): Pick<Sources, 'grants' | 'revoke'> {
   const trpc = useTRPC(),
     cache = useQueryClient();
 
-  const grants = useQuery(trpc.agent.listGrants.queryOptions());
+  // Read again whenever Settings opens, since a Permission answer elsewhere adds grants.
+  const grants = useQuery({
+    ...trpc.agent.listGrants.queryOptions(),
+    refetchOnMount: 'always',
+  });
 
   const revoke = useMutation(
     trpc.agent.revokeGrant.mutationOptions({
@@ -99,8 +103,8 @@ function controlState(sources: Sources): Omit<Controls, 'access'> {
     ...progress(sources),
     todoList: todoList.data?.enabled,
     grants: grants.data,
-    onRevokeGrant: ({ projectId, operationId }) =>
-      revoke.mutate({ projectId, operationId }),
+    onRevokeGrant: ({ projectId, operationId, targetProjectId }) =>
+      revoke.mutate({ projectId, operationId, targetProjectId }),
     onTodoListChange: (enabled) => changeTodoList.mutate({ enabled }),
     onEnabledChange: (enabled) => change.mutate({ enabled }),
     onInstall: () => install.mutate(),

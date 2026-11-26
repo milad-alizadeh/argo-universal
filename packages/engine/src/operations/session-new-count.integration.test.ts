@@ -70,5 +70,15 @@ it('takes a Prompt to a running started Session while ten run, since it steers o
     },
   });
 
-  expect(JSON.stringify(landed)).toMatch(/steered|queued/);
+  expect(landed).toEqual({
+    kind: 'operation_execution',
+    id: expect.stringMatching(/^turn:/),
+    status: 'still_running',
+    result: {
+      sessionId: running,
+      status: 'queued',
+      messageId: expect.any(String),
+      notSteered: null,
+    },
+  });
 }, 30_000);

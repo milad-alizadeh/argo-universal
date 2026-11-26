@@ -44,6 +44,10 @@ const directory = memorySessionDirectory({
   started: { projectId: 'p1', startedBySessionId: 'caller' },
   unrelated: { projectId: 'p1', startedBySessionId: null },
   foreign: { projectId: 'p2', startedBySessionId: 'caller' },
+  // A Session in p1 that a Session in p2 started, and a Session in a third Project.
+  outsider: { projectId: 'p2', startedBySessionId: null },
+  imported: { projectId: 'p1', startedBySessionId: 'outsider' },
+  far: { projectId: 'p3', startedBySessionId: null },
   opening: { projectId: 'p1', startedBySessionId: 'caller', opening: true },
   middle: { projectId: 'p1', startedBySessionId: 'started' },
   deep: { projectId: 'p1', startedBySessionId: 'middle' },
@@ -54,8 +58,11 @@ const directory = memorySessionDirectory({
   ...runningAgents('full', atLimit),
 });
 
-const grantKey = ({ projectId, operationId }: GrantKey): string =>
-  `${projectId}/${operationId}`;
+const grantKey = ({
+  projectId,
+  operationId,
+  targetProjectId,
+}: GrantKey): string => `${projectId}/${operationId}/${targetProjectId}`;
 
 export const memoryGrants = (): OperationGrants => {
   const granted = new Set<string>();
@@ -65,6 +72,7 @@ export const memoryGrants = (): OperationGrants => {
     grant: async (grant) => {
       granted.add(grantKey(grant));
     },
+    projectName: (projectId) => `Project ${projectId}`,
   };
 };
 
@@ -155,7 +163,7 @@ export async function scoped(
 ): Promise<Scoped> {
   const cards: OperationCard[] = [];
   const invoked: unknown[] = [];
-  const call = { confirm: refusing(cards) };
+  const call = { confirm: refusing(cards), canConfirm: true };
 
   const outcome = await scope
     .run({ caller, call, invoke: recording(invoked) }, operation)

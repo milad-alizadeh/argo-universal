@@ -1,7 +1,7 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "b65df866-977d-4c85-b410-671bf6ea2470",
+  "id": "120b955b-9c29-4e0f-ad37-9fe87e62e269",
   "prevIds": [
     "b4cd68d4-dd3b-4707-afb5-589283678b7e"
   ],
@@ -1959,6 +1959,16 @@
       "table": "operation_grant"
     },
     {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_project_id",
+      "entityType": "columns",
+      "table": "operation_grant"
+    },
+    {
       "type": "integer",
       "notNull": true,
       "autoincrement": false,
@@ -2379,6 +2389,21 @@
     },
     {
       "columns": [
+        "target_project_id"
+      ],
+      "tableTo": "project",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_operation_grant_target_project_id_project_id_fk",
+      "entityType": "fks",
+      "table": "operation_grant"
+    },
+    {
+      "columns": [
         "blob_id",
         "session_id"
       ],
@@ -2451,7 +2476,8 @@
     {
       "columns": [
         "project_id",
-        "operation_id"
+        "operation_id",
+        "target_project_id"
       ],
       "nameExplicit": false,
       "name": "operation_grant_pk",

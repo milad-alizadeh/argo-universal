@@ -6,12 +6,17 @@ export const AgentAccess = agentAccessColumns.pick({ enabled: true });
 
 export type AgentAccess = z.infer<typeof AgentAccess>;
 
-// An Operation the person chose Always allow for: Sessions in this Project run it without asking again.
+/*
+ * An Operation the person chose Always allow for: Sessions whose delegation chain starts in `projectId` run it into
+ * `targetProjectId` without asking again.
+ */
 export const OperationGrant = z.strictObject({
   projectId: z.string(),
   projectName: z.string(),
   operationId: z.string(),
   label: z.string(),
+  targetProjectId: z.string(),
+  targetProjectName: z.string(),
   createdAt: z.number(),
 });
 
@@ -20,6 +25,7 @@ export type OperationGrant = z.infer<typeof OperationGrant>;
 const OperationGrantTarget = OperationGrant.pick({
   projectId: true,
   operationId: true,
+  targetProjectId: true,
 }).strict();
 
 export const agentAccessOperations = {

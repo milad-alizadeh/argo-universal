@@ -3,6 +3,7 @@ import { operations } from '@repo/contracts/operations';
 import type { Database } from '@repo/db';
 import { operationGrant, project } from '@repo/db/schema';
 import { and, asc, eq } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import {
   writeDatabaseJobAndWaitForCommit,
   type StorageTransaction,
@@ -10,13 +11,17 @@ import {
   type WriterJob,
 } from '../storage';
 
-// One Always allow choice: Sessions in this Project run this Operation without a Permission request.
-export type GrantKey = Pick<OperationGrant, 'projectId' | 'operationId'>;
+// One Always allow choice: Sessions started from this Project run this Operation into the target Project without asking.
+export type GrantKey = Pick<
+  OperationGrant,
+  'projectId' | 'operationId' | 'targetProjectId'
+>;
 
-// Always allow grants, as the Session scope reads and records them (ADR-0044, Always allow).
+// Always allow grants, as the Session scope reads and records them, and the Project names its card states (ADR-0044).
 export type OperationGrants = {
   granted: (key: GrantKey) => boolean;
   grant: (key: GrantKey) => Promise<void>;
+  projectName: (projectId: string) => string;
 };
 
 export function storedOperationGrants(
@@ -26,21 +31,32 @@ export function storedOperationGrants(
   return {
     granted: (key) => hasOperationGrant(database, key),
     grant: (key) => writeDatabaseJobAndWaitForCommit(writer, new GrantJob(key)),
+    projectName: (projectId) => readProjectName(database, projectId),
   };
 }
 
-function hasOperationGrant(
-  database: Database,
-  { projectId, operationId }: GrantKey,
-): boolean {
+// A Project that is gone is named by its id.
+function readProjectName(database: Database, projectId: string): string {
+  return (
+    database
+      .select({ name: project.name })
+      .from(project)
+      .where(eq(project.id, projectId))
+      .get()?.name ?? projectId
+  );
+}
+
+function hasOperationGrant(database: Database, key: GrantKey): boolean {
   return (
     database
       .select({ projectId: operationGrant.projectId })
       .from(operationGrant)
-      .where(grantRow({ projectId, operationId }))
+      .where(grantRow(key))
       .get() !== undefined
   );
 }
+
+const targetProject = alias(project, 'target_project');
 
 export function readOperationGrants(database: Database): OperationGrant[] {
   return database
@@ -48,10 +64,16 @@ export function readOperationGrants(database: Database): OperationGrant[] {
       projectId: operationGrant.projectId,
       projectName: project.name,
       operationId: operationGrant.operationId,
+      targetProjectId: operationGrant.targetProjectId,
+      targetProjectName: targetProject.name,
       createdAt: operationGrant.createdAt,
     })
     .from(operationGrant)
     .innerJoin(project, eq(project.id, operationGrant.projectId))
+    .innerJoin(
+      targetProject,
+      eq(targetProject.id, operationGrant.targetProjectId),
+    )
     .orderBy(asc(operationGrant.createdAt), asc(operationGrant.operationId))
     .all()
     .map((row) => ({ ...row, label: operationLabel(row.operationId) }));
@@ -74,10 +96,12 @@ const operationLabel = (id: string): string =>
 const grantRow = ({
   projectId,
   operationId,
+  targetProjectId,
 }: GrantKey): ReturnType<typeof and> =>
   and(
     eq(operationGrant.projectId, projectId),
     eq(operationGrant.operationId, operationId),
+    eq(operationGrant.targetProjectId, targetProjectId),
   );
 
 class GrantJob implements WriterJob {

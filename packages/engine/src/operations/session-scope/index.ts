@@ -6,9 +6,9 @@ import type { OperationParams, OperationResult } from '../implementations';
 import { isNativeStartOperation, type NativeStartId } from '../native-start';
 import { operationPermission } from '../operation-permission';
 import { validateParams } from '../params';
+import { cardFor, grantFor, record } from './always-allow';
 import type { ScopedRun } from './confirmation';
 import { Delegation, type ScopePorts } from './delegation';
-import { operationCard } from './rules';
 import { scopedParams } from './targets';
 
 export { PromptChains } from './prompt-chain';
@@ -37,9 +37,11 @@ const terminalTarget = z.object({
   shellId: z.string().optional(),
 });
 
+// The policy that applies to this call, and the Project the call acts in.
 type Admission = {
   id: OperationId;
   policy: ReturnType<typeof operationPermission>;
+  targetProjectId: string;
 };
 
 // The registry policy decides whether a Session token’s Operation asks first (ADR-0044).
@@ -55,8 +57,9 @@ export class SessionScope {
   ): Promise<OperationResult> {
     if (isNativeStartOperation(id)) {
       const policy = operationPermission(operations[id].policy, false);
+      const targetProjectId = context.caller.projectId;
 
-      return this.permitted(context, { id, policy }, () =>
+      return this.permitted(context, { id, policy, targetProjectId }, () =>
         this.delegation.run(context, { id, params }),
       );
     }
@@ -84,9 +87,9 @@ export class SessionScope {
   ): Promise<Result> {
     const scoped = scopedParams(id, params, context.caller);
     this.admitTerminal(context.caller.sessionId, id, scoped);
-    const policy = this.permission(context, id, scoped);
+    const admission = this.admission(context, id, scoped);
 
-    return this.permitted(context, { id, policy }, () => invoke(scoped));
+    return this.permitted(context, admission, () => invoke(scoped));
   }
   // An Agent may read a shell in its Checkout. An Agent never types into a person's shell (ADR-0063).
   private admitTerminal(
@@ -106,57 +109,57 @@ export class SessionScope {
       });
   }
   /*
-   * An Operation that asks runs once the person allows it. Always allow records a grant for the caller's Project,
-   * where the Session token's scope already ends, so its other Sessions run that Operation without asking again.
+   * An Operation that asks runs once the person allows it. Always allow records a grant, for an Operation that opts
+   * in, keyed by the caller's Project and the Project the call acts in; a granted call still needs the calling
+   * Session's active Turn, as discovery says (ADR-0044).
    */
   private async permitted<Result>(
     { caller, call }: ScopedRun,
-    { id, policy }: Admission,
+    { id, policy, targetProjectId }: Admission,
     invoke: () => Promise<Result>,
   ): Promise<Result> {
     if (policy !== 'ask') return invoke();
 
-    const grant = { projectId: caller.projectId, operationId: id };
+    const grant = grantFor(this.ports, { caller, id, targetProjectId });
 
-    if (this.ports.grants.granted(grant)) return invoke();
+    if (grant && call.canConfirm && this.ports.grants.granted(grant))
+      return invoke();
 
-    const consent = await call.confirm({
-      ...operationCard(id),
-      alwaysAllow: true,
-    });
+    const consent = await call.confirm(cardFor(this.ports, id, grant));
 
-    if (consent === 'always') await this.ports.grants.grant(grant);
+    if (consent === 'always' && grant) await record(this.ports, grant);
 
     return invoke();
   }
-  private permission(
+  private admission(
     context: ScopedRun,
     id: OperationId,
     params: OperationParams,
-  ): ReturnType<typeof operationPermission> {
+  ): Admission {
     const { policy } = operations[id];
+    const own = context.caller.projectId;
 
     if (policy !== 'ask-outside-project')
-      return operationPermission(policy, false);
+      return {
+        id,
+        policy: operationPermission(policy, false),
+        targetProjectId: own,
+      };
 
-    if (id.startsWith('project.')) {
-      const { projectId } = projectTarget.parse(params);
+    const targetProjectId = this.targetProject(id, params);
 
-      return operationPermission(
-        policy,
-        false,
-        projectId !== context.caller.projectId,
-      );
-    }
+    return {
+      id,
+      policy: operationPermission(policy, false, targetProjectId !== own),
+      targetProjectId,
+    };
+  }
+  private targetProject(id: OperationId, params: OperationParams): string {
+    if (id.startsWith('project.')) return projectTarget.parse(params).projectId;
 
     const { sessionId } = sessionTarget.parse(params);
-    const target = this.ports.directory.session(sessionId);
 
-    return operationPermission(
-      policy,
-      false,
-      target.projectId !== context.caller.projectId,
-    );
+    return this.ports.directory.session(sessionId).projectId;
   }
 }
 

@@ -160,6 +160,11 @@
       "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
     },
     {
+      // An Always allow grant that cannot be written is logged at warn, and the call runs as Allow once (ADR-0044).
+      "files": ["packages/engine/src/operations/session-scope/always-allow.ts"],
+      "rules": { "no-console": ["error", { "allow": ["warn"] }] }
+    },
+    {
       // Logs expected App socket closes for diagnosis at info level, without an error overlay.
       "files": ["packages/contracts/src/app-web-socket.ts"],
       "rules": { "no-console": ["error", { "allow": ["info"] }] }

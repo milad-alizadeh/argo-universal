@@ -81,6 +81,8 @@ export interface OperationDefinition {
   result: z.ZodType;
   tier: OperationTier;
   policy: OperationPolicy;
+  // The Permission request also offers Always allow, which the person can revoke in Settings (ADR-0044).
+  alwaysAllowable?: true;
   keywords: readonly string[];
   imageVisibility?: ImageVisibility;
 }

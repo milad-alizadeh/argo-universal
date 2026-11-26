@@ -1,10 +1,12 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { AgentAccessDetailView } from './agent-access-detail-view';
 import { scheduleGrant } from './agent-access-detail-view-fixtures';
 
 const installLabel = 'Add Argo to your Agents';
+
+const body = within(document.body);
 
 const accessSwitch = { name: 'Agent access to Argo' };
 
@@ -48,11 +50,29 @@ export const ChangesAccessAndInstallsOnlyWhenPressed: Story = {
   },
 };
 
-export const RevokesAnAlwaysAllowGrant: Story = {
+export const RevokeAsksFirstAndCancelKeepsTheGrant: Story = {
   args: { grants: [scheduleGrant] },
   play: async ({ canvas, args, userEvent }) => {
-    await expect(canvas.getByText('argo-universal')).toBeVisible();
+    await expect(
+      canvas.getByText('argo-universal → support-bot'),
+    ).toBeVisible();
     await userEvent.click(canvas.getByText('Schedule Prompt'));
+
+    const alert = within(await body.findByRole('dialog'));
+
+    await userEvent.click(alert.getByRole('button', { name: 'Cancel' }));
+    await expect(args.onRevokeGrant).not.toHaveBeenCalled();
+  },
+};
+
+export const ConfirmingRevokesTheGrant: Story = {
+  args: { grants: [scheduleGrant] },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByText('Schedule Prompt'));
+
+    const alert = within(await body.findByRole('dialog'));
+
+    await userEvent.click(alert.getByRole('button', { name: 'Revoke' }));
     await expect(args.onRevokeGrant).toHaveBeenCalledWith(scheduleGrant);
   },
 };

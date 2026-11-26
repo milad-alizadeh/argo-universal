@@ -4,6 +4,7 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { GrantsSection } from './agent-access-grants';
 
 export type AgentAccessLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
@@ -39,7 +40,10 @@ export function AgentAccessDetailView(
         {accessSection(props)}
         {todoListSection(props)}
         {screenSightSection(props)}
-        {grantsSection(props)}
+        <GrantsSection
+          grants={props.grants}
+          onRevokeGrant={props.onRevokeGrant}
+        />
         {instructionsSection(props)}
         {statusSection(props)}
       </FieldGroup>
@@ -105,37 +109,6 @@ function screenSightSection(
         value={props.screenSight === true}
         onValueChange={onChange}
       />
-    </FieldGroup.Section>
-  );
-}
-
-const grantsFooter = {
-  some: 'Sessions in each Project run these Operations without asking. Revoke one to be asked again.',
-  none: 'When you choose Always allow on a Permission request, Sessions in that Project run the Operation without asking, and it is listed here to revoke.',
-};
-
-function grantsSection(
-  props: AgentAccessDetailViewProps,
-): React.JSX.Element | null {
-  const grants = props.grants;
-
-  if (!grants) return null;
-
-  return (
-    <FieldGroup.Section
-      title="Always allowed"
-      footer={grants.length > 0 ? grantsFooter.some : grantsFooter.none}
-    >
-      {grants.map((grant) => (
-        <FieldGroup.Link
-          key={`${grant.projectId}/${grant.operationId}`}
-          title={grant.label}
-          subtitle={grant.projectName}
-          value="Revoke"
-          action
-          onPress={() => props.onRevokeGrant(grant)}
-        />
-      ))}
     </FieldGroup.Section>
   );
 }

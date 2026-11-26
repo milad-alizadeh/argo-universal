@@ -44,7 +44,7 @@ it('counts a start still being admitted against the running Agents until it sett
     .run(
       {
         caller: busy,
-        call: { confirm: async () => 'once' as const },
+        call: { confirm: async () => 'once' as const, canConfirm: true },
         invoke: () => held.promise,
       },
       startIn('p1'),
@@ -80,7 +80,7 @@ it('says what the running limit is, what holds it and how to free it', async () 
     .run(
       {
         caller: sessionCaller('full'),
-        call: { confirm: async () => 'once' as const },
+        call: { confirm: async () => 'once' as const, canConfirm: true },
         invoke: async () => {
           throw ran;
         },
