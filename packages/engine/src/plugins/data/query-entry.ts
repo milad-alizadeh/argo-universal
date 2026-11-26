@@ -61,7 +61,7 @@ export class QueryEntry {
   // Whether a rate limit running low holds the read back, so it is served what was kept and nothing is asked.
   private saving(read: QueryRead): boolean {
     return (
-      this.servable(undefined) &&
+      this.servable() &&
       heldBack(read, this.services.services.budgetLeft(this.owner.pluginId))
     );
   }
@@ -84,7 +84,7 @@ export class QueryEntry {
    * An answer to serve while a fresh one is read: one the last read did not fail, and not a paged list's that is due
    * or old, which only a draw can read.
    */
-  private servable(every: number | undefined): boolean {
+  private servable(every?: number): boolean {
     return (
       this.state.data !== undefined &&
       this.state.error === undefined &&

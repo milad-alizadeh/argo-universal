@@ -8,14 +8,14 @@ export const repository = 'owner/repository';
 
 type Call = { endpoint: string; status: number };
 
-// The answers the fixture's `gh` gives, by endpoint: the repository, each pull request and its head's Check runs.
-function responsesOf(numbers: readonly number[]): Record<string, unknown> {
+// The answers the fixture's `gh` gives as JSON, by endpoint: the repository, each pull request and its head's Check runs.
+function responsesOf(numbers: readonly number[]): string {
   const pulls = numbers.map((number) => [
     `repos/${repository}/pulls/${number}`,
     pullOf(repository, number)[1],
   ]);
 
-  return {
+  return JSON.stringify({
     [`repos/${repository}`]: {},
     [`repos/${repository}/commits/${sha}/check-runs?per_page=100`]: {
       total_count: 1,
@@ -24,7 +24,7 @@ function responsesOf(numbers: readonly number[]): Record<string, unknown> {
       ],
     },
     ...Object.fromEntries(pulls),
-  };
+  });
 }
 
 /*
@@ -33,14 +33,14 @@ function responsesOf(numbers: readonly number[]): Record<string, unknown> {
  * with its status.
  */
 const scriptOf = (
-  responses: Record<string, unknown>,
+  responses: string,
   log: string,
 ): string => `#!/usr/bin/env node
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const argv = process.argv.slice(2);
 const endpoint = argv.at(-1);
-const data = ${JSON.stringify(responses)}[endpoint];
+const data = ${responses}[endpoint];
 const asked = argv.flatMap((arg, i) => argv[i - 1] === '-H' && /^if-none-match:/i.test(arg) ? [arg.replace(/^if-none-match:\\s*/i, '')] : [])[0];
 const log = ${JSON.stringify(log)};
 const spent = (fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '').split('\\n').filter((line) => line.endsWith(' 200')).length;
@@ -94,5 +94,7 @@ export async function cliCallsOf(directory: string): Promise<Call[]> {
 }
 
 // The calls GitHub would have counted against the rate limit: all but its 304s.
+const notModified = 304;
+
 export const spentOf = (calls: readonly Call[]): number =>
-  calls.filter(({ status }) => status !== 304).length;
+  calls.filter(({ status }) => status !== notModified).length;

@@ -62,13 +62,15 @@ function ghOf(first: ProcessResult): Gh {
   };
 }
 
+const pullOne = 'repos/o/r/pulls/1';
+
 const cacheAt = (now = 1_000_000): GitHubCliCache =>
   new GitHubCliCache(new PluginFetchCache({ now: () => now }));
 
 describe('GitHub CLI reads', () => {
   it('asks gh again with the kept ETag, and a 304 answers what the first read printed', async () => {
     const cache = cacheAt();
-    const endpoint = 'repos/o/r/pulls/1';
+    const endpoint = pullOne;
     const gh = ghOf(printed('200 OK', { Etag: '"a"' }, '{"title":"One"}'));
 
     const first = await cache.run(readOf(endpoint), gh.run);
@@ -90,7 +92,7 @@ describe('GitHub CLI reads', () => {
 
   it('keeps a changed answer over the old one', async () => {
     const cache = cacheAt();
-    const endpoint = 'repos/o/r/pulls/1';
+    const endpoint = pullOne;
     const gh = ghOf(printed('200 OK', { Etag: '"a"' }, '{"title":"One"}'));
 
     await cache.run(readOf(endpoint), gh.run);
@@ -117,6 +119,7 @@ describe('GitHub CLI reads', () => {
 
   it('runs gh no more while GitHub says the limit is spent', async () => {
     const cache = cacheAt();
+
     const gh = ghOf(
       printed('403 Forbidden', {
         'X-RateLimit-Remaining': '0',
@@ -124,7 +127,7 @@ describe('GitHub CLI reads', () => {
       }),
     );
 
-    await cache.run(readOf('repos/o/r/pulls/1'), gh.run);
+    await cache.run(readOf(pullOne), gh.run);
     const refused = await cache.run(readOf('repos/o/r/pulls/2'), gh.run);
 
     expect(gh.argvs).toHaveLength(1);

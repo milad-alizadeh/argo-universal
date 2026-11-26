@@ -84,6 +84,7 @@ const printed = (status: string, etag: string, body = ''): ProcessResult => ({
 
 it('asks gh again with the kept ETag, so a preview GitHub has not changed costs no rate limit', async () => {
   const argvs: string[][] = [];
+
   const answers = [
     printed('200 OK', '"a"', JSON.stringify(item)),
     printed('304 Not Modified', '"a"'),

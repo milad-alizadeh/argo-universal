@@ -4,11 +4,19 @@ import { hopOf, reply, service } from './plugin-fetch-cache-fixtures';
 // The fixture clock starts at 1,000 seconds; a limit that resets an hour later.
 const resetSecond = 4600;
 
+// The rate-limit headers GitHub sends with each reply.
+type Limits = {
+  'X-RateLimit-Limit': string;
+  'X-RateLimit-Remaining': string;
+  'X-RateLimit-Reset': string;
+  'X-RateLimit-Resource': string;
+};
+
 const limits = (
   remaining: number,
   resource = 'core',
   reset = resetSecond,
-): Record<string, string> => ({
+): Limits => ({
   'X-RateLimit-Limit': '5000',
   'X-RateLimit-Remaining': String(remaining),
   'X-RateLimit-Reset': String(reset),

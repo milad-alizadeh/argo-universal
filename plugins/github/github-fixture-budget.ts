@@ -14,17 +14,23 @@ const notModifiedStatus = 304;
 const resetSeconds = 4_000_000_000;
 
 const etagOf = (answer: FixtureAnswer): string =>
-  `"${createHash('sha1')
+  `"${createHash('sha256')
     .update(JSON.stringify(answer.json ?? answer.text ?? null))
     .digest('hex')}"`;
 
 const resourceOf = (path: string): string =>
   path === '/graphql' ? 'graphql' : 'core';
 
-const limitHeaders = (
-  budget: FixtureBudget,
-  path: string,
-): Record<string, string> => ({
+// The rate-limit headers GitHub sends with each answer.
+type LimitHeaders = {
+  'x-ratelimit-limit': string;
+  'x-ratelimit-remaining': string;
+  'x-ratelimit-used': string;
+  'x-ratelimit-reset': string;
+  'x-ratelimit-resource': string;
+};
+
+const limitHeaders = (budget: FixtureBudget, path: string): LimitHeaders => ({
   'x-ratelimit-limit': String(budget.limit),
   'x-ratelimit-remaining': String(Math.max(budget.limit - budget.used, 0)),
   'x-ratelimit-used': String(budget.used),

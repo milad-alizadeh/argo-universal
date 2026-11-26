@@ -14,7 +14,6 @@ export const pluginId = 'tracker';
 // Named reads run in the worker, so no Server service is asked.
 const refused: PluginReply = { ok: false, error: 'No services' };
 
-// What a test makes go wrong: reads that throw before the worker is asked, and the time a rate limit reopens.
 // What goes wrong for the next reads, and what share of a rate limit the Plugin's calls last had left.
 type Faults = { broken: boolean; limitedUntil?: number; budgetLeft?: number };
 

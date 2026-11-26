@@ -4,7 +4,11 @@ import { z } from 'zod';
 import { shellEnvironment } from '../agents';
 import type { CheckedCommand } from '../plugins/access/plugin-access';
 import { realClock } from '../plugins/clock';
-import { GitHubCliCache } from '../plugins/services/github-cli-cache';
+import {
+  GitHubCliCache,
+  printedBody,
+  readForm,
+} from '../plugins/services/github-cli-cache';
 import { PluginFetchCache } from '../plugins/services/plugin-fetch-cache';
 import { PluginProcesses } from '../plugins/services/plugin-processes';
 import { GitCommit, type GitData, GitItem } from './github';
@@ -57,7 +61,7 @@ export function githubOutput(run: Run): GitHubCommand {
   const cache = new GitHubCliCache(new PluginFetchCache(realClock));
 
   return async (path) =>
-    bodyOf(successfulOutput(await cache.run(await ghCommand(path), run)));
+    printedBody(successfulOutput(await cache.run(await ghCommand(path), run)));
 }
 
 const ghOutput = githubOutput(runOnce);
@@ -70,26 +74,12 @@ async function ghCommand(path: string): Promise<CheckedCommand> {
   );
 
   return {
-    argv: [
-      'gh',
-      'api',
-      '--hostname',
-      'github.com',
-      '--method',
-      'GET',
-      '--include',
-      '--',
-      path,
-    ],
+    argv: [...readForm, path],
     cwd: process.cwd(),
     env: Object.fromEntries(entries),
     timeoutMs,
   };
 }
-
-// What follows the status line and headers `--include` prints.
-const bodyOf = (stdout: string): string =>
-  stdout.replace(/^HTTP\/\S+ [^\r\n]*\r?\n[\s\S]*?\r?\n\r?\n/, '');
 
 const missingGh = z.object({
   code: z.literal('ENOENT'),

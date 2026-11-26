@@ -3,7 +3,9 @@
   "include": [
     "**/*.test.ts",
     "attach-again-fixture.ts",
+    "github-cli-budget-fixture.ts",
     "github-cli-fixture.ts",
+    "github-fixture-budget.ts",
     "github-fixture-rest.ts",
     "github-fixture.ts",
     "journey-archive-fixture.ts",

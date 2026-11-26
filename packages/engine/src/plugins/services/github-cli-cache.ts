@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type {
   FetchReply,
   ProcessResult,
@@ -8,7 +9,7 @@ import type { Hop } from './plugin-fetch-response';
 import { lower } from './plugin-rate-limit';
 
 // The one `gh` read core knows (`github-cli-read-command.ts`): one GET of one endpoint, with the answer's headers printed.
-const readForm = [
+export const readForm = [
   'gh',
   'api',
   '--hostname',
@@ -42,9 +43,15 @@ const endpointOf = (argv: readonly string[]): string | undefined =>
     ? argv[readForm.length]
     : undefined;
 
-// A login the Plugin names in the command's environment is its own credential; otherwise the CLI's signed-in one.
-const loginOf = ({ env }: CheckedCommand): string =>
-  env.GH_TOKEN ?? env.GITHUB_TOKEN ?? 'signed-in';
+/*
+ * A token the Plugin names in the command's environment is its own credential; otherwise the CLI's signed-in one. Only
+ * its hash is kept, as the key its answers and rate limit are kept by.
+ */
+const loginOf = ({ env }: CheckedCommand): string => {
+  const token = env.GH_TOKEN ?? env.GITHUB_TOKEN;
+
+  return token ? createHash('sha256').update(token).digest('hex') : 'signed-in';
+};
 
 const hopOf = (endpoint: string, command: CheckedCommand): Hop => ({
   url: new URL(`https://api.github.com/${endpoint}`),
@@ -92,6 +99,10 @@ function conditional(argv: readonly string[], sent: Hop): string[] {
 
   return [...argv.slice(0, -2), ...asks, ...argv.slice(-2)];
 }
+
+// What follows the status line and headers `--include` prints.
+export const printedBody = (stdout: string): string =>
+  stdout.replace(printedHead, '');
 
 const printed = (reply: FetchReply, exitCode: number): ProcessResult => ({
   exitCode,
