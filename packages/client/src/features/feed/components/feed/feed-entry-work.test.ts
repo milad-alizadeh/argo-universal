@@ -1,7 +1,7 @@
 import type { LiveHeader } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { FeedViewItem } from '../../view/feed-view';
-import { completedCommand } from '../tool-call.mocks';
+import { completedCommand, runningCommand } from '../tool-call.mocks';
 import { withLiveHeader } from './feed-entry';
 
 const working: LiveHeader = {
@@ -56,5 +56,36 @@ describe('withLiveHeader beside a lone Tool call', () => {
       exploring,
       { type: 'live_header', liveHeader: thought, toolCall: undefined },
     ]);
+  });
+});
+
+// A Conversation steers the person's words into the running Turn, below the Tool call still running.
+describe('withLiveHeader below the person’s words', () => {
+  it('draws no second line for the Tool call already drawn above', () => {
+    const running: LiveHeader = {
+      text: runningCommand.title,
+      source: { type: 'tool_call', toolCallId: runningCommand.toolCallId },
+      startedAt: 1_000,
+    };
+
+    const drawn: FeedViewItem[] = [
+      { type: 'tool_call', row: runningCommand },
+      {
+        type: 'row',
+        row: {
+          id: 'spoken',
+          sessionId: runningCommand.sessionId,
+          turnId: runningCommand.turnId,
+          position: runningCommand.position + 1,
+          revision: 1,
+          state: 'settled',
+          sessionUpdate: 'user_message',
+          messageId: 'spoken',
+          content: [{ type: 'text', text: 'Also update the notes' }],
+        },
+      },
+    ];
+
+    expect(withLiveHeader(drawn, running, runningCommand)).toEqual(drawn);
   });
 });
