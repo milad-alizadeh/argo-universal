@@ -1,4 +1,8 @@
-import { type LiveHeader, runningCompactionStatus } from '@repo/contracts';
+import {
+  type LiveHeader,
+  runningCompactionStatus,
+  type ToolCallUpdate,
+} from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { compactionStates } from '../../../../mocks/feed-paper';
 import type { FeedViewItem } from './feed-view';
@@ -94,5 +98,70 @@ describe('shownLiveHeader', () => {
   it('shows nothing without a live header', () => {
     expect(shownLiveHeader([openGroup], null)).toBeNull();
     expect(shownLiveHeader([exploring], null)).toBeNull();
+  });
+
+  // A Conversation steers its Prompt into the running Turn, so the person's words land below the Tool call that still runs.
+  describe('with the named Tool call drawn above the person’s words', () => {
+    const runningCommand: ToolCallUpdate = {
+      id: 'command',
+      sessionId: 'session-1',
+      turnId: 'turn-1',
+      position: 1,
+      revision: 1,
+      state: 'open',
+      sessionUpdate: 'tool_call_update',
+      toolCallId: 'command',
+      title: 'Check formatting, commit and push',
+      kind: 'execute',
+      status: 'in_progress',
+      content: [],
+    };
+
+    const steered: FeedViewItem = {
+      type: 'row',
+      row: {
+        id: 'steered',
+        sessionId: runningCommand.sessionId,
+        turnId: runningCommand.turnId,
+        position: runningCommand.position + 1,
+        revision: runningCommand.revision + 1,
+        state: 'settled',
+        sessionUpdate: 'user_message',
+        messageId: 'steered',
+        content: [{ type: 'text', text: 'Also update the notes' }],
+      },
+    };
+
+    const running = header({
+      type: 'tool_call',
+      toolCallId: runningCommand.toolCallId,
+    });
+
+    it.each<{ name: string; item: FeedViewItem }>([
+      {
+        name: 'a lone Tool call',
+        item: { type: 'tool_call', row: runningCommand },
+      },
+      {
+        name: 'an open group',
+        item: {
+          ...openGroup,
+          items: [{ type: 'tool_call', row: runningCommand }],
+        },
+      },
+      {
+        name: 'an Exploration',
+        item: { ...exploring, toolCalls: [runningCommand] },
+      },
+    ])('leaves the header out when $name draws it', ({ item }) => {
+      expect(shownLiveHeader([item, steered], running)).toBeNull();
+    });
+
+    it('keeps a header naming another Tool call', () => {
+      const other = header({ type: 'tool_call', toolCallId: 'other' });
+      const item: FeedViewItem = { type: 'tool_call', row: runningCommand };
+
+      expect(shownLiveHeader([item, steered], other)).toBe(other);
+    });
   });
 });

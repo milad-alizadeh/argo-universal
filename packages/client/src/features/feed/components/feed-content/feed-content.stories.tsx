@@ -5,6 +5,7 @@ import { compactingNotice } from '../feed-notice/feed-notice-fixtures';
 import { Feed } from '../feed/feed';
 import { workingLiveHeader } from '../live-header/live-header-fixtures';
 import { completedCommand } from '../tool-call.mocks';
+import { conversationPromptDuringToolCall } from './feed-content-fixtures';
 
 const { rows, snapshot } = recordedAcpContent('agent-1');
 
@@ -55,4 +56,10 @@ export const Compacting: Story = {
     items: toFeedView([compactingNotice.row], snapshot).items,
     ...workingLiveHeader,
   },
+};
+
+// A Conversation's Prompt lands below the command still running: that command's own row says it runs, and no second line repeats it.
+export const ConversationPromptDuringToolCall: Story = {
+  name: 'Conversation Prompt during a Tool call',
+  args: conversationPromptDuringToolCall,
 };
