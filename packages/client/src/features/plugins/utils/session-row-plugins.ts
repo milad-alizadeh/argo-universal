@@ -5,15 +5,18 @@ import type {
 } from '#features/sessions';
 import type { ReadItem, SlotReading } from './slot-items';
 
-const rowItem = (
-  { pluginId, pluginName, item }: ReadItem<SessionRowItem>,
-  index: number,
-): SessionRowPluginItem => ({
-  key: `${pluginId}:${index}`,
-  pluginId,
-  pluginName,
-  item,
-});
+// Keyed by its place in the whole row: "+N" lists shown items that did not fit beside held ones, so keys never repeat.
+const rowItem =
+  (start: number) =>
+  (
+    { pluginId, pluginName, item }: ReadItem<SessionRowItem>,
+    index: number,
+  ): SessionRowPluginItem => ({
+    key: `${pluginId}:${start + index}`,
+    pluginId,
+    pluginName,
+    item,
+  });
 
 /*
  * What a Session row draws from what the reader read of its Slot: the items that fit and the rest behind "+N".
@@ -24,5 +27,8 @@ export function sessionRowPlugins(
 ): SessionRowPlugins | undefined {
   if (!row.items.length) return undefined;
 
-  return { items: row.items.map(rowItem), more: row.overflow.map(rowItem) };
+  return {
+    items: row.items.map(rowItem(0)),
+    more: row.overflow.map(rowItem(row.items.length)),
+  };
 }
