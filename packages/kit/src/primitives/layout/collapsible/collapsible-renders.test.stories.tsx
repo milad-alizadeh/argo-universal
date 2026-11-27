@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Profiler, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { renderCounter } from '#mocks/render-counts';
-import { sampleEachFrame } from '#mocks/sample-each-frame';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import {
@@ -27,10 +26,12 @@ const idleLabel = 'Collapsible not drawn';
 
 const detailLabel = 'Open tool call detail';
 
+const contentLaidOut = fn<(height: number) => void>();
+
 const layoutSync = {
   syncLayout: fn(),
   onMotionChange: fn(),
-  grow: fn(),
+  grow: fn<(height: number) => void>(),
 };
 
 // Starts empty, so counting covers the collapsible's first draw, as a Feed row mounting does.
@@ -47,7 +48,11 @@ function OpenInAList(): ReactElement {
           {drawn && (
             <Collapsible defaultOpen>
               <CollapsibleHeader icon="read" label="Read files" />
-              <CollapsibleContent>
+              <CollapsibleContent
+                onLayout={({ nativeEvent }) =>
+                  contentLaidOut(nativeEvent.layout.height)
+                }
+              >
                 <View className="h-32">
                   <Text>{detailLabel}</Text>
                 </View>
@@ -82,36 +87,57 @@ export const OpenAtRestDrawsOnceOnMount: Story = {
   },
 };
 
-// The box that clips the content while it moves.
-function clipHeight(detail: HTMLElement | null): number {
-  let box = detail?.parentElement;
+async function observeClose(
+  trigger: HTMLElement,
+  content: HTMLElement,
+): Promise<[number, ...number[]]> {
+  const heights: [number, ...number[]] = [content.offsetHeight];
+  const observer = new ResizeObserver(() => heights.push(content.offsetHeight));
 
-  while (box && getComputedStyle(box).overflow !== 'hidden')
-    box = box.parentElement;
+  observer.observe(content);
 
-  return box?.getBoundingClientRect().height ?? 0;
+  try {
+    trigger.click();
+    await waitFor(() => expect(content).not.toBeInTheDocument());
+
+    return heights;
+  } finally {
+    observer.disconnect();
+  }
 }
 
 export const OpenOnMountClosesFromItsFullHeight: Story = {
   render: () => <OpenInAList />,
   play: async ({ canvas }) => {
     await settleLayout('phone');
-    canvas.getByRole('button', { name: idleLabel }).click();
-    const detail = await canvas.findByText(detailLabel);
-    await frame();
-    await frame();
-    const trigger = canvas.getByRole('button', { name: 'Read files' });
-    const open = detail.getBoundingClientRect().height;
 
-    const heights = await sampleEachFrame(
-      () => trigger.click(),
-      () => clipHeight(canvas.queryByText(detailLabel)),
-      6,
+    contentLaidOut.mockClear();
+    layoutSync.grow.mockClear();
+    canvas.getByRole('button', { name: idleLabel }).click();
+    const trigger = await canvas.findByRole('button', { name: 'Read files' });
+
+    // React Native Web delivers onLayout asynchronously, after the mount measurement is queued.
+    await waitFor(() =>
+      expect(contentLaidOut.mock.lastCall?.[0] ?? 0).toBeGreaterThan(0),
     );
 
-    // It starts from what it showed and only shrinks, rather than snapping shut from a height it never measured.
-    await expect(open).toBeGreaterThan(0);
+    const content = trigger.ownerDocument.getElementById(
+      trigger.getAttribute('aria-controls') ?? '',
+    );
+
+    if (!content) throw new Error('The trigger must control a content region.');
+
+    // Observe the same region before React commits the deferred close and adds clipping.
+    const heights = await observeClose(trigger, content);
+
+    // The list hears the entire height change even when Chromium skips frames.
+    const heightChange = layoutSync.grow.mock.calls.reduce(
+      (total, [delta]) => total + delta,
+      0,
+    );
+
     await expect(heights[0]).toBeGreaterThan(0);
+    await expect(heightChange).toBe(-heights[0]);
     await expect(heights).toEqual([...heights].sort((a, b) => b - a));
   },
 };
