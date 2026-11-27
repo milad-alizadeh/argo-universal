@@ -64,10 +64,12 @@ function choosing(width: number): Story {
 
 // A click on the row's title, away from its value, opens the choices, and the row stays one button.
 export const RowOpensFromTitleMenu: Story = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => <ControlledPicker {...menu} onValueChange={changed} />,
   play: async ({ canvas, userEvent }) => {
+    const title = await canvas.findByText('Label');
     await expect(canvas.getAllByRole('button')).toHaveLength(1);
-    await userEvent.click(canvas.getByText('Label'));
+    await userEvent.click(title);
     await expect(
       await within(document.body).findByRole('option', { name: 'One' }),
     ).toBeInTheDocument();
@@ -258,6 +260,7 @@ export const MultipleMenuReportsList: Story = {
 
 // A menu option whose value is the empty string chooses and reports like any other.
 export const EmptyValueOptionChooses: Story = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => <ControlledPicker {...emptyOption} onValueChange={changed} />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
