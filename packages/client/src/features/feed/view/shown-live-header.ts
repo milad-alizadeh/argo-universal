@@ -1,4 +1,8 @@
-import { type LiveHeader, runningCompactionStatus } from '@repo/contracts';
+import {
+  type LiveHeader,
+  runningCompactionStatus,
+  type ToolCallUpdate,
+} from '@repo/contracts';
 import type { FeedActivity, FeedViewItem } from './feed-view';
 
 function isOpenWork(item: FeedViewItem | undefined): boolean {
@@ -37,7 +41,7 @@ export function shownLiveHeader(
 ): LiveHeader | null {
   if (!liveHeader) return null;
 
-  if (drawnAboveNewest(items, liveHeader)) return null;
+  if (runsAboveNewest(items, liveHeader)) return null;
 
   if (!isOpenWork(items.at(-1))) return liveHeader;
 
@@ -46,9 +50,10 @@ export function shownLiveHeader(
 
 /*
  * A Conversation steers its Prompt into the running Turn, so the person's words land below the
- * Tool call still running. That Tool call already draws itself there; the header would repeat it below.
+ * Tool call still running. That running row already says what the Agent does; the header would
+ * repeat it below. A settled Tool call says nothing live, so a header naming one still shows.
  */
-function drawnAboveNewest(
+function runsAboveNewest(
   items: readonly FeedViewItem[],
   { source }: LiveHeader,
 ): boolean {
@@ -56,17 +61,20 @@ function drawnAboveNewest(
 
   return items
     .slice(0, -1)
-    .some((item) => drawnToolCallIds(item).includes(source.toolCallId));
+    .flatMap(drawnToolCalls)
+    .some(
+      (call) => call.toolCallId === source.toolCallId && call.state === 'open',
+    );
 }
 
-function drawnToolCallIds(item: FeedViewItem | FeedActivity): string[] {
+function drawnToolCalls(item: FeedViewItem | FeedActivity): ToolCallUpdate[] {
   switch (item.type) {
     case 'tool_call':
-      return [item.row.toolCallId];
+      return [item.row];
     case 'exploration':
-      return item.toolCalls.map(({ toolCallId }) => toolCallId);
+      return item.toolCalls;
     case 'group':
-      return item.items.flatMap(drawnToolCallIds);
+      return item.items.flatMap(drawnToolCalls);
     default:
       return [];
   }

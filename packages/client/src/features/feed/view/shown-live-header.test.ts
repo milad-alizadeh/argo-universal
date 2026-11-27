@@ -157,6 +157,15 @@ describe('shownLiveHeader', () => {
       expect(shownLiveHeader([item, steered], running)).toBeNull();
     });
 
+    it('keeps the header once the Tool call above has settled', () => {
+      const settled: FeedViewItem = {
+        type: 'tool_call',
+        row: { ...runningCommand, state: 'settled', status: 'completed' },
+      };
+
+      expect(shownLiveHeader([settled, steered], running)).toBe(running);
+    });
+
     it('keeps a header naming another Tool call', () => {
       const other = header({ type: 'tool_call', toolCallId: 'other' });
       const item: FeedViewItem = { type: 'tool_call', row: runningCommand };
