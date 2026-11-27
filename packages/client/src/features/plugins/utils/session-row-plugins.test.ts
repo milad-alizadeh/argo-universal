@@ -37,13 +37,27 @@ describe('a Session row’s Plugin content', () => {
       ],
       more: [
         {
-          key: 'coverage:0',
+          key: 'coverage:1',
           pluginId: 'coverage',
           pluginName: 'Coverage',
           item: coverage.item,
         },
       ],
     });
+  });
+
+  // "+N" lists shown items that did not fit with the held ones, so their keys must not repeat.
+  it('keys every item uniquely across the row, behind "+N" too', () => {
+    const drawn = sessionRowPlugins({
+      items: [issue, issue, issue],
+      overflow: [issue, issue, issue],
+    });
+
+    const keys = [...(drawn?.items ?? []), ...(drawn?.more ?? [])].map(
+      ({ key }) => key,
+    );
+
+    expect(new Set(keys).size).toBe(6);
   });
 
   it('adds nothing to a row no Plugin adds to', () => {

@@ -24,5 +24,9 @@ export function sessionRowPlugins(
 ): SessionRowPlugins | undefined {
   if (!row.items.length) return undefined;
 
-  return { items: row.items.map(rowItem), more: row.overflow.map(rowItem) };
+  // Keyed by place in the whole row: "+N" lists shown items that did not fit beside held ones, so no key repeats.
+  const keyed = [...row.items, ...row.overflow].map(rowItem);
+  const shown = row.items.length;
+
+  return { items: keyed.slice(0, shown), more: keyed.slice(shown) };
 }
